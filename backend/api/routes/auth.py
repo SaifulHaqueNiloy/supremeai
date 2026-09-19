@@ -163,8 +163,11 @@ async def optional_current_user(
         return None
     try:
         payload = jwt.decode(token, _get_secret_key(), algorithms=[ALGORITHM])
-        # বাংলা: type=access ছাড়া অন্য টোকেন (যেমন refresh) ব্যবহার রোধ।
-        if payload.get("type") != "access":
+        # বাংলা: type=access অথবা role=admin (admin step-up token) ছাড়া অন্য টোকেন (যেমন refresh) ব্যবহার রোধ।
+        token_type = payload.get("type")
+        if token_type is not None and token_type != "access":
+            return None
+        if token_type is None and payload.get("role") != "admin":
             return None
         # বাংলা মন্তব্য (ROOT-CAUSE FIX, /logout ফিচারের অংশ): logout করা
         # (blacklist-এ থাকা) টোকেন যেন আর valid না ধরা হয়, নাহলে logout-এর

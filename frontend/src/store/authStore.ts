@@ -210,7 +210,43 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   initialize: async () => {
     const token = localStorage.getItem(TOKEN_KEY);
+    const adminToken = typeof window !== 'undefined'
+      ? (sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt'))
+      : null;
+
     if (!token) {
+      // 🛡️ ISSUE #495: যদি ইউজার টোকেন না থাকে কিন্তু বৈধ আন-এক্সপায়ার্ড admin JWT থাকে,
+      // তবে সেশনকে অ্যাডমিন হিসেবে পুনরুদ্ধার করতে হবে (রিলোড ও ট্যাব নেভিগেশনে auto-logout ফিক্স)।
+      if (adminToken) {
+        const adminPayload = decodeJwtPayload(adminToken);
+        const isAdminValid = Boolean(
+          adminPayload &&
+          adminPayload.role === 'admin' &&
+          typeof adminPayload.exp === 'number' &&
+          adminPayload.exp * 1000 > Date.now()
+        );
+
+        if (isAdminValid) {
+          updateTokenCache(adminToken);
+          const adminEmail = typeof adminPayload?.email === 'string' && adminPayload.email ? adminPayload.email : 'admin@supremeai.dev';
+          const adminName = typeof adminPayload?.name === 'string' && adminPayload.name ? adminPayload.name : adminEmail.split('@')[0];
+          const adminUser: UserProfile = {
+            id: typeof adminPayload?.sub === 'string' ? adminPayload.sub : 'admin',
+            email: adminEmail,
+            name: adminName,
+            avatarUrl: avatarUrl(adminEmail),
+          };
+          persistUser(adminUser);
+          set({
+            status: AuthStatus.LOGGED_IN,
+            user: adminUser,
+            role: 'admin',
+            permissions: ['*'],
+          });
+          return;
+        }
+      }
+
       // ── Cookie-based session restore (production-readiness plan, item 3b) ──
       // বাংলা: localStorage টোকেন না থাকলেও httpOnly cookie-ভিত্তিক সেশন থাকতে
       // পারে (login এখন দুই মোডেই cookie সেট করে)। credentials: 'include' সহ
