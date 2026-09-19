@@ -11,6 +11,10 @@ import PQueue from 'p-queue';
 // বাংলা মন্তব্য: কাস্টম এরর ক্লাস — status প্রপার্টি দিয়ে React Query retry ফাংশন সঠিকভাবে 401/403/429 চিহ্নিত করতে পারে
 export class ApiError extends Error {
   status: number;
+  // Issue #685 (Domain 15): backend-echoed request correlation id (X-Request-ID
+  // response header, or the correlation_id field of the error payload) — lets
+  // user-reported failures be matched to the backend's structured logs.
+  requestId?: string;
   constructor(message: string, status: number) {
     super(message);
     this.name = 'ApiError';
@@ -151,10 +155,21 @@ export const getAuthHeaders = async (): Promise<Record<string, string>> => {
     console.warn("Failed to get device fingerprint", e);
   }
 
+  // Issue #685 (Domain 15): one fresh correlation id per HTTP request. The
+  // backend CORS allow-list already includes X-Request-ID, so no preflight
+  // change is needed.
+  headers['X-Request-ID'] = buildRequestId();
+
   return headers;
 };
 
 const handleResponse = async (res: Response) => {
+  // Issue #685 (Domain 15): capture the correlation id echoed by the backend.
+  // Readable because backend CORS expose_headers now lists X-Request-ID /
+  // X-Correlation-ID (app_builder.py); falls back to the id we sent.
+  const requestId = res.headers?.get('X-Request-ID') || res.headers?.get('X-Correlation-ID');
+  if (requestId) lastRequestId = requestId;
+
   // 🔐 Phase 2 JIT-OTP Interceptor — Status 202 Accepted means JIT OTP is required
   if (res.status === 202) {
     const data = await res.json().catch(() => ({}));
@@ -180,18 +195,25 @@ const handleResponse = async (res: Response) => {
       console.warn("Failed to parse error response JSON", e);
     }
 
+    // Issue #685 (Domain 15): every thrown ApiError carries the correlation id.
+    const apiError = (msg: string): ApiError => {
+      const err = new ApiError(msg, res.status);
+      err.requestId = requestId || lastRequestId || undefined;
+      return err;
+    };
+
     // 🛑 ZERO-GAP: Intercept specific critical HTTP exception statuses
     if (res.status === 429) {
       if (isDev()) console.warn("Rate limit exceeded (429). Throttling client requests.");
-      throw new ApiError(`Rate limit exceeded: ${errMsg}. Please wait before retrying.`, 429);
+      throw apiError(`Rate limit exceeded: ${errMsg}. Please wait before retrying.`);
     }
     if (res.status === 402) {
       if (isDev()) console.warn("Payment/Budget Required (402). CostGuard rejected the request.");
-      throw new ApiError(`Budget Limit Exceeded: ${errMsg}`, 402);
+      throw apiError(`Budget Limit Exceeded: ${errMsg}`);
     }
     if (res.status === 422) {
       if (isDev()) console.error("Validation error (422) detected in payload schema.");
-      throw new ApiError(`Validation Error: ${errMsg}`, 422);
+      throw apiError(`Validation Error: ${errMsg}`);
     }
     if (res.status === 401 || res.status === 403) {
       if (isDev()) console.warn("Authorization failure (401/403). Session invalidated.");
@@ -211,9 +233,9 @@ const handleResponse = async (res: Response) => {
       if ((res.status === 401 || res.status === 403) && isSessionValidation) {
         clearAuthToken();
       }
-      throw new ApiError(errMsg, res.status);
+      throw apiError(errMsg);
     }
-    throw new ApiError(errMsg, res.status);
+    throw apiError(errMsg);
   }
   return res.json();
 };
@@ -314,6 +336,20 @@ const buildIdempotencyKey = (): string =>
   typeof crypto !== 'undefined' && crypto.randomUUID
     ? crypto.randomUUID()
     : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+// Issue #685 (Domain 15): per-request correlation id. The backend
+// (SupremeContext/RequestId middleware) honors this header, echoes it back on
+// the response, and uses it as the correlation id in its structured logs and
+// LLM telemetry — one id end-to-end.
+const buildRequestId = (): string =>
+  typeof crypto !== 'undefined' && crypto.randomUUID
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+// Last correlation id seen on a backend response (success or error) — exposed
+// for error reporting/support flows.
+let lastRequestId: string = '';
+export const getLastRequestId = (): string => lastRequestId;
 
 export const apiClient = {
   get: async <T>(path: string, options?: RequestInit): Promise<T> => {

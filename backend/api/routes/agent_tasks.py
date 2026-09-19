@@ -11,6 +11,7 @@ from brain.autonomous_agent import AutonomousAgent
 from brain.langgraph_agent import SupremeOrchestrator
 from brain.model_router import ModelRouter
 from core.generation_monitor import GenerationMonitor
+from core.logging_config import logger
 from core.security.authentication.rbac import RoleBasedAccessControl
 from core.zero_cost_architecture.swarm_orchestrator_integration import ZeroCostSwarmOrchestrator
 
@@ -64,8 +65,22 @@ def _user_context(request: Request) -> dict[str, Any]:
     }
 
 
+def _correlation_id(request: Request) -> str:
+    """Issue #685: the id assigned by SupremeContext/RequestContext middleware."""
+    return getattr(request.state, "correlation_id", "") or ""
+
+
 @agent_router.post("/execute", response_model=AgentExecuteResponse)
 async def execute_agent(request: Request, body: AgentExecuteRequest):
+    correlation_id = _correlation_id(request)
+    # Issue #685 (Domain 15): high-traffic router correlation logging.
+    logger.info(
+        "[agents.execute] task_type=%s department=%s autonomous=%s correlation_id=%s",
+        body.task_type,
+        body.department,
+        body.autonomous,
+        correlation_id,
+    )
     _user_context(request)
     if body.autonomous:
         run = autonomous_agent.run(body.task, body.task_type)
@@ -120,6 +135,12 @@ async def execute_swarm(request: Request, body: SwarmExecuteRequest):
     and returns the final workspace state.
     """
     session_id = body.session_id or str(uuid.uuid4())
+    # Issue #685 (Domain 15): high-traffic router correlation logging.
+    logger.info(
+        "[agents.swarm_execute] session_id=%s correlation_id=%s",
+        session_id,
+        _correlation_id(request),
+    )
     orchestrator = ZeroCostSwarmOrchestrator(
         user_id=body.user_id, session_id=session_id, task_prompt=body.task
     )  # type: ignore
