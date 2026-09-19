@@ -14274,9 +14274,7 @@
       "path": "backend/tests/test_file_gate_run.py"
     },
     {
-      "capability_signals": [
-        "mcp"
-      ],
+      "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
