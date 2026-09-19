@@ -3416,7 +3416,7 @@ Current role: 3-backend load balancer + 24/7 ping (cron: */8 * * * *)
 ## Supabase
 
 ```text
-Project: xtvkltzmberxekoamala (Singapore region)
+Project: <project-ref> (Singapore region)
 URL ref: SUPABASE_URL
 Anon key ref: SUPABASE_KEY
 Service role key ref: SUPABASE_SERVICE_ROLE_KEY

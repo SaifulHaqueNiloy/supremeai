@@ -458,7 +458,7 @@ These items cannot be truthfully completed by code-only changes and require prov
 | `verified` | Frontend owner | Wire AI Studio editor actions: Explain, Review, Security Scan, Performance, Auto-Heal | Implemented in `EvolutionForge.tsx` and tested in `EvolutionForge.test.tsx` (Vitest 77/77 passed) |
 | `verified` | Billing owner | Verify Upgrade-to-Pro checkout with server-side price/quantity validation and idempotency | Stripe webhook reconciliation and idempotent verification in `test_money.py` |
 | `verified` | Integrations owner | Verify Skills catalog data, plugin marketplace routes, and role-scoped permissions | Implemented & verified in `backend/tests/core/plugins/` (7/7 tests passed) and `usePlugins.test.ts` |
-| `verified` | Platform owner | Verify deployed `/api/v1/live` CORS headers after the Cache-Control fix | Live verification on `supremeai-primary-node.onrender.com/api/v1/health/live` returning 200 OK with security headers |
+| `verified` | Platform owner | Verify deployed `/api/v1/live` CORS headers after the Cache-Control fix | Live verification on `<render-primary-host>/api/v1/health/live` returning 200 OK with security headers |
 
 Do not mark advisory-only canary or rollback behavior as `verified` without the provider/runtime evidence above.
 
@@ -502,13 +502,13 @@ These tasks require Supabase/Postgres or production secret-manager access and mu
 
 1. [x] **Run migrations 15, 16, and 19** — **COMPLETED & VERIFIED:** `match_experiences` RPC deployed and `19_harden_knowledge_base.sql` applied on Supabase. `knowledge_base` schema hardened with `knowledge_key`, `content_hash`, and `knowledge_import_audits`.
 2. [x] **Set service URLs in the Core/Worker environments** — **COMPLETED & VERIFIED:** Render API script injected `BACKEND_URL`, `WORKER_URL`, `SCRAPER_URL`, and `MCP_URL` into all 4 Render services (`Primary Node`, `Worker Node`, `Scraper Node`, `MCP Tower`).
-3. [x] **Set frontend public variables before build** — **COMPLETED & VERIFIED:** Configured in `frontend/.env` (`VITE_API_URL` and `VITE_BACKEND_URL` pointing to `https://supremeai-primary-node.onrender.com`).
+3. [x] **Set frontend public variables before build** — **COMPLETED & VERIFIED:** Configured in `frontend/.env` (`VITE_API_URL` and `VITE_BACKEND_URL` pointing to `https://<render-primary-url>`).
 4. [x] **Deploy all service revisions together** — **COMPLETED & VERIFIED:** Triggered latest deploys across all Render services: Core (`dep-dad12udg1s2s73ejfgog`), Worker (`dep-dad12umk1f9s73anmni0`), Scraper (`dep-dad12uv10e5c73cs7i50`), and MCP Tower (`dep-dad12vf10e5c73cs7jdg`).
 5. [x] **Verify each service endpoint** — **COMPLETED & VERIFIED:**
-   - Core API: `https://supremeai-primary-node.onrender.com/api/v1/health/live` -> **`200 {"status":"alive"}`**
-   - Async Worker: `https://supremeai-worker-node.onrender.com/health` -> **`200 {"status":"ok"}`**
-   - Scraper: `https://supremeai-scraper-node.onrender.com/api/v1/health/live` -> **`200 {"status":"alive"}`**
-   - MCP Tower: `https://supremeai-mcp-tower.onrender.com/health` -> **`200 {"status":"ok"}`**
+   - Core API: `https://<render-primary-url>/api/v1/health/live` -> **`200 {"status":"alive"}`**
+   - Async Worker: `https://<render-worker-url>/health` -> **`200 {"status":"ok"}`**
+   - Scraper: `https://<render-scraper-url>/api/v1/health/live` -> **`200 {"status":"alive"}`**
+   - MCP Tower: `https://<render-mcp-url>/health` -> **`200 {"status":"ok"}`**
 6. [x] **Enable evolution features only after observing logs:** keep `ENABLE_EVOLUTION=false` until startup, memory, and approval behavior are verified. (VERIFIED & ENFORCED: `ENABLE_EVOLUTION=false`, `ENABLE_EVOLUTION_LEARNING=false`, `ENABLE_DAILY_LEARNER=false` default configuration maintained across all production environments).
 7. [x] **Configure secrets through the provider secret manager** — **COMPLETED & VERIFIED:** Infisical Vault integration is active (`124 secrets loaded in single call`). No raw secrets in code.
 
@@ -18066,7 +18066,7 @@ Then also enforce a safe minimum inside the database function for defense in dep
 
 ### 2.2 Supabase project reference is hardcoded
 **Finding:**
-`PROJECT_REF: xtvkltzmberxekoamala`
+`PROJECT_REF: <project-ref>`
 
 **Why this is a problem:**
 - Environment-specific infrastructure identity is committed to source.
