@@ -188,13 +188,27 @@ class ControlTowerClient:
             logger.info("🔌 MCP Control Tower Disconnected")
 
     async def call_tool(self, name: str, arguments: dict) -> Any:
-        """Call a specific tool on the Control Tower."""
-        if not self._session:
-            raise RuntimeError("Not connected to MCP Control Tower")
+        """Call a specific tool on the Control Tower.
 
-        logger.info(f"Calling MCP Tool '{name}' with args: {arguments}")
-        result = await self._session.call_tool(name, arguments)
-        return result
+        বাংলা (M06 P-A ৮/৮ RunType adoption): প্রতিটি MCP কল ক্যানোনিকাল
+        ``run_type="mcp"`` রান হিসেবেও পর্যবেক্ষিত (flag-gated, best-effort)।
+        connection-অনুপস্থিতির RuntimeError আগের মতোই ছড়ায় — রান সেটাকেই
+        FAILED-হিসেবে রেকর্ড করে (সত্য প্রতিফলন)।
+        """
+        from runs.run_scope import observe_run
+
+        async with observe_run(
+            run_type="mcp",
+            title=f"mcp:{name}",
+            source_type="mcp",
+            source_ref=name,
+        ):
+            if not self._session:
+                raise RuntimeError("Not connected to MCP Control Tower")
+
+            logger.info(f"Calling MCP Tool '{name}' with args: {arguments}")
+            result = await self._session.call_tool(name, arguments)
+            return result
 
 
 # Global singleton instance (can be used throughout the backend)

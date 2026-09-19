@@ -270,7 +270,31 @@ class MissionService:
         self, session: AsyncSession, mission_id: Any, *, actor: str | None = None
     ) -> Mission:
         """Complete the current phase and start the next one; completing the
-        last phase transitions the mission to SUCCEEDED."""
+        last phase transitions the mission to SUCCEEDED.
+
+        বাংলা (M06 P-A ৮/৮ RunType adoption): প্রতিটি mission-advance ক্যানোনিকাল
+        ``run_type="mission"`` রান হিসেবেও পর্যবেক্ষিত — নিজস্ব session-এ
+        (আয়োজক mission-ট্রানজেকশন স্পর্শ নয়), flag-gated, best-effort।
+        IllegalTransition-সহ ব্যর্থতা রান-কে FAILED settle করেই ছড়ায়।
+        """
+        from runs.run_scope import observe_run
+
+        async with observe_run(
+            run_type="mission",
+            user_id=actor or "system",
+            title=f"mission:{mission_id}:advance",
+            source_type="mission",
+            source_ref=str(mission_id),
+        ) as run_ctx:
+            mission = await self._advance_phase_impl(session, mission_id, actor=actor)
+            if run_ctx is not None:
+                run_ctx.finish("succeeded")
+            return mission
+
+    async def _advance_phase_impl(
+        self, session: AsyncSession, mission_id: Any, *, actor: str | None = None
+    ) -> Mission:
+        """Original advance_phase body — run-observation wrapper-এর ভিতরে চলে।"""
         mission = await self.get_mission(session, mission_id)
         if mission.state != RUNNING:
             raise IllegalTransition(

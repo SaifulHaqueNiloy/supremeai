@@ -139,3 +139,63 @@ async def run_scope(
         await session.commit()
     except Exception as settle_exc:
         logger.warning(f"⚠️ run_scope settle ({target}) skipped: {settle_exc!r}")
+
+
+@contextlib.asynccontextmanager
+async def observe_run(
+    *,
+    run_type: str,
+    user_id: str = "system",
+    title: str | None = None,
+    source_type: str | None = None,
+    source_ref: str | None = None,
+    correlation_id: str | None = None,
+    **budget_limits: Any,
+) -> AsyncIterator[RunContext | None]:
+    """Self-contained run-observation wrapper (M06 P-A ৮/৮ RunType adoption).
+
+    বাংলা: নিজস্ব DB-session-এ ক্যানোনিকাল run তৈরি করে — আয়োজকের
+    ট্রানজেকশন-স্কোপ স্পর্শ করে না (extend, not replace)। চুক্তি:
+
+    - flag-off → ``None`` yield (byte-নিরপেক্ষ no-op);
+    - session/service অনুপস্থিতি → লাউড warning + ``None`` (আয়োজক অপ্রভাবিত);
+    - আয়োজক-ব্যতিক্রম কখনো গিলে না — run-টি FAILED-এ settle হয়ে ব্যতিক্রম
+      আয়োজকের কাছেই যায় (সত্য প্রতিফলন)।
+    """
+    if not run_fabric_universal():
+        yield None
+        return
+
+    session_cm: Any = None
+    try:
+        from database.session import get_db_session_context
+        from runs.service import RunService
+
+        session_cm = get_db_session_context()
+        session = await session_cm.__aenter__()
+        service = RunService()
+    except Exception as exc:
+        logger.warning(
+            f"⚠️ observe_run({run_type}) session/service unavailable: {exc!r} — "
+            "host execution unaffected"
+        )
+        yield None
+        return
+
+    try:
+        async with run_scope(
+            session,
+            service,
+            run_type=run_type,
+            user_id=user_id,
+            title=title,
+            source_type=source_type,
+            source_ref=source_ref,
+            correlation_id=correlation_id,
+            **budget_limits,
+        ) as ctx:
+            yield ctx
+    finally:
+        with contextlib.suppress(Exception):
+            if session_cm is not None:
+                await session_cm.__aexit__(None, None, None)

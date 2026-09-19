@@ -27,7 +27,26 @@ class AutonomousBrowserAgent:
         self._trace: list[dict[str, Any]] = []
 
     async def achieve(self, goal: str) -> dict[str, Any]:
-        """Autonomously reason, execute, and replan until the goal is accomplished."""
+        """Autonomously reason, execute, and replan until the goal is accomplished.
+
+        বাংলা (M06 P-A ৮/৮ RunType adoption): প্রতিটি browser-mission ক্যানোনিকাল
+        ``run_type="browser"`` রান হিসেবেও পর্যবেক্ষিত (flag-gated, best-effort);
+        ``achieved=False``-ই রান-ব্যর্থতার সত্য — অন্য কোনো ভান নেই।
+        """
+        from runs.run_scope import observe_run
+
+        async with observe_run(
+            run_type="browser",
+            title=f"browser:{goal[:80]}",
+            source_type="browser",
+        ) as run_ctx:
+            result = await self._achieve_impl(goal)
+            if run_ctx is not None and result.get("achieved") is False:
+                run_ctx.finish("failed")
+            return result
+
+    async def _achieve_impl(self, goal: str) -> dict[str, Any]:
+        """Original achieve body — run-observation wrapper-এর ভিতরে চলে।"""
         logger.info(f"[AutonomousBrowserAgent] Starting mission: '{goal}'")
         self._trace = []
 
