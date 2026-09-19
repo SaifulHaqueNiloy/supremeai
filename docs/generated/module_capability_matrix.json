@@ -9644,7 +9644,21 @@
       "path": "backend/services/hitl/__init__.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "dispatch",
+        "execute",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/services/hitl/dispatch.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "execute"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -13769,6 +13783,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/services/test_health_monitor_routes.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/services/test_hitl_dispatch.py"
     },
     {
       "capability_signals": [
@@ -24744,5 +24768,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2852
+  "source_file_count": 2854
 }

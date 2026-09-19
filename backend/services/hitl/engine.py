@@ -4,6 +4,7 @@ from typing import Any, Optional
 from core.logging_config import logger
 from database.tenant_db import TenantAwareFirestore
 
+from .dispatch import ApprovalDispatchError, execute_approved, resolve_executor
 from .hitl_ledger import HITLAuditLedger
 
 
@@ -93,7 +94,17 @@ class HITLEngine:
 
     def approve(self, admin_user_id: str, record_id: str) -> dict[str, Any]:
         """
-        Approve a pending action.
+        Approve a pending action and EXECUTE it (M17 P-B dispatch).
+
+        বাংলা (M17 P-B): আগে এটি কেবল status-flip করত — অনুমোদিত কাজ
+        কখনো চলত না (নীরব ভান)। এখন চুক্তি:
+        ১. status-flip-এর **আগেই** executor resolve — অজানা target হলে
+           loud fail-closed, রেকর্ড pending-ই থাকে ("approved অথচ
+           কিছুই হয়নি" ফাঁদ অসম্ভব);
+        ২. flip-এর পরে execute — সফল হলে execution_result রেকর্ডে +
+           ledger 'approval_executed';
+        ৩. রানটাইম-ব্যর্থতা হলে execution_error রেকর্ডে + ledger
+           'approval_execution_failed' + loud re-raise (নীরব ভান নেই)।
         """
         doc_ref = self.db.client.collection(self.collection_name).document(record_id)
         doc = doc_ref.get()
@@ -104,6 +115,13 @@ class HITLEngine:
         record = doc.to_dict()
         if record.get("status") != "pending_approval":
             raise ValueError(f"Record {record_id} is not in pending state.")
+
+        target = record.get("target_resource") or ""
+        try:
+            resolve_executor(target)
+        except ApprovalDispatchError as exc:
+            logger.error(f"[M17 P-B] approve({record_id}) fail-closed: {exc} — রেকর্ড pending-ই থাকল")
+            raise
 
         # Update status
         now = datetime.now(UTC).isoformat()
@@ -117,6 +135,52 @@ class HITLEngine:
         )
 
         logger.info(f"? [HITLEngine] Admin {admin_user_id} approved '{record_id}'.")
+
+        # ── M17 P-B: approve-পরবর্তী কার্যকরী-অর্ধ (dispatch executor) ──
+        try:
+            result = execute_approved(target, record.get("payload") or {})
+        except Exception as exc:
+            exec_failed_at = datetime.now(UTC).isoformat()
+            doc_ref.update(
+                {
+                    "execution_status": "failed",
+                    "execution_error": str(exc),
+                    "executed_at": exec_failed_at,
+                }
+            )
+            self.ledger.record_entry_sync(
+                agent_id=admin_user_id,
+                action="approval_execution_failed",
+                payload={
+                    "target_resource": record.get("target_resource"),
+                    "record_id": record_id,
+                    "error": str(exc),
+                },
+            )
+            logger.error(
+                f"[M17 P-B] Approved record '{record_id}' FAILED to execute — "
+                f"target={target!r}: {exc} (loud, execution_status=failed)"
+            )
+            raise
+
+        doc_ref.update(
+            {
+                "execution_status": "executed",
+                "execution_result": result,
+                "executed_at": datetime.now(UTC).isoformat(),
+            }
+        )
+        self.ledger.record_entry_sync(
+            agent_id=admin_user_id,
+            action="approval_executed",
+            payload={
+                "target_resource": record.get("target_resource"),
+                "record_id": record_id,
+                "result": result,
+            },
+        )
+        record["execution_status"] = "executed"
+        record["execution_result"] = result
         return record
 
     def reject(self, admin_user_id: str, record_id: str, reason: str = "") -> dict[str, Any]:
