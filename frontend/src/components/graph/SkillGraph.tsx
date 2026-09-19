@@ -22,6 +22,7 @@ interface GraphData {
 
 import { getApiBaseUrl } from '../../utils/api';
 import { adminTokenStore } from '../../services/adminTokenStore';
+import { getAdminToken } from '../../services/tokenStorage';
 
 export default function SkillGraph() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -31,7 +32,7 @@ export default function SkillGraph() {
   const fetchGraphData = async () => {
     try {
       const decodedToken = adminTokenStore.getDecodedToken();
-      const token = localStorage.getItem('supreme_admin_jwt');
+      const token = getAdminToken();
 
       const response = await fetch(`${getApiBaseUrl()}/api/v1/graph/skills`, {
         method: 'GET',

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { getApiBaseUrl } from '../../utils/api';
+import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 import { globalShowToastRef } from '../../contexts/ToastContext';
 import { parseResearchSseLine } from './researchEventContract';
 
@@ -158,7 +159,8 @@ export default function DeepResearchPanel() {
     abortRef.current = new AbortController();
 
     try {
-      const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
+      // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
+      const token = getUserToken() || getAdminToken();
       // Issue #452 fix: window.location.origin breaks whenever the API lives on
       // a different origin than the frontend — use the canonical base URL
       // helper like every other panel.

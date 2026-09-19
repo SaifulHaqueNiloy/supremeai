@@ -22,14 +22,16 @@ const token = (payload: Record<string, unknown>) =>
 describe('authStore', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     vi.clearAllMocks();
     useAuthStore.setState({ status: AuthStatus.UNINITIALIZED, user: null });
   });
 
-  it('logs in, stores the token and sets the user', async () => {
+  it('logs in, stores the token in sessionStorage (Issue #521) and sets the user', async () => {
     postMock.mockResolvedValue({ access_token: 'tok', user_id: 'u1' });
     await useAuthStore.getState().login('a@b.com', 'pw');
-    expect(localStorage.getItem('supremeai_auth_token')).toBe('tok');
+    expect(sessionStorage.getItem('supremeai_auth_token')).toBe('tok');
+    expect(localStorage.getItem('supremeai_auth_token')).toBeNull();
     expect(updateTokenCache).toHaveBeenCalledWith('tok');
     expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_IN);
     expect(useAuthStore.getState().user?.email).toBe('a@b.com');
@@ -52,6 +54,7 @@ describe('authStore', () => {
     postMock.mockResolvedValue({ access_token: 'tok', user_id: 'u1' });
     await useAuthStore.getState().login('a@b.com', 'pw');
     useAuthStore.getState().logout();
+    expect(sessionStorage.getItem('supremeai_auth_token')).toBeNull();
     expect(localStorage.getItem('supremeai_auth_token')).toBeNull();
     expect(updateTokenCache).toHaveBeenCalledWith(null);
     expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_OUT);
@@ -71,6 +74,7 @@ describe('authStore', () => {
     expect(useAuthStore.getState().user?.email).toBe('cookie@x.com');
     expect(getMock).toHaveBeenCalledWith('/api/v1/auth/me');
     expect(localStorage.getItem('supremeai_auth_token')).toBeNull();
+    expect(sessionStorage.getItem('supremeai_auth_token')).toBeNull();
   });
 
   it('stays logged out when neither token nor cookie session exists', async () => {
@@ -99,16 +103,26 @@ describe('authStore', () => {
 
   it('keeps the session on a transient initialize error', async () => {
     const tok = token({ email: 'me@x.com', name: 'Me' });
+    sessionStorage.setItem('supremeai_auth_token', tok);
+    getMock.mockRejectedValue({ status: 500 });
+    await useAuthStore.getState().initialize();
+    expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_IN);
+    expect(sessionStorage.getItem('supremeai_auth_token')).toBe(tok);
+  });
+
+  it('migrates a legacy localStorage token into sessionStorage and sweeps it (Issue #521)', async () => {
+    const tok = token({ email: 'me@x.com', name: 'Me', sub: 'u9' });
     localStorage.setItem('supremeai_auth_token', tok);
     getMock.mockRejectedValue({ status: 500 });
     await useAuthStore.getState().initialize();
     expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_IN);
-    expect(localStorage.getItem('supremeai_auth_token')).toBe(tok);
+    expect(sessionStorage.getItem('supremeai_auth_token')).toBe(tok);
+    expect(localStorage.getItem('supremeai_auth_token')).toBeNull();
   });
 
   it('restores the persisted profile after a browser restart', async () => {
     const tok = token({ email: 'me@x.com', name: 'Me', sub: 'u9' });
-    localStorage.setItem('supremeai_auth_token', tok);
+    sessionStorage.setItem('supremeai_auth_token', tok);
     localStorage.setItem('supremeai_auth_user', JSON.stringify({
       id: 'u9', email: 'me@x.com', name: 'Me', avatarUrl: 'avatar',
     }));
@@ -118,7 +132,7 @@ describe('authStore', () => {
 
     expect(useAuthStore.getState().status).toBe(AuthStatus.LOGGED_IN);
     expect(useAuthStore.getState().user).toMatchObject({ id: 'u9', email: 'me@x.com', name: 'Me' });
-    expect(localStorage.getItem('supremeai_auth_token')).toBe(tok);
+    expect(sessionStorage.getItem('supremeai_auth_token')).toBe(tok);
   });
 
   it('does not clear a session for a non-authenticated request failure', async () => {

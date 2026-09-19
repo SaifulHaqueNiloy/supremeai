@@ -23,6 +23,7 @@ import { useForgeAutosave } from './hooks/useForgeAutosave';
 import { DebateOverlay } from './DebateOverlay';
 import { getApiBaseUrl } from '../../../utils/api';
 import { apiClient } from '../../../services/apiClient';
+import { getAdminToken, getUserToken } from '../../../services/tokenStorage';
 import { eventBus, Events } from '../../../lib/componentEventBus';
 import { Sparkles, Upload, CheckCircle, AlertCircle } from 'lucide-react';
 
@@ -81,9 +82,10 @@ const EvolutionForgeCanvas = () => {
     // forced to pass the token as a URL query param (?token=...) — a credential
     // leak vector via browser history and server logs.
     // Solution: fetch-based SSE using the Authorization header instead.
+    // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
     const token =
-      localStorage.getItem('supremeai_auth_token') ||
-      localStorage.getItem('supreme_admin_jwt');
+      getUserToken() ||
+      getAdminToken();
     if (!token) return;
 
     const abortController = new AbortController();
@@ -225,7 +227,8 @@ const EvolutionForgeCanvas = () => {
   });
 
   const handleSaveSwarm = async () => {
-    const token = localStorage.getItem('supremeai_auth_token');
+    // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
+    const token = getUserToken();
     if (!token) {
       showToast('error', 'Authentication required to save swarm.');
       return;
@@ -271,7 +274,8 @@ const EvolutionForgeCanvas = () => {
   };
 
   const handleExecuteSwarm = async () => {
-    const token = localStorage.getItem('supremeai_auth_token');
+    // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
+    const token = getUserToken();
     if (!token) {
       showToast('error', 'Authentication required to execute swarm.');
       return;

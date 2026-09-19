@@ -1,4 +1,5 @@
 import { getApiBaseUrl } from '../../utils/api';
+import { getAdminToken } from '../../services/tokenStorage';
 import { createSecureEventSource } from '../../lib/secureSse';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -22,7 +23,8 @@ export class SseBridges {
   }
 
   connect() {
-    const rawToken = localStorage.getItem('supreme_admin_jwt');
+    // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
+    const rawToken = getAdminToken();
     if (!rawToken) return;
 
     const baseUrl = getApiBaseUrl();

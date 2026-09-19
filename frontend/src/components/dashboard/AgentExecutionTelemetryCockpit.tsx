@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import WebSocketManager from '../../services/realtime/WebSocketManager';
 import { getWebSocketBaseUrl } from '../../utils/api';
+import { getUserToken } from '../../services/tokenStorage';
 
 interface AgentLogEntry {
   timestamp: string;
@@ -35,7 +36,8 @@ const AgentExecutionTelemetryCockpit: React.FC<AgentExecutionTelemetryCockpitPro
     const wsManager = new WebSocketManager(wsUrl, {
       onOpen: () => {
         // Send auth frame immediately on connect — never in the URL.
-        const token = authToken || localStorage.getItem('supremeai_auth_token');
+        // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
+        const token = authToken || getUserToken();
         if (token) {
           // WebSocketManager.send is called via its internal ws; use onOpen callback
           // to trigger the first-message auth right after the socket opens.

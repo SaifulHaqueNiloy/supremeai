@@ -24,7 +24,7 @@ describe('Admin Session Persistence (Issue #495)', () => {
     return `${header}.${payload}.mock-signature`;
   };
 
-  it('restores admin session from localStorage supreme_admin_jwt on initialize()', async () => {
+  it('restores a legacy localStorage supreme_admin_jwt on initialize() (Issue #521 keeps legacy reads)', async () => {
     const futureExp = Math.floor(Date.now() / 1000) + 3600 * 12; // 12 hours ahead
     const adminJwt = createMockJwt({
       sub: 'admin_123',

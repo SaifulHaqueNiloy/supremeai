@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Card, Badge } from '../ui';
 import { Smartphone, Tablet, RefreshCw } from 'lucide-react';
 import { getApiBaseUrl } from '../../utils/api';
+import { getAdminToken } from '../../services/tokenStorage';
 
 interface MobileSimulatorProps {
   html?: string;
@@ -22,7 +23,9 @@ export function MobileSimulator({ html, url = '' }: MobileSimulatorProps) {
 
   const proxied = (src: string): string => {
     if (/^https?:\/\//i.test(src)) {
-      const token = localStorage.getItem('supreme_admin_jwt') || localStorage.getItem('adminToken') || '';
+      // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept);
+      // 'adminToken' stays a legacy read-only key.
+      const token = getAdminToken() || localStorage.getItem('adminToken') || '';
       return `${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(src)}&token=${token}`;
     }
     return src;
