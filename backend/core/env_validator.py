@@ -336,15 +336,31 @@ class EnvironmentValidator:
         # Calculate health score
         result.score = int((valid_count / total_vars) * 100)
 
-        # Check for at least one LLM provider
-        llm_providers = ["OPENROUTER_API_KEY", "OPENAI_API_KEY", "GEMINI_API_KEY"]
+        # Check for at least one LLM provider across the entire dynamic pool ($0..N)
+        llm_providers = [
+            "OPENROUTER_API_KEY",
+            "OPENAI_API_KEY",
+            "GEMINI_API_KEY",
+            "GROQ_API_KEY",
+            "MISTRAL_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "DEEPSEEK_API_KEY",
+            "COHERE_API_KEY",
+            "BYNARA_API_KEY",
+            "BAI_API_KEY",
+            "TOGETHER_API_KEY",
+            "HF_API_KEY",
+            "HUGGINGFACE_API_KEY",
+            "OLLAMA_API_KEY",
+            "OLLAMA_BASE_URL",
+        ]
         has_llm_provider = any(os.environ.get(key) for key in llm_providers)
 
         if not has_llm_provider:
             result.errors.append(
                 {
                     "variable": "LLM_PROVIDERS",
-                    "message": "At least one LLM API key is required (OPENAI_API_KEY, GEMINI_API_KEY, or OPENROUTER_API_KEY)",
+                    "message": "At least one LLM API key is required across dynamic pool (e.g., OPENAI, GEMINI, OPENROUTER, MISTRAL, GROQ, ANTHROPIC, DEEPSEEK, etc.)",
                     "severity": "critical",
                 }
             )

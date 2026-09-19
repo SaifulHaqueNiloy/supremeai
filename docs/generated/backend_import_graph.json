@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3207,
+  "edge_count": 3215,
   "edges": [
     {
       "from": "adapters",
@@ -1664,6 +1664,10 @@
       "to": "api.routes.browser"
     },
     {
+      "from": "api.routes.browser._session_store",
+      "to": "core.state_store"
+    },
+    {
       "from": "api.routes.browser._surf_actions",
       "to": "api.deps"
     },
@@ -2778,6 +2782,10 @@
     {
       "from": "api.routes.sandbox_api",
       "to": "api.dependencies"
+    },
+    {
+      "from": "api.routes.sandbox_api",
+      "to": "core.state_store"
     },
     {
       "from": "api.routes.scheduled_tasks",
@@ -6444,6 +6452,10 @@
       "to": "models.shared_workspace"
     },
     {
+      "from": "core.social_growth",
+      "to": "core.state_store"
+    },
+    {
       "from": "core.startup.agents",
       "to": "core"
     },
@@ -8748,6 +8760,10 @@
       "to": "core.persistence"
     },
     {
+      "from": "services.memory_service",
+      "to": "core.state_store"
+    },
+    {
       "from": "services.minio_client",
       "to": "core.cache"
     },
@@ -9932,6 +9948,18 @@
       "to": "core.middleware.docs_auth"
     },
     {
+      "from": "tests.core.test_dynamic_zero_key_resilience",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "tests.core.test_dynamic_zero_key_resilience",
+      "to": "services.voice_service"
+    },
+    {
+      "from": "tests.core.test_dynamic_zero_key_resilience",
+      "to": "tools.social.telegram_bot.ai_engine"
+    },
+    {
       "from": "tests.core.test_e2e",
       "to": "core.app"
     },
@@ -10462,6 +10490,14 @@
     {
       "from": "tests.core.test_startup_validator",
       "to": "core.startup_validator"
+    },
+    {
+      "from": "tests.core.test_state_store",
+      "to": "core"
+    },
+    {
+      "from": "tests.core.test_state_store",
+      "to": "core.state_store"
     },
     {
       "from": "tests.core.test_stategraph",
@@ -12649,10 +12685,6 @@
     },
     {
       "from": "tools.social.telegram_bot.ai_engine",
-      "to": "core.config"
-    },
-    {
-      "from": "tools.social.telegram_bot.ai_engine",
       "to": "core.logging_config"
     },
     {
@@ -12832,7 +12864,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1861,
+  "module_count": 1865,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -13611,6 +13643,7 @@
     "core.startup.api_key_tables",
     "core.startup.services",
     "core.startup_validator",
+    "core.state_store",
     "core.storage.interfaces",
     "core.storage.local_adapter",
     "core.storage.models",
@@ -14196,6 +14229,7 @@
     "tests.core.test_distributed_budget",
     "tests.core.test_docker_sandbox",
     "tests.core.test_docs_exposure_policy",
+    "tests.core.test_dynamic_zero_key_resilience",
     "tests.core.test_e2e",
     "tests.core.test_e2e_media",
     "tests.core.test_effective_policy",
@@ -14289,6 +14323,7 @@
     "tests.core.test_social_growth",
     "tests.core.test_sprint56_adaptation_promotion",
     "tests.core.test_startup_validator",
+    "tests.core.test_state_store",
     "tests.core.test_stategraph",
     "tests.core.test_stealth_networking",
     "tests.core.test_stream",
@@ -14372,6 +14407,7 @@
     "tests.scripts.test_gateway_contract_m03",
     "tests.scripts.test_generate_firebase_config",
     "tests.scripts.test_import_knowledge_base_rollback",
+    "tests.scripts.test_plan_backend_test_groups",
     "tests.security.test_admin_fail_closed",
     "tests.security.test_adversarial_webhook_signatures",
     "tests.security.test_auth",

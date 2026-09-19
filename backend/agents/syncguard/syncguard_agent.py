@@ -45,12 +45,30 @@ class SyncGuardAgent:
             audit_report["status"] = "SYNC_FAILED"
             audit_report["issues"].append("Infrastructure Blueprint Drift Detected.")
 
-        # 2. Check Environment Variables (The critical keys from your blueprint)
-        required_env_keys = ["REDIS_URL", "OPENAI_API_KEY", "SUPABASE_URL"]
+        # 2. Check Environment Variables (Core infra + Dynamic AI provider pool check)
+        required_env_keys = ["REDIS_URL", "SUPABASE_URL"]
         env_status = await check_env_secrets_sync(required_env_keys)
         if env_status["status"] != "synced":
             audit_report["status"] = "SYNC_FAILED"
             audit_report["issues"].append(f"Missing Env Secrets: {env_status['missing']}")
+
+        # Verify whether at least one AI provider is configured (informational, not fatal)
+        ai_provider_candidates = [
+            "OPENAI_API_KEY",
+            "GEMINI_API_KEY",
+            "OPENROUTER_API_KEY",
+            "GROQ_API_KEY",
+            "MISTRAL_API_KEY",
+            "ANTHROPIC_API_KEY",
+            "DEEPSEEK_API_KEY",
+            "HF_API_KEY",
+            "BYNARA_API_KEY",
+        ]
+        has_ai_key = any(bool(os.getenv(k)) for k in ai_provider_candidates)
+        if not has_ai_key:
+            audit_report["issues"].append(
+                "AI Providers: 0 keys configured (System operating in zero-key resilient mode)."
+            )
 
         # 3. Check Message Broker (Upstash Redis)
         redis_alive = await check_redis_connection(os.getenv("REDIS_URL", "dummy_url"))
