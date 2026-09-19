@@ -3,6 +3,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from core.security.codegen_gate import ALLOW_INPROCESS_CODEGEN_ENV
 from core.skill_manager import SkillManager
 
 
@@ -29,6 +30,9 @@ async def test_skill_manager_blocks_unsafe_code(monkeypatch):
         raise Exception("blocked")
 
     monkeypatch.setattr("core.skill_manager.run_sandbox_ast_check", _raise, raising=False)
+    # Issue #682: opt in so this test keeps exercising the AST-vetting gate
+    # (gate 1) instead of being short-circuited by the new fail-closed gate 0.
+    monkeypatch.setenv(ALLOW_INPROCESS_CODEGEN_ENV, "true")
 
     with pytest.raises(ValueError):
         await mgr.get_skill("skill_x")
@@ -52,6 +56,9 @@ async def test_skill_manager_loads_safe_code_from_db(monkeypatch):
         raising=False,
     )
     monkeypatch.setattr("core.skill_manager.run_sandbox_ast_check", lambda _: True, raising=False)
+    # Issue #682: in-process skill exec is fail-closed by default; this coverage
+    # test exercises the explicitly-enabled (local dev) path.
+    monkeypatch.setenv(ALLOW_INPROCESS_CODEGEN_ENV, "true")
 
     skill = await mgr.get_skill("skill_y")
     assert skill is not None
