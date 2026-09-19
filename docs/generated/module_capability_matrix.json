@@ -2386,7 +2386,9 @@
       "path": "backend/api/routes/reasoning.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
