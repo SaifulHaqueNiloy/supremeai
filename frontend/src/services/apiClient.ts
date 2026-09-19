@@ -277,7 +277,7 @@ const IDEMPOTENCY_REQUIRED_PREFIXES = [
 
 export const pathRequiresIdempotencyKey = (url: string): boolean => {
   try {
-    const base = typeof window !== 'undefined' ? window.location.origin : 'http://localhost';
+    const base = typeof window !== 'undefined' ? window.location.origin : 'https://api.internal';
     const { pathname } = new URL(url, base);
     return IDEMPOTENCY_REQUIRED_PREFIXES.some((p) => pathname.startsWith(p));
   } catch {
