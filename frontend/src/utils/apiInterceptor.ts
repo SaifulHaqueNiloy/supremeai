@@ -1,31 +1,12 @@
-// apps/studio-client/src/utils/apiInterceptor.ts
-// 🛡️ Production-ready API interceptor with structured error handling
+// frontend/src/utils/apiInterceptor.ts
+// 🛡️ Global fetch interceptor — cookie-scoping + structured error normalization.
+//
+// DRY Phase 1-B4 cleanup: the unused `apiInterceptor<T>()` response-wrapper
+// export was removed (zero importers — only `setupGlobalFetchInterceptor`
+// below is consumed, by src/main.tsx). Response envelope/error-shaping now
+// has ONE home: the canonical transport (packages/shared-services
+// createHttpClient) plus this live global hook.
 
-export const apiInterceptor = async <T = unknown>(response: Response): Promise<T> => {
-  const contentType = response.headers.get("content-type");
-
-  if (!response.ok) {
-    throw new Error(`API Transport Failed. Status: ${response.status}`);
-  }
-
-  // 🛡️ অডিটর ফিক্স: সাইলেন্ট কমেন্ট রিমুভ করে মালফর্মড বডি ভ্যালিডেশন
-  if (contentType && contentType.includes("application/json")) {
-    try {
-      return (await response.json()) as T;
-    } catch (parseError: unknown) {
-      const errorMsg = parseError instanceof Error ? parseError.message : String(parseError);
-      console.error("🚨 [INTERCEPTOR_PARSING_CRASH]: Body claimed JSON but failed to decode.", errorMsg);
-      throw new Error("Malformed JSON response packet received from SupremeAI core backend.");
-    }
-  }
-
-  // স্ট্রিম বা প্লেইন টেক্সট মেসেজের জন্য সেফ গ্রেসফুল ফলব্যাক
-  const rawText = await response.text();
-  console.warn("ℹ️ [NON_JSON_STREAM_TRAFFIC]: Handling streaming or text matrix payload.", { length: rawText.length });
-  return rawText as unknown as T;
-};
-
-// Legacy support: Keep existing fetch interceptor for backward compatibility
 export function setupGlobalFetchInterceptor() {
   if (typeof window === 'undefined') return;
 

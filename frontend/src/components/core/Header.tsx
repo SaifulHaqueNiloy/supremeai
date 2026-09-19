@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuthStore } from "../../store/authStore";
+import type { Theme } from "../../contexts/ThemeConstants";
 
 // বাংলা মন্তব্য: Header global search — CommandBar (⌘K) open করে। Shared event-driven trigger.
 const openCommandPalette = () => {
@@ -11,7 +12,9 @@ interface HeaderProps {
   title: string;
   onToggleSidebar: () => void;
   onToggleTheme: () => void;
-  theme: 'light' | 'dark';
+  // Theme (৪-মান union) — DashboardLayout ThemeProvider থেকে 'matrix'/'sunset'-ও আসতে পারে;
+  // ভেতরের 'dark' চেক অন্য মানগুলোকে non-dark branch-এ ঠিকভাবেই ফেলে দেয়।
+  theme: Theme;
 }
 
 export const Header: React.FC<HeaderProps> = ({
