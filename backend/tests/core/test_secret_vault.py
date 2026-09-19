@@ -83,14 +83,29 @@ class TestSecretVaultFallback:
         with pytest.raises(RuntimeError):
             vault._fallback_to_env("SUPABASE_DATABASE_URL_POOLER", None)
 
-    def test_fallback_production_noncritical_degrades(self, monkeypatch):
-        # বাংলা মন্তব্য: non-critical secret missing হলে আর crash না — খালি স্ট্রিং দিয়ে degrade।
-        monkeypatch.delenv("CRITICAL_SECRET", raising=False)
+    def test_fallback_production_unknown_fails_closed(self, monkeypatch):
+        # BE-13 (issue #545): a secret missing in production that is in NEITHER
+        # OPTIONAL_SECRETS nor HARD_REQUIRED_SECRETS must fail closed instead
+        # of silently degrading to "" (the old behavior hid misconfigurations
+        # like an empty STRIPE_WEBHOOK_SECRET accepting forged events).
+        monkeypatch.delenv("STRIPE_API_KEY", raising=False)
         vault = ProductionSecretVault()
         vault.env = "production"
         vault.client = None
-        result = vault._fallback_to_env("CRITICAL_SECRET", None)
-        assert result == ""
+        with pytest.raises(RuntimeError, match="BE-13 fail-closed"):
+            vault._fallback_to_env("STRIPE_API_KEY", None)
+        with pytest.raises(RuntimeError, match="BE-13 fail-closed"):
+            vault._fallback_to_env("STRIPE_API_KEY", "")  # even with default=""
+
+    def test_fallback_production_optional_degrades(self, monkeypatch):
+        # BE-13 (issue #545): explicitly allowlisted optional secrets keep the
+        # graceful degrade behavior in production.
+        monkeypatch.delenv("RESEND_API_KEY", raising=False)
+        vault = ProductionSecretVault()
+        vault.env = "production"
+        vault.client = None
+        assert vault._fallback_to_env("RESEND_API_KEY", None) == ""
+        assert vault._fallback_to_env("RESEND_API_KEY", "") == ""
 
 
 class TestSecretVaultCache:
