@@ -22,8 +22,8 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
-from core.logging_config import logger
 # Issue #542 (BE-10): unify the JWT secret floor with the other validators.
+from core.logging_config import logger
 from core.secret_policy import (
     JWT_SECRET_ENV,
     JWT_SECRET_MIN_LENGTH,

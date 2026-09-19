@@ -14,9 +14,9 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any
 
-from core.logging_config import logger
 # Issue #542 (BE-10): unify the JWT secret floor with the other validators.
 # Issue #567 (BE-16): canonical JWT secret env-var name + deprecated alias.
+from core.logging_config import logger
 from core.secret_policy import (
     JWT_SECRET_DEPRECATED_ENV,
     JWT_SECRET_ENV,

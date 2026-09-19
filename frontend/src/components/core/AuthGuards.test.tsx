@@ -10,13 +10,20 @@ const mockAuthState = {
   uninitialized: { status: 'uninitialized', initialize: vi.fn().mockResolvedValue(undefined) },
 };
 
-vi.mock('../../store/authStore', () => ({
-  useAuthStore: (selector?: (state: typeof mockAuthState['loggedIn']) => unknown) => {
+vi.mock('../../store/authStore', () => {
+  // identity.ts canAccessAdminContext() reads the store non-reactively via
+  // useAuthStore.getState() — the mock must expose the same zustand surface.
+  const useAuthStoreMock = (selector?: (state: typeof mockAuthState['loggedIn']) => unknown) => {
     const state = mockAuthState['loggedIn'];
     return selector ? selector(state) : state;
-  },
-  AuthStatus: { UNINITIALIZED: 'uninitialized', LOGGED_OUT: 'loggedOut', LOGGED_IN: 'loggedIn' },
-}));
+  };
+  (useAuthStoreMock as unknown as { getState: () => typeof mockAuthState['loggedIn'] }).getState =
+    () => mockAuthState['loggedIn'];
+  return {
+    useAuthStore: useAuthStoreMock,
+    AuthStatus: { UNINITIALIZED: 'uninitialized', LOGGED_OUT: 'loggedOut', LOGGED_IN: 'loggedIn' },
+  };
+});
 
 describe('AuthGuards', () => {
   beforeEach(() => {
