@@ -5,6 +5,13 @@ Mandatory Rule & Security Protocols:
 - Pre-execution validation via AST scanner: blocks os.system, subprocess, eval, exec, and file tampering.
 - Executes within bounded, resource-limited sandbox.
 - Auto-GC: immediately deletes ephemeral code and execution artifacts after result collection.
+
+Issue #704 (fail-closed codegen gate): the restricted-namespace ``exec()`` below
+is NOT a security sandbox. By default (``SUPREMEAI_ALLOW_INPROCESS_CODEGEN``
+unset — all prod/staging) ``execute_ephemeral_script`` refuses to run and returns
+a ``status="rejected"`` result without executing anything. The exec path only
+runs when the gate is explicitly enabled (local development only), and a loud
+warning is emitted once at import/boot when it is.
 """
 
 from __future__ import annotations
@@ -18,6 +25,16 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from core.logging_config import logger
+from core.security.codegen_gate import (
+    denied_reason,
+    inprocess_codegen_enabled,
+    warn_inprocess_codegen_boot,
+)
+
+# Issue #704: loud one-time boot warning when the in-process exec escape hatch
+# is explicitly enabled (local development only).
+if inprocess_codegen_enabled():
+    warn_inprocess_codegen_boot("EphemeralToolSynthesizer.execute_ephemeral_script")
 
 
 class SynthesizedToolResult(BaseModel):
@@ -84,6 +101,21 @@ class EphemeralToolSynthesizer:
     ) -> SynthesizedToolResult:
         start_time = time.perf_counter()
         args = input_args or {}
+
+        # 0. Issue #704 fail-closed gate: refuse in-process exec of LLM-generated
+        # code unless explicitly enabled (SUPREMEAI_ALLOW_INPROCESS_CODEGEN).
+        if not inprocess_codegen_enabled():
+            logger.warning(
+                f"[EphemeralSynthesizer] Blocked in-process exec for '{tool_name}': "
+                f"{denied_reason('EphemeralToolSynthesizer.execute_ephemeral_script')}"
+            )
+            return SynthesizedToolResult(
+                tool_name=tool_name,
+                status="rejected",
+                error=denied_reason("EphemeralToolSynthesizer.execute_ephemeral_script"),
+                ast_safe=False,
+                execution_time_ms=(time.perf_counter() - start_time) * 1000.0,
+            )
 
         # 1. AST Pre-Execution Security Gate
         is_safe, violation = validate_ephemeral_code_ast(script_code)
