@@ -4256,6 +4256,16 @@
       "path": "backend/core/db_repository.py"
     },
     {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/db_schema_gate.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -24846,5 +24856,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2862
+  "source_file_count": 2863
 }
