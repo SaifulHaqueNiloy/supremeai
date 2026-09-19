@@ -15,6 +15,7 @@ Critical Security Note: সমস্ত লগ এখন JSON ফরম্যা
 import asyncio
 import json
 import logging
+import os
 import sys
 import uuid
 from datetime import datetime
@@ -44,13 +45,27 @@ class LoggingConfig:
 
     def setup_logging(self):
         """Configure structured logging with correlation IDs."""
-        from core.config import settings
+        # Issue #601 boot probe: this module is imported through the
+        # core.logging_config deprecation shim while core/__init__ is still
+        # executing, so `from core.config import settings` here re-entered a
+        # partially-initialized package (core.config → shim → partial module →
+        # ImportError: cannot import name 'logger'). Logging must come up
+        # BEFORE settings, so derive the level from the environment and defer
+        # any settings-based tuning until after boot.
+        try:
+            from core.config import settings
+
+            debug = bool(getattr(settings, "debug", False))
+            env_name = settings.env
+        except Exception:  # boot-order cycle: settings not ready yet
+            debug = os.getenv("DEBUG", "").lower() in ("1", "true", "yes")
+            env_name = os.getenv("ENV", "development")
 
         # Remove default handlers to avoid duplication
         logger.remove()
 
         # Determine log level based on environment
-        log_level = "DEBUG" if settings.debug else "INFO"
+        log_level = "DEBUG" if debug else "INFO"
 
         # AUD-2.9 (P1): loguru's ``diagnose=True`` renders variable values
         # inside tracebacks. In production/staging that leaks secrets, tokens
@@ -73,7 +88,7 @@ class LoggingConfig:
 
         logging.basicConfig(handlers=[InterceptHandler()], level=0, force=True)
 
-        is_prod_like = settings.env in ("production", "staging")
+        is_prod_like = env_name in ("production", "staging")
         logger.add(
             sys.stdout,
             format=self._json_format,
@@ -83,10 +98,8 @@ class LoggingConfig:
         )
 
         # Add file handler if needed (with rotation)
-        if settings.env in ["production", "staging"]:
+        if env_name in ["production", "staging"]:
             try:
-                import os
-
                 # Use /tmp/logs for ephemeral environments like Render
                 log_dir = os.environ.get("LOG_DIR", "/tmp/logs")
                 os.makedirs(log_dir, exist_ok=True)
@@ -104,7 +117,16 @@ class LoggingConfig:
 
     def _json_format(self, record: dict) -> str:
         """Custom JSON formatter with correlation ID."""
-        from core.config import settings
+        # Boot-order safety (issue #601): fall back to env when settings is
+        # still initializing — see setup_logging.
+        try:
+            from core.config import settings
+
+            env_name = settings.env
+            project_name = settings.PROJECT_NAME
+        except Exception:
+            env_name = os.getenv("ENV", "development")
+            project_name = os.getenv("PROJECT_NAME", "supremeai")
 
         # Extract correlation ID from context if available
         correlation_id = "N/A"
@@ -125,8 +147,8 @@ class LoggingConfig:
             "function": record["function"],
             "line": record["line"],
             "correlation_id": correlation_id,
-            "environment": settings.env,
-            "service": settings.PROJECT_NAME,
+            "environment": env_name,
+            "service": project_name,
         }
 
         # Add any extra fields that were passed
