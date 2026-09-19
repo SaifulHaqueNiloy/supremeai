@@ -181,7 +181,9 @@ async def readiness_check():
             "role": role,
             "persistence_mode": persistence_mode,
             "cache": "healthy" if redis_ok == "healthy" else "degraded",
-            "schema": {k: schema_status.get(k) for k in ("checked", "missing", "present", "unknown")},
+            "schema": {
+                k: schema_status.get(k) for k in ("checked", "missing", "present", "unknown")
+            },
             "readiness_policy": {"decision": "role-tolerated", "reason": reason},
         }
 

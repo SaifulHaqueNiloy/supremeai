@@ -45,8 +45,16 @@ def _rest_base_and_key() -> tuple[str, str] | None:
         try:
             from core.config import settings
 
-            base = base or getattr(settings, "supabase_url", "") or getattr(settings, "supabase_project_url", "")
-            key = key or getattr(settings, "supabase_service_role_key", "") or getattr(settings, "supabase_anon_key", "")
+            base = (
+                base
+                or getattr(settings, "supabase_url", "")
+                or getattr(settings, "supabase_project_url", "")
+            )
+            key = (
+                key
+                or getattr(settings, "supabase_service_role_key", "")
+                or getattr(settings, "supabase_anon_key", "")
+            )
         except Exception:  # noqa: BLE001 — very-early-boot safety; settings is heavy
             return None
     base = (base or "").rstrip("/")
@@ -133,6 +141,8 @@ def production_schema_incompatible() -> str | None:
     status = check_schema_status()
     if not status.get("checked"):
         return None
-    return None if not status.get("missing") else (
-        "missing required table(s): " + ", ".join(status["missing"])
+    return (
+        None
+        if not status.get("missing")
+        else ("missing required table(s): " + ", ".join(status["missing"]))
     )
