@@ -267,7 +267,6 @@ Current code has a dedicated server-side service client for backend-only/RLS-pro
 | `RENDER_API_KEY` | Render API/deploy control | GitHub Actions / Infisical | MUST for automated deploy | [~] |
 | `RENDER_PRIMARY_SVC_ID` | primary service identifier | GitHub Actions / Infisical | GOOD/MUST for automation | [~] |
 | `RENDER_BACKEND_SVC_ID` | backend service identifier | GitHub Actions / Infisical | MUST if this name is used by CI | [!] |
-| `RENDER_BACKUP_SVC_ID` | backup service identifier | GitHub Actions / Infisical | OPTIONAL | [~] |
 | `RENDER_DEPLOY_HOOK_URL` | webhook deployment fallback | GitHub Actions / Infisical | OPTIONAL | [~] |
 | `PORT` | application port | Render ENV | MUST | [x] |
 | `ENV` | environment selector | Render ENV | MUST | [x] |
