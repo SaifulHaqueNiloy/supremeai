@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Header } from "../core/Header";
 import { Sidebar } from "../core/Sidebar";
+import { useTheme } from "../../contexts/useTheme";
 
 interface DashboardLayoutProps {
   title: string;
@@ -9,32 +10,13 @@ interface DashboardLayoutProps {
 
 export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ title, children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState<'light' | 'dark'>('dark');
+  const { theme, toggleTheme } = useTheme();
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
   };
 
-  const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    
-    // Update the document class for theme
-    if (newTheme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
-
-  // Initialize theme
-  React.useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+  const headerTheme = (theme === 'light' ? 'light' : 'dark') as 'light' | 'dark';
 
   return (
     <div className="dashboard-aurora flex h-screen bg-gray-50 dark:bg-slate-950">

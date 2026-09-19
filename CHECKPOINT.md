@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-19 10:42 UTC
+- **Date:** 2026-09-19 12:18 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,10 +10,11 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/services/apiClient.ts`
-  - `frontend/vite.config.ts`
-  - `CHECKPOINT.md`
-  - `scripts/ci/check_hardcoded_deployment_config.py`
+  - `frontend/src/index.css`
+  - `docker-compose.production.yml`
+  - `frontend/src/contexts/ThemeProvider.test.tsx`
+  - `frontend/src/components/dashboard/DashboardLayout.tsx`
+  - `frontend/src/components/dashboard/SettingsPage.tsx`
 
 ## Pending (Carry Forward)
 - 103 active skipped test markers triage across 53 files towards <30 (reconciled in docs/SKIPPED_TESTS.md)
