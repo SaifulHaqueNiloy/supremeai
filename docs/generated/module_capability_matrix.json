@@ -20932,7 +20932,9 @@
       "path": "infrastructure/mcp-control-plane/src/adapters/github/index.ts"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "adapter",
       "entrypoints": [],
       "kind": "ts",
