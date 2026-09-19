@@ -27,6 +27,14 @@ def discover_capability(capability: str, tenant_id: str) -> dict[str, object] | 
 
 
 def discover_capabilities(tenant_id: str) -> tuple[dict[str, object], ...]:
+    # Issue #472 (xdist parallel-safety): ensure core capabilities are
+    # registered BEFORE iterating the registry. `discover_capability` does
+    # this per-item, but the aggregated path evaluated
+    # `circle_registry.capabilities()` first — so in a fresh process (new
+    # xdist worker, or any cold start) it returned an empty set and the
+    # per-item registration never ran. Registration is idempotent and
+    # guarded, making this order-independent.
+    register_core_capabilities()
     return tuple(
         description
         for capability in circle_registry.capabilities()
