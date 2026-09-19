@@ -113,7 +113,7 @@ Workspace membership (`pnpm-workspace.yaml`): `packages/*`, `frontend`, `tools/v
 
 ## Backend Assembly: Request Lifecycle
 
-The app is built entirely in code — no decorators spread across files. `backend/core/app.py` calls `create_app()` from `core/app_builder.py`, then layers on memory-aware middleware, welcome/aggregated-health routes, the admin router, `register_all_routers(app)` (central registry in `api/routers.py`) and the Tier-S feature routes.
+The app is built entirely in code — no decorators spread across files. `backend/app.py` (moved from `backend/core/app.py` per issue #683 Section 1; `core/app.py` now re-exports the singleton) calls `create_app()` from `core/app_builder.py`, then layers on memory-aware middleware, the aggregated-health route, `register_all_routers(app)` (central registry in `api/routers.py`, which also mounts the admin router `api.routes.admin_routes`) and the Tier-S feature routes (registered individually in the same registry).
 
 **Middleware chain (16 layers, outermost last):** `CORSMiddleware` → `ResponseStandardizationMiddleware` → `RateLimitMiddleware` → `IdempotencyMiddleware` → `ChaosInjectorMiddleware` → `HoneypotMiddleware` → `AutonoGuardMiddleware` → `APIKeyAuthMiddleware` → `AuthMiddleware` → `ObservabilityMiddleware` → `TenantExtractionMiddleware` → `SupremeContextMiddleware` → `TrustedOriginMiddleware` → `RequestValidationMiddleware` (SQLi/XSS) → `SecurityHeadersMiddleware` → `RequestIdMiddleware` → `GZipMiddleware` → `RequestContextMiddleware`.
 
@@ -10620,7 +10620,7 @@ We systematically analyzed:
 |---|---|---|
 | **Total Backend Endpoints Analyzed** | ~780 endpoints | Spanning `backend/api/routes/`, `backend/tools/`, and `backend/core/` |
 | **Backend Files Defining `APIRouter`** | 152 files | Verified by static tree scan (Python files matching `router = APIRouter`) |
-| **Backend Routers Mounted Anywhere** | **129 router modules** | Registered via `ALL_ROUTERS` (123 entries in `backend/api/routers.py`) + Tier-S `workspace_feature_routes` (12 in `backend/api/routes/workspace_feature_routes.py`) + direct `app.include_router` in `app_builder.py`/`app.py` (5: `api.routes.browser`, `core.health_routes` ×2 prefixes, `core.admin_routes`, `stream_chat_sse.legacy_router`, conditional `byoc_api`) |
+| **Backend Routers Mounted Anywhere** | **129 router modules** | Registered via `ALL_ROUTERS` (123 entries in `backend/api/routers.py`) + Tier-S `workspace_feature_routes` (12 in `backend/api/routes/workspace_feature_routes.py`) + direct `app.include_router` in `app_builder.py`/`app.py` (4: `api.routes.browser`, `core.health_routes` ×2 prefixes, `stream_chat_sse.legacy_router`, conditional `byoc_api`; the admin router moved to `api.routes.admin_routes` and is registry-mounted only, per the 2026-09-15 mount-hygiene fix) |
 | **Backend Routers Define-but-Not-Directly-Registered** | **27** (25 composed sub-routers + **2 genuinely orphaned: `services.scraper.main`, `tools.api_gateway`**) | 25 are parent-aggregated (e.g. `commandcenter.*`, `tools.code.*`); boot mounts them via their package `__init__`. 2 orphans have zero code references. |
 | **Boot Registration Outcome** | **123/123 `ALL_ROUTERS` mounted, 0 failures** + **12/12 Tier-S mounted** | Exact 123 entries defined in `backend/api/routers.py` and locked by `tests/security/test_dead_route_wiring.py` (18/18 tests pass); no import/mount failures. |
 | **Total Frontend Source Files Scanned** | 473 files | React 19 + TypeScript + Vite (verified across `frontend/src/**/*.ts`, `*.tsx`) |
@@ -17806,7 +17806,7 @@ Flagged by the scan but verified as deliberate, documented decisions — listed 
 | `backend/core/container_auditor.py:74` | `0.0` | Audit metrics read as zero |
 | `backend/agents/infrastructure/auto_scaling_agent.py:441,485` | `0.0` / `None` | Autoscaler may compute on fake zeros |
 | `backend/core/code_validator.py:55,62,78,93,128,146` | `False` | Validation outage reads as "code invalid" — 6 separate silent paths |
-| `backend/core/admin_routes.py:487` | `False` | Admin op failure looks like "denied/not found" |
+| `backend/api/routes/admin_routes.py:487` | `False` | Admin op failure looks like "denied/not found" |
 | `backend/core/app_builder.py:170` | `False` | Builder failure indistinguishable from validation failure |
 
 Full list: `scratch/silent_errors_report.json` → `python_findings` where `type == "except-return-default"`.

@@ -5,7 +5,7 @@
 | File | কী করে |
 |---|---|
 | `main.py` | FastAPI app entry point, server startup |
-| `core/app.py` | App factory, middleware registration |
+| `app.py` | FastAPI app assembly — create_app + middleware + registry mount (moved from `core/app.py`, #683; `core/app.py` = re-export shim) |
 | `core/lifespan.py` | Startup/shutdown lifecycle handlers |
 | `core/config.py` | All environment settings (Pydantic Settings) |
 

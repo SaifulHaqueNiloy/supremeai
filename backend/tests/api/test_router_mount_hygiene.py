@@ -76,7 +76,7 @@ def test_no_route_registered_more_than_once() -> None:
        conftest-level alias unification (sys.modules redirect), tracked as a
        next-round item with the full-suite verification it deserves.
     Every OTHER module is guarded — this guard already caught and fixed the
-    core.admin_routes, missions/mcp_hub, codeflow and vulnerability_prophet
+    api.routes.admin_routes, missions/mcp_hub, codeflow and vulnerability_prophet
     double mounts.
     """
     seen = Counter()

@@ -3062,7 +3062,7 @@
     {
       "evidence": [
         {
-          "line": 187,
+          "line": 191,
           "path": "backend/core/observability/observability_middleware.py"
         }
       ],
@@ -3102,7 +3102,7 @@
     {
       "evidence": [
         {
-          "line": 11,
+          "line": 24,
           "path": "backend/api/routes/metrics.py"
         }
       ],

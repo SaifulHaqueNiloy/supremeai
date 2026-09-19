@@ -221,7 +221,9 @@ ALL_ROUTERS = [
     # tests/api/test_admin_routes.py both EXPECT these routes to exist.
     # Endpoints enforce their own admin auth internally; login itself must be
     # reachable pre-authentication, hence is_admin=False.
-    {"path": "core.admin_routes", "prefix": "", "is_admin": False, "is_critical": True},
+    # Issue #683 Section 1: moved from core.admin_routes → api.routes.admin_routes
+    # (core must never import api; the admin router imports api.dependencies).
+    {"path": "api.routes.admin_routes", "prefix": "", "is_admin": False, "is_critical": True},
     # RESTORE-AND-WIRE (2026-09-14): /api/v1/gateway proxy (rate-limited
     # forward + capability dispatch) restored and mounted; admin flag adds
     # router-level get_current_user_token to every endpoint (its /forward

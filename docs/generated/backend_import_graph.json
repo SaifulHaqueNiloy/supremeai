@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3220,
+  "edge_count": 3256,
   "edges": [
     {
       "from": "adapters",
@@ -1144,6 +1144,34 @@
       "to": "core.logging_config"
     },
     {
+      "from": "api.routes.admin_routes",
+      "to": "api.dependencies"
+    },
+    {
+      "from": "api.routes.admin_routes",
+      "to": "core"
+    },
+    {
+      "from": "api.routes.admin_routes",
+      "to": "core.config"
+    },
+    {
+      "from": "api.routes.admin_routes",
+      "to": "core.firebase_auth"
+    },
+    {
+      "from": "api.routes.admin_routes",
+      "to": "core.gcp_firestore"
+    },
+    {
+      "from": "api.routes.admin_routes",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "api.routes.admin_routes",
+      "to": "models.admin"
+    },
+    {
       "from": "api.routes.admin_v1",
       "to": "api.dependencies"
     },
@@ -1821,11 +1849,19 @@
     },
     {
       "from": "api.routes.chat",
+      "to": "context_engine.budget"
+    },
+    {
+      "from": "api.routes.chat",
       "to": "core.cache.multi_layer_cache"
     },
     {
       "from": "api.routes.chat",
       "to": "core.circuit_breaker"
+    },
+    {
+      "from": "api.routes.chat",
+      "to": "core.i18n.language_directive"
     },
     {
       "from": "api.routes.chat",
@@ -2261,6 +2297,10 @@
     },
     {
       "from": "api.routes.health",
+      "to": "core.db_schema_gate"
+    },
+    {
+      "from": "api.routes.health",
       "to": "core.degraded_mode"
     },
     {
@@ -2581,7 +2621,7 @@
     },
     {
       "from": "api.routes.metrics",
-      "to": "utils.firestore_helpers"
+      "to": "core.observability.metrics_registry"
     },
     {
       "from": "api.routes.metrics",
@@ -3348,6 +3388,34 @@
       "to": "core.metrics_collector"
     },
     {
+      "from": "app",
+      "to": "api.routers"
+    },
+    {
+      "from": "app",
+      "to": "api.routes.stream_chat_sse"
+    },
+    {
+      "from": "app",
+      "to": "core.app_builder"
+    },
+    {
+      "from": "app",
+      "to": "core.health_check"
+    },
+    {
+      "from": "app",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "app",
+      "to": "core.memory_manager"
+    },
+    {
+      "from": "app",
+      "to": "monitoring"
+    },
+    {
       "from": "brain.agent_departments",
       "to": "core.agents.framework.agent_departments"
     },
@@ -3624,6 +3692,10 @@
       "to": "context_engine.engine"
     },
     {
+      "from": "context_engine.budget",
+      "to": "core.logging_config"
+    },
+    {
       "from": "context_engine.engine",
       "to": "context_engine.budget"
     },
@@ -3650,34 +3722,6 @@
     {
       "from": "core.admin_god",
       "to": "core.universal_rules"
-    },
-    {
-      "from": "core.admin_routes",
-      "to": "api.dependencies"
-    },
-    {
-      "from": "core.admin_routes",
-      "to": "core"
-    },
-    {
-      "from": "core.admin_routes",
-      "to": "core.config"
-    },
-    {
-      "from": "core.admin_routes",
-      "to": "core.firebase_auth"
-    },
-    {
-      "from": "core.admin_routes",
-      "to": "core.gcp_firestore"
-    },
-    {
-      "from": "core.admin_routes",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.admin_routes",
-      "to": "models.admin"
     },
     {
       "from": "core.agent_factory",
@@ -3841,31 +3885,7 @@
     },
     {
       "from": "core.app",
-      "to": "api.routers"
-    },
-    {
-      "from": "core.app",
-      "to": "api.routes.stream_chat_sse"
-    },
-    {
-      "from": "core.app",
-      "to": "core.app_builder"
-    },
-    {
-      "from": "core.app",
-      "to": "core.health_check"
-    },
-    {
-      "from": "core.app",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.app",
-      "to": "core.memory_manager"
-    },
-    {
-      "from": "core.app",
-      "to": "monitoring"
+      "to": "app"
     },
     {
       "from": "core.app_builder",
@@ -4393,6 +4413,10 @@
     },
     {
       "from": "core.config_secrets",
+      "to": "core.secret_policy"
+    },
+    {
+      "from": "core.config_secrets",
       "to": "core.security.secret_vault"
     },
     {
@@ -4400,8 +4424,16 @@
       "to": "core.logging_config"
     },
     {
+      "from": "core.config_validation",
+      "to": "core.secret_policy"
+    },
+    {
       "from": "core.config_validator",
       "to": "core.logging_config"
+    },
+    {
+      "from": "core.config_validator",
+      "to": "core.secret_policy"
     },
     {
       "from": "core.connection_registry",
@@ -4560,6 +4592,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "core.env_validator",
+      "to": "core.secret_policy"
+    },
+    {
       "from": "core.errors.error_bus",
       "to": "core.messaging.event_bus"
     },
@@ -4713,6 +4749,10 @@
     },
     {
       "from": "core.human_behavior",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.i18n.language_directive",
       "to": "core.logging_config"
     },
     {
@@ -5412,12 +5452,24 @@
       "to": "models.execution_log"
     },
     {
-      "from": "core.observability.observability_middleware",
-      "to": "api.routes.metrics"
+      "from": "core.observability.metrics_registry",
+      "to": "core.config"
+    },
+    {
+      "from": "core.observability.metrics_registry",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.observability.metrics_registry",
+      "to": "utils.firestore_helpers"
     },
     {
       "from": "core.observability.observability_middleware",
       "to": "core.logging_config"
+    },
+    {
+      "from": "core.observability.observability_middleware",
+      "to": "core.observability.metrics_registry"
     },
     {
       "from": "core.observability.observability_middleware",
@@ -6025,6 +6077,10 @@
     },
     {
       "from": "core.security.autonoguard_middleware",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.security.codegen_gate",
       "to": "core.logging_config"
     },
     {
@@ -8861,6 +8917,10 @@
     },
     {
       "from": "services.tool_forge",
+      "to": "core.security.codegen_gate"
+    },
+    {
+      "from": "services.tool_forge",
       "to": "core.security.scanning.ast_scanner"
     },
     {
@@ -9462,6 +9522,14 @@
     {
       "from": "tests.context.test_context_scopes",
       "to": "context.scopes"
+    },
+    {
+      "from": "tests.context_engine.test_budget_config",
+      "to": "context_engine"
+    },
+    {
+      "from": "tests.context_engine.test_budget_config",
+      "to": "context_engine.budget"
     },
     {
       "from": "tests.context_engine.test_context_engine",
@@ -10156,6 +10224,14 @@
       "to": "core.knowledge_facade"
     },
     {
+      "from": "tests.core.test_language_directive",
+      "to": "context_engine"
+    },
+    {
+      "from": "tests.core.test_language_directive",
+      "to": "core.i18n.language_directive"
+    },
+    {
       "from": "tests.core.test_learning_loop_sprint34",
       "to": "core.learning"
     },
@@ -10596,6 +10672,18 @@
       "to": "core.llm.token_deductor"
     },
     {
+      "from": "tests.core.test_tool_fleet",
+      "to": "core.mcp_policy"
+    },
+    {
+      "from": "tests.core.test_tool_fleet",
+      "to": "core.tool_loop"
+    },
+    {
+      "from": "tests.core.test_tool_fleet",
+      "to": "tools.agent_tools"
+    },
+    {
       "from": "tests.core.test_tool_loop",
       "to": "brain.reasoning_orchestrator"
     },
@@ -10820,6 +10908,14 @@
       "to": "core.rag.sparse_bm25"
     },
     {
+      "from": "tests.runs.test_run_adoption",
+      "to": "database.session"
+    },
+    {
+      "from": "tests.runs.test_run_adoption",
+      "to": "runs.run_scope"
+    },
+    {
       "from": "tests.runs.test_run_bridges",
       "to": "missions.models"
     },
@@ -10988,6 +11084,14 @@
       "to": "scout.knowledge_extractor"
     },
     {
+      "from": "tests.scout_tests.test_telemetry_persistence",
+      "to": "scout.models"
+    },
+    {
+      "from": "tests.scout_tests.test_telemetry_persistence",
+      "to": "scout.telemetry"
+    },
+    {
       "from": "tests.scout_tests.test_web_crawler_agent",
       "to": "scout.web_crawler_agent"
     },
@@ -11026,6 +11130,18 @@
     {
       "from": "tests.security.test_adversarial_webhook_signatures",
       "to": "api.routes.pr_review_api"
+    },
+    {
+      "from": "tests.security.test_codegen_gate_fail_closed",
+      "to": "core.security.codegen_gate"
+    },
+    {
+      "from": "tests.security.test_codegen_gate_fail_closed",
+      "to": "services.tool_forge"
+    },
+    {
+      "from": "tests.security.test_codegen_gate_fail_closed",
+      "to": "tools.ephemeral_synthesizer"
     },
     {
       "from": "tests.security.test_cross_tenant_isolation",
@@ -11162,6 +11278,18 @@
     {
       "from": "tests.services.test_health_monitor_routes",
       "to": "core.app"
+    },
+    {
+      "from": "tests.services.test_hitl_canonical_mirror",
+      "to": "models.pending_tasks"
+    },
+    {
+      "from": "tests.services.test_hitl_canonical_mirror",
+      "to": "models.pending_tasks"
+    },
+    {
+      "from": "tests.services.test_hitl_canonical_mirror",
+      "to": "services.hitl.engine"
     },
     {
       "from": "tests.services.test_hitl_dispatch",
@@ -11365,6 +11493,10 @@
     },
     {
       "from": "tests.services.test_tool_forge",
+      "to": "core.security.codegen_gate"
+    },
+    {
+      "from": "tests.services.test_tool_forge",
       "to": "services.tool_forge"
     },
     {
@@ -11553,7 +11685,15 @@
     },
     {
       "from": "tests.test_swarm_and_ephemeral",
+      "to": "core.security.codegen_gate"
+    },
+    {
+      "from": "tests.test_swarm_and_ephemeral",
       "to": "tools.ephemeral_synthesizer"
+    },
+    {
+      "from": "tests.test_synaptic_dream_loop",
+      "to": "workers.synaptic_dream"
     },
     {
       "from": "tests.test_task_gateway",
@@ -12284,6 +12424,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "tools.ephemeral_synthesizer",
+      "to": "core.security.codegen_gate"
+    },
+    {
       "from": "tools.freebuff_client",
       "to": "tools.cli_process_delegator"
     },
@@ -12884,7 +13028,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1867,
+  "module_count": 1884,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -13031,6 +13175,7 @@
     "api.routes.admin_dashboard.endpoints_ws",
     "api.routes.admin_librarian",
     "api.routes.admin_llm",
+    "api.routes.admin_routes",
     "api.routes.admin_v1",
     "api.routes.advanced_router",
     "api.routes.agent",
@@ -13194,6 +13339,7 @@
     "api.server",
     "api.v1",
     "api.v1.telemetry",
+    "app",
     "brain",
     "brain.agent_departments",
     "brain.api_router",
@@ -13240,7 +13386,6 @@
     "core.action_policy",
     "core.adaptive_optimizer",
     "core.admin_god",
-    "core.admin_routes",
     "core.advanced_reasoning",
     "core.agent_factory",
     "core.agent_review_workflow",
@@ -13356,6 +13501,7 @@
     "core.database.connection_manager",
     "core.db",
     "core.db_repository",
+    "core.db_schema_gate",
     "core.db_ssl",
     "core.decision_engine",
     "core.degraded_mode",
@@ -13399,6 +13545,7 @@
     "core.human_behavior",
     "core.i18n",
     "core.i18n.bengali_text",
+    "core.i18n.language_directive",
     "core.idempotency_middleware",
     "core.immune_system",
     "core.in_process_dispatcher",
@@ -13504,6 +13651,7 @@
     "core.observability.audit_logger",
     "core.observability.interfaces",
     "core.observability.log_batcher",
+    "core.observability.metrics_registry",
     "core.observability.observability_middleware",
     "core.observability.posthog_client",
     "core.observability.providers",
@@ -13596,6 +13744,7 @@
     "core.schema_exporter",
     "core.schema_validator",
     "core.search",
+    "core.secret_policy",
     "core.security",
     "core.security.api_key_limiter",
     "core.security.api_key_middleware",
@@ -13605,6 +13754,7 @@
     "core.security.authentication.auth_middleware",
     "core.security.authentication.rbac",
     "core.security.autonoguard_middleware",
+    "core.security.codegen_gate",
     "core.security.cryptographic_ledger",
     "core.security.enhanced_ast_scanner",
     "core.security.governance_policy",
@@ -14144,6 +14294,7 @@
     "tests.context.test_context_budget",
     "tests.context.test_context_engine",
     "tests.context.test_context_scopes",
+    "tests.context_engine.test_budget_config",
     "tests.context_engine.test_context_engine",
     "tests.core.automation.test_execution_recorder",
     "tests.core.automation.test_execution_recorder_run_bridge",
@@ -14272,6 +14423,7 @@
     "tests.core.test_grpc_client",
     "tests.core.test_hallucination_guard",
     "tests.core.test_health_contract",
+    "tests.core.test_health_ttl_cache",
     "tests.core.test_hotfix_regressions",
     "tests.core.test_human_behavior",
     "tests.core.test_idempotency_middleware",
@@ -14283,6 +14435,7 @@
     "tests.core.test_intent",
     "tests.core.test_knowledge_base",
     "tests.core.test_knowledge_facade",
+    "tests.core.test_language_directive",
     "tests.core.test_learning_loop_sprint34",
     "tests.core.test_learning_store",
     "tests.core.test_lifespan",
@@ -14320,6 +14473,7 @@
     "tests.core.test_pubsub",
     "tests.core.test_qa_suite_honesty",
     "tests.core.test_query_cache_coverage",
+    "tests.core.test_rate_limiter_lua_invariants",
     "tests.core.test_rbac",
     "tests.core.test_reasoning_orchestrator",
     "tests.core.test_redis_cache",
@@ -14357,6 +14511,7 @@
     "tests.core.test_tier8_evolution",
     "tests.core.test_token_budget",
     "tests.core.test_token_deductor",
+    "tests.core.test_tool_fleet",
     "tests.core.test_tool_loop",
     "tests.core.test_universal_rules",
     "tests.core.test_universal_rules_extended",
@@ -14401,6 +14556,7 @@
     "tests.p2p_tests.test_credit_system",
     "tests.p2p_tests.test_secure_tunnel",
     "tests.rag.test_hybrid_retriever",
+    "tests.runs.test_run_adoption",
     "tests.runs.test_run_api",
     "tests.runs.test_run_bridges",
     "tests.runs.test_run_budgets",
@@ -14417,12 +14573,14 @@
     "tests.scout_tests.test_dedup",
     "tests.scout_tests.test_extractor",
     "tests.scout_tests.test_knowledge_extractor",
+    "tests.scout_tests.test_telemetry_persistence",
     "tests.scout_tests.test_web_crawler_agent",
     "tests.scripts.test_adapt_coldstart_knowledge",
     "tests.scripts.test_billing_fraud_detector",
     "tests.scripts.test_billing_quota_enforcer",
     "tests.scripts.test_billing_usage_reporter",
     "tests.scripts.test_ci_failure_trend",
+    "tests.scripts.test_coverage_cache_keys",
     "tests.scripts.test_coverage_quality_gate",
     "tests.scripts.test_gateway_context_m03",
     "tests.scripts.test_gateway_contract_m03",
@@ -14432,6 +14590,7 @@
     "tests.security.test_admin_fail_closed",
     "tests.security.test_adversarial_webhook_signatures",
     "tests.security.test_auth",
+    "tests.security.test_codegen_gate_fail_closed",
     "tests.security.test_cross_tenant_isolation",
     "tests.security.test_database_readiness_regression",
     "tests.security.test_dead_route_wiring",
@@ -14458,6 +14617,7 @@
     "tests.services.test_graph_service",
     "tests.services.test_health_monitor",
     "tests.services.test_health_monitor_routes",
+    "tests.services.test_hitl_canonical_mirror",
     "tests.services.test_hitl_dispatch",
     "tests.services.test_integration_layer",
     "tests.services.test_intent_deciphering",
@@ -14516,6 +14676,7 @@
     "tests.test_strategic_patches.test_cognitive_router_contract",
     "tests.test_supreme_kernel",
     "tests.test_swarm_and_ephemeral",
+    "tests.test_synaptic_dream_loop",
     "tests.test_task_gateway",
     "tests.test_tenant_di",
     "tests.test_workers_phase5",
