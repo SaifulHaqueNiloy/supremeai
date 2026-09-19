@@ -22,6 +22,7 @@ from enum import StrEnum
 from typing import Any
 
 from fastapi import APIRouter, Response
+from loguru import logger
 
 router = APIRouter(tags=["health"])
 
@@ -276,6 +277,36 @@ async def readiness_probe(response: Response) -> dict[str, Any]:
         nc_results = await asyncio.gather(*[_run_check(c) for c in non_critical_checks])
         degraded = [r.name for r in nc_results if r.status != HealthStatus.HEALTHY]
 
+    # Issue #478: schema gate — production fail-closed when a required table
+    # is missing; schema state always observable in the probe payload.
+    # Read-only REST probe (settings SSoT), cached 60s, never crashes the probe.
+    from core.db_schema_gate import check_schema_status, production_schema_incompatible
+
+    schema_reason: str | None = None
+    schema_status: dict[str, Any] = {
+        "checked": False,
+        "reason": "probe error",
+        "missing": [],
+        "present": [],
+    }
+    try:
+        schema_reason = await asyncio.to_thread(production_schema_incompatible)
+        schema_status = await asyncio.to_thread(check_schema_status)
+    except Exception as exc:  # noqa: BLE001 — probe must never crash readiness
+        logger.warning(f"schema gate probe error (treated as unknown): {exc}")
+    schema_block = {k: schema_status.get(k) for k in ("checked", "missing", "present", "unknown")}
+    if schema_reason and role == "core":
+        logger.critical(f"Readiness schema gate: {schema_reason} (env={os.getenv('ENV', '')})")
+        response.status_code = 503
+        return {
+            "status": "not_ready",
+            "timestamp": now,
+            "role": role,
+            "degraded": degraded,
+            "schema": schema_block,
+            "detail": f"Schema incompatible — not ready ({schema_reason})",
+        }
+
     if not critical_checks:
         # No critical checks registered: the service is ready by definition,
         # but non-critical failures still surface as degraded visibility.
@@ -285,6 +316,7 @@ async def readiness_probe(response: Response) -> dict[str, Any]:
             "timestamp": now,
             "role": role,
             "degraded": degraded,
+            "schema": schema_block,
         }
 
     results = await asyncio.gather(*[_run_check(c) for c in critical_checks])
@@ -297,6 +329,7 @@ async def readiness_probe(response: Response) -> dict[str, Any]:
         "timestamp": now,
         "role": role,
         "degraded": degraded,
+        "schema": schema_block,
     }
 
 
