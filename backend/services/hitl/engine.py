@@ -321,6 +321,7 @@ class HITLEngine:
                 "record_id": record_id,
                 "reason": reason,
             },
+            reason=reason,
         )
 
         logger.warning(
@@ -359,6 +360,7 @@ class HITLEngine:
         extra_fields: dict[str, Any],
         ledger_action: str,
         ledger_payload: dict[str, Any],
+        reason: str | None = None,
     ) -> None:
         """Guard + commit a terminal status-flip (#481).
 
@@ -392,7 +394,7 @@ class HITLEngine:
             self._mark_expired(doc_ref, record_id, admin_user_id, record.get("expires_at"))
             raise
 
-        self._mirror_to_canonical_resolve(record_id, target_status, admin_user_id)
+        self._mirror_to_canonical_resolve(record_id, target_status, admin_user_id, reason=reason)
 
         # Log to ledger
         self.ledger.record_entry_sync(
