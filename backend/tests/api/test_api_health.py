@@ -57,6 +57,13 @@ class TestHealthEndpoint:
         dummy_check = HealthCheck(name="database", check_fn=lambda: True, critical=True)
         _checks.append(dummy_check)
         try:
+            # বাংলা মন্তব্য (#468 TTL cache): আগের টেস্টের healthy ফল এখনো ১০s
+            # TTL-উইন্ডোতে থাকতে পারে — রিসেট ছাড়া এই টেস্ট ক্যাশ-হিট (200,
+            # cache_hit=true) পাবে এবং সত্য 503-পথ কখনোই চলবে না। 200-টেস্টের
+            # মতোই টেস্ট-শুরুতেই রিসেট — কেবল finally-তে নয়।
+            from core.health_routes import reset_health_cache
+
+            reset_health_cache()
             with patch("core.health_routes._run_check") as mock_check:
                 mock_result = HealthResult(
                     name="database",
