@@ -10,10 +10,11 @@ from typing import Any
 from pydantic import PrivateAttr, SecretStr, model_serializer
 
 from core.logging_config import logger
+
 # Issue #542 (BE-10): single shared floor for the JWT secret minimum length.
 from core.secret_policy import JWT_SECRET_MIN_LENGTH, resolve_jwt_secret_env
 
-from .security.secret_vault import get_secret_vault
+from .security.secret_vault import SecretNotFoundError, get_secret_vault
 
 
 class SettingsSecretsMixin:
@@ -594,7 +595,15 @@ class SettingsSecretsMixin:
             # deprecated JWT_SECRET alias is still accepted (with a
             # deprecation warning from resolve_jwt_secret_env) so legacy
             # deploys keep booting; vault is the last source.
-            secret = resolve_jwt_secret_env() or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+            secret = resolve_jwt_secret_env()
+            if not secret:
+                try:
+                    secret = self._get_cached_secret("SUPREMEAI_JWT_SECRET")
+                except SecretNotFoundError:
+                    # BE-13 fail-closed vault: a missing secret must still
+                    # surface as the actionable JWT boot error below, not the
+                    # generic vault message (test_security_regression).
+                    secret = ""
             if not secret or len(secret) < JWT_SECRET_MIN_LENGTH:
                 raise RuntimeError(
                     f"Production JWT secret must be set and >= {JWT_SECRET_MIN_LENGTH} bytes"

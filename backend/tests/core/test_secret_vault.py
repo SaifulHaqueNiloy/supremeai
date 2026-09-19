@@ -88,14 +88,29 @@ class TestSecretVaultFallback:
         # OPTIONAL_SECRETS nor HARD_REQUIRED_SECRETS must fail closed instead
         # of silently degrading to "" (the old behavior hid misconfigurations
         # like an empty STRIPE_WEBHOOK_SECRET accepting forged events).
-        monkeypatch.delenv("STRIPE_API_KEY", raising=False)
+        # NOTE: uses a genuinely-unknown key - STRIPE_API_KEY is warn-optional
+        # by validate_all contract ("mock mode"), see
+        # test_fallback_production_stripe_degrades below.
+        unknown = "TOTALLY_UNKNOWN_INTEGRATION_SECRET_XYZ"
+        monkeypatch.delenv(unknown, raising=False)
         vault = ProductionSecretVault()
         vault.env = "production"
         vault.client = None
         with pytest.raises(RuntimeError, match="BE-13 fail-closed"):
-            vault._fallback_to_env("STRIPE_API_KEY", None)
+            vault._fallback_to_env(unknown, None)
         with pytest.raises(RuntimeError, match="BE-13 fail-closed"):
-            vault._fallback_to_env("STRIPE_API_KEY", "")  # even with default=""
+            vault._fallback_to_env(unknown, "")  # even with default=""
+
+    def test_fallback_production_stripe_degrades(self, monkeypatch):
+        # Stripe credentials are warn-optional by the validate_all contract
+        # ("Billing features will run in mock mode" / "Webhook validation
+        # disabled") - absence degrades loudly at every boot instead of
+        # aborting it (issue #601 real-boot probes).
+        monkeypatch.delenv("STRIPE_API_KEY", raising=False)
+        vault = ProductionSecretVault()
+        vault.env = "production"
+        vault.client = None
+        assert vault._fallback_to_env("STRIPE_API_KEY", None) == ""
 
     def test_fallback_production_optional_degrades(self, monkeypatch):
         # BE-13 (issue #545): explicitly allowlisted optional secrets keep the

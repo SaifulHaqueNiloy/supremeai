@@ -71,6 +71,17 @@ OPTIONAL_SECRETS: set[str] = {
     # Consumers handle absence explicitly (core/db_ssl.py warns and relies on
     # certifi when unset), so absence must degrade, not raise.
     "SUPABASE_DB_CA_CERT",
+    # Billing integrations: config_validation.validate_all explicitly warns
+    # ("Billing features will run in mock mode" / "Webhook validation
+    # disabled") and continues — absence is a loud degradation, not a boot
+    # abort. Without these here, every production boot without Stripe
+    # configured crashed at the validate_all property access (issue #601
+    # real-boot probes caught this before a deploy did).
+    "STRIPE_API_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    # validate_all warns ("Production missing config vars: CI_WEBHOOK_SECRET.
+    # Running in degraded zero-cost mode") and continues - warn-optional.
+    "CI_WEBHOOK_SECRET",
 }
 # Infra-critical secrets whose absence aborts boot — kept as a separate set so
 # they get the CRITICAL log + alert event before the fail-closed raise.

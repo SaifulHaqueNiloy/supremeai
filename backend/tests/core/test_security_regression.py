@@ -23,7 +23,12 @@ async def test_production_jwt_secret_required():
             "JWT_SECRET": "",
         },
     ):
-        with patch("core.security.secret_vault.get_secret_vault") as mock_get_secret_vault:
+        # Patch where config_secrets BOUND the symbol (from .security.secret_vault
+        # import get_secret_vault) — patching core.security.secret_vault directly
+        # leaves config_secrets calling the real vault, whose BE-13 fail-closed
+        # raise masks the property's JWT-specific error under test (main CI #733).
+        with patch("core.config_secrets.get_secret_vault") as mock_get_secret_vault:
+            mock_get_secret_vault.return_value.fetch_all_secrets.return_value = {}
             mock_get_secret_vault.return_value.fetch_secret.return_value = ""
             with pytest.raises(RuntimeError) as excinfo:
                 _ = Settings().jwt_secret
