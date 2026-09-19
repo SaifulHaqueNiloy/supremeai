@@ -23,6 +23,8 @@ from enum import StrEnum
 from typing import Any
 
 from core.logging_config import logger
+# Issue #542 (BE-10): unify the JWT secret floor with the other validators.
+from core.secret_policy import JWT_SECRET_MIN_LENGTH
 
 
 class VarType(StrEnum):
@@ -155,9 +157,13 @@ CONFIG_SCHEMA: list[VarDefinition] = [
         var_type=VarType.STRING,
         required=True,
         severity=Severity.ERROR,
-        min_value=32,
-        description="JWT signing secret (min 32 chars)",
-        examples=["your-super-secret-key-at-least-32-chars"],
+        # Issue #542 (BE-10): was 32, which let a too-short secret pass boot
+        # validation and blow up mid-request when settings.jwt_secret raised
+        # RuntimeError (>=64 floor). Now shares JWT_SECRET_MIN_LENGTH with
+        # config_secrets.py and env_validator.py.
+        min_value=JWT_SECRET_MIN_LENGTH,
+        description=f"JWT signing secret (min {JWT_SECRET_MIN_LENGTH} chars)",
+        examples=["your-super-secret-key-at-least-64-bytes-change-me-0123456789abcdef-abcdef"],
     ),
     VarDefinition(
         name="ENFORCE_ANTI_HACKING",

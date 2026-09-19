@@ -15,6 +15,8 @@ from enum import Enum
 from typing import Any
 
 from core.logging_config import logger
+# Issue #542 (BE-10): unify the JWT secret floor with the other validators.
+from core.secret_policy import JWT_SECRET_MIN_LENGTH
 
 
 class EnvSeverity(Enum):
@@ -36,6 +38,7 @@ class EnvVarDefinition:
     severity: EnvSeverity
     default: str | None = None
     pattern: str | None = None  # Regex pattern for validation
+    min_length: int | None = None  # Minimum value length (issue #542 / BE-10)
     examples: list[str] = field(default_factory=list)
     documentation_url: str | None = None
 
@@ -65,7 +68,13 @@ ENV_REGISTRY: list[EnvVarDefinition] = [
     ),
     # ── Secrets (CRITICAL in production) ─────────────────────────────────
     EnvVarDefinition(
-        name="SUPREMEAI_JWT_SECRET", description="JWT signing secret", severity=EnvSeverity.CRITICAL
+        name="SUPREMEAI_JWT_SECRET",
+        description="JWT signing secret",
+        severity=EnvSeverity.CRITICAL,
+        # Issue #542 (BE-10): had no length check, so a too-short secret
+        # passed boot validation and blew up mid-request when
+        # settings.jwt_secret raised RuntimeError (>=64 floor).
+        min_length=JWT_SECRET_MIN_LENGTH,
     ),
     EnvVarDefinition(
         name="SUPREMEAI_ADMIN_PASSWORD_HASH",
@@ -301,6 +310,8 @@ class EnvironmentValidator:
                             }
                         )
             else:
+                value_is_valid = True
+
                 # Validate format if pattern specified
                 if env_def.pattern:
                     import re
@@ -328,9 +339,38 @@ class EnvironmentValidator:
                                     "severity": env_def.severity.value,
                                 }
                             )
+                        value_is_valid = False
+
+                # Validate minimum length if specified (issue #542 / BE-10)
+                if env_def.min_length is not None and len(value) < env_def.min_length:
+                    msg = (
+                        f"Value for {env_def.name} is only {len(value)} characters long; "
+                        f"minimum required length is {env_def.min_length}"
+                    )
+
+                    if env_def.severity == EnvSeverity.CRITICAL:
+                        result.errors.append(
+                            {
+                                "variable": env_def.name,
+                                "message": msg,
+                                "severity": env_def.severity.value,
+                                "actual_value_preview": value[:8] + "..."
+                                if len(value) > 8
+                                else value,
+                            }
+                        )
+                        result.is_valid = False
                     else:
-                        valid_count += 1
-                else:
+                        result.warnings.append(
+                            {
+                                "variable": env_def.name,
+                                "message": msg,
+                                "severity": env_def.severity.value,
+                            }
+                        )
+                    value_is_valid = False
+
+                if value_is_valid:
                     valid_count += 1
 
         # Calculate health score
