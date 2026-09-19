@@ -1,9 +1,42 @@
 """Pydantic field declarations for SupremeAI settings."""
 
-from typing import Annotated, ClassVar
+import json
+from typing import Annotated, Any, ClassVar
 
 from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import NoDecode
+
+
+def parse_origin_list(value: Any) -> Any:
+    """Single shared parser for CORS-origin-style list settings (issue #684 DRY).
+
+    Accepts a JSON array string, a comma-separated string, or an existing
+    list/tuple and returns the stripped, empty-entry-free ``list[str]``.
+    Values of any other type are returned untouched so pydantic's own field
+    validation keeps failing loudly on genuinely invalid config instead of
+    the parser silently swallowing it.
+
+    This is the ONE copy of the origin/list parsing routine — previously the
+    JSON-then-comma-split logic was duplicated between ``config_fields.py``
+    and ``config_validation.py`` (with drifted edge behaviour). Both mixins
+    import from this module, keeping the dependency direction leaf-ward and
+    core-internal (config_validation -> config_fields -> pydantic only).
+    """
+    if isinstance(value, str):
+        value = value.strip()
+        if not value:
+            return []
+        if value.startswith("["):
+            try:
+                parsed = json.loads(value)
+            except (json.JSONDecodeError, ValueError):
+                parsed = None
+            if isinstance(parsed, list):
+                return [str(item).strip() for item in parsed if str(item).strip()]
+        return [item.strip() for item in value.split(",") if item.strip()]
+    if isinstance(value, (list, tuple)):
+        return [str(item).strip() for item in value if str(item).strip()]
+    return value
 
 
 class SettingsFieldsMixin:
@@ -249,11 +282,9 @@ class SettingsFieldsMixin:
 
     @staticmethod
     def _csv(value: str | list[str]) -> list[str]:
-        return [
-            item.strip()
-            for item in (value if isinstance(value, list) else value.split(","))
-            if item.strip()
-        ]
+        # Issue #684 (CORS DRY): delegates to the single shared origin/list
+        # parser instead of keeping a second comma-split implementation.
+        return parse_origin_list(value)
 
     @property
     def route_ladders(self) -> dict[str, list[str]]:

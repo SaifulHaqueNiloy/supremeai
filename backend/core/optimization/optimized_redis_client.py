@@ -2,6 +2,7 @@ import asyncio
 import os
 
 from core.logging_config import logger
+from core.resilience.circuit_breaker import CircuitBreakerState
 
 try:
     import redis.asyncio as aioredis
@@ -19,27 +20,28 @@ class CircuitBreaker:
         self.recovery_timeout = recovery_timeout
         self.failures = 0
         self.last_failure_time = 0
-        self.state = "CLOSED"  # CLOSED (ok), OPEN (failing), HALF_OPEN (testing recovery)
+        # Issue #684 (H-05): canonical breaker-state enum instead of raw literals.
+        self.state = CircuitBreakerState.CLOSED
 
     def record_failure(self):
         self.failures += 1
         self.last_failure_time = asyncio.get_event_loop().time()
         if self.failures >= self.failure_threshold:
-            self.state = "OPEN"
+            self.state = CircuitBreakerState.OPEN
             logger.warning("Redis Circuit Breaker OPENED due to multiple failures")
 
     def record_success(self):
-        if self.state != "CLOSED":
+        if self.state != CircuitBreakerState.CLOSED:
             logger.info("Redis Circuit Breaker CLOSED (recovery successful)")
         self.failures = 0
-        self.state = "CLOSED"
+        self.state = CircuitBreakerState.CLOSED
 
     def can_execute(self) -> bool:
-        if self.state == "CLOSED":
+        if self.state == CircuitBreakerState.CLOSED:
             return True
-        if self.state == "OPEN":
+        if self.state == CircuitBreakerState.OPEN:
             if asyncio.get_event_loop().time() - self.last_failure_time > self.recovery_timeout:
-                self.state = "HALF_OPEN"
+                self.state = CircuitBreakerState.HALF_OPEN
                 return True
             return False
         # HALF_OPEN - allow one test request

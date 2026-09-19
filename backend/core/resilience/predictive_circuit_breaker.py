@@ -1,6 +1,7 @@
 import time
 
 from core.logging_config import logger
+from core.resilience.circuit_breaker import CircuitBreakerState
 from core.resilience.predictive_metrics import PredictiveMetricsTracker
 
 
@@ -17,7 +18,10 @@ class PredictiveCircuitBreaker:
         self.fallback_provider = fallback_provider
         self.cooldown_seconds = cooldown_seconds
         self.tracker = PredictiveMetricsTracker()
-        self.state = "CLOSED"  # 3 States: CLOSED (Normal), OPEN (Shifted to Fallback), HALF-OPEN (Testing Primary)
+        # Issue #684 (H-05): state now uses the canonical CircuitBreakerState
+        # enum (values CLOSED/OPEN/HALF_OPEN) instead of raw literals that
+        # historically included the divergent "HALF-OPEN" spelling.
+        self.state = CircuitBreakerState.CLOSED
         self.last_state_change = time.time()
         self.primary_provider = "gemini"
 
@@ -28,12 +32,12 @@ class PredictiveCircuitBreaker:
         self.tracker.record_request(latency_ms, status_code)
 
         # অ্যানমেলি চেক করা
-        if self.state == "CLOSED" and self.tracker.is_anomaly_detected():
+        if self.state == CircuitBreakerState.CLOSED and self.tracker.is_anomaly_detected():
             logger.warning(
                 f"[PredictiveCircuitBreaker] Anomaly detected on '{self.name}'. "
                 f"Proactively shifting route from '{self.primary_provider}' to '{self.fallback_provider}'."
             )
-            self.state = "OPEN"
+            self.state = CircuitBreakerState.OPEN
             self.last_state_change = time.time()
 
     def get_active_provider(self) -> str:
@@ -43,14 +47,17 @@ class PredictiveCircuitBreaker:
         current_time = time.time()
 
         # Cooldown সময় শেষ হলে অটোমেটিক HALF-OPEN স্টেটে চেক করা
-        if self.state == "OPEN" and (current_time - self.last_state_change) > self.cooldown_seconds:
+        if (
+            self.state == CircuitBreakerState.OPEN
+            and (current_time - self.last_state_change) > self.cooldown_seconds
+        ):
             logger.info(
                 f"[PredictiveCircuitBreaker] Cooldown expired for '{self.name}'. Switching to HALF-OPEN to test primary provider."
             )
-            self.state = "HALF-OPEN"
+            self.state = CircuitBreakerState.HALF_OPEN
             return self.primary_provider
 
-        if self.state == "OPEN":
+        if self.state == CircuitBreakerState.OPEN:
             return self.fallback_provider or "groq"
 
         return self.primary_provider
@@ -59,9 +66,9 @@ class PredictiveCircuitBreaker:
         """
         HALF-OPEN অবস্থায় প্রাইমারি সার্ভিস সফল হলে পুনরায় CLOSED স্টেটে প্রমোট করা।
         """
-        if self.state == "HALF-OPEN":
+        if self.state == CircuitBreakerState.HALF_OPEN:
             logger.info(
                 f"[PredictiveCircuitBreaker] Primary provider recovered for '{self.name}'. State restored to CLOSED."
             )
-            self.state = "CLOSED"
+            self.state = CircuitBreakerState.CLOSED
             self.last_state_change = time.time()
