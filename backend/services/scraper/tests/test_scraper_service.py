@@ -318,9 +318,7 @@ def test_is_safe_url_resolved_allows_public_resolution():
     """A hostname resolving only to public IPs passes the resolved-IP gate."""
     import security as scraper_security
 
-    with patch.object(
-        scraper_security, "resolve_hostname", return_value=["93.184.216.34"]
-    ):
+    with patch.object(scraper_security, "resolve_hostname", return_value=["93.184.216.34"]):
         assert scraper_security.is_safe_url_resolved("https://example.com") is True
 
 
