@@ -32,10 +32,12 @@ from core.logging_config import logger, setup_logging
 # বাংলা মন্তব্ব্য: স্টার্টআপ অডিট ও লগিং — টেস্ট এক্সক্লুডেড
 # সেন্ট্রি ইনিশিয়ালাইজেশন monitoring/init_observability()-এ কেন্দ্রীভূত (Issue #566 / BE-15:
 # এখানে 0.1 rate-সহ ডুপ্লিকেট sentry_sdk.init() ছিল — একমাত্র init path monitoring মডিউল)।
+# Issue #569 (BE-18): the import-time audit_container_resources() call was
+# removed — it was a `pass` no-op (dead code) that made the boot path look
+# like memory auditing was active. If container auditing is ever wanted, the
+# ContainerAuditor.run() loop must be started explicitly, not via a hollow
+# boot-path call.
 if "pytest" not in sys.modules and os.getenv("CI") != "true":
-    from core.container_auditor import audit_container_resources
-
-    audit_container_resources()
     setup_logging()
 
 
