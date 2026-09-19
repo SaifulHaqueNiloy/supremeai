@@ -79,9 +79,11 @@ class RiskEngine:
         if provider == "agent_tools":
             # M09 P-A: এজেন্ট-নিজস্ব টুল-শ্রেণি — read/health নিরাপদ (R0),
             # sandbox-যাচাইকৃত অতিথি-কোডও মানব-অনুমোদন ছাড়া চলবে না (R5)।
+            # M09 P-G: "verify" — deterministic গাণিতিক যাচাই (পার্শ্বপ্রতিক্রিয়া-শূন্য
+            # গণনা, কোনো কোড-নির্বাহ নয়) → R0।
             if action in ("execute", "execute_code"):
                 return "R5"
-            if action in ("health", "search", "read", "status"):
+            if action in ("health", "search", "read", "status", "verify"):
                 return "R0"
             return "R3"
 
@@ -130,6 +132,8 @@ TOOL_PROVIDER_ACTION: dict[str, tuple[str, str]] = {
     "search_database": ("agent_tools", "search"),
     "check_system_health": ("agent_tools", "health"),
     "execute_python_code": ("agent_tools", "execute"),
+    # M09 P-G first-fleet: deterministic symbolic-math verification — R0।
+    "cot_verify_math": ("agent_tools", "verify"),
     # Memory MCP — Knowledge Graph
     "create_entities": ("memory", "create"),
     "create_relations": ("memory", "create"),

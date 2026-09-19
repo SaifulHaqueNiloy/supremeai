@@ -33,6 +33,12 @@ _PRIMARY_ARG: dict[str, str] = {
     "execute_python_code": "code",
 }
 
+#: বাংলা (M09 P-G): বহু-প্যারামিটার টুল — নাম-মিল কেবল জানা কীগুলোর,
+#: অতিরিক্ত কী পাস হয় না (গভর্নড পৃষ্ঠ)।
+_MULTI_ARG: dict[str, tuple[str, ...]] = {
+    "cot_verify_math": ("expression", "claimed_result"),
+}
+
 
 def agent_tools_enabled() -> bool:
     """Flag-gate: ``SUPREMEAI_AGENT_TOOLS=true`` হলেই কেবল সত্য (default OFF)।"""
@@ -40,14 +46,21 @@ def agent_tools_enabled() -> bool:
 
 
 def tool_registry() -> dict[str, Callable[..., Any]]:
-    """নাম → কলযোগ্য ম্যাপ — কেবল SUPREME_TOOLS-সদস্যই নির্বাহযোগ্য।"""
-    from tools.agent_tools import SUPREME_TOOLS
+    """নাম → কলযোগ্য ম্যাপ — কেবল governed রেজিস্ট্রি-সদস্যই নির্বাহযোগ্য।
 
-    return {fn.__name__: fn for fn in SUPREME_TOOLS}
+    বাংলা (M09 P-G): ``governed_tools()`` flag-off-এ SUPREME_TOOLS-এর
+    প্রতিলিপি (আজকের আচরণ), flag-on-এ প্রথম-ফ্লিট টুল যুক্ত হয়।
+    """
+    from tools.agent_tools import governed_tools
+
+    return {fn.__name__: fn for fn in governed_tools()}
 
 
 def _resolve_call_args(tool: str, args: dict[str, Any]) -> dict[str, Any]:
     """LLM/fallback-args-কে টুল-সিগনেচারে নিরাপদে ম্যাপ করা।"""
+    multi = _MULTI_ARG.get(tool)
+    if multi is not None:
+        return {k: str(args[k]) for k in multi if k in (args or {})}
     param = _PRIMARY_ARG.get(tool)
     if param is None:
         # check_system_health — বিধানহীন টুল।
