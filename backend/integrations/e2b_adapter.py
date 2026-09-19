@@ -1,4 +1,5 @@
 """E2B-inspired secure code-execution sandbox adapter for SupremeAI.
+STATUS: orphaned — see docs/operations/MODULE_STATUS_REGISTRY.md (#449).
 
 E2B (open-source isolated sandbox for AI-generated code) থেকে নেওয়া মূল ধারণা: এজেন্ট-
 জেনারেটেড কোড নিরাপদ বিচ্ছিন্ন প্রক্রিয়ায় চালানো, যাতে মূল পরিবেশ বা user filesystem-এ

@@ -1,4 +1,5 @@
 """OpenHands-inspired autonomous coding-agent adapter for SupremeAI.
+STATUS: orphaned — see docs/operations/MODULE_STATUS_REGISTRY.md (#449).
 
 OpenHands (AI software-engineering agent) থেকে নেওয়া মূল ধারণা: একটি টাস্ক দিলে
 এজেন্ট নিজে codebase-এ কোড পড়ে/লিখে/টেস্ট চালিয়ে decoupled Agent Server-এ কাজ করে।

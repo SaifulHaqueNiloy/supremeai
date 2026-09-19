@@ -1,4 +1,5 @@
 """Graphiti-inspired temporal knowledge-graph memory adapter for SupremeAI.
+STATUS: orphaned — see docs/operations/MODULE_STATUS_REGISTRY.md (#449).
 
 Graphiti (real-time knowledge graphs for agents) থেকে নেওয়া মূল ধারণা: memory-তে
 **time-aware** entity→relation→entity ট্রিপল সংরক্ষণ করা, যাতে প্রশ্নের সাথে

@@ -1,4 +1,5 @@
 """
+STATUS: orphaned — see docs/operations/MODULE_STATUS_REGISTRY.md (#449).
 Backward compatibility bridge: re-export all from delivery_fleet_tracker.
 Preserves legacy imports for 'services.rider_tracker' and 'backend.services.rider_tracker'.
 """
