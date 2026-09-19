@@ -127,9 +127,9 @@ class TestJWTAlgorithmConfusion:
         # Issue #542/#567: the floor is centralized in core/secret_policy.py
         # (JWT_SECRET_MIN_LENGTH = 64) and config_secrets enforces it via the
         # constant instead of a hardcoded literal.
-        assert re.search(
-            r"len\s*\(\s*secret\s*\)\s*<\s*JWT_SECRET_MIN_LENGTH", src
-        ), "production JWT secret length guard missing"
+        assert re.search(r"len\s*\(\s*secret\s*\)\s*<\s*JWT_SECRET_MIN_LENGTH", src), (
+            "production JWT secret length guard missing"
+        )
         assert "RuntimeError" in src, "production must fail closed on weak secret"
         assert "resolve_jwt_secret_env" in src, "canonical env resolver must be consulted"
         policy_src = _source_of("core/secret_policy.py")
