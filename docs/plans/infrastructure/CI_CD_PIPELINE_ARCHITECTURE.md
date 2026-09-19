@@ -84,12 +84,15 @@ python scripts/find_stub_data.py --path scripts --fail-on HIGH
 |---|---|---|
 | **Gate 0** | `stub-blocker` | Zero-Gap scanner; blocks all fake code / mocks / stubs. |
 | **Gate 0** | `plan-governance` | Verifies `docs/plans/` integrity; updates `plan_registry.json`. |
-| **Stage 1** | `changes` | Detects modified paths + auto-carries forward previous failures. |
+| **Stage 1** | `changes` | Detects modified paths + auto-carries forward previous failures (incl. per-group backend failure memory, #470). |
 | **Stage 1** | `security` | Trivy CVE vulnerability scan + Gitleaks secret leak detection. |
 | **Stage 1** | `constitution-audit` | Rule compliance scan; uploads SARIF security reports. |
-| **Stage 2** | `backend-tests` | Adaptive parallel pytest execution with coverage aggregation. |
+| **Stage 1.5** | `backend-test-planner` | Maps the diff to matrix groups and emits the dynamic matrix JSON (`scripts/ci/plan_backend_test_groups.py` — single source of truth; FULL-mode default = coverage-gate contract, #470). |
+| **Stage 2** | `backend-tests` | Planner-driven parallel pytest groups (fast / core-unit / core-support / services) with coverage aggregation; core split gives the ~215-file bottleneck its own runner (#470). |
 | **Stage 2** | `frontend-tests` | TypeScript type-check (`tsc --noEmit`), ESLint, and Vitest suite. |
-| **Stage 3** | `backend-aggregate` | Validates OpenAPI schemas, mission scoreboards, and merges coverage. |
+| **Stage 3** | `backend-aggregate` | Coverage-only merge + FAIL-CLOSED tier gate (no containers). |
+| **Stage 3** | `backend-contract` | OpenAPI schema validation, Canonical Startup (AUD-1.1), pgvector verification (parallel to coverage gate). |
+| **Stage 3** | `backend-passk` | Mission pass^k reliability scoreboard (main-only, non-gating, parallel). |
 | **Stage 3** | `build` | Next.js/Vite frontend production bundle compilation. |
 | **Stage 4** | `deploy-frontend` | Deploys validated bundle to Firebase Hosting. |
 | **Stage 4** | `render-deploy-preflight`| Validates service quotas, health probes, and deployment triggers. |
