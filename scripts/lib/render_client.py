@@ -17,6 +17,10 @@ token lookup + auth header + pagination লেখা; API বদলালে ১
 stdlib-only (urllib) — কোনো requests dependency নেই, তাই CI runner-এও
 নির্ভরতাহীন। ধাপে ধাপে বাকি script-গুলো এখানে migrate হবে; প্রথম slice-এ
 check_render.py, check_render_svc.py, trigger_render_deploy.py করা হয়েছে।
+Phase 2-C3 slice: update_render_image, update_render_env2, list_render_services,
+create_render_service, check_render_auto_deploy, render_trigger_deploy,
+render_build_budget_guard, render_deploy_preflight, deploy_all_services,
+verify_render_env — এখন সবাই এই client ব্যবহার করে (backend services পরে)।
 """
 
 from __future__ import annotations
@@ -139,3 +143,40 @@ class RenderClient:
             f"/services/{service_id or self.default_service_id}/deploys",
             body={"clearCache": clear_cache},
         )
+
+    # ── Phase 2-C3 operations (remaining scripts migrate onto these) ──
+    def request(
+        self,
+        method: str,
+        path: str,
+        body: Optional[Dict[str, Any]] = None,
+        query: Optional[Dict[str, Any]] = None,
+    ) -> Any:
+        """Public escape hatch — arbitrary Render API call through the single
+        transport. নতুন endpoint-এর জন্য আগে domain method যোগ করার চেষ্টা করুন;
+        শুধু তখনই এটা ব্যবহার করুন যখন সেটা এক script-এর একবারের প্রয়োজন।"""
+        return self._request(method, path, body=body, query=query)
+
+    def list_owners(self) -> List[Dict[str, Any]]:
+        return self._request("GET", "/owners") or []
+
+    def create_service(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        return self._request("POST", "/services", body=payload)
+
+    def delete_service(self, service_id: str) -> None:
+        self._request("DELETE", f"/services/{service_id}")
+
+    def update_service(self, service_id: str, body: Dict[str, Any]) -> Dict[str, Any]:
+        return self._request("PATCH", f"/services/{service_id}", body=body)
+
+    def get_env_vars(self, service_id: str, limit: int = 100) -> List[Dict[str, Any]]:
+        return self._request(
+            "GET", f"/services/{service_id}/env-vars", query={"limit": limit}
+        ) or []
+
+    def update_env_vars(
+        self, service_id: str, env_vars: List[Dict[str, str]]
+    ) -> List[Dict[str, Any]]:
+        return self._request(
+            "PUT", f"/services/{service_id}/env-vars", body=env_vars
+        ) or []
