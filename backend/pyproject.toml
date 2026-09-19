@@ -49,7 +49,6 @@ pygithub = "^2.5.0"
 supabase = "^2.11.0"
 firebase-admin = "^6.5.0"
 qdrant-client = "^1.12.1"
-psycopg2-binary = "^2.9.9"
 
 pillow = "^12.3.0"  # CVE fix floor (AUDIT-014)
 # বাংলা মন্তব্য (M0-A / AUDIT F1): openpyxl প্রোডাকশন কোডে সরাসরি ব্যবহৃত
@@ -124,6 +123,20 @@ optional = true
 
 [tool.poetry.group.browser.dependencies]
 playwright = "^1.62.0"
+
+# Issue #543 (BE-11): psycopg2-binary was a core dependency but is unused on
+# the FastAPI/worker runtime path (runtime driver is asyncpg, core/db.py).
+# Only backend/tools/mcp/mcp_supabase.py, mcp_neon.py and
+# scripts/migrate_files_to_db.py hard-import it; runtime-adjacent callers
+# (core/persistence/pooled_pg.py, database/supabase_client.py) use safe
+# imports with graceful fallback. Moved to this optional group so the prod
+# image (`poetry install --only main`) no longer ships ~5MB + libpq.
+# Install where needed with: poetry install --with mcp-tools
+[tool.poetry.group.mcp-tools]
+optional = true
+
+[tool.poetry.group.mcp-tools.dependencies]
+psycopg2-binary = "^2.9.9"
 
 [tool.poetry.group.ml]
 optional = true
