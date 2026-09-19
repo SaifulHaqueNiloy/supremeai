@@ -173,7 +173,10 @@ _IMPORTANT_TEST_PARTS = (
 
 
 def _matches_test_parts(test_file: Path, patterns: tuple[tuple[str, ...], ...]) -> bool:
-    relative = test_file.resolve().relative_to(_TEST_ROOT).parts
+    try:
+        relative = test_file.resolve().relative_to(_TEST_ROOT).parts
+    except ValueError:
+        return False
     return any(
         len(relative) >= len(pattern)
         and all(
