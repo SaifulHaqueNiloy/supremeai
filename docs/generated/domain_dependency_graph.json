@@ -4682,6 +4682,16 @@
     {
       "evidence": [
         {
+          "line": 28,
+          "path": "backend/core/security/codegen_gate.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 8,
           "path": "backend/core/security/cryptographic_ledger.py"
         }
