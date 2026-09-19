@@ -21,6 +21,7 @@
     }
   ],
   "rewrites": [
+    { "source": "/__/:path*", "destination": "/__/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
