@@ -578,7 +578,12 @@ jobs:
     uses: ./.github/workflows/ci-advanced-checks.yml
     with:
       changed: ${{ needs.changes.outputs.backend == 'true' || needs.changes.outputs.frontend == 'true' || needs.changes.outputs.infra == 'true' }}
-    secrets: inherit
+    # CI-10: explicit allowlist instead of secrets:inherit (public repo).
+    secrets:
+      INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+      INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+      INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+      INFISICAL_PROJECT_SLUG: ${{ secrets.INFISICAL_PROJECT_SLUG }}
 
   # -----------------------------------------------------------------
   # Phase 1: Deterministic backend preparation
@@ -1587,7 +1592,24 @@ jobs:
       publish-core: ${{ needs.changes.outputs.backend == 'true' }}
       publish-scraper: ${{ needs.changes.outputs.scraper == 'true' }}
       build-allowed: ${{ needs.render-deploy-preflight.outputs.build_allowed == 'true' }}
-    secrets: inherit
+    # CI-10: explicit allowlist instead of secrets:inherit (public repo).
+    # GITHUB_TOKEN is intentionally not listed — the called workflow uses the
+    # automatic token scoped by this job's permissions block.
+    secrets:
+      INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+      INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+      INFISICAL_PROJECT_SLUG: ${{ secrets.INFISICAL_PROJECT_SLUG }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_API_KEY_1: ${{ secrets.RENDER_API_KEY_1 }}
+      RENDER_API_KEY_2: ${{ secrets.RENDER_API_KEY_2 }}
+      RENDER_API_KEY_3: ${{ secrets.RENDER_API_KEY_3 }}
+      RENDER_API_KEY_4: ${{ secrets.RENDER_API_KEY_4 }}
+      RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+      RENDER_BACKUP_API_KEY_2: ${{ secrets.RENDER_BACKUP_API_KEY_2 }}
+      RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID }}
+      RENDER_WORKER_SVC_ID: ${{ secrets.RENDER_WORKER_SVC_ID }}
+      RENDER_SCRAPER_SVC_ID: ${{ secrets.RENDER_SCRAPER_SVC_ID }}
+      RENDER_MCP_SVC_ID: ${{ secrets.RENDER_MCP_SVC_ID }}
 
   # -----------------------------------------------------------------
   # MCP Control Tower Build & Verify
@@ -1611,7 +1633,35 @@ jobs:
       deploy-scraper: ${{ needs.changes.outputs.scraper == 'true' }}
       deploy-mcp: ${{ needs.changes.outputs.infra == 'true' }}
       deploy-cloudflare: ${{ needs.changes.outputs.infra == 'true' }}
-    secrets: inherit
+    # CI-10: explicit allowlist instead of secrets:inherit (public repo).
+    secrets:
+      INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+      INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+      INFISICAL_PROJECT_SLUG: ${{ secrets.INFISICAL_PROJECT_SLUG }}
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_API_KEY_2: ${{ secrets.RENDER_API_KEY_2 }}
+      RENDER_API_KEY_3: ${{ secrets.RENDER_API_KEY_3 }}
+      RENDER_API_KEY_4: ${{ secrets.RENDER_API_KEY_4 }}
+      RENDER_API_KEY_BACKUP: ${{ secrets.RENDER_API_KEY_BACKUP }}
+      RENDER_BACKUP_API_KEY_2: ${{ secrets.RENDER_BACKUP_API_KEY_2 }}
+      RENDER_PRIMARY_SVC_ID: ${{ secrets.RENDER_PRIMARY_SVC_ID }}
+      RENDER_WORKER_SVC_ID: ${{ secrets.RENDER_WORKER_SVC_ID }}
+      RENDER_BACKUP_SVC_ID: ${{ secrets.RENDER_BACKUP_SVC_ID }}
+      RENDER_SCRAPER_SVC_ID: ${{ secrets.RENDER_SCRAPER_SVC_ID }}
+      RENDER_MCP_SVC_ID: ${{ secrets.RENDER_MCP_SVC_ID }}
+      RENDER_CORE_URL: ${{ secrets.RENDER_CORE_URL }}
+      RENDER_WORKER_URL: ${{ secrets.RENDER_WORKER_URL }}
+      RENDER_SCRAPER_URL: ${{ secrets.RENDER_SCRAPER_URL }}
+      RENDER_MCP_URL: ${{ secrets.RENDER_MCP_URL }}
+      DB_SCHEMA_CHECK_URL: ${{ secrets.DB_SCHEMA_CHECK_URL }}
+      SUPABASE_DATABASE_URL_POOLER: ${{ secrets.SUPABASE_DATABASE_URL_POOLER }}
+      SUPABASE_DATABASE_URL_WRITER: ${{ secrets.SUPABASE_DATABASE_URL_WRITER }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_WORKER_URL: ${{ secrets.CLOUDFLARE_WORKER_URL }}
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
   # -----------------------------------------------------------------
   # Smart Pipeline Summary
@@ -1754,7 +1804,10 @@ jobs:
     # Deployment Truth ব্লক UNVERIFIED স্পষ্ট বলবে — নীরব ভুয়া পাস নয়)।
     if: github.ref == 'refs/heads/main' && github.event_name == 'push' && vars.STAGING_ENABLED == 'true'
     uses: ./.github/workflows/staging-deploy.yml
-    secrets: inherit
+    # CI-10: explicit allowlist instead of secrets:inherit (public repo).
+    secrets:
+      RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+      RENDER_STAGING_SERVICE_ID: ${{ secrets.RENDER_STAGING_SERVICE_ID }}
 
   # -----------------------------------------------------------------
   # Post-deploy canary — প্রথমবার সত্যিকারে সংযুক্ত (আগে workflow_run ট্রিগার
@@ -1766,5 +1819,8 @@ jobs:
     needs: [production-deploy]
     if: always() && needs.production-deploy.result == 'success' && github.ref == 'refs/heads/main'
     uses: ./.github/workflows/09-post-deploy-smoke.yml
-    secrets: inherit
+    # CI-10: explicit allowlist instead of secrets:inherit (public repo).
+    secrets:
+      PRODUCTION_URL: ${{ secrets.PRODUCTION_URL }}
+      FRONTEND_PRODUCTION_URL: ${{ secrets.FRONTEND_PRODUCTION_URL }}
 
