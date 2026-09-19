@@ -26,9 +26,10 @@ class UpstashRedisQueue:
                 limits=httpx.Limits(max_connections=10, max_keepalive_connections=5),
                 timeout=self.timeout,
             )
-            if self.rest_url and self.token
+            if (self.rest_url and self.token) or (hasattr(settings, "upstash_redis_rest_pool") and settings.upstash_redis_rest_pool)
             else None
         )
+        self._active_pool_idx = 0
 
     @property
     def configured(self) -> bool:
@@ -39,13 +40,34 @@ class UpstashRedisQueue:
             raise RuntimeError(
                 "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are not configured"
             )
-        response = self._client.post(
-            self.rest_url,
-            headers={"Authorization": f"Bearer {self.token}"},
-            json=list(args),
-        )
-        response.raise_for_status()
-        return response.json()
+
+        # Issue #754 (MA-04): multi-account federation failover across all 5 Upstash instances
+        pool = getattr(settings, "upstash_redis_rest_pool", [])
+        endpoints = pool if pool else ([(self.rest_url, self.token)] if (self.rest_url and self.token) else [])
+        if not endpoints:
+            raise RuntimeError("No configured Upstash Redis REST endpoints available")
+
+        last_err: Exception | None = None
+        for i in range(len(endpoints)):
+            idx = (self._active_pool_idx + i) % len(endpoints)
+            target_url, target_token = endpoints[idx]
+            try:
+                response = self._client.post(
+                    target_url,
+                    headers={"Authorization": f"Bearer {target_token}"},
+                    json=list(args),
+                )
+                response.raise_for_status()
+                if idx != self._active_pool_idx:
+                    self._active_pool_idx = idx
+                return response.json()
+            except Exception as exc:
+                last_err = exc
+                logger.warning(f"Upstash Redis REST instance {idx} failed ({exc}); failing over...")
+
+        if last_err:
+            raise last_err
+        return {}
 
     # বাংলা মন্তব্য: SET NX EX মেকানিজম ইমপ্লিমেন্ট করা হলো যা শুধুমাত্র কী না থাকলে লক সেট করবে
     def set_nx(self, key: str, value: str, ex: int | None = None) -> bool:

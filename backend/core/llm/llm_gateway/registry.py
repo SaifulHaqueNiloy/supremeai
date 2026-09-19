@@ -8,6 +8,7 @@ instance (kept in exactly this one module and re-exported by the package).
 """
 
 import asyncio
+import os
 import time
 
 # বাংলা মন্তব্ব: Provider → settings attribute mapping।
@@ -82,13 +83,25 @@ class _ProviderKeyPool:
         self._lock = asyncio.Lock()
 
     @staticmethod
-    def _keys_for(raw: str | None) -> list[str]:
-        if not raw:
-            return []
-        return [k.strip() for k in str(raw).split(",") if k.strip()]
+    def _keys_for(raw: str | None, provider: str = "") -> list[str]:
+        keys: list[str] = []
+        if raw:
+            keys.extend([k.strip() for k in str(raw).split(",") if k.strip()])
+
+        # Issue #755 (MA-12): also discover numbered env vars ${PREFIX}_1, ${PREFIX}_2, ...
+        # (e.g. GEMINI_API_KEY_1, GEMINI_API_KEY_2, OPENAI_API_KEY_1, V0_API_KEY_1, etc.)
+        if provider:
+            prefixes = [f"{provider.upper()}_API_KEY", f"{provider.upper()}_KEY", provider.upper()]
+            for pfx in prefixes:
+                for idx in range(1, 15):
+                    val = os.getenv(f"{pfx}_{idx}")
+                    if val and val.strip() and val.strip() not in keys:
+                        keys.append(val.strip())
+
+        return keys
 
     async def next_key(self, provider: str, raw: str | None) -> str | None:
-        keys = self._keys_for(raw)
+        keys = self._keys_for(raw, provider=provider)
         if not keys:
             return None
         if len(keys) == 1:

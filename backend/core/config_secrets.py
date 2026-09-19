@@ -317,6 +317,33 @@ class SettingsSecretsMixin:
             return f"redis://{url}"
         return url
 
+    # ── Upstash Redis REST Credentials & Federation Pool (Resolves #754) ────
+    @property
+    def upstash_redis_rest_url(self) -> str:
+        return self._get_cached_secret("UPSTASH_REDIS_REST_URL")
+
+    @property
+    def upstash_redis_rest_token(self) -> str:
+        return self._get_cached_secret("UPSTASH_REDIS_REST_TOKEN")
+
+    @property
+    def upstash_redis_rest_pool(self) -> list[tuple[str, str]]:
+        """Return all available Upstash Redis REST (url, token) pairs across the 5 accounts."""
+        pool: list[tuple[str, str]] = []
+        pairs = [
+            ("UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"),
+            ("UPSTASH_REDIS_SECONDARY_REST_URL", "UPSTASH_REDIS_SECONDARY_REST_TOKEN"),
+            ("UPSTASH_REDIS_TERTIARY_REST_URL", "UPSTASH_REDIS_TERTIARY_REST_TOKEN"),
+            ("UPSTASH_REDIS_QUATERNARY_REST_URL", "UPSTASH_REDIS_QUATERNARY_REST_TOKEN"),
+            ("UPSTASH_REDIS_QUINARY_REST_URL", "UPSTASH_REDIS_QUINARY_REST_TOKEN"),
+        ]
+        for url_k, tok_k in pairs:
+            u = (self._get_cached_secret(url_k) or "").rstrip("/")
+            t = self._get_cached_secret(tok_k) or ""
+            if u and t:
+                pool.append((u, t))
+        return pool
+
     def _set_cached_secret(self, key: str, value: Any) -> None:
         self._ensure_secrets_loaded()
         self._get_private_state()["_cached_secrets"][key] = str(value) if value is not None else ""
