@@ -599,6 +599,19 @@ class SettingsSecretsMixin:
     def neo4j_password(self) -> str:
         return self._get_cached_secret("NEO4J_PASSWORD") or ""
 
+    # ── Neon Database Credentials (Issue #756: connection pooler) ───────────
+    @property
+    def neon_database_url(self) -> str:
+        url = self._get_cached_secret("NEON_DATABASE_URL")
+        # Ensure pooler endpoint is prioritized to eliminate connection exhaustion
+        if url and ".c-4.ap-southeast-1.aws.neon.tech" in url and "-pooler" not in url:
+            url = url.replace(".c-4.ap-southeast-1.aws.neon.tech", "-pooler.c-4.ap-southeast-1.aws.neon.tech")
+        return url
+
+    @property
+    def neon_api_key(self) -> str:
+        return self._get_cached_secret("NEON_API_KEY")
+
     # ── Admin Password Hash — Infisical-backed lazy property ────────────────
     # বাংলা মন্তব্য: Pydantic Field(validation_alias=...) সরাসরি OS env var থেকে পড়ে, যা Infisical
     # ভল্টে থাকা সিক্রেট পড়তে পারে না এবং Render ডিপ্লয়মেন্টে Validation Error ঘটিয়ে প্রসেস করায়।
