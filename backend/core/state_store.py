@@ -206,6 +206,16 @@ class DurableStateStore:
         with self._lock:
             return list(self._mirror.keys())
 
+    def reset(self) -> None:
+        """Clear mirror + hydration state (test isolation / admin ops).
+
+        বাংলা: সিঙ্গেলটন স্টোর টেস্টের মধ্যে state লিক করায় — ফিক্সচারে
+        reset() ডাকা হয়। Redis-এ কোনো DEL পাঠায় না (শুধু লোকাল ভিউ)।
+        """
+        with self._lock:
+            self._mirror.clear()
+            self._hydrated = False
+
     def mirror_items(self) -> dict[str, Any]:
         with self._lock:
             return {k: json.loads(v) for k, v in self._mirror.items()}

@@ -107,6 +107,17 @@ def sqlite_service(tmp_path):
     return ms.CascadeMemoryService(db_path=str(tmp_path / "memory-test.db"))
 
 
+@pytest.fixture(autouse=True)
+def _reset_durable_state_store():
+    """Issue #451: the durable state-store singleton persists across tests —
+    reset the local mirror view before each test so hydrated rows from a
+    previous test never leak into the next one."""
+    store = ms.durable_state("cascade_memory")
+    store.reset()
+    yield
+    store.reset()
+
+
 @pytest.fixture
 def degraded_service(monkeypatch):
     """Production DB-loss policy: no Postgres, SQLite fallback refused."""
