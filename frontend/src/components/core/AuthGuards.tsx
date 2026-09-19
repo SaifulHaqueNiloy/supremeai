@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuthStore, AuthStatus } from '../../store/authStore';
+import { canAccessAdminContext } from '../../auth/identity';
 
 // বাংলা (single-frontend migration): hook + spinner এখন export করা — App.tsx-এর
 // LandingRedirect ও অন্য guard-রাও (RoleGuard/PermissionGuard) একই auth-state
@@ -16,7 +17,8 @@ export const useAuthStatus = () => {
   }, [status, initialize]);
 
   const isChecking = status === AuthStatus.UNINITIALIZED;
-  const isAuthenticated = status === AuthStatus.LOGGED_IN;
+  // 🛡️ ISSUE #495: বৈধ unexpired admin JWT থাকলে ProtectedRoute যেন এডমিনকে অকালে লগআউট বা রিডাইরেক্ট না করে
+  const isAuthenticated = status === AuthStatus.LOGGED_IN || canAccessAdminContext();
 
   return { isChecking, isAuthenticated };
 };
