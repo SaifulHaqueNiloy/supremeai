@@ -41,6 +41,49 @@ except ImportError as e:
 CACHE_TTL_SECONDS: int = int(os.getenv("SECRET_CACHE_TTL") or "300")  # 5 min default
 INFISICAL_TIMEOUT: int = int(os.getenv("INFISICAL_TIMEOUT") or "10")  # 10s default
 
+# ── Secret classification (BE-13, issue #545) ─────────────────────────────────
+# Secrets that may legitimately be absent in production/staging: a missing
+# value only degrades the corresponding integration (INFO log, empty/None
+# returned). EVERY other secret is FAIL-CLOSED: a missing value raises
+# RuntimeError so a forgotten secret can never silently become "" downstream
+# (e.g. STRIPE_WEBHOOK_SECRET → SecretStr("") accepting forged webhook events).
+# To ship a new optional integration, explicitly add its key here.
+OPTIONAL_SECRETS: set[str] = {
+    "ADMIN_NOTIFICATION_EMAIL",
+    "DISCORD_OTP_WEBHOOK_URL",
+    "DISCORD_WEBHOOK_URL",
+    "DISCORD_BOT_TOKEN",
+    "RESEND_API_KEY",
+    "NVIDIA_API_KEY",
+    "OPENAI_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "GEMINI_API_KEY",
+    "OPENROUTER_API_KEY",
+    "GROQ_API_KEY",
+    "GITHUB_CLIENT_ID",
+    "GITHUB_CLIENT_SECRET",
+    "HF_API_KEY",
+    "NEO4J_URI",
+    "NEO4J_USER",
+    "NEO4J_PASSWORD",
+    "TELEGRAM_BOT_TOKEN",
+    "ADMIN_TELEGRAM_CHAT_ID",
+    # Consumers handle absence explicitly (core/db_ssl.py warns and relies on
+    # certifi when unset), so absence must degrade, not raise.
+    "SUPABASE_DB_CA_CERT",
+}
+# Infra-critical secrets whose absence aborts boot — kept as a separate set so
+# they get the CRITICAL log + alert event before the fail-closed raise.
+HARD_REQUIRED_SECRETS: set[str] = {
+    "SUPABASE_DATABASE_URL_POOLER",
+    "SUPABASE_URL",
+    "SUPABASE_KEY",
+    "REDIS_URL",
+    "SUPREMEAI_JWT_SECRET",
+    "ENCRYPTION_KEY",
+    "SUPREMEAI_API_KEY",
+}
+
 
 class _CacheEntry:
     """Cache entry with TTL expiry."""
@@ -346,90 +389,75 @@ class ProductionSecretVault:
     def _fallback_to_env(self, secret_id: str, default: str | None) -> str:
         """Fallback to environment variable.
 
-        বাংলা মন্তব্য: এনভায়রনমেন্ট ভেরিয়েবলে ফলব্যাক। প্রোডাকশনে ইনফিসিক্যাল বা এনভায়রনমেন্ট ভেরিয়েবল
-        অনুপস্থিত থাকলে হার্ড ক্র্যাশ না করে ওয়ার্নিং লগ করে গ্রেসফুল ফলব্যাক বা খালি স্ট্রিং রিটার্ন করা হচ্ছে,
-        যাতে ক্লাউড রান বা রেন্ডারে সার্ভার ক্র্যাশ না করে হেলথ চেক সম্পন্ন হতে পারে।
+        বাংলা মন্তব্য: এনভায়রনমেন্ট ভেরিয়েবলে ফলব্যাক। প্রোডাকশন/স্টেজিং-এ OPTIONAL_SECRETS-এ
+        স্পষ্টভাবে তালিকাভুক্ত সিক্রেট না থাকলে এখন fail-closed (RuntimeError) — অজানা
+        সিক্রেট আর নীরবে "" হয়ে ডাউনস্ট্রিমে চলে যাবে না (BE-13, issue #545)।
+        Local/dev-এ আগের মতোই graceful mock fallback রাখা হয়েছে।
         """
-        env_fallback = os.getenv(secret_id, default)
-        if env_fallback is None:
-            if self.env in ("production", "staging"):
-                OPTIONAL_SECRETS = {
-                    "ADMIN_NOTIFICATION_EMAIL",
-                    "DISCORD_OTP_WEBHOOK_URL",
-                    "DISCORD_WEBHOOK_URL",
-                    "DISCORD_BOT_TOKEN",
-                    "RESEND_API_KEY",
-                    "NVIDIA_API_KEY",
-                    "OPENAI_API_KEY",
-                    "DEEPSEEK_API_KEY",
-                    "GEMINI_API_KEY",
-                    "OPENROUTER_API_KEY",
-                    "GROQ_API_KEY",
-                    "GITHUB_CLIENT_ID",
-                    "GITHUB_CLIENT_SECRET",
-                    "HF_API_KEY",
-                    "NEO4J_URI",
-                    "NEO4J_USER",
-                    "NEO4J_PASSWORD",
-                    "TELEGRAM_BOT_TOKEN",
-                    "ADMIN_TELEGRAM_CHAT_ID",
-                }
-                HARD_REQUIRED_SECRETS = {
-                    "SUPABASE_DATABASE_URL_POOLER",
-                    "SUPABASE_URL",
-                    "SUPABASE_KEY",
-                    "REDIS_URL",
-                    "SUPREMEAI_JWT_SECRET",
-                    "ENCRYPTION_KEY",
-                    "SUPREMEAI_API_KEY",
-                }
-
-                if default is None and secret_id in HARD_REQUIRED_SECRETS:
-                    logger.critical(
-                        f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert..."
-                    )
-                    try:
-                        error_event_bus.emit(
-                            ErrorEvent(
-                                module="secret_vault",
-                                error_type="CRITICAL_SECRET_MISSING",
-                                message=f"Secret '{secret_id}' not found in Infisical or env!",
-                                severity="CRITICAL",
-                                context={"secret_id": secret_id},
-                            )
-                        )
-                    except Exception as exc:
-                        logger.debug(f"Failed to emit error event: {exc}")
-                    # বাংলা মন্তব্য: শুধুমাত্র infra-critical secret অনুপস্থিত হলেই Fail-closed।
-                    raise RuntimeError(
-                        f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed."
-                    )
-                elif default is None:
-                    if secret_id not in OPTIONAL_SECRETS:
-                        logger.warning(
-                            f"⚠️ Secret '{secret_id}' missing in {self.env} — degrading with empty value (unknown)."
-                        )
-                    else:
-                        logger.info(
-                            f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping."
-                        )
-
+        env_value = os.getenv(secret_id)
+        if env_value:
+            env_fallback = env_value
+        elif self.env in ("production", "staging"):
+            # BE-13 (issue #545): in production/staging the classification
+            # sets decide. NOTE: an env var explicitly set to "" is treated as
+            # missing (empty value is never a valid secret).
+            if secret_id in OPTIONAL_SECRETS:
+                logger.info(
+                    f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping."
+                )
                 env_fallback = default if default is not None else ""
+            elif default is None and secret_id in HARD_REQUIRED_SECRETS:
+                logger.critical(
+                    f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert..."
+                )
+                try:
+                    error_event_bus.emit(
+                        ErrorEvent(
+                            module="secret_vault",
+                            error_type="CRITICAL_SECRET_MISSING",
+                            message=f"Secret '{secret_id}' not found in Infisical or env!",
+                            severity="CRITICAL",
+                            context={"secret_id": secret_id},
+                        )
+                    )
+                except Exception as exc:
+                    logger.debug(f"Failed to emit error event: {exc}")
+                # বাংলা মন্তব্য: infra-critical secret অনুপস্থিত হলে Fail-closed।
+                raise RuntimeError(
+                    f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed."
+                )
             else:
-                logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
-                if default is not None:
-                    env_fallback = default
-                elif secret_id == "SUPREMEAI_JWT_SECRET":
-                    # বাংলা মন্তব্য: Local/CI মকিং-এর ক্ষেত্রে JWT Secret সর্বনিম্ন 64 বাইট সিকিউরিটি নিশ্চিত করা হলো
-                    import secrets
+                # BE-13 (issue #545): default fail-closed for every secret not
+                # explicitly opted into OPTIONAL_SECRETS. A secret forgotten in
+                # the classification sets (e.g. a new key added to
+                # _CORE_SECRET_KEYS, or STRIPE_WEBHOOK_SECRET read by the
+                # webhook-verification path) must never silently become ""
+                # downstream — previously this branch only logged a WARNING and
+                # returned "" (or swallowed the caller's default=""), so an
+                # empty SecretStr("") reached webhook verification and accepted
+                # forged events. Operators opt unknown/optional secrets in
+                # explicitly instead.
+                raise RuntimeError(
+                    f"Secret '{secret_id}' is missing in {self.env} and is not in the "
+                    f"optional allowlist (BE-13 fail-closed). Provision it via Infisical/env, "
+                    f"or add it to OPTIONAL_SECRETS in core/security/secret_vault.py if it is "
+                    f"genuinely optional."
+                )
+        else:
+            logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
+            if default is not None:
+                env_fallback = default
+            elif secret_id == "SUPREMEAI_JWT_SECRET":
+                # বাংলা মন্তব্য: Local/CI মকিং-এর ক্ষেত্রে JWT Secret সর্বনিম্ন 64 বাইট সিকিউরিটি নিশ্চিত করা হলো
+                import secrets
 
-                    env_fallback = secrets.token_urlsafe(64)
-                elif secret_id == "SUPABASE_URL":
-                    env_fallback = "https://mock.supabase.co"
-                elif secret_id == "SUPABASE_KEY":
-                    env_fallback = "mock-key"
-                else:
-                    env_fallback = f"mock_{secret_id}"
+                env_fallback = secrets.token_urlsafe(64)
+            elif secret_id == "SUPABASE_URL":
+                env_fallback = "https://mock.supabase.co"
+            elif secret_id == "SUPABASE_KEY":
+                env_fallback = "mock-key"
+            else:
+                env_fallback = f"mock_{secret_id}"
         self._cache[secret_id] = _CacheEntry(env_fallback)
         return env_fallback
 
