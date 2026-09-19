@@ -625,16 +625,6 @@ async def worker_status() -> dict[str, Any]:
     }
 
 
-# ── Celery subprocess lifecycle (atexit is the reliable path; uvicorn replaces
-#    our signal handlers when it installs its own, but both are registered) ────
-atexit.register(_terminate_celery)
-for _sig in (signal.SIGTERM, signal.SIGINT):
-    with contextlib.suppress(ValueError, OSError):  # non-main thread / unsupported
-        signal.signal(_sig, lambda *_: (_terminate_celery(), sys.exit(0)))
-
-_spawn_celery()
-
-
 def _start_kaggle_dispatcher() -> None:
     """Issue #439: run the Kaggle job dispatcher loop on the worker node.
 
@@ -692,7 +682,23 @@ def _start_kaggle_dispatcher() -> None:
     threading.Thread(target=_loop, name="kaggle-dispatcher", daemon=True).start()
 
 
-_start_kaggle_dispatcher()
-
+# ── Process lifecycle (Issue #568 / BE-17) ───────────────────────────────────
+# The atexit/signal cleanup, the Celery subprocess spawn and the Kaggle
+# dispatcher thread used to run at IMPORT time, so any process that merely
+# imported worker_service (openapi gen, schema_exporter, tests, lazy
+# __getattr__) unconditionally forked a Celery subprocess and started
+# dispatching Kaggle jobs. They are side effects of RUNNING the service, so
+# they now happen only under `python worker_service.py` (the production
+# entrypoint — docker-compose.yml command), never on import.
 if __name__ == "__main__":
+    # atexit is the reliable path; uvicorn replaces our signal handlers when
+    # it installs its own, but both are registered.
+    atexit.register(_terminate_celery)
+    for _sig in (signal.SIGTERM, signal.SIGINT):
+        with contextlib.suppress(ValueError, OSError):  # non-main thread / unsupported
+            signal.signal(_sig, lambda *_: (_terminate_celery(), sys.exit(0)))
+
+    _spawn_celery()
+    _start_kaggle_dispatcher()
+
     uvicorn.run(app, host="0.0.0.0", port=PORT)
