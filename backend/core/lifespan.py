@@ -217,13 +217,29 @@ async def app_lifespan(app):
         logger.info("Supabase schema bootstrap cancelled during shutdown")
         raise
     except TimeoutError:
-        logger.warning(
-            f"Supabase schema bootstrap timed out after {timeout_val}s — continuing without full schema init."
-        )
+        # Issue #478: a skipped migration/bootstrap must never count as silent
+        # success in production — make it CRITICAL-visible (crash remains off
+        # the table: the readiness schema gate owns the fail-closed decision).
+        if str(getattr(settings, "env", "") or os.getenv("ENV", "")).lower() in {"production", "prod"}:
+            logger.critical(
+                f"Supabase schema bootstrap timed out after {timeout_val}s in PRODUCTION "
+                "— schema drift possible; readiness schema gate will report missing tables. "
+                "Set SUPABASE_DATABASE_URL_WRITER (MANUAL_STEPS 7.9)."
+            )
+        else:
+            logger.warning(
+                f"Supabase schema bootstrap timed out after {timeout_val}s — continuing without full schema init."
+            )
     except Exception as exc:
-        logger.warning(
-            f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap."
-        )
+        if str(getattr(settings, "env", "") or os.getenv("ENV", "")).lower() in {"production", "prod"}:
+            logger.critical(
+                "Supabase bootstrap failed on startup in PRODUCTION: "
+                f"{type(exc).__name__} (details suppressed) — readiness schema gate will verify tables."
+            )
+        else:
+            logger.warning(
+                f"Supabase bootstrap failed on startup: {exc}. Continuing without schema bootstrap."
+            )
         error_event_bus.emit(
             ErrorEvent(
                 module="lifespan",

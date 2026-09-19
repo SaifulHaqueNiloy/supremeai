@@ -18,6 +18,7 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from alembic import context as _alembic_context
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine.reflection import Inspector
 
@@ -28,14 +29,25 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-def upgrade():
-    conn = op.get_bind()
+def _existing_tables_offline_safe(conn):
+    # Issue #478: offline mode cannot inspect (MockConnection) — degrade to an
+    # empty set so the generated SQL plan contains the full DDL; the live run
+    # still guards with the real inspector.
+    from alembic import context
+
+    if _alembic_context.is_offline_mode:
+        return set()
     inspector = (
         Inspector.from_engine(conn.engine)
         if hasattr(conn, "engine")
         else Inspector.from_engine(conn)
     )
-    existing_tables = inspector.get_table_names()
+    return inspector.get_table_names()
+
+
+def upgrade():
+    conn = op.get_bind()
+    existing_tables = _existing_tables_offline_safe(conn)
     for enum_name, enum_values in [
         (
             "agent_session_state",
@@ -48,9 +60,19 @@ def upgrade():
         ),
         ("policy_scope_enum", "('global_scope', 'per_platform', 'per_action')"),
     ]:
-        if not conn.execute(
-            sa.text(f"SELECT 1 FROM pg_type WHERE typname = '{enum_name}'")
-        ).scalar():
+        # Issue #478: offline mode has no live connection — pg_type cannot be
+        # probed (execute() returns None). Treat the enum as absent so the
+        # generated SQL plan contains the CREATE TYPE; the live run still
+        # probes pg_type for real.
+        if _alembic_context.is_offline_mode:
+            exists = False
+        else:
+            exists = bool(
+                conn.execute(
+                    sa.text(f"SELECT 1 FROM pg_type WHERE typname = '{enum_name}'")
+                ).scalar()
+            )
+        if not exists:
             op.execute(f"CREATE TYPE {enum_name} AS ENUM {enum_values}")
 
     if "agent_genomes" not in existing_tables:

@@ -24,6 +24,7 @@ Create Date: 2026-08-30
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+from alembic import context as _alembic_context
 from alembic import op
 from sqlalchemy.dialects import postgresql
 
@@ -34,15 +35,27 @@ branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
 
-def upgrade() -> None:
-    """মিসিং টেবিলগুলো তৈরি করে -- ইতিমধ্যে বিদ্যমান থাকলে skip করে (idempotent)।"""
-    bind = op.get_bind()
+def _reflection_offline_safe(bind):
+    """Issue #478: offline mode (alembic --sql) cannot reflect a MockConnection.
+
+    Degrade to empty reflection so the generated SQL plan contains the full
+    unconditional DDL; the live run still reflects the real database.
+    """
+    if _alembic_context.is_offline_mode:
+        return set(), set()
     inspector = sa.inspect(bind)
     existing_tables = set(inspector.get_table_names())
     existing_indexes = set()
     for table in existing_tables:
         for idx in inspector.get_indexes(table):
             existing_indexes.add(idx["name"])
+    return existing_tables, existing_indexes
+
+
+def upgrade() -> None:
+    """মিসিং টেবিলগুলো তৈরি করে -- ইতিমধ্যে বিদ্যমান থাকলে skip করে (idempotent)।"""
+    bind = op.get_bind()
+    existing_tables, existing_indexes = _reflection_offline_safe(bind)
 
     if "provider_configs" not in existing_tables:
         op.create_table(
@@ -1749,7 +1762,7 @@ def upgrade() -> None:
         )
 
     # ইনডেক্স -- টেবিল আগে থেকে থাকলেও ইনডেক্স না থাকলে তৈরি করা হয়
-    existing_tables = set(inspector.get_table_names())
+    existing_tables, existing_indexes = _reflection_offline_safe(bind)
     if "user_preferences" in existing_tables:
         if "idx_user_preferences_updated_at" not in existing_indexes:
             op.create_index(

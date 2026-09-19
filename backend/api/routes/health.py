@@ -18,6 +18,7 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from core.cache import get_cache
 from core.cache.redis_manager import redis_manager
+from core.db_schema_gate import check_schema_status, production_schema_incompatible
 from core.degraded_mode import db_degraded
 from core.logging_config import logger
 
@@ -131,6 +132,26 @@ async def readiness_check():
     db_ok = await _check_database()
     redis_ok = await _check_redis()
 
+    # Issue #478: schema gate — report schema state; fail closed in production
+    # when a required table is missing (missing-table runtime failures are
+    # worse than an honest 503). Read-only REST probe, cached 60s.
+    import asyncio
+
+    try:
+        schema_reason = await asyncio.to_thread(production_schema_incompatible)
+        schema_status = await asyncio.to_thread(check_schema_status)
+    except Exception as exc:  # noqa: BLE001 — probe must never crash readiness
+        logger.warning(f"schema gate probe error (treated as unknown): {exc}")
+        schema_reason = None
+        schema_status = {"checked": False, "reason": "probe error", "missing": [], "present": []}
+    if schema_reason:
+        env_hint = os.getenv("ENV", "")
+        logger.critical(f"Readiness schema gate: {schema_reason} (env={env_hint})")
+        raise HTTPException(
+            status_code=503,
+            detail=f"Schema incompatible — not ready ({schema_reason})",
+        )
+
     persistence_mode = (
         "healthy" if db_ok == "healthy" else ("degraded" if db_degraded() else "unavailable")
     )
@@ -160,6 +181,7 @@ async def readiness_check():
             "role": role,
             "persistence_mode": persistence_mode,
             "cache": "healthy" if redis_ok == "healthy" else "degraded",
+            "schema": {k: schema_status.get(k) for k in ("checked", "missing", "present", "unknown")},
             "readiness_policy": {"decision": "role-tolerated", "reason": reason},
         }
 
@@ -169,6 +191,7 @@ async def readiness_check():
         "role": role,
         "persistence_mode": persistence_mode,
         "cache": "healthy" if redis_ok == "healthy" else "degraded",
+        "schema": {k: schema_status.get(k) for k in ("checked", "missing", "present", "unknown")},
     }
 
 
