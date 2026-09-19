@@ -66,11 +66,30 @@ class TestConfigValidationReportContract(unittest.TestCase):
 
         from core.config_validation import build_config_validation_report
 
-        with patch.dict(os.environ, {"JWT_SECRET": ""}, clear=False):
+        # Issue #567 (BE-16): canonical name is SUPREMEAI_JWT_SECRET; the
+        # JWT_SECRET alias is cleared too so the report must flag the
+        # canonical var as missing.
+        with patch.dict(os.environ, {"SUPREMEAI_JWT_SECRET": "", "JWT_SECRET": ""}, clear=False):
             report = build_config_validation_report(env="test")
         names = {c.name for c in report.errors}
-        self.assertIn("JWT_SECRET", names)
+        self.assertIn("SUPREMEAI_JWT_SECRET", names)
         self.assertFalse(report.ok)
+
+    def test_deprecated_jwt_alias_is_warning_not_error(self):
+        import os
+
+        from core.config_validation import build_config_validation_report
+
+        # Issue #567 (BE-16): operators still on the legacy JWT_SECRET name
+        # get a deprecation warning, not a false "missing required var" error.
+        with patch.dict(os.environ, {"SUPREMEAI_JWT_SECRET": "", "JWT_SECRET": "legacy-secret-value"}, clear=False):
+            report = build_config_validation_report(env="test")
+        error_names = {c.name for c in report.errors}
+        self.assertNotIn("SUPREMEAI_JWT_SECRET", error_names)
+        alias_checks = [
+            c for c in report.checks if c.name == "SUPREMEAI_JWT_SECRET" and c.status == "warning"
+        ]
+        self.assertTrue(alias_checks, "expected a deprecation warning for the JWT_SECRET alias")
 
     def test_every_error_has_fix_suggestion(self):
         from core.config_validation import build_config_validation_report

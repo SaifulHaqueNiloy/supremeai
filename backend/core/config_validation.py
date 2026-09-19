@@ -16,6 +16,7 @@ from pydantic import (
 )
 
 from core.logging_config import logger
+from core.secret_policy import JWT_SECRET_DEPRECATED_ENV, JWT_SECRET_ENV
 
 # Public platform apex domains that must NEVER appear as bare entries in
 # production/staging ALLOWED_HOSTS (see validate_allowed_hosts for rationale:
@@ -580,8 +581,10 @@ class ConfigValidationReport(BaseModel):
 
 
 # Required environment variables for a deployable core service.
+# Issue #567 (BE-16): canonical JWT secret name is SUPREMEAI_JWT_SECRET;
+# JWT_SECRET is accepted as a deprecated alias (warning, not error).
 _REQUIRED_VARS = (
-    "JWT_SECRET",
+    JWT_SECRET_ENV,
     "SUPABASE_URL",
     "SUPABASE_SERVICE_ROLE_KEY",
 )
@@ -612,6 +615,27 @@ def build_config_validation_report(env: str | None = None) -> ConfigValidationRe
 
     for var in _REQUIRED_VARS:
         value = os.getenv(var, "")
+        if not value.strip() and var == JWT_SECRET_ENV:
+            # Issue #567 (BE-16): JWT_SECRET is a deprecated alias for the
+            # canonical SUPREMEAI_JWT_SECRET — accept it with a warning so
+            # operators following the legacy name get one honest report
+            # instead of failing this validator while passing the others.
+            if os.getenv(JWT_SECRET_DEPRECATED_ENV, "").strip():
+                report.add(
+                    ConfigCheck(
+                        name=var,
+                        status="warning",
+                        detail=(
+                            f"{JWT_SECRET_DEPRECATED_ENV} is set; it is a deprecated alias "
+                            f"for {JWT_SECRET_ENV} and is still accepted this boot."
+                        ),
+                        fix_suggestion=(
+                            f"Rename {JWT_SECRET_DEPRECATED_ENV} to {JWT_SECRET_ENV} "
+                            "in the deployment environment."
+                        ),
+                    )
+                )
+                continue
         if not value.strip():
             report.add(
                 ConfigCheck(

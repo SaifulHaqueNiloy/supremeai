@@ -180,10 +180,14 @@ class TestMissionConfigHonesty:
     def test_missing_required_var_is_error(self, monkeypatch):
         from core.config_validation import build_config_validation_report
 
+        # Issue #567 (BE-16): canonical name is SUPREMEAI_JWT_SECRET.
+        monkeypatch.delenv("SUPREMEAI_JWT_SECRET", raising=False)
         monkeypatch.delenv("JWT_SECRET", raising=False)
         report = build_config_validation_report(env="test")
         assert report.ok is False
-        assert any(c.name == "JWT_SECRET" and c.status == "error" for c in report.errors)
+        assert any(
+            c.name == "SUPREMEAI_JWT_SECRET" and c.status == "error" for c in report.errors
+        )
         assert report.errors[0].fix_suggestion  # সৎ রিপোর্ট = ফিক্স পথসহ
 
     def test_wildcard_cors_never_survives_resolution(self, monkeypatch):
@@ -198,7 +202,11 @@ class TestMissionConfigHonesty:
         """বাংলা: সঠিকভাবে কনফিগার করা env-এ রিপোর্ট সবুজ হওয়াই চুক্তি।"""
         from core.config_validation import build_config_validation_report
 
-        monkeypatch.setenv("JWT_SECRET", "mission-test-secret-value")
+        # Issue #567 (BE-16): canonical SUPREMEAI_JWT_SECRET satisfies the
+        # report; the deprecated JWT_SECRET alias must not leak in from the
+        # surrounding environment.
+        monkeypatch.setenv("SUPREMEAI_JWT_SECRET", "mission-test-secret-value")
+        monkeypatch.delenv("JWT_SECRET", raising=False)
         monkeypatch.setenv("SUPABASE_URL", "https://missiontest.supabase.co")
         monkeypatch.setenv("SUPABASE_SERVICE_ROLE_KEY", "mission-service-key")
         monkeypatch.delenv("REDIS_URL", raising=False)  # optional var — অনুপস্থিত = চেক ছাড়াই
