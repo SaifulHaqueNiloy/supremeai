@@ -1,4 +1,5 @@
 """browser-use inspired agentic browser-control adapter for SupremeAI.
+STATUS: orphaned — see docs/operations/MODULE_STATUS_REGISTRY.md (#449).
 
 browser-use (AI-agent browser automation) থেকে নেওয়া মূল ধারণা: প্রাকৃতিক ভাষার টাস্ক
 দিয়ে এজেন্ট নিজে ব্রাউজার খুলে ক্লিক/টাইপ/ফর্ম/এক্সট্র্যাক্ট করতে পারে — মানুষের মতো।
