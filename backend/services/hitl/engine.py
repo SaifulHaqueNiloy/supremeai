@@ -7,6 +7,9 @@ from database.tenant_db import TenantAwareFirestore
 from .dispatch import ApprovalDispatchError, execute_approved, resolve_executor
 from .hitl_ledger import HITLAuditLedger
 
+#: M17 P-D: HITLEngine suspension-এর canonical idempotency-key উপসর্গ।
+_CANONICAL_KEY_PREFIX = "hitl:"
+
 
 class HITLEngine:
     """
@@ -52,6 +55,12 @@ class HITLEngine:
         except Exception as e:
             logger.error(f"?[HITLEngine] Failed to suspend '{target_resource}': {e}")
             raise RuntimeError(f"Failed to suspend action for HITL: {e}")
+
+        # M17 P-D (seven→one): canonical pending_tasks-এ write-through mirror —
+        # দ্বৈত-লেখা পর্ব (Firestore = HITLEngine-authority, pending_tasks =
+        # একক read-পৃষ্ঠ)। best-effort + লাউড: mirror-ব্যর্থতা suspension
+        # ব্লক করে না, কিন্তু নীরবেও গিলে না।
+        self._mirror_to_canonical_create(record_id, payload)
 
         # Log to ledger
         self.ledger.record_entry_sync(
@@ -126,6 +135,7 @@ class HITLEngine:
         # Update status
         now = datetime.now(UTC).isoformat()
         doc_ref.update({"status": "approved", "approved_by": admin_user_id, "updated_at": now})
+        self._mirror_to_canonical_resolve(record_id, "approved", admin_user_id)
 
         # Log to ledger
         self.ledger.record_entry_sync(
@@ -207,6 +217,7 @@ class HITLEngine:
                 "updated_at": now,
             }
         )
+        self._mirror_to_canonical_resolve(record_id, "rejected", admin_user_id, reason=reason)
 
         # Log to ledger
         self.ledger.record_entry_sync(
@@ -223,3 +234,70 @@ class HITLEngine:
             f"?? [HITLEngine] Admin {admin_user_id} rejected '{record_id}'. Reason: {reason}"
         )
         return record
+
+    # ── M17 P-D (seven→one): canonical pending_tasks write-through ─────────
+    # বাংলা: সাত প্রতিযোগী স্টোর → এক ক্যানোনিকাল read-পৃষ্ঠের প্রথম সেতু।
+    # দ্বৈত-লেখা পর্বে Firestore-ই HITLEngine-authority; mirror best-effort —
+    # ব্যর্থতায় লাউড warning, কখনো নীরব ভান নয়।
+
+    def _mirror_to_canonical_create(self, record_id: str, payload: dict[str, Any]) -> None:
+        key = f"{_CANONICAL_KEY_PREFIX}{record_id}"
+        try:
+            from models.pending_tasks import TaskType, create_pending_task, get_task_by_idempotency
+
+            existing = get_task_by_idempotency(key)
+            if existing is not None:
+                # বাংলা: পুনরাবৃত্তি নিরীহ — একই hitl-record-এর mirror আগেই আছে।
+                logger.debug(f"[M17 P-D] canonical mirror already present for {record_id}")
+                return
+            create_pending_task(
+                task_type=TaskType.HITL_SUSPENSION,
+                payload={**(payload or {}), "hitl_record_id": record_id},
+                created_by="hitl-engine",
+                risk_level="high",
+                idempotency_key=key,
+            )
+            logger.info(f"[M17 P-D] suspension '{record_id}' mirrored to canonical pending_tasks")
+        except Exception as exc:
+            logger.warning(
+                f"[M17 P-D] canonical mirror (create) skipped for '{record_id}': {exc!r} — "
+                "Firestore record remains authoritative"
+            )
+
+    def _mirror_to_canonical_resolve(
+        self,
+        record_id: str,
+        verdict: str,
+        admin_user_id: str,
+        reason: str | None = None,
+    ) -> None:
+        key = f"{_CANONICAL_KEY_PREFIX}{record_id}"
+        try:
+            from models.pending_tasks import TaskStatus, get_task_by_idempotency, update_task_status
+
+            task = get_task_by_idempotency(key)
+            if task is None:
+                # বাংলা: suspension-টি mirror-হারা (পুরনো রেকর্ড) — resolve করার
+                # কিছু নেই; সেটি নীরব-ভান নয়, পরিচিত দ্বৈত-লেখা-পূর্ববর্তী অবস্থা।
+                logger.debug(f"[M17 P-D] no canonical mirror to resolve for {record_id}")
+                return
+            status = TaskStatus.APPROVED if verdict == "approved" else TaskStatus.REJECTED
+            updated = update_task_status(
+                task.task_id,
+                status,
+                resolved_by=admin_user_id,
+                reason=reason,
+            )
+            if updated is None:
+                logger.warning(f"[M17 P-D] canonical mirror task for '{record_id}' vanished — loud")
+            else:
+                logger.info(
+                    f"[M17 P-D] canonical mirror for '{record_id}' → {verdict} (by {admin_user_id})"
+                )
+        except Exception as exc:
+            # বাংলা: CAS/TTL ব্যতিক্রমসহ সব mirror-ব্যর্থতা লাউড — Firestore রেকর্ড
+            # authority থাকায় নির্বাহ-পথ অপ্রভাবিত।
+            logger.warning(
+                f"[M17 P-D] canonical mirror (resolve) skipped for '{record_id}': {exc!r} — "
+                "Firestore record remains authoritative"
+            )
