@@ -3,7 +3,7 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Enable corepack for pnpm if needed, or use npm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
 
 # Copy root and package files for monorepo / workspace dependencies
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
