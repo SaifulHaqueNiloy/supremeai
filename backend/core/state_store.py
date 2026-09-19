@@ -93,7 +93,9 @@ class DurableStateStore:
                 exc,
             )
 
-    async def _apply(self, op: str, redis_key: str, value: str | None = None, ttl: int | None = None):
+    async def _apply(
+        self, op: str, redis_key: str, value: str | None = None, ttl: int | None = None
+    ):
         client = await _redis_client()
         if client is None:
             self._durable = False
@@ -180,7 +182,7 @@ class DurableStateStore:
             if keys:
                 raw = await client.mget(*keys)  # one pipeline → few billable ops
                 with self._lock:
-                    for k, v in zip(keys, raw):
+                    for k, v in zip(keys, raw, strict=False):
                         if v is None:
                             continue
                         short = k.decode() if isinstance(k, bytes) else k
