@@ -1,6 +1,6 @@
 # STATUS_PROOF.md (generated — do not hand-edit)
 
-**Verdict: PASS** — প্রতিটি machine-checkable দাবি tree-বাস্তবের সাথে মিলেছে।
+**Verdict: FAIL** — 1টি দাবি tree-বাস্তবের সাথে মেলেনি — STATUS.md হয় সংশোধন করুন, নয়তো tree ঠিক করুন।
 
 generated_by: `scripts/ci/generate_status_proof.py` (stdlib-only, deterministic)
 honesty_contract: tree-pure — কোনো timestamp/sha/runtime ডেটা নেই (diff-gate বৈধ রাখতে);
@@ -20,7 +20,7 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 ## Deployment verification chain (static inventory)
 
 - ✅ `.github/workflows/ci-deploy-production.yml` — reusable deploy (workflow_call); fail-closed gate markers present
-- ✅ `.github/workflows/09-post-deploy-smoke.yml` — post-deploy Playwright canary (workflow_run); fail-closed gate markers present
+- ❌ `.github/workflows/09-post-deploy-smoke.yml` — missing markers: ['PRODUCTION_URL secret is not configured']
 - ✅ `.github/workflows/qa-live-smoke.yml` — scheduled live probe (schedule + workflow_dispatch); fail-closed gate markers present
 
 Live/runtime evidence: CI Pipeline summaries, `QA — Live Production Smoke` run summaries
