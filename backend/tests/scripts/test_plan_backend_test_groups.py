@@ -270,3 +270,111 @@ def test_main_exception_failsafe_full(tmp_path, monkeypatch) -> None:
     text = output_file.read_text(encoding="utf-8")
     assert "plan_mode=full" in text
     assert "failsafe" in text
+
+
+# ── #471: cache fields in the matrix contract ───────────────────────────────
+
+
+def test_matrix_entries_carry_cache_fields() -> None:
+    data = json.loads(
+        planner.build_matrix_json(
+            ["fast"],
+            cache_keys={"fast": "bcov-v1-fast-abc"},
+            force_run_groups=set(),
+        )
+    )
+    entry = data["include"][0]
+    assert entry["cache_key"] == "bcov-v1-fast-abc"
+    assert entry["force_run"] == "false"
+
+
+def test_matrix_missing_cache_key_is_empty_not_missing() -> None:
+    """Key-computation failure → empty string (job ignores cache, still runs)."""
+    data = json.loads(planner.build_matrix_json(["fast"], cache_keys={}))
+    entry = data["include"][0]
+    assert entry["cache_key"] == ""
+    # force_run is caller-decided (mode contract), not key-availability-derived
+    assert entry["force_run"] == "false"
+    assert entry["paths"]  # usable matrix regardless
+
+
+def test_main_full_mode_forces_all_groups(tmp_path, monkeypatch) -> None:
+    output_file = tmp_path / "github_output.txt"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
+    monkeypatch.delenv("CI_COVERAGE_CACHE_ENABLED", raising=False)
+    rc = planner.main_inprocess(
+        is_main=False,
+        force_overall=False,
+        changed_files=["backend/tests/api/test_health.py"],  # test-only → full (cache off)
+    )
+    assert rc == 0
+    data = json.loads(_read_output(output_file.read_text(encoding="utf-8"), "matrix_json"))
+    assert all(e["force_run"] == "true" for e in data["include"])
+    assert all(e["cache_key"].startswith("bcov-v1-") for e in data["include"])
+
+
+def test_main_scoped_mode_respects_cache_except_forced(tmp_path, monkeypatch) -> None:
+    output_file = tmp_path / "github_output.txt"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
+    monkeypatch.setenv("CI_COVERAGE_CACHE_ENABLED", "true")
+    rc = planner.main_inprocess(
+        is_main=False,
+        force_overall=False,
+        changed_files=["backend/tests/api/test_health.py"],
+        previous_group_failures="fast",  # owning group also failed previously
+    )
+    assert rc == 0
+    text = output_file.read_text(encoding="utf-8")
+    data = json.loads(_read_output(text, "matrix_json"))
+    by_group = {e["group"]: e for e in data["include"]}
+    assert by_group["fast"]["force_run"] == "true"  # previous failure must re-run
+    assert [e["group"] for e in data["include"]] == ["fast"]
+    # All four cache keys emitted for the aggregate even when not in matrix
+    for key in planner.ALL_GROUP_KEYS:
+        assert f"cache_key_{key}=bcov-v1-" in text
+
+
+def test_main_scoped_mode_cache_hit_allowed_without_failures(tmp_path, monkeypatch) -> None:
+    output_file = tmp_path / "github_output.txt"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
+    monkeypatch.setenv("CI_COVERAGE_CACHE_ENABLED", "true")
+    rc = planner.main_inprocess(
+        is_main=False,
+        force_overall=False,
+        changed_files=["backend/tests/agents/test_runner.py"],
+    )
+    assert rc == 0
+    data = json.loads(_read_output(output_file.read_text(encoding="utf-8"), "matrix_json"))
+    services = next(e for e in data["include"] if e["group"] == "services")
+    assert services["force_run"] == "false"
+    assert services["cache_key"].startswith("bcov-v1-services-")
+
+
+def test_main_cache_key_failure_degrades_to_no_cache(tmp_path, monkeypatch) -> None:
+    """If key computation explodes, planner still emits a usable matrix
+    with empty cache keys (jobs then ignore the cache entirely)."""
+    output_file = tmp_path / "github_output.txt"
+    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
+    monkeypatch.delenv("CI_COVERAGE_CACHE_ENABLED", raising=False)
+
+    def _explode() -> dict[str, str]:
+        raise RuntimeError("injected key-computation failure")
+
+    script_dir = str(REPO_ROOT / "scripts" / "ci")
+    if script_dir not in sys.path:
+        sys.path.insert(0, script_dir)
+    import coverage_cache_keys as ckey_mod
+
+    monkeypatch.setattr(ckey_mod, "compute_all_group_keys", _explode)
+    rc = planner.main_inprocess(
+        is_main=False,
+        force_overall=False,
+        changed_files=["backend/tests/api/test_health.py"],
+    )
+    assert rc == 0
+    text = output_file.read_text(encoding="utf-8")
+    data = json.loads(_read_output(text, "matrix_json"))
+    assert len(data["include"]) == 4
+    assert all(e["cache_key"] == "" for e in data["include"])
+    assert all(e["force_run"] == "true" for e in data["include"])
+    assert "cache_key_fast=" in text  # emitted, empty
