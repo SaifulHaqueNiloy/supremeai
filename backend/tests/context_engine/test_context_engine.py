@@ -139,3 +139,50 @@ def test_best_fit_keeps_smaller_later_blocks():
     out = engine.assemble(blocks, max_input_tokens=500)
     assert "kb-huge" in out.report.dropped  # exceeds the 60% knowledge section cap
     assert "k-tiny" in out.prompt  # still fits → kept (best-fit, not first-fit-stop)
+
+
+def test_second_system_block_dropped_is_reported_not_silent():
+    """P-G honesty: only the first system block is the contract, but any
+    further system block must appear in report.dropped — never vanish silently."""
+    engine = ContextEngine()
+    blocks = [
+        ContextBlock(Section.SYSTEM, "primary rules", 0, "sys-primary"),
+        ContextBlock(Section.SYSTEM, "secondary rules", 1, "sys-secondary"),
+        ContextBlock(Section.USER, "q", 0, "user"),
+    ]
+    out = engine.assemble(blocks, max_input_tokens=1_000)
+    assert "primary rules" in out.prompt
+    assert "secondary rules" not in out.prompt
+    assert "sys-secondary" in out.report.dropped
+    assert "sys-primary" not in out.report.dropped
+
+
+def test_late_oversized_user_block_truncated_and_reported():
+    """P-G honesty: an oversized user block arriving AFTER the first one is
+    truncated (and reported) — never kept whole to silently blow the budget."""
+    engine = ContextEngine()
+    blocks = [
+        ContextBlock(Section.USER, "short question", 0, "u1"),
+        ContextBlock(Section.USER, "flood " * 2_000, 1, "u2"),  # ≈2501 tok ≫ 50% cap
+    ]
+    out = engine.assemble(blocks, max_input_tokens=300)
+    assert "short question" in out.prompt
+    assert _TRUNCATION_MARK in out.prompt
+    assert "user" in out.report.truncated_sections
+    assert out.report.fits
+
+
+def test_oversized_system_block_after_first_is_dropped_not_truncated():
+    """Only the first system block participates in keep/truncate; a second
+    oversized one is a reported drop, never a silent budget violation."""
+    engine = ContextEngine()
+    blocks = [
+        ContextBlock(Section.SYSTEM, "keep me", 0, "sys-1"),
+        ContextBlock(Section.SYSTEM, "rule " * 5_000, 1, "sys-2-huge"),
+        ContextBlock(Section.USER, "q", 0, "user"),
+    ]
+    out = engine.assemble(blocks, max_input_tokens=300)
+    assert "keep me" in out.prompt
+    assert "rule" not in out.prompt
+    assert "sys-2-huge" in out.report.dropped
+    assert "system" not in out.report.truncated_sections  # first block was small

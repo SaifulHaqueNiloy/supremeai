@@ -50,6 +50,11 @@ CREATE TABLE IF NOT EXISTS deep_research_sessions (
 
 _research_bootstrapped = False
 
+#: Columns returned by GET /history. চুক্তি (M08 P-A): ``report`` অবশ্যই
+#: থাকবে — ফ্রন্টএন্ড ResearchHistoryItem.report এই ফিল্ড থেকেই ভরে;
+#: এটি বাদ দিলে ইতিহাস-ভিউয়ার স্থায়ীভাবে "Report not available" দেখায়।
+HISTORY_SELECT_COLUMNS = "id, query, status, steps_completed, total_sources, created_at, report"
+
 
 # ---------------------------------------------------------------------------
 # Request / Response models
@@ -741,7 +746,12 @@ async def list_research_history(
     limit: int = 20,
     user: dict = Depends(get_current_user_token),
 ) -> list[dict[str, Any]]:
-    """Return recent research sessions for the authenticated user."""
+    """Return recent research sessions for the authenticated user.
+
+    বাংলা: ``report`` কলামটি বাধ্যতামূলক — ফ্রন্টএন্ড ``DeepResearchPanel``
+    ইতিহাস-ভিউয়ার সরাসরি এই ফিল্ড নিয়ে রিপোর্ট দেখায় (M08 P-A চুক্তি)।
+    কলাম-তালিকা একটি কনস্ট্যান্টে পিন করা যাতে চুক্তি-টেস্ট ধরে রাখতে পারে।
+    """
     user_id = user.get("sub")
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token.")
@@ -751,7 +761,7 @@ async def list_research_history(
     try:
         resp = (
             await supabase_db.client.table("deep_research_sessions")
-            .select("id, query, status, steps_completed, total_sources, created_at")
+            .select(HISTORY_SELECT_COLUMNS)
             .eq("user_id", user_id)
             .order("created_at", desc=True)
             .limit(limit)

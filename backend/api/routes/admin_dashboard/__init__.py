@@ -414,10 +414,10 @@ def get_full_data_export():
         raise HTTPException(status_code=500, detail=f"Export failed: {e!s}") from e
 
 
-from .endpoints_approvals_mcp import (  # noqa: E402,F811  (registers routes + re-export)
+from .endpoints_approvals_mcp import (  # noqa: E402  (registers routes + re-export)
     ApprovalActionPayload,
-    get_commandcenter_approvals,
-    resolve_commandcenter_approval,
+    get_commandcenter_approvals_mcp,
+    resolve_commandcenter_approval_mcp,
 )
 from .endpoints_ci import (  # noqa: E402  (registers routes + re-export)
     get_ci_logs,
@@ -431,7 +431,7 @@ from .endpoints_command import (  # noqa: E402  (registers routes + re-export)
     decide_commandcenter_approval,
     get_admin_audit_logs,
     get_command_swarm,
-    get_commandcenter_approvals,  # first (pending-task) definition; shadowed below
+    get_commandcenter_approvals,  # pending-task মালিক (M17 P-A: MCP-proxy এখন /approvals/mcp-এ)
     get_commandcenter_knowledge_stats,
     get_commandcenter_memory_stats,
     get_commandcenter_rate_limits,

@@ -87,6 +87,22 @@ class _RecordingMockRef:
         return _RecordingMockDoc()
 
 
+class _DurableFirestoreShim:
+    """M17 P-C: কাঁচা firestore ক্লায়েন্টকে db-চুক্তির আকৃতিতে মোড়ানো।
+
+    HITLEngine/FitnessEngine একটি স্টোর প্রত্যাশা করে যার ``.client`` ও
+    ``.collection()`` আছে। db=None-পথে _resolve_firestore_client() থেকে
+    পাওয়া কাঁচা ক্লায়েন্ট সরাসরি self.db-তে বসালে সেই চুক্তি পূরণ হত না —
+    এই shim এটি পূরণ করে (নীরব no-op নয়, প্রকৃত স্টোর-প্রবেশ)।
+    """
+
+    def __init__(self, client: Any) -> None:
+        self.client = client
+
+    def collection(self, name: str):
+        return self.client.collection(name)
+
+
 def _resolve_firestore_client():
     """Resolve the shared Firestore client (or None).
 
@@ -168,6 +184,12 @@ class AutoSkillCreator:
             client = _resolve_firestore_client()
             if client is not None:
                 self.skills_ref = client.collection("supreme_dynamic_skills")
+                # M17 P-C: durable store-টি self.db-তেও বসানো হয় — HITL
+                # সাসপেন্স (HITLEngine(db=self.db)) ও FitnessEngine এখন সত্য
+                # স্টোর পায়। আগে self.db None থেকে প্রোডাকশন-পথের সফল
+                # skill-জেনারেশনও HITL-ধাপে AttributeError-এ মারা যেত —
+                # অর্থাৎ কোনো skill কখনো অনুমোদন-পাইপলাইনে পৌঁছাতই না।
+                self.db = _DurableFirestoreShim(client)
             elif _is_test_env():
                 logger.error(
                     "[P0] skill persistence is MOCKED (test env): writes are recorded "

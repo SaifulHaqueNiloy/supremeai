@@ -27,6 +27,7 @@ import re
 from collections import OrderedDict
 
 from core.config import settings
+from core.i18n import bengali_text
 from core.logging_config import logger
 
 LOW_MEMORY_MODE = os.getenv("LOW_MEMORY_MODE", "false").lower() == "true"
@@ -452,6 +453,10 @@ def embed_for_pgvector(text: str, pg_dim: int = _PG_DIM) -> list[float]:
     normalized to 384 rather than creating an incompatible vector.
     """
     global _cache_hits, _cache_misses
+
+    # M19 P-D: NFC গোছানো — একই পাঠ্যের NFC/NFD/ZWNJ-ভিন্ন রূপ আলাদা
+    # cache-key/vector তৈরি করত (বাংলা ইনপুটে অতিরিক্ত miss + ভেক্টর-বিভ্রম)।
+    text = bengali_text.nfc(text)
 
     if pg_dim != _PG_DIM:
         logger.warning(

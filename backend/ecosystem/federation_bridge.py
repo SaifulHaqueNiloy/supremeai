@@ -51,10 +51,18 @@ async def observe_remediation_run(
     idempotency_key: str | None = None,
     **budget_limits: Any,
 ) -> Run:
-    """Record a self-healing proposal as a governed canonical run."""
+    """Record a self-healing proposal as a governed canonical run.
+
+    বাংলা (M06 হাইজিন-ফিক্স): আগে ``run_type="remediation"`` পাঠানো হতো —
+    যা RunType-enum-এ (mission/agent/tool/mcp/browser/code/automation/
+    pipeline) অস্তিত্বই নেই; প্রথম প্রকৃত কলে create_run বৈধতা-ধাপে
+    ValueError ছুড়ে দিত (latent bug — ফাংশনটি এ পর্যন্ত কোনো production
+    caller-বিহীন)। স্ব-নিরাময়-প্রস্তাব = স্বায়ত্তশাসিত agent-run — তাই
+    বৈধ ``"agent"`` ম্যাপ; source_type="self_healing" আলাদাত্ব বহন করে।
+    """
     return await service.create_run(
         session,
-        run_type="remediation",
+        run_type="agent",
         user_id=user_id,
         title=f"remediation:{fix_id}",
         source_type="self_healing",
