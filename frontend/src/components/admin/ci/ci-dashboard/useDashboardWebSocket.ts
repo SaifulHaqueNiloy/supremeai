@@ -6,6 +6,7 @@
 import { useEffect } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { CISummaryData, ConnectionStatus } from './types';
+import { getAdminToken, getUserToken } from '../../../../services/tokenStorage';
 
 interface UseDashboardWebSocketOptions {
   wsUrl?: string;
@@ -51,7 +52,8 @@ export function useDashboardWebSocket({
 
         socket.onopen = () => {
           // First-message auth frame — token never appears in URL or logs.
-          const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
+          // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
+          const token = getUserToken() || getAdminToken();
           if (token) socket.send(JSON.stringify({ type: 'auth', token }));
           reconnectAttempt = 0;
           setConnectionStatus('connected');

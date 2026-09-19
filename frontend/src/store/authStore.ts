@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { apiClient, updateTokenCache } from '../services/apiClient';
+import { clearUserToken, getUserToken, setUserToken } from '../services/tokenStorage';
 import { isRole, normalizeRole, type Role } from '../config/permissions';
 import { useCustomerStore } from './customerStore';
 import { clearLocalDataScope, setLocalDataScope } from './localFirstDb';
@@ -36,7 +37,8 @@ interface AuthState {
   initialize: () => Promise<void>;
 }
 
-const TOKEN_KEY = 'supremeai_auth_token';
+// বাংলা (Issue #521 / FE-04): TOKEN_KEY আর সরাসরি localStorage-এ লেখা হয় না —
+// টোকেন এখন services/tokenStorage.ts (sessionStorage + in-memory) দিয়ে যায়।
 const USER_KEY = 'supremeai_auth_user';
 
 /**
@@ -53,7 +55,9 @@ export const LEGACY_ADMIN_TOKEN_KEY = 'adminToken';
  */
 export function clearCanonicalSession(): void {
   try {
-    localStorage.removeItem(TOKEN_KEY);
+    // Issue #521: token now lives in sessionStorage — clearUserToken sweeps both
+    // storage tiers (sessionStorage + legacy localStorage migration sweep).
+    clearUserToken();
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
   } catch (e) {
@@ -134,7 +138,10 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       const token = response.access_token;
-      localStorage.setItem(TOKEN_KEY, token);
+      // Issue #521 (FE-04): sessionStorage instead of localStorage — token no
+      // longer survives the browser session. In-memory cache keeps this tab's
+      // requests authenticated.
+      setUserToken(token);
       updateTokenCache(token);
 
       const user: UserProfile = {
@@ -169,7 +176,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       });
 
       const token = response.access_token;
-      localStorage.setItem(TOKEN_KEY, token);
+      // Issue #521 (FE-04): sessionStorage instead of localStorage.
+      setUserToken(token);
       updateTokenCache(token);
 
       const user: UserProfile = {
@@ -197,7 +205,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     // বাংলা: unified clearing — token + cached profile + role/permissions একসাথে।
     // admin step-up state ইচ্ছাকৃতভাবে অক্ষত থাকে (সেটি আলাদা identity flow);
     // UI-তে admin context logout আলাদাভাবে handleAdminLogout() ডাকে।
-    localStorage.removeItem(TOKEN_KEY);
+    // Issue #521: clearUserToken sessionStorage + legacy localStorage দুটোই পরিষ্কার করে।
+    clearUserToken();
     localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
     updateTokenCache(null);
     persistUser(null);
@@ -209,7 +218,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
 
   initialize: async () => {
-    const token = localStorage.getItem(TOKEN_KEY);
+    // Issue #521: read via tokenStorage — sessionStorage first, legacy
+    // localStorage entries are migrated (and swept) on first read.
+    const token = getUserToken();
     const adminToken = typeof window !== 'undefined'
       ? (sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt'))
       : null;
@@ -341,7 +352,8 @@ export const useAuthStore = create<AuthState>((set) => ({
       const status = error?.status as number | undefined;
       if (status === 401 || status === 403) {
         // বাংলা মন্তব্য: Token সত্যিই invalid/revoked — শুধুমাত্র এই ক্ষেত্রেই সেশন মুছে দেওয়া হয়।
-        localStorage.removeItem(TOKEN_KEY);
+        // Issue #521: tokenStorage sweep (sessionStorage + legacy localStorage)।
+        clearUserToken();
         updateTokenCache(null);
         persistUser(null);
         void clearLocalDataScope();

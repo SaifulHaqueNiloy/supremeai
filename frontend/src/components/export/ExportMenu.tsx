@@ -9,6 +9,7 @@ import {
   File,
 } from 'lucide-react';
 import { globalShowToastRef } from '../../contexts/ToastContext';
+import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -84,7 +85,8 @@ export default function ExportMenu({ conversationId, conversationTitle }: Export
     try {
       // Fetch export blob directly
       const baseUrl = window.location.origin;
-      const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
+      // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
+      const token = getUserToken() || getAdminToken();
 
       const blobResponse = await fetch(`${baseUrl}/api/chat/export`, {
         method: 'POST',

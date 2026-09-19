@@ -55,6 +55,7 @@ describe('adminStore', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    sessionStorage.clear();
     reset();
     (signInWithEmailAndPassword as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       user: { getIdToken: () => Promise.resolve('id-token') },
@@ -129,7 +130,9 @@ describe('adminStore', () => {
     const s = useAdminStore.getState();
     expect(s.adminAuthenticated).toBe(true);
     expect(s.adminRole).toBe('admin');
-    expect(localStorage.getItem('supreme_admin_jwt')).toBe(`h.${payload}.s`);
+    // Issue #521 (FE-04): admin JWT persists in sessionStorage only — never localStorage.
+    expect(sessionStorage.getItem('supreme_admin_jwt')).toBe(`h.${payload}.s`);
+    expect(localStorage.getItem('supreme_admin_jwt')).toBeNull();
   });
 
   it('records an error when TOTP verification fails', async () => {
@@ -147,8 +150,10 @@ describe('adminStore', () => {
     };
     eventBus.on(Events.AUTH_LOGOUT, handler);
     localStorage.setItem('supreme_admin_jwt', 'x');
+    sessionStorage.setItem('supreme_admin_jwt', 'x');
     await useAdminStore.getState().handleAdminLogout();
     expect(localStorage.getItem('supreme_admin_jwt')).toBeNull();
+    expect(sessionStorage.getItem('supreme_admin_jwt')).toBeNull();
     expect(signOut).toHaveBeenCalled();
     expect(emitted).toBe(true);
     expect(useAdminStore.getState().adminAuthenticated).toBe(false);

@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import { ImagePlus, X, Loader2 } from 'lucide-react';
 import { getApiBaseUrl } from '../../utils/api';
+import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 import { globalShowToastRef } from '../../contexts/ToastContext';
 
 // ─── Types ───────────────────────────────────────────────────────────────
@@ -112,8 +113,9 @@ export function ImageUploadButton({ onUpload, disabled }: ImageUploadButtonProps
             reject(new Error('Upload cancelled'));
           });
 
-          // Get auth token
-          const token = localStorage.getItem('supremeai_auth_token') || localStorage.getItem('supreme_admin_jwt');
+          // Get auth token — Issue #521: tokenStorage (sessionStorage-first,
+          // legacy localStorage swept).
+          const token = getUserToken() || getAdminToken();
           const headers: Record<string, string> = {};
           if (token) {
             headers['Authorization'] = `Bearer ${token}`;

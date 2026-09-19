@@ -4,6 +4,7 @@ import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { eventBus, Events } from '../lib/componentEventBus';
 import { authService } from '../services/authService';
 import { updateTokenCache } from '../services/apiClient';
+import { clearAdminToken, getAdminToken, setAdminToken } from '../services/tokenStorage';
 import { LEGACY_ADMIN_TOKEN_KEY } from './authStore';
 
 const decodeJwt = (token: string): Record<string, unknown> | null => {
@@ -38,8 +39,10 @@ const buildProvisioningUri = (email: string, secret: string): string =>
 
 const persistAdminToken = (token: unknown): token is string => {
   if (typeof token !== 'string' || token.trim().length < 20) return false;
-  localStorage.setItem('supreme_admin_jwt', token);
-  sessionStorage.setItem('supreme_admin_jwt', token);
+  // Issue #521 (FE-04): sessionStorage only — the localStorage duplicate write
+  // (which survived browser restarts) is gone; legacy entries are swept by
+  // tokenStorage's read path and by handleAdminLogout/clearAuthToken.
+  setAdminToken(token);
   updateTokenCache(token);
   return true;
 };
@@ -80,7 +83,9 @@ interface AdminState {
 const getInitialAdminToken = (): string | null => {
   if (typeof window === 'undefined') return null;
   try {
-    return sessionStorage.getItem('supreme_admin_jwt') || localStorage.getItem('supreme_admin_jwt');
+    // Issue #521: tokenStorage read — sessionStorage first, legacy localStorage
+    // entries are migrated (and removed) on first read.
+    return getAdminToken();
   } catch {
     return null;
   }
@@ -259,8 +264,8 @@ export const useAdminStore = create<AdminState>((set, get) => ({
       // admin logout আর user session ধ্বংস করবে না (আগের ক্রস-সেশন ডিস্ট্রাকশন বাগ)।
       // User session পরিষ্কার করতে UI logout আলাদাভাবে clearCanonicalSession() ডাকবে।
       localStorage.removeItem(LEGACY_ADMIN_TOKEN_KEY);
-      localStorage.removeItem('supreme_admin_jwt');
-      sessionStorage.removeItem('supreme_admin_jwt');
+      // Issue #521: clearAdminToken sweeps sessionStorage + legacy localStorage.
+      clearAdminToken();
       updateTokenCache(null);
 
       // বাংলা মন্তব্য: backend-এ কোনো /api/admin/logout endpoint নাই (নিশ্চিত হয়ে দেখা গেছে)।

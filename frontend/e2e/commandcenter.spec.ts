@@ -13,8 +13,10 @@ async function waitForCommandCenter(page: Page) {
   // 'supremeai_token'), so ProtectedRoute redirected to /login and "home loads KPI
   // tiles" never saw ACTIVE AGENTS. Optimistic restore (authStore.initialize) sets
   // LOGGED_IN from the token alone — no network required.
+  // Issue #521: token now seeds sessionStorage (the canonical tier); the
+  // tokenStorage read path still migrates legacy localStorage entries.
   await page.addInitScript(() => {
-    window.localStorage.setItem('supremeai_auth_token', 'demo-token');
+    window.sessionStorage.setItem('supremeai_auth_token', 'demo-token');
     window.localStorage.setItem(
       'supremeai_auth_user',
       JSON.stringify({ id: 'demo-user', email: 'user@supremeai.dev', name: 'Demo User' }),

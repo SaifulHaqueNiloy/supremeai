@@ -18,7 +18,8 @@
  * CONTRACTS UNDER TEST (from src/store/authStore.ts + src/services/apiClient.ts):
  *   POST /api/v1/auth/login  {username, password} → {access_token, user_id, ...}
  *   GET  /api/v1/auth/me     Authorization: Bearer <token>
- *   localStorage key: 'supremeai_auth_token'
+ *   sessionStorage key: 'supremeai_auth_token' (Issue #521 — tokens no longer
+ *   persist in localStorage; sessionStorage dies with the tab)
  */
 import { test, expect, type Page, type Route } from '@playwright/test';
 
@@ -116,9 +117,12 @@ test.describe('Auth session lifecycle smoke', () => {
 
     await expect(page).toHaveURL(/\/workspace/, { timeout: 15_000 });
 
-    // Token persisted under the canonical key (authStore TOKEN_KEY).
-    const token = await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY);
+    // Token persisted under the canonical key (authStore — sessionStorage, Issue #521).
+    const token = await page.evaluate((key) => sessionStorage.getItem(key), TOKEN_KEY);
     expect(token).toBe(loginResponse.access_token);
+    // Issue #521: the token must NOT exist in localStorage anymore.
+    const legacyToken = await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY);
+    expect(legacyToken).toBeNull();
 
     // The cached profile key must not leak a service-role or admin secret.
     const userRaw = await page.evaluate((key) => localStorage.getItem(key), USER_KEY);
@@ -146,7 +150,7 @@ test.describe('Auth session lifecycle smoke', () => {
     // GuestRoute would bounce an unauthenticated session back to /login;
     // staying on /workspace proves the optimistic restore worked.
     await expect(page).toHaveURL(/\/workspace/, { timeout: 15_000 });
-    const token = await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY);
+    const token = await page.evaluate((key) => sessionStorage.getItem(key), TOKEN_KEY);
     expect(token).toBe(loginResponse.access_token);
   });
 
@@ -166,7 +170,7 @@ test.describe('Auth session lifecycle smoke', () => {
     // The persisted token must be gone once the session-validation endpoint
     // proved it invalid; ProtectedRoute then bounces to /login.
     await expect
-      .poll(() => page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY), { timeout: 15_000 })
+      .poll(() => page.evaluate((key) => sessionStorage.getItem(key), TOKEN_KEY), { timeout: 15_000 })
       .toBeNull();
     await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
   });
@@ -182,7 +186,7 @@ test.describe('Auth session lifecycle smoke', () => {
     await signOutViaAccountMenu(page);
 
     await expect(page).toHaveURL(/\/login/, { timeout: 15_000 });
-    const token = await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY);
+    const token = await page.evaluate((key) => sessionStorage.getItem(key), TOKEN_KEY);
     expect(token).toBeNull();
   });
 
@@ -203,7 +207,7 @@ test.describe('Auth session lifecycle smoke', () => {
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
     await expect(page).toHaveURL(/\/workspace/, { timeout: 15_000 });
 
-    const token = await page.evaluate((key) => localStorage.getItem(key), TOKEN_KEY);
+    const token = await page.evaluate((key) => sessionStorage.getItem(key), TOKEN_KEY);
     expect(token).toBe(loginResponse.access_token);
   });
 });
