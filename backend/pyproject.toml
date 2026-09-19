@@ -49,6 +49,17 @@ pygithub = "^2.5.0"
 supabase = "^2.11.0"
 firebase-admin = "^6.5.0"
 qdrant-client = "^1.12.1"
+# বাংলা মন্তব্য (BE-11, issue #546): `psycopg2-binary` was moved out of main
+# runtime dependencies because the primary production path uses `asyncpg`.
+# `psycopg2-binary` is retained only for optional sync subsystems
+# (`core/persistence/pooled_pg.py`, `database/supabase_client.py` bootstrap)
+# and CI/scripts. Install with `poetry install --with sync-db` when needed.
+# This avoids bloating the production image and prevents accidental sync-DB
+# misuse on the critical async path.
+[tool.poetry.group.sync-db]
+optional = true
+
+[tool.poetry.group.sync-db.dependencies]
 psycopg2-binary = "^2.9.9"
 
 pillow = "^12.3.0"  # CVE fix floor (AUDIT-014)

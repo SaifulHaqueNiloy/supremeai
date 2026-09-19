@@ -155,9 +155,9 @@ CONFIG_SCHEMA: list[VarDefinition] = [
         var_type=VarType.STRING,
         required=True,
         severity=Severity.ERROR,
-        min_value=32,
-        description="JWT signing secret (min 32 chars)",
-        examples=["your-super-secret-key-at-least-32-chars"],
+        min_value=64,
+        description="JWT signing secret (min 64 bytes; falls back to SUPREMEAI_JWT_SECRET)",
+        examples=["your-super-secret-key-at-least-64-chars"],
     ),
     VarDefinition(
         name="ENFORCE_ANTI_HACKING",

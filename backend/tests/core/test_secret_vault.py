@@ -6,6 +6,7 @@ import pytest
 
 from core.security.secret_vault import (
     ProductionSecretVault,
+    SecretNotFoundError,
     _CacheEntry,
     reset_secret_vault,
 )
@@ -84,13 +85,22 @@ class TestSecretVaultFallback:
             vault._fallback_to_env("SUPABASE_DATABASE_URL_POOLER", None)
 
     def test_fallback_production_noncritical_degrades(self, monkeypatch):
-        # বাংলা মন্তব্য: non-critical secret missing হলে আর crash না — খালি স্ট্রিং দিয়ে degrade।
-        monkeypatch.delenv("CRITICAL_SECRET", raising=False)
+        # বাংলা মন্তব্য (Issue #548): non-critical secret missing হলে খালি স্ট্রিং দিয়ে মাস্ক না করে
+        # default (None) রিটার্ন করা হয়, যাতে get_secret() সঠিক ভাবে SecretNotFoundError রেইজ করতে পারে।
+        monkeypatch.delenv("NON_CRITICAL_SECRET", raising=False)
         vault = ProductionSecretVault()
         vault.env = "production"
         vault.client = None
-        result = vault._fallback_to_env("CRITICAL_SECRET", None)
-        assert result == ""
+        result = vault._fallback_to_env("NON_CRITICAL_SECRET", None)
+        assert result is None
+
+    def test_get_secret_raises_not_found_on_missing_unknown_secret(self, monkeypatch):
+        monkeypatch.delenv("UNKNOWN_SECRET", raising=False)
+        vault = ProductionSecretVault()
+        vault.env = "production"
+        vault.client = None
+        with pytest.raises(SecretNotFoundError):
+            vault.get_secret("UNKNOWN_SECRET")
 
 
 class TestSecretVaultCache:

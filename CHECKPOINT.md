@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-19 13:00 UTC
+- **Date:** 2026-09-19 13:35 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,17 +10,15 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/config/navigationRegistry.ts`
-  - `scripts/deploy/generate_firebase_config.py`
-  - `firebase.template.json`
-  - `backend/tests/scripts/test_generate_firebase_config.py`
+  - `backend/tools/graph_service.py`
+  - `backend/core/env_validator.py`
   - `CHECKPOINT.md`
-  - `frontend/src/config/navigationRegistry.test.ts`
-  - `frontend/src/components/admin/shared/AdminSubTabContent.tsx`
-  - `frontend/src/components/shell/GlobalHeader.tsx`
-  - `frontend/src/types.ts`
-  - `frontend/src/components/shell/RoleAwareNavRail.tsx`
-  - `package.json`
+  - `backend/core/security/secret_vault.py`
+  - `backend/tests/core/test_secret_vault.py`
+  - `backend/core/config_validator.py`
+  - `backend/pyproject.toml`
+  - `backend/services/scraper/security.py`
+  - `backend/database/supabase_client.py`
 
 ## Pending (Carry Forward)
 - 103 active skipped test markers triage across 53 files towards <30 (reconciled in docs/SKIPPED_TESTS.md)

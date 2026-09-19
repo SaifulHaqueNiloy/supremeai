@@ -12,13 +12,16 @@ from core.logging_config import logger
 class GraphService:
     def __init__(self):
         # বাংলা মন্তব্য: Neo4j Aura (ফ্রি টিয়ার) এর ক্রেডেনশিয়াল
-        self.uri = getattr(settings, "neo4j_uri", "bolt://localhost:7687")  # is_local()
-        self.user = getattr(settings, "neo4j_user", "neo4j")
+        self.uri = getattr(settings, "neo4j_uri", None)
+        self.user = getattr(settings, "neo4j_user", None)
         self.password = getattr(settings, "neo4j_password", None)
 
-        # বাংলা মন্তব্য: যদি পাসওয়ার্ড না থাকে, অথবা টেস্ট এনভায়রনমেন্টে মক সিক্রেট থাকে (যেমন: 'mock_NEO4J_URI'), তবে ড্রাই-রান মোড চালু হবে।
+        # বাংলা মন্তব্য: যদি পাসওয়ার্ড না থাকে, অথবা URI/USER None থাকে, অথবা মক সিক্রেট থাকে,
+        # তবে ড্রাই-রান মোড চালু হবে। প্রোডাকশনে localhost/neo4j ডিফল্ট violent fallback নয়।
         self.dry_run = (
             not self.password
+            or self.uri is None
+            or self.user is None
             or self.uri.startswith("mock_")
             or (isinstance(self.password, str) and self.password.startswith("mock_"))
         )

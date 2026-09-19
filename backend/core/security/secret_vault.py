@@ -9,6 +9,7 @@ Strict secret handling ensures exceptions are raised for missing secrets.
 from __future__ import annotations
 
 import asyncio
+import concurrent.futures
 import os
 import time
 from typing import TYPE_CHECKING
@@ -148,7 +149,7 @@ class ProductionSecretVault:
             )
 
     @with_error_bus("fetch_secret")
-    def fetch_secret(self, secret_id: str, default: str | None = None) -> str:
+    def fetch_secret(self, secret_id: str, default: str | None = None) -> str | None:
         """Fetch a secret from Infisical with TTL-based caching.
 
         বাংলা: TTL-ভিত্তিক ক্যাশিং সহ Infisical থেকে সিক্রেট ফেচ।
@@ -212,7 +213,17 @@ class ProductionSecretVault:
                         logger.warning(
                             f"Retrying Infisical fetch for {secret_id} in {sleep_time}s due to: {exc}"
                         )
-                        time.sleep(sleep_time)
+                        try:
+                            loop = asyncio.get_running_loop()
+                        except RuntimeError:
+                            loop = None
+
+                        if loop and loop.is_running():
+                            with concurrent.futures.ThreadPoolExecutor(max_workers=1) as ex:
+                                future = ex.submit(time.sleep, sleep_time)
+                                future.result(timeout=sleep_time + 1)
+                        else:
+                            time.sleep(sleep_time)
                     else:
                         raise exc from exc
             # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
@@ -262,7 +273,7 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
 
     @with_error_bus("fetch_secret_async")
-    async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
+    async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str | None:
         """Fetch a secret from Infisical asynchronously (Bug #5 fix)."""
         if self._circuit_breaker_open:
             return self._fallback_to_env(secret_id, default)
@@ -327,7 +338,7 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
 
     @with_error_bus("_fallback_to_env")
-    def _fallback_to_env(self, secret_id: str, default: str | None) -> str:
+    def _fallback_to_env(self, secret_id: str, default: str | None) -> str | None:
         """Fallback to environment variable.
 
         বাংলা মন্তব্য: এনভায়রনমেন্ট ভেরিয়েবলে ফলব্যাক। প্রোডাকশনে ইনফিসিক্যাল বা এনভায়রনমেন্ট ভেরিয়েবল
@@ -398,7 +409,7 @@ class ProductionSecretVault:
                             f"ℹ️ Optional secret '{secret_id}' missing in {self.env}. Skipping."
                         )
 
-                env_fallback = default if default is not None else ""
+                env_fallback = default
             else:
                 logger.warning(f"Mocking missing secret '{secret_id}' for {self.env} environment.")
                 if default is not None:

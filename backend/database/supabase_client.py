@@ -855,6 +855,11 @@ class SupabaseDB:
                 if candidate_url.startswith("sqlite"):
                     logger.info("Skipping psycopg2 bootstrap for SQLite: %s", candidate_url)
                     continue
+                if psycopg2 is None:
+                    logger.warning(
+                        "psycopg2 is not installed — skipping schema bootstrap via psycopg2."
+                    )
+                    continue
                 # বাংলা মন্তব্য: connect_timeout=10 দেওয়া হলো যাতে Render/Supabase SSL handshake
                 # অনির্দিষ্টকালের জন্য ব্লক না করে। 10s পরে exception raise হবে।
                 conn = psycopg2.connect(candidate_url, connect_timeout=10)

@@ -65,7 +65,10 @@ ENV_REGISTRY: list[EnvVarDefinition] = [
     ),
     # ── Secrets (CRITICAL in production) ─────────────────────────────────
     EnvVarDefinition(
-        name="SUPREMEAI_JWT_SECRET", description="JWT signing secret", severity=EnvSeverity.CRITICAL
+        name="SUPREMEAI_JWT_SECRET",
+        description="JWT signing secret (min 64 bytes)",
+        severity=EnvSeverity.CRITICAL,
+        pattern=r".{64,}",
     ),
     EnvVarDefinition(
         name="SUPREMEAI_ADMIN_PASSWORD_HASH",

@@ -28,8 +28,8 @@ from urllib.parse import urlparse
 
 _BLOCKED_SCHEMES = {"file", "ftp", "gopher", "dict", "ldap", "javascript", "data"}
 _BLOCKED_HOSTS = {
-    "localhost",
-    "127.0.0.1",
+    "localhost",  # is_local()
+    "127.0.0.1",  # is_local()
     "0.0.0.0",
     "::1",
     "metadata",  # GCP metadata (resolvable via /etc/hosts on GCP)
@@ -102,7 +102,7 @@ def resolve_hostname(hostname: str) -> list[str]:
 
     No caching on purpose — a DNS cache would widen the rebinding TOCTOU
     window (issue #511). Returns [] when resolution fails; callers must fail
-    closed (a hostile resolver answering NXDOMAIN to us and 127.0.0.1 to
+    closed (a hostile resolver answering NXDOMAIN to us and loopback IP to
     httpx must not slip through).
     """
     try:
