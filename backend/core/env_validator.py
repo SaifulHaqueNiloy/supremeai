@@ -16,7 +16,12 @@ from typing import Any
 
 from core.logging_config import logger
 # Issue #542 (BE-10): unify the JWT secret floor with the other validators.
-from core.secret_policy import JWT_SECRET_MIN_LENGTH
+# Issue #567 (BE-16): canonical JWT secret env-var name + deprecated alias.
+from core.secret_policy import (
+    JWT_SECRET_DEPRECATED_ENV,
+    JWT_SECRET_ENV,
+    JWT_SECRET_MIN_LENGTH,
+)
 
 
 class EnvSeverity(Enum):
@@ -68,8 +73,8 @@ ENV_REGISTRY: list[EnvVarDefinition] = [
     ),
     # ── Secrets (CRITICAL in production) ─────────────────────────────────
     EnvVarDefinition(
-        name="SUPREMEAI_JWT_SECRET",
-        description="JWT signing secret",
+        name=JWT_SECRET_ENV,
+        description="JWT signing secret (canonical; JWT_SECRET is a deprecated alias)",
         severity=EnvSeverity.CRITICAL,
         # Issue #542 (BE-10): had no length check, so a too-short secret
         # passed boot validation and blew up mid-request when
@@ -272,6 +277,41 @@ class EnvironmentValidator:
 
         for env_def in self.registry:
             value = os.environ.get(env_def.name)
+
+            if env_def.name == JWT_SECRET_ENV and not (value and value.strip()):
+                # Issue #567 (BE-16): JWT_SECRET is a deprecated alias for the
+                # canonical SUPREMEAI_JWT_SECRET — accept it instead of a
+                # false CRITICAL "missing", but warn so operators migrate;
+                # the >=64-byte floor (issue #542) still applies to it.
+                legacy = os.environ.get(JWT_SECRET_DEPRECATED_ENV, "")
+                if legacy.strip():
+                    if len(legacy) < (env_def.min_length or 0):
+                        result.errors.append(
+                            {
+                                "variable": env_def.name,
+                                "message": (
+                                    f"Deprecated alias {JWT_SECRET_DEPRECATED_ENV} is only "
+                                    f"{len(legacy)} characters long; minimum required length "
+                                    f"is {env_def.min_length}"
+                                ),
+                                "severity": env_def.severity.value,
+                            }
+                        )
+                        result.is_valid = False
+                    else:
+                        result.warnings.append(
+                            {
+                                "variable": env_def.name,
+                                "message": (
+                                    f"Deprecated alias {JWT_SECRET_DEPRECATED_ENV} is set; "
+                                    f"rename it to the canonical {JWT_SECRET_ENV} "
+                                    "(Issue #567 / BE-16)."
+                                ),
+                                "severity": env_def.severity.value,
+                            }
+                        )
+                        valid_count += 1
+                    continue
 
             if value is None or value.strip() == "":
                 if env_def.default is not None:

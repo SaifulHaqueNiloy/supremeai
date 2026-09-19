@@ -24,7 +24,11 @@ from typing import Any
 
 from core.logging_config import logger
 # Issue #542 (BE-10): unify the JWT secret floor with the other validators.
-from core.secret_policy import JWT_SECRET_MIN_LENGTH
+from core.secret_policy import (
+    JWT_SECRET_ENV,
+    JWT_SECRET_MIN_LENGTH,
+    resolve_jwt_secret_env,
+)
 
 
 class VarType(StrEnum):
@@ -153,7 +157,7 @@ CONFIG_SCHEMA: list[VarDefinition] = [
     ),
     # --- Security ---
     VarDefinition(
-        name="JWT_SECRET",
+        name=JWT_SECRET_ENV,
         var_type=VarType.STRING,
         required=True,
         severity=Severity.ERROR,
@@ -161,6 +165,8 @@ CONFIG_SCHEMA: list[VarDefinition] = [
         # validation and blow up mid-request when settings.jwt_secret raised
         # RuntimeError (>=64 floor). Now shares JWT_SECRET_MIN_LENGTH with
         # config_secrets.py and env_validator.py.
+        # Issue #567 (BE-16): canonical env-var name; JWT_SECRET is accepted
+        # as a deprecated alias in _validate_var with a deprecation warning.
         min_value=JWT_SECRET_MIN_LENGTH,
         description=f"JWT signing secret (min {JWT_SECRET_MIN_LENGTH} chars)",
         examples=["your-super-secret-key-at-least-64-bytes-change-me-0123456789abcdef-abcdef"],
@@ -245,11 +251,20 @@ CONFIG_SCHEMA: list[VarDefinition] = [
 def _validate_var(var_def: VarDefinition, settings_obj: Any = None) -> ValidationError | None:
     """Validate a single environment variable."""
     raw_value = os.getenv(var_def.name)
-    if not raw_value and var_def.name == "JWT_SECRET":
-        raw_value = os.getenv("SUPREMEAI_JWT_SECRET")
+    if not raw_value and var_def.name == JWT_SECRET_ENV:
+        # Issue #567 (BE-16): JWT_SECRET is the deprecated alias — accepted
+        # so legacy deploys keep validating; resolve_jwt_secret_env() emits
+        # the deprecation warning when the alias is what satisfied the var.
+        # Returns "" when neither var is set → None lets the settings_obj
+        # fallback below still run (non-prod generated secret, vault, …).
+        raw_value = resolve_jwt_secret_env() or None
 
     if raw_value is None and settings_obj is not None:
         prop_name = var_def.name.lower()
+        if var_def.name == JWT_SECRET_ENV:
+            # Issue #567 (BE-16): the settings attribute is `jwt_secret`, not
+            # the canonical env-var name lowercased.
+            prop_name = "jwt_secret"
         if hasattr(settings_obj, prop_name):
             try:
                 val = getattr(settings_obj, prop_name)
