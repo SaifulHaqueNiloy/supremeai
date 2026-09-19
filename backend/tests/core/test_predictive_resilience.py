@@ -98,12 +98,12 @@ def test_predictive_circuit_breaker_moves_to_half_open_after_cooldown():
     with patch("core.resilience.predictive_circuit_breaker.time.time", return_value=161.0):
         assert breaker.get_active_provider() == "gemini"
 
-    assert breaker.state == "HALF-OPEN"
+    assert breaker.state == "HALF_OPEN"
 
 
 def test_predictive_circuit_breaker_recovery_returns_to_closed():
     breaker = PredictiveCircuitBreaker("test")
-    breaker.state = "HALF-OPEN"
+    breaker.state = "HALF_OPEN"
 
     with patch("core.resilience.predictive_circuit_breaker.time.time", return_value=200.0):
         breaker.mark_recovery_success()

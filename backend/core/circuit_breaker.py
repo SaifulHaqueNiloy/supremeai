@@ -36,6 +36,18 @@ T = TypeVar("T")
 
 
 class CircuitState(StrEnum):
+    """Circuit breaker states (lowercase family).
+
+    Issue #684 (H-05): the canonical breaker-state enum is
+    ``core.resilience.circuit_breaker.CircuitBreakerState`` (uppercase values).
+    These lowercase values are PERSISTED to Redis (``circuit_breaker:<name>:
+    state``, written by RedisCircuitBreaker) and exposed in API payloads, so
+    the spelling must NOT change — backward compatibility with already-
+    serialized state. Cross-family comparisons must normalize via
+    ``normalize_circuit_state()``; the parallel implementation itself is
+    tracked for unification under issue #688.
+    """
+
     CLOSED = "closed"  # Normal operation
     OPEN = "open"  # Failing, reject immediately
     HALF_OPEN = "half_open"  # Testing recovery

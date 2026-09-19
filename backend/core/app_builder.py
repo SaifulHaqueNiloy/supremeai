@@ -486,6 +486,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         """Handle unhandled exceptions with proper response and circuit breaker awareness."""
 
         from core.circuit_breaker import CIRCUITS
+        from core.resilience.circuit_breaker import CircuitBreakerState, normalize_circuit_state
 
         status_code = getattr(exc, "status_code", 500)
 
@@ -510,13 +511,22 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         exc_lower = str(exc).lower()
         if any(kw in exc_lower for kw in ["timeout", "connection", "refused", "5xx"]):
             cb_stats = {name: cb.stats for name, cb in CIRCUITS.items()}
-            if any(s.current_state.value == "open" for s in cb_stats.values()):
+            # Issue #684 (H-05): the lowercase-family CircuitState values are
+            # normalized onto the canonical CircuitBreakerState before the
+            # "is a breaker open?" comparison, so legacy "open"-style persisted
+            # or upstream-cased values can never silently miss the check. The
+            # serialized "state" field below keeps the producer's own value.
+            if any(
+                normalize_circuit_state(s.current_state.value) == CircuitBreakerState.OPEN
+                for s in cb_stats.values()
+            ):
                 error_response["circuit_breakers"] = {
                     name: {"state": s.current_state.value, "recovery_in": cb.get_recovery_time()}
                     for name, cb, s in [
                         (n, CIRCUITS[n], CIRCUITS[n].stats)
                         for n in CIRCUITS
-                        if CIRCUITS[n].stats.current_state.value == "open"
+                        if normalize_circuit_state(CIRCUITS[n].stats.current_state.value)
+                        == CircuitBreakerState.OPEN
                     ]
                 }
 

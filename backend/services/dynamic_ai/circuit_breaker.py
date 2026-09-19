@@ -13,6 +13,16 @@ from core.logging_config import logger
 
 
 class CircuitState(Enum):
+    """Provider circuit states.
+
+    Issue #684 (H-05): the canonical breaker-state enum is
+    ``core.resilience.circuit_breaker.CircuitBreakerState`` (uppercase values).
+    This enum's lowercase VALUES are serialized in the provider-status payload
+    (``"state": circuit.state.value``), so the spelling is kept for backward
+    compatibility; the parallel implementation itself is tracked for
+    unification under issue #688.
+    """
+
     CLOSED = "closed"  # Normal operation - requests flow through
     OPEN = "open"  # Failing - requests are blocked
     HALF_OPEN = "half_open"  # Testing - one request allowed to test recovery
