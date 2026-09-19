@@ -11,13 +11,13 @@
 
 | Component | Platform | Identity |
 |-----------|----------|----------|
-| Backend core | **Render** free tier | `supremeai-primary-node.onrender.com` |
+| Backend core | **Render** free tier | `<render-primary-host>` |
 | Worker | Render free tier | `supremeai-worker-node` (`worker_service.py`) |
 | Scraper | Render free tier | `supremeai-scraper-node` (Playwright isolated) |
 | MCP Control Tower | Render (Blueprint) | `supremeai-mcp-tower` — only service with a `render.yaml` (`infrastructure/mcp-control-plane/render.yaml`) |
 | Frontend | **Firebase Hosting** | `https://supremeai-a.web.app` (project `supremeai-a`; `.firebaserc` targets `user`→`supremeai-a`, `admin`→`supremeai-admin`) |
 | Keep-alive pinger | **Cloudflare Workers** | `supremeai-worker` (cron `*/8 * * * *`, `infrastructure/wrangler.toml`) |
-| Database | **Supabase** | project `xtvkltzmberxekoamala` (Management API used by retention workflow) |
+| Database | **Supabase** | project `<project-ref>` (Management API used by retention workflow) |
 | Secrets | **Infisical** | env slugs `staging`/`prod`, imported at deploy time |
 
 > **Vercel**: no `vercel.json` and no deploy automation exists. Vercel appears only as residual env names, `.env.example` example URLs and a bundle-size limit entry in `check_free_tier_limits.py`. Deploy the frontend via Firebase Hosting, not Vercel.

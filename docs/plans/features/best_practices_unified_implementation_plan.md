@@ -400,8 +400,8 @@ async def apply_stealth_fingerprint(cls, page: Page) -> None:
 ```javascript
 // enhanced-worker.js — handleApiRequest() replacement
 const BACKEND_NODES = [
-  { url: 'https://supremeai-primary-node.onrender.com', priority: 1 },
-  { url: 'https://supremeai-worker-node.onrender.com',  priority: 2 },
+  { url: 'https://<render-primary-url>', priority: 1 },
+  { url: 'https://<render-worker-url>',  priority: 2 },
 ];
 
 async function handleApiRequest(request, env, ctx) {
