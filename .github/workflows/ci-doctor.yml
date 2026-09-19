@@ -310,8 +310,8 @@ jobs:
               }
             }
 
-            const totalWarnings = codeWarnings.length + runnerWarnings.length;
-            console.log(`Extracted total warnings: ${totalWarnings} (Code: ${codeWarnings.length}, Runner: ${runnerWarnings.length})`);
+            const extractedTotalWarnings = codeWarnings.length + runnerWarnings.length;
+            console.log(`Extracted total warnings: ${extractedTotalWarnings} (Code: ${codeWarnings.length}, Runner: ${runnerWarnings.length})`);
 
             // 3. Search for existing warning ledger issue
             const allIssues = await github.rest.issues.listForRepo({
