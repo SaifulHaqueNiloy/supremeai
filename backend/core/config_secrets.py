@@ -648,7 +648,7 @@ class SettingsSecretsMixin:
             for origin in origins:
                 if (
                     origin.startswith("https://")
-                    or "localhost" in origin
+                    or "localhost" in origin  # is_local()
                     or "127.0.0.1" in origin  # is_local()
                     or is_test_or_ci
                 ):

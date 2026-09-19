@@ -61,7 +61,7 @@ ENV_REGISTRY: list[EnvVarDefinition] = [
         name="HOST",
         description="Server bind address",
         severity=EnvSeverity.MEDIUM,
-        default="0.0.0.0",
+        default="0.0.0.0",  # is_local()
     ),
     # ── Secrets (CRITICAL in production) ─────────────────────────────────
     EnvVarDefinition(
