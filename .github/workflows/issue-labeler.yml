@@ -82,30 +82,6 @@ jobs:
               // Check if PR has merge conflicts with target branch
               const isConflicted = pr.mergeable === false;
 
-              if (prAction === 'opened') {
-                for (const issueNum of linkedIssues) {
-                  try {
-                    // Add in-progress label to claimed issue
-                    await github.rest.issues.addLabels({
-                      owner,
-                      repo,
-                      issue_number: issueNum,
-                      labels: ['in-progress']
-                    });
-                    // Post reference comment
-                    await github.rest.issues.createComment({
-                      owner,
-                      repo,
-                      issue_number: issueNum,
-                      body: `🤖 **SupremeAI PR Agent Helper:** Claimed by PR #${prNumber} (\`${pr.head.ref}\`). Status: \`in-progress\`.`
-                    });
-                    console.log(`Successfully linked and labeled issue #${issueNum}`);
-                  } catch (err) {
-                    console.warn(`Could not update issue #${issueNum}: ${err.message}`);
-                  }
-                }
-              }
-
               // Check and report merge conflicts directly to linked issues
               if ((prAction === 'opened' || prAction === 'synchronize') && isConflicted) {
                 console.log(`PR #${prNumber} has merge conflicts. Alerting linked issues...`);
