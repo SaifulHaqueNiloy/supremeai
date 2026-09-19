@@ -1,5 +1,8 @@
 # Multi-stage Dockerfile for Frontend (Vite + React)
-FROM node:20-alpine AS builder
+# FIX(FE-01): pin to node:24-alpine — root package.json engines requires
+# node >=24.0.0 (see also .nvmrc=24). Node 20 silently skipped Node 24
+# features several deps require and broke reproducibility vs CI.
+FROM node:24-alpine AS builder
 WORKDIR /app
 
 # Enable corepack for pnpm if needed, or use npm
