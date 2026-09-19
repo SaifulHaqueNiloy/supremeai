@@ -1,4 +1,5 @@
 """mem0-inspired self-learning memory adapter for SupremeAI.
+STATUS: orphaned — see docs/operations/MODULE_STATUS_REGISTRY.md (#449).
 
 mem0 (Universal memory layer for AI agents) থেকে নেওয়া মূল ধারণা: এজেন্ট/ব্যবহারকারীর
 কথোপকথন থেকে স্থায়ী, অনুসন্ধানযোগ্য মেমোরি তৈরি করা, যা পরবর্তী কলে রিকল করা যায়।

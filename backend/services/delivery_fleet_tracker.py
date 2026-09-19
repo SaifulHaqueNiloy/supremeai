@@ -1,4 +1,5 @@
 """
+STATUS: orphaned — see docs/operations/MODULE_STATUS_REGISTRY.md (#449).
 SupremeAI — Delivery Fleet Tracker Service
 =================================================
 
