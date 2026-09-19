@@ -201,6 +201,21 @@ class SettingsValidationMixin:
                 "admin API stays locked without it."
             )
 
+        # Issue #709 (item 6): visibility for the public dev fallback docs
+        # password. The fail-closed policies above already block production/
+        # staging misuse; this WARNING only makes the fallback's activation
+        # loud for every non-local/dev environment (e.g. misconfigured boxes)
+        # so a silent public-password gate can never go unnoticed.
+        if (self.env or "").lower() not in ("local", "dev", "development"):
+            pwd = self.docs_password.get_secret_value() if self.docs_password else ""
+            if pwd.lower() in self.DOCS_DEV_FALLBACK_PASSWORDS:
+                logger.warning(
+                    "🚨 BOOT-TIME WARNING: SUPREMEAI_DOCS_PASSWORD is unset — the PUBLIC dev "
+                    f"fallback 'dev_password_only' is active while ENV='{self.env}'. "
+                    "Anyone who reads the public repo knows this password. Set a strong "
+                    "SUPREMEAI_DOCS_PASSWORD (>= 12 chars) before relying on the docs/auth gate."
+                )
+
         if self.env in {"production", "staging"}:
             _LLM_CRITICAL_KEYS = [
                 "GEMINI_API_KEY",
