@@ -3082,8 +3082,18 @@
     {
       "evidence": [
         {
-          "line": 10,
+          "line": 11,
           "path": "backend/scout/telemetry.py"
+        }
+      ],
+      "source": "observability",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
+          "path": "backend/tests/scout_tests/test_telemetry_persistence.py"
         }
       ],
       "source": "observability",

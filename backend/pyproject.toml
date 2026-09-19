@@ -17,6 +17,11 @@ fastapi = "^0.136.0"
 # jinja2, uvicorn[standard] duplicates আসলে অপ্রয়োজনীয়। python-multipart ও
 # email-validator আগেই explicit declared। core image-এ মৃত transitive deps আর নেই।
 httpx = "^0.28.1"
+# বাংলা মন্তব্য (M08 P-C, issue #453): DDGS web-search provider-এর প্যাকেজ-সত্য —
+# core/search.py আগে graceful-None fallback দিত (প্যাকেজ অনুপস্থিতি নিশ্চিত ছিল —
+# lock/image-তে ছিলই না), ফলে provider-1 পথ মৃত ছিল। এখন স্পষ্ট-ঘোষিত ও
+# শূন্য-খরচ (DuckDuckGo, কোনো API key নেই)।
+ddgs = "^9.16.0"
 uvicorn = {extras = ["standard"], version = "^0.51.0"}
 starlette-context = "^0.3"
 sqlalchemy = "^2.0.36"
