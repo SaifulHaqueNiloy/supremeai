@@ -22,6 +22,7 @@ os.environ["TESTING"] = "true"
 os.environ["ALLOW_TEST_AUTH_BYPASS"] = "true"
 os.environ["ALLOW_TEST_ORIGIN_BYPASS"] = "true"
 os.environ["ENV"] = "test"
+os.environ["SUPREMEAI_ALLOW_INPROCESS_CODEGEN"] = "true"
 # ROOT-CAUSE FIX: get_current_platform_admin() (api/dependencies.py) checks the
 # bypass-issued admin subject against settings.admin_emails. Without this, the
 # test-bypass admin identity is never in the configured allowlist and every
