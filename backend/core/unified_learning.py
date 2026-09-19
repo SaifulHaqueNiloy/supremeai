@@ -596,14 +596,75 @@ class UnifiedLearningEngine:
         return None
 
     async def _persist(self, knowledge: KnowledgeNode):
-        """Persist knowledge to storage (optional)."""
-        # Would save to database/vector store here
-        pass
+        """Persist knowledge to the durable state store (issue #451).
+
+        বাংলা: আগে এটা `pass` ছিল — শেখা প্রতিটি জ্ঞান রিস্টার্টে মুছে যেত।
+        এখন Redis federation-এ write-through হয়; `load_persisted()` বুটে
+        ফেরত আনে। LearningType enum + datetime সহ dataclass সিরিয়ালাইজ।
+        """
+        try:
+            from dataclasses import asdict
+
+            from core.state_store import durable_state
+
+            data = asdict(knowledge)
+            data["learning_type"] = knowledge.learning_type.value
+            await durable_state("learned_knowledge").set_async(knowledge.id, data)
+        except Exception as exc:
+            import logging
+
+            logging.getLogger("unified_learning").warning(
+                "KnowledgeNode persist failed (kept in memory only): %s", exc
+            )
 
     async def load_persisted(self):
-        """Load persisted knowledge into memory."""
-        # Would load from database/vector store here
-        pass
+        """Load persisted knowledge into memory (issue #451)."""
+        try:
+            from core.state_store import durable_state
+
+            store = durable_state("learned_knowledge")
+            await store.hydrate_async()
+            restored = 0
+            for data in store.mirror_items().values():
+                try:
+                    knowledge = KnowledgeNode(
+                        id=data["id"],
+                        pattern=data["pattern"],
+                        outcome=data["outcome"],
+                        confidence=data.get("confidence", 0.5),
+                        usage_count=data.get("usage_count", 0),
+                        success_count=data.get("success_count", 0),
+                        learning_type=LearningType(data.get("learning_type", "pattern_recognition")),
+                        tags=list(data.get("tags") or []),
+                        created_at=datetime.fromisoformat(data["created_at"])
+                        if isinstance(data.get("created_at"), str)
+                        else data.get("created_at") or datetime.utcnow(),
+                        last_used=datetime.fromisoformat(data["last_used"])
+                        if isinstance(data.get("last_used"), str)
+                        else data.get("last_used"),
+                        last_updated=datetime.fromisoformat(data["last_updated"])
+                        if isinstance(data.get("last_updated"), str)
+                        else data.get("last_updated") or datetime.utcnow(),
+                        source_events=list(data.get("source_events") or []),
+                    )
+                except Exception:
+                    continue  # malformed record — skip, never boot-block
+                self.knowledge_base[knowledge.id] = knowledge
+                pattern_hash = hashlib.sha256(knowledge.pattern.encode()).hexdigest()[:16]
+                self.pattern_index[pattern_hash] = knowledge.id
+                restored += 1
+            if restored:
+                import logging
+
+                logging.getLogger("unified_learning").info(
+                    "Restored %d durable KnowledgeNode(s) from state store", restored
+                )
+        except Exception as exc:
+            import logging
+
+            logging.getLogger("unified_learning").warning(
+                "KnowledgeNode load_persisted failed (starting empty): %s", exc
+            )
 
 
 # ============================================================================

@@ -397,6 +397,16 @@ ALL_ROUTERS = [
         "is_admin": False,
         "is_critical": False,
     },
+    # Issue #449 wire-next: services/diagram_parser_service.py defined a full
+    # APIRouter (prefix="/diagram-parser") that NO router registry referenced —
+    # doubly-dead module. Light deps (stdlib + fastapi + defusedxml + llm_router),
+    # its own tests exist → wired, not archived.
+    {
+        "path": "services.diagram_parser_service",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
     {"path": "tools.code.voice_coder", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "tools.code.ai_pair_programmer",

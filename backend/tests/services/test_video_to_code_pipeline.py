@@ -57,7 +57,13 @@ def test_video_frame_extractor_check_ffmpeg_false(monkeypatch):
 
 
 @pytest.mark.anyio
-async def test_extract_frames_fallback_when_no_ffmpeg(tmp_path, monkeypatch):
+async def test_extract_frames_refuses_honestly_when_no_ffmpeg(tmp_path, monkeypatch):
+    """Issue #449 honest-failure contract.
+
+    The old "fallback" passed the raw video file to the vision model as an
+    "image" (guaranteed garbage advertised as success). extract_frames must
+    now REFUSE with a clear error when ffmpeg is unavailable.
+    """
     extractor = VideoFrameExtractor()
 
     def fake_run(*args, **kwargs):
@@ -66,8 +72,53 @@ async def test_extract_frames_fallback_when_no_ffmpeg(tmp_path, monkeypatch):
     monkeypatch.setattr("subprocess.run", fake_run)
     video = tmp_path / "vid.mp4"
     video.write_bytes(b"fake")
-    frames = await extractor.extract_frames(str(video), max_frames=3)
-    assert isinstance(frames, list)
+    with pytest.raises(RuntimeError, match="ffmpeg is not available"):
+        await extractor.extract_frames(str(video), max_frames=3)
+
+
+@pytest.mark.anyio
+async def test_fallback_extract_method_is_removed(tmp_path):
+    """Issue #449: calling the removed fallback raises instead of faking data."""
+    from services.video_to_code_pipeline import VideoToCodePipeline  # noqa: F401
+
+    extractor = VideoFrameExtractor()
+    with pytest.raises(RuntimeError, match="removed"):
+        await extractor._fallback_extract(str(tmp_path / "vid.mp4"), 3)
+
+
+@pytest.mark.anyio
+async def test_process_video_reports_honest_failure_on_error_marker(tmp_path, monkeypatch):
+    """Issue #449: error-marker code must not be reported as status=success."""
+    from fastapi import HTTPException
+
+    from services.video_to_code_pipeline import CodeGenerationResult, get_video_pipeline
+
+    pipeline = get_video_pipeline()
+
+    async def fake_process(video_path, framework, styling, interval=2):
+        return CodeGenerationResult(
+            component_tree=[],
+            generated_code="// Error generating code: simulated failure",
+            framework=framework,
+            styling=styling,
+            confidence=0.4,
+            error="simulated failure",
+        )
+
+    monkeypatch.setattr(pipeline, "process", fake_process)
+
+    from services.video_to_code_pipeline import process_video  # noqa: F811
+    from unittest.mock import AsyncMock
+
+    upload = AsyncMock()
+    upload.content_type = "video/mp4"
+    upload.filename = "vid.mp4"
+    upload.read = AsyncMock(return_value=b"fake")
+
+    with pytest.raises(HTTPException) as exc_info:
+        await process_video(file=upload, framework="react", styling="tailwind")
+    assert exc_info.value.status_code == 502
+    assert exc_info.value.detail["error"] == "VIDEO_CODE_GENERATION_FAILED"
 
 
 # ---------------------------------------------------------------------------
@@ -127,8 +178,9 @@ async def test_extract_frames_runs_ffmpeg_via_async_subprocess(tmp_path, monkeyp
 
 
 @pytest.mark.anyio
-async def test_extract_frames_nonzero_exit_returns_empty_list(tmp_path, monkeypatch):
-    # বাংলা: check=True-এর সমতুল্য — non-zero exit-এ error path (log + [])
+async def test_extract_frames_nonzero_exit_raises_honestly(tmp_path, monkeypatch):
+    # বাংলা: issue #449 — আগে error path চুপচাপ [] ফেরত দিত (dishonest);
+    # এখন RuntimeError তোলে যাতে route টা 503 দেয়, success নয়।
     extractor = VideoFrameExtractor()
     monkeypatch.setattr(extractor, "_check_ffmpeg", lambda: True)
 
@@ -136,7 +188,8 @@ async def test_extract_frames_nonzero_exit_returns_empty_list(tmp_path, monkeypa
         return _FakeProc(returncode=1, communicate_result=(b"", b"decode failure"))
 
     monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
-    assert await extractor.extract_frames(_video_file(tmp_path), max_frames=2) == []
+    with pytest.raises(RuntimeError, match="Frame extraction failed"):
+        await extractor.extract_frames(_video_file(tmp_path), max_frames=2)
 
 
 @pytest.mark.anyio
@@ -157,7 +210,10 @@ async def test_extract_frames_timeout_kills_child_process(tmp_path, monkeypatch)
         return proc
 
     monkeypatch.setattr(asyncio, "create_subprocess_exec", fake_exec)
-    assert await extractor.extract_frames(_video_file(tmp_path), max_frames=2) == []
+    # Issue #449: timeout no longer returns [] — it raises after killing the
+    # child (no zombie processes, honest failure).
+    with pytest.raises(RuntimeError, match="Frame extraction failed"):
+        await extractor.extract_frames(_video_file(tmp_path), max_frames=2)
     assert proc_holder["proc"].killed is True
 
 
