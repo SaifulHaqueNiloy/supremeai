@@ -16,10 +16,46 @@ def worker_app():
 
 
 @pytest.mark.asyncio
-async def test_liveness_is_process_only(worker_app):
+@pytest.mark.parametrize("path", ["/health/live", "/api/v1/health/live"])
+async def test_liveness_ok_when_queue_available(worker_app, path):
+    """Issue #508: liveness must reflect the critical queue dependency (200 when up)."""
+    transport = ASGITransport(app=worker_app)
+    with (
+        patch("worker_service._redis_url", return_value="redis://ok"),
+        patch("worker_service._queue_call", return_value={}),
+    ):
+        async with AsyncClient(transport=transport, base_url="http://worker") as client:
+            response = await client.get(path)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ready"
+    assert body["queue_available"] is True
+
+
+@pytest.mark.asyncio
+async def test_liveness_returns_503_when_queue_unavailable(worker_app):
+    """Issue #508: a worker whose queue is down must NOT report alive (503)."""
+    transport = ASGITransport(app=worker_app)
+    with (
+        patch("worker_service._redis_url", return_value="redis://unavailable"),
+        patch("worker_service._queue_call", side_effect=ConnectionError("offline")),
+    ):
+        async with AsyncClient(transport=transport, base_url="http://worker") as client:
+            response = await client.get("/health/live")
+
+    assert response.status_code == 503
+    body = response.json()
+    assert body["status"] == "not_ready"
+    assert body["queue_available"] is False
+
+
+@pytest.mark.asyncio
+async def test_health_root_is_process_level(worker_app):
+    """Bare /health stays process-level: the HTTP wrapper is up (Render keepalive)."""
     transport = ASGITransport(app=worker_app)
     async with AsyncClient(transport=transport, base_url="http://worker") as client:
-        response = await client.get("/health/live")
+        response = await client.get("/health")
 
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "service": "supremeai-worker"}

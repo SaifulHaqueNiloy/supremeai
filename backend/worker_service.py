@@ -262,10 +262,32 @@ async def root() -> dict[str, Any]:
 
 
 @app.get("/health")
+async def health() -> dict[str, str]:
+    """Process-level health — the HTTP wrapper is up (Render free-tier keepalive)."""
+    return {"status": "ok", "service": "supremeai-worker"}
+
+
 @app.get("/health/live")
 @app.get("/api/v1/health/live")
-async def health() -> dict[str, str]:
-    return {"status": "ok", "service": "supremeai-worker"}
+async def liveness() -> JSONResponse:
+    """Liveness reflects the critical queue dependency (Issue #508 / BE-02).
+
+    Previously this returned a static 200, so Docker/Render HEALTHCHECK kept a
+    worker whose Redis/queue was down "alive" and never restarted it. It now
+    mirrors /health/ready semantics: 503 with the HealthStatus payload when
+    the queue is unreachable, so the orchestrator can restart/route away from
+    a broken instance.
+    """
+    queue_ok, detail = await _queue_available()
+    payload = HealthStatus(
+        status="ready" if queue_ok else "not_ready",
+        role=ROLE,
+        queue_configured=bool(_redis_url()),
+        queue_available=queue_ok,
+        celery_alive=_celery_alive(),
+        detail=detail,
+    )
+    return JSONResponse(payload.model_dump(), status_code=200 if queue_ok else 503)
 
 
 @app.get("/health/ready", response_model=HealthStatus)
