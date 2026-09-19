@@ -118,9 +118,12 @@ def test_cache_control_headers_present() -> None:
     client = _client()
     r1 = client.get("/api/v1/health")
     r2 = client.get("/api/v1/health")
+    # বাংলা: রাউট কনস্ট্যান্ট থেকেই হেডার তৈরি হয় — টেস্টও সেই সত্য-উৎস থেকেই
+    # দাবি করুক (#468: TTL 10s→15s হলেও এই টেস্ট আর ভাঙবে না)।
+    ttl = int(health_routes._HEALTH_CACHE_TTL_SECONDS)
     for r in (r1, r2):
-        assert "max-age=10" in r.headers["Cache-Control"]
-        assert "stale-while-revalidate=20" in r.headers["Cache-Control"]
+        assert f"max-age={ttl}" in r.headers["Cache-Control"]
+        assert f"stale-while-revalidate={ttl * 2}" in r.headers["Cache-Control"]
 
 
 def test_expired_cache_reruns_checks() -> None:
