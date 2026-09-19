@@ -181,9 +181,7 @@ class ContextEngine:
         system_blocks = sorted(by_section.get(Section.SYSTEM, []), key=lambda b: b.priority)
         for i, b in enumerate(system_blocks):
             if i > 0:
-                report.dropped.append(
-                    b.block_id or f"{Section.SYSTEM.value}#{b.priority}"
-                )
+                report.dropped.append(b.block_id or f"{Section.SYSTEM.value}#{b.priority}")
                 continue
             sys_cap = int(budget * SECTION_CAPS["system"])
             t = b.tokens
