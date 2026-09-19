@@ -73,16 +73,20 @@ async def initialize_independent_services(app):
                 logger.info("⚡ PgBouncer connection pool successfully initialized at startup.")
                 await _ensure_api_key_tables()
 
-                # Automatically run Alembic migrations on startup if enabled
-                if os.getenv("AUTO_MIGRATE", "false").lower() == "true":
+                # Apply Alembic migrations before serving requests. Disabling this in
+                # production would allow the live schema to drift from the application.
+                if os.getenv("AUTO_MIGRATE", "true").lower() == "true":
                     try:
                         from scripts.db.auto_migrate import run_migrations
 
                         logger.info("🔄 Running automatic Alembic migrations on startup...")
                         await asyncio.to_thread(run_migrations)
                         logger.info("✅ Automatic Alembic migrations completed.")
-                    except BaseException as mig_err:
-                        logger.warning(f"⚠️ Automatic migration notice (non-fatal): {mig_err}")
+                    except Exception as mig_err:
+                        if settings.env == "production":
+                            logger.critical("❌ Production database migration failed: %s", mig_err)
+                            raise
+                        logger.warning("⚠️ Automatic migration notice: %s", mig_err)
 
                 # Optimize queries with connection pooling best practices
                 app.state.db_pool = pool

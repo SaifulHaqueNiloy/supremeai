@@ -1,11 +1,12 @@
-const CACHE_NAME = 'supremeai-pwa-cache-v3';
+const CACHE_NAME = 'supremeai-pwa-cache-v4';
 
-// বাংলা মন্তব্য: যেসব রিসোর্স ক্যাশ করা হবে — শুধু নিশ্চিত ফাইলগুলো রাখা হয়েছে
-const PRECACHE_URLS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-];
+// Only immutable, fingerprinted assets are safe to cache across deployments.
+const HASHED_ASSET_PATTERN = /(?:^|[-_.])[a-f0-9]{8,}(?:[-_.]|$)/i;
+const PRECACHE_URLS = [];
+
+function isCacheableAsset(url) {
+  return url.origin === self.location.origin && HASHED_ASSET_PATTERN.test(url.pathname);
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -63,7 +64,7 @@ self.addEventListener('fetch', (event) => {
     fetch(event.request)
       .then((response) => {
         // Never cache HTML: stale index.html can point at an older deployment bundle.
-        if (!isHtmlRequest && response.status === 200 && event.request.url.startsWith('http')) {
+        if (!isHtmlRequest && response.status === 200 && isCacheableAsset(url)) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseClone));
         }
@@ -75,10 +76,8 @@ self.addEventListener('fetch', (event) => {
           if (cachedResponse) {
             return cachedResponse;
           }
-          // বাংলা মন্তব্য: HTML রিকোয়েস্ট হলে ক্যাশ করা index.html ফেরত দেওয়া হবে (SPA ফলব্যাক)
-          if (event.request.headers.get('accept')?.includes('text/html')) {
-            return caches.match('/index.html');
-          }
+          // Do not serve a cached HTML shell from a previous deployment.
+          // A failed navigation should surface as unavailable rather than stale UI.
           // 🔥 ফিক্স: ক্যাশেও না থাকলে একটি Response না দিয়ে undefined return করলে
           // "Failed to convert value to 'Response'" error হয় — তাই একটি minimal Response দিন
           return new Response('', { status: 503, statusText: 'Service Unavailable' });
