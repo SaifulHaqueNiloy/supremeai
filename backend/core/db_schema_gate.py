@@ -14,7 +14,6 @@ never fabricated success).
 
 from __future__ import annotations
 
-import os
 import time
 from datetime import UTC, datetime
 from typing import Any
@@ -35,29 +34,19 @@ _cache: dict[str, Any] = {"checked_at": 0.0, "status": None}
 
 
 def _rest_base_and_key() -> tuple[str, str] | None:
-    """Resolve the PostgREST base URL + service key from env/settings.
+    """Resolve the PostgREST base URL + service key via the settings SSoT.
 
-    বাংলা: env আগে, তারপর settings — লেখার কোনো প্রয়োজন নেই, শুধু পড়া।
+    বাংলা: configuration scanner-এর নিয়ম মেনে সরাসরি os.getenv() নয় —
+    settings.supabase_url / settings.supabase_service_key (Single Source
+    of Truth) ব্যবহার করা হয়েছে। শুধু পড়া হয়, লেখা হয় না।
     """
-    base = os.getenv("SUPABASE_URL") or os.getenv("SUPABASE_PROJECT_URL")
-    key = os.getenv("SUPABASE_SERVICE_ROLE_KEY") or os.getenv("SUPABASE_ANON_KEY")
-    if not base or not key:
-        try:
-            from core.config import settings
+    try:
+        from core.config import settings
 
-            base = (
-                base
-                or getattr(settings, "supabase_url", "")
-                or getattr(settings, "supabase_project_url", "")
-            )
-            key = (
-                key
-                or getattr(settings, "supabase_service_role_key", "")
-                or getattr(settings, "supabase_anon_key", "")
-            )
-        except Exception:  # noqa: BLE001 — very-early-boot safety; settings is heavy
-            return None
-    base = (base or "").rstrip("/")
+        base = (getattr(settings, "supabase_url", "") or "").rstrip("/")
+        key = getattr(settings, "supabase_service_key", "") or getattr(settings, "supabase_key", "")
+    except Exception:  # noqa: BLE001 — very-early-boot safety; settings is heavy
+        return None
     if not base or not key:
         return None
     return base, key
