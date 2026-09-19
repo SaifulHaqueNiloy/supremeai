@@ -1,5 +1,3 @@
-import logging
-
 # backend/core/app_builder.py
 """FastAPI Application Builder — Centralized Middleware & Dependency Injection (Zero-Hardcode)
 
@@ -17,7 +15,6 @@ Critical Security Note: মিডলওয়্যার অর্ডার স
 """
 
 import os
-import re
 import sys
 from contextlib import asynccontextmanager
 from typing import Any
@@ -32,60 +29,14 @@ from core.logging_config import logger, setup_logging
 # এর ফলে কোল্ড স্টার্ট ২০% দ্রুত হবে এবং modularity বাড়বে।
 
 
-# বাংলা মন্তব্ব্য: সেন্ট্রি ইনিশিয়ালাইজেশন — লেজি ফাংশনে মোড়ানো
-def _init_sentry() -> None:
-    """লেজি সেন্ট্রি ইনিশিয়ালাইজেশন — শুধুমাত্র create_app() কল করলে রান হয় (Bangla: Lazy Sentry init)"""
-    try:
-        import sentry_sdk
-        from sentry_sdk.integrations.fastapi import FastApiIntegration
-        from sentry_sdk.integrations.logging import LoggingIntegration
-
-        # Validate Sentry DSN format
-        def is_valid_sentry_dsn(dsn: str) -> bool:
-            if not dsn:
-                return False
-            pattern = r"^https?://[^@]+@[\w.-]+(?::\d+)?/\d+$"
-            return bool(re.match(pattern, dsn))
-
-        if settings.sentry_dsn and is_valid_sentry_dsn(settings.sentry_dsn):
-            sentry_logging = LoggingIntegration(
-                level=logging.INFO,
-                event_level=logging.ERROR,
-            )
-            sentry_sdk.init(
-                dsn=settings.sentry_dsn,
-                integrations=[
-                    FastApiIntegration(transaction_style="endpoint"),
-                    sentry_logging,
-                ],
-                traces_sample_rate=0.1,
-                profiles_sample_rate=0.1,
-            )
-            logger.info("✅ Sentry initialized successfully")
-        elif settings.sentry_dsn:
-            logger.error(f"❌ Invalid Sentry DSN format: {settings.sentry_dsn}")
-            raise ValueError(f"Invalid Sentry DSN format: {settings.sentry_dsn}")
-        else:
-            logger.warning("⚠️ Sentry DSN not configured, error tracking disabled")
-    except ImportError:
-        logger.warning("⚠️ Sentry SDK not installed, error tracking disabled")
-    except ValueError as e:
-        # Malformed SENTRY_DSN must never crash API boot (Issue #509 / BE-03):
-        # observability is best-effort — log prominently and continue without it.
-        logger.error(f"❌ Sentry disabled due to configuration error: {e}")
-    except Exception as e:
-        # sentry_sdk.init() or integration wiring failed — degrade gracefully
-        # instead of taking down the whole service at import time.
-        logger.error(f"❌ Failed to initialize Sentry, continuing WITHOUT it: {e}")
-
-
 # বাংলা মন্তব্ব্য: স্টার্টআপ অডিট ও লগিং — টেস্ট এক্সক্লুডেড
+# সেন্ট্রি ইনিশিয়ালাইজেশন monitoring/init_observability()-এ কেন্দ্রীভূত (Issue #566 / BE-15:
+# এখানে 0.1 rate-সহ ডুপ্লিকেট sentry_sdk.init() ছিল — একমাত্র init path monitoring মডিউল)।
 if "pytest" not in sys.modules and os.getenv("CI") != "true":
     from core.container_auditor import audit_container_resources
 
     audit_container_resources()
     setup_logging()
-    _init_sentry()
 
 
 def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
