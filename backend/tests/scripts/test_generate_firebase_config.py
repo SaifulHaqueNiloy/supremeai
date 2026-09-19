@@ -96,6 +96,15 @@ def test_real_repo_template_passes_end_to_end(monkeypatch, tmp_path):
         assert srcs == {"**"}
         assert site["rewrites"][0]["destination"] == "/index.html"
 
+        # বাংলা: সিকিউরিটি হেডার যাচাই — CSP উপস্থিত ও X-XSS-Protection অনুপস্থিত
+        headers_by_key = {
+            h["key"].lower(): h["value"]
+            for h_rule in site.get("headers", [])
+            for h in h_rule.get("headers", [])
+        }
+        assert "content-security-policy" in headers_by_key
+        assert "x-xss-protection" not in headers_by_key
+
 
 def test_minimal_valid_template_generates_output(monkeypatch, tmp_path):
     _run_generate(monkeypatch, tmp_path, _template())
@@ -210,3 +219,67 @@ def test_wrong_spa_destination_rejected(monkeypatch, tmp_path):
     with pytest.raises(SystemExit) as exc:
         _run_generate(monkeypatch, tmp_path, template)
     assert exc.value.code == 1
+
+
+def test_deprecated_xss_protection_rejected(monkeypatch, tmp_path, capsys):
+    site = {
+        "target": "user",
+        "public": "frontend/dist",
+        "rewrites": [{"source": "**", "destination": "/index.html"}],
+        "headers": [
+            {
+                "source": "**",
+                "headers": [
+                    {"key": "Content-Security-Policy", "value": "default-src 'self'"},
+                    {"key": "X-XSS-Protection", "value": "1; mode=block"},
+                ],
+            }
+        ],
+    }
+    template = json.dumps({"hosting": [site]})
+    with pytest.raises(SystemExit) as exc:
+        _run_generate(monkeypatch, tmp_path, template)
+    assert exc.value.code == 1
+    assert "deprecated header X-XSS-Protection" in capsys.readouterr().out
+
+
+def test_missing_csp_rejected_when_headers_present(monkeypatch, tmp_path, capsys):
+    site = {
+        "target": "user",
+        "public": "frontend/dist",
+        "rewrites": [{"source": "**", "destination": "/index.html"}],
+        "headers": [
+            {
+                "source": "**",
+                "headers": [
+                    {"key": "X-Content-Type-Options", "value": "nosniff"},
+                ],
+            }
+        ],
+    }
+    template = json.dumps({"hosting": [site]})
+    with pytest.raises(SystemExit) as exc:
+        _run_generate(monkeypatch, tmp_path, template)
+    assert exc.value.code == 1
+    assert "missing Content-Security-Policy header" in capsys.readouterr().out
+
+
+def test_require_build_checks_artifact(monkeypatch, tmp_path, capsys):
+    out_dir = tmp_path / "repo"
+    out_dir.mkdir()
+    (out_dir / "firebase.template.json").write_text(_template(), encoding="utf-8")
+    monkeypatch.chdir(out_dir)
+
+    # When artifact is missing
+    with pytest.raises(SystemExit) as exc:
+        gen.generate_firebase_config(require_build=True)
+    assert exc.value.code == 1
+    assert "Frontend build artifact missing or empty" in capsys.readouterr().out
+
+    # When artifact is present
+    dist_dir = out_dir / "frontend" / "dist"
+    dist_dir.mkdir(parents=True)
+    (dist_dir / "index.html").write_text("<!DOCTYPE html><html></html>", encoding="utf-8")
+
+    gen.generate_firebase_config(require_build=True)
+    assert (out_dir / "firebase.json").exists()
