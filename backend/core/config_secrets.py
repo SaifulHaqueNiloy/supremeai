@@ -10,6 +10,8 @@ from typing import Any
 from pydantic import PrivateAttr, SecretStr, model_serializer
 
 from core.logging_config import logger
+# Issue #542 (BE-10): single shared floor for the JWT secret minimum length.
+from core.secret_policy import JWT_SECRET_MIN_LENGTH
 
 from .security.secret_vault import get_secret_vault
 
@@ -564,8 +566,10 @@ class SettingsSecretsMixin:
                 or os.getenv("JWT_SECRET")
                 or self._get_cached_secret("SUPREMEAI_JWT_SECRET")
             )
-            if not secret or len(secret) < 64:
-                raise RuntimeError("Production JWT secret must be set and >= 64 bytes")
+            if not secret or len(secret) < JWT_SECRET_MIN_LENGTH:
+                raise RuntimeError(
+                    f"Production JWT secret must be set and >= {JWT_SECRET_MIN_LENGTH} bytes"
+                )
             self._jwt_secret_cache = secret
             return secret
 
