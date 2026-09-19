@@ -197,6 +197,18 @@ async def initialize_independent_services(app):
                 )
             )
 
+    # BE-12 (issue #544): batch-load all vault secrets off the event-loop
+    # thread BEFORE any component reads a secret-backed property
+    # (supabase_database_url, redis_url, jwt_secret, ...). Without this, the
+    # first property access (below, inside _init_db_pool/_init_redis) runs the
+    # sync Infisical fetch + time.sleep retry backoff on the loop thread,
+    # freezing every concurrent request and the liveness probe on timeouts.
+    try:
+        await settings.apreload_secrets()
+        logger.info("✅ Core secrets preloaded off the event loop (BE-12).")
+    except Exception as exc:
+        logger.warning(f"Secret preload failed (continuing with lazy loads): {exc}")
+
     # Run all independent initializations in parallel
     init_results = await asyncio.gather(
         _init_tracing(),
