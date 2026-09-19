@@ -32,6 +32,7 @@ _MODEL_KEY_MAP: dict[str, str] = {
     # routing chain wasted 40-60s per call on dead providers.
     "bynara": "bynara_api_key",
     "bai": "bai_api_key",
+    "v0": "v0_api_key",
 }
 
 # Provider → OpenAI-compatible base URL. When a model's provider appears here,
@@ -40,6 +41,7 @@ _MODEL_KEY_MAP: dict[str, str] = {
 _PROVIDER_API_BASES: dict[str, str] = {
     "bynara": "https://router.bynara.id/v1",
     "bai": "https://api.b.ai/v1",
+    "v0": "https://api.v0.dev/v1",
 }
 
 # Models that are no longer served by their provider (verified 2026-09-13).

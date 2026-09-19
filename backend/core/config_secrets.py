@@ -416,6 +416,15 @@ class SettingsSecretsMixin:
     def bai_api_key(self, value: str) -> None:
         self._set_cached_secret("BAI_API_KEY", value)
 
+    # v0.dev API key pool (v0-mini model)
+    @property
+    def v0_api_key(self) -> str:
+        return self._get_cached_secret("V0_API_KEY")
+
+    @v0_api_key.setter
+    def v0_api_key(self, value: str) -> None:
+        self._set_cached_secret("V0_API_KEY", value)
+
     # Issue #466: dynamic provider pool ($0..N) — vault-backed lazy properties so
     # ModelRouter provider detection sees Infisical-loaded keys, not just env vars.
     @property
