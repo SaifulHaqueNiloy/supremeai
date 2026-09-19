@@ -107,7 +107,7 @@ poetry run pytest tests/test_cache_cleanup.py -v --cov=tools/cache_cleanup
 | **P33** | `tools/code/code_smell_detector.py` | 137 | 58.10% | Test all code smell patterns, severity scoring |
 | **P34** | `core/queue/task_queue_enhanced.py` | 135 | 56.59% | Test queue FIFO/priority, retries, dead-letter, persistence |
 | **P35** | `api/routes/browser.py` | 111 | 62.24% | Test all browser automation endpoints |
-| **P36** | `core/admin_routes.py` | 102 | 57.32% | Test all admin route handlers, auth guards |
+| **P36** | `api/routes/admin_routes.py` | 102 | 57.32% | Test all admin route handlers, auth guards |
 | **P37** | `core/tier8/self_improvement_agent.py` | 100 | 50.00% | Test self-improvement loop, metric tracking, model update |
 | **P38** | `tools/learning/style_learner.py` | 96 | 53.40% | Test style adaptation, preference learning, A/B tracking |
 | **P39** | `tools/comment_thread_ai.py` | 86 | 54.74% | Test AI comment analysis, sentiment, suggestion generation |

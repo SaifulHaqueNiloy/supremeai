@@ -188,7 +188,7 @@ Total Modules: **194**
 | 174 | Frontend Service Module | frontend/src/services/socialGrowthService.ts | 🟠 Partially Wired | 0 active callers (dormant) | None | unassigned | owner-review |
 | 175 | Frontend Service Module | frontend/src/services/storageApi.ts | 🟠 Partially Wired | 0 active callers (dormant) | None | unassigned | owner-review |
 | 176 | Frontend Service Module | frontend/src/services/supremeShared.ts | 🟢 Operational | frontend/src/components/editor/monacoAi.ts, frontend/src/services/aiActions.ts | 3 tests (frontend/src/components/editor/monacoAi.ts, ...) | unassigned | retain |
-| 177 | Frontend State Store | frontend/src/store/adminStore.ts | 🟢 Operational | 6 callers (backend/core/admin_routes.py, ...) | 7 tests (frontend/src/components/admin/CommandCenter.tsx, ...) | unassigned | retain |
+| 177 | Frontend State Store | frontend/src/store/adminStore.ts | 🟢 Operational | 6 callers (backend/api/routes/admin_routes.py, ...) | 7 tests (frontend/src/components/admin/CommandCenter.tsx, ...) | unassigned | retain |
 | 178 | Frontend State Store | frontend/src/store/authStore.ts | 🟢 Operational | 21 callers (frontend/src/auth/identity.ts, ...) | 22 tests (frontend/src/auth/identity.ts, ...) | unassigned | retain |
 | 179 | Frontend State Store | frontend/src/store/customerStore.ts | 🟢 Operational | 5 callers (frontend/src/components/customer/HomeFeed.tsx, ...) | 6 tests (frontend/src/components/customer/HomeFeed.tsx, ...) | unassigned | retain |
 | 180 | Frontend State Store | frontend/src/store/dashboardStore.ts | 🟢 Operational | 6 callers (frontend/src/components/admin/AuditLogsPanel.tsx, ...) | 7 tests (frontend/src/components/admin/AuditLogsPanel.tsx, ...) | unassigned | retain |

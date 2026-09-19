@@ -168,7 +168,7 @@ def get_experience_db():
     return ExperienceDatabase()
 
 
-# AUDIT-WIRE FIX (latent AttributeError + Part-A/D connect): admin_routes.py
+# AUDIT-WIRE FIX (latent AttributeError + Part-A/D connect): api/routes/admin_routes.py
 # `/admin/gcp/health` এবং `/admin/gcp/*` রুটগুলো `services.gcp_router`,
 # `services.verification_queue`, `services.gcp_pubsub_queue`,
 # `services.cloud_function_client` reference করে — কিন্তু এই নামগুলোর কোনো
@@ -217,7 +217,7 @@ _SINGLETON_FACTORIES: dict[str, Callable[[], Any]] = {
     "intent_clf": get_intent_clf,
     "intent_parser": get_intent_parser,
     "experience_db": get_experience_db,
-    # AUDIT-WIRE FIX: admin_routes.py /admin/gcp/* রুটগুলোর জন্য প্রয়োজনীয়।
+    # AUDIT-WIRE FIX: api/routes/admin_routes.py /admin/gcp/* রুটগুলোর জন্য প্রয়োজনীয়।
     "gcp_router": get_gcp_router,
     "verification_queue": get_verification_queue,
     "gcp_pubsub_queue": get_gcp_pubsub_queue,

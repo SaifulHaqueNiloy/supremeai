@@ -22,7 +22,7 @@ class TestHelperFunctions:
             # If bcrypt is installed, this should work
             import bcrypt  # noqa: F401 -- শুধু availability probe, bcrypt ইনস্টল আছে কিনা যাচাই
 
-            from core.admin_routes import _hash_password
+            from api.routes.admin_routes import _hash_password
 
             hashed = _hash_password("password")
             assert isinstance(hashed, str)
@@ -39,7 +39,7 @@ class TestHelperFunctions:
         with patch.dict("sys.modules", {"bcrypt": None}):
             import importlib
 
-            from core import admin_routes
+            from api.routes import admin_routes
 
             importlib.reload(admin_routes)
             assert admin_routes._verify_password("pass", "hash") is False
@@ -48,7 +48,7 @@ class TestHelperFunctions:
     @pytest.mark.skip(reason="Needs update")
     def test_verify_password_empty_hash(self):
         """খালি হ্যাশে ভেরিফিকেশন False রিটার্ন করে।"""
-        from core.admin_routes import _verify_password
+        from api.routes.admin_routes import _verify_password
 
         assert _verify_password("password", "") is False
         assert _verify_password("password", None) is False
@@ -58,7 +58,7 @@ class TestHelperFunctions:
     def test_get_admin_credentials_missing_hash(self):
         """এডমিন পাসওয়ার্ড হ্যাশ নেই থাকলে 500 রিটার্ন করে।"""
         with patch.dict(os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": ""}, clear=False):
-            from core.admin_routes import _get_admin_credentials
+            from api.routes.admin_routes import _get_admin_credentials
 
             with pytest.raises(HTTPException) as exc_info:
                 _get_admin_credentials()
@@ -71,7 +71,7 @@ class TestHelperFunctions:
         """যোগ্য এডমিন হ্যাশ রিটার্ন করে।"""
         test_hash = "test-admin-hash-value"
         with patch.dict(os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": test_hash}, clear=False):
-            from core.admin_routes import _get_admin_credentials
+            from api.routes.admin_routes import _get_admin_credentials
 
             assert _get_admin_credentials() == test_hash
 
@@ -81,7 +81,7 @@ class TestVerifyTotpCode:
 
     def test_verify_totp_code_valid(self):
         """বৈধ TOTP কোড ভেরিফিকেশন."""
-        from core.admin_routes import verify_totp_code
+        from api.routes.admin_routes import verify_totp_code
 
         secret = base64.b32encode(os.urandom(10)).decode("utf-8")
 
@@ -97,14 +97,14 @@ class TestVerifyTotpCode:
 
     def test_verify_totp_code_invalid(self):
         """অবৈধ TOTP কোড রিজেক্স করা হচ্ছে।"""
-        from core.admin_routes import verify_totp_code
+        from api.routes.admin_routes import verify_totp_code
 
         secret = base64.b32encode(os.urandom(10)).decode("utf-8")
         assert verify_totp_code("000000", secret) is False
 
     def test_check_totp_valid(self):
         """check_totp বৈধ কোড ভেরিফাই করে."""
-        from core.admin_routes import check_totp
+        from api.routes.admin_routes import check_totp
 
         secret = base64.b32encode(os.urandom(10)).decode("utf-8")
 
@@ -120,14 +120,14 @@ class TestVerifyTotpCode:
 
     def test_check_totp_invalid(self):
         """check_totp অবৈধ কোড রিজেক্স করে."""
-        from core.admin_routes import check_totp
+        from api.routes.admin_routes import check_totp
 
         secret = base64.b32encode(os.urandom(10)).decode("utf-8")
         assert check_totp("123456", secret) is False
 
     def test_verify_totp_code_bad_secret(self):
         """খারাপ সিক্রেটে TOTP False রিটার্ন করে।"""
-        from core.admin_routes import verify_totp_code
+        from api.routes.admin_routes import verify_totp_code
 
         assert verify_totp_code("1234567", "not-valid-base32-!@#$") is False
 
@@ -178,7 +178,7 @@ class TestAdminRoutes:
         """Trusted browser (Remember me for 7 days) TOTP বাইপাস করে সরাসরি টোকেন দেয়।"""
         with (
             patch("core.config.settings.env", "local"),
-            patch("core.admin_routes._trusted_browser_uid", return_value="mock-admin-uid"),
+            patch("api.routes.admin_routes._trusted_browser_uid", return_value="mock-admin-uid"),
         ):
             response = client.post(
                 "/api/admin/firebase-login", json={"id_token": "mock-test-token"}
@@ -223,7 +223,7 @@ class TestAdminRoutes:
 
     def test_cloud_distribution(self, client):
         """Cloud distribution endpoint."""
-        with patch("core.admin_routes.services") as mock_services:
+        with patch("api.routes.admin_routes.services") as mock_services:
             mock_provider = {"status": "active", "current_requests": 0}
             mock_services.parallel_router.PROVIDERS = {"provider1": mock_provider}
             mock_services.parallel_router.get_distribution_stats = MagicMock(return_value={})
@@ -236,7 +236,7 @@ class TestAdminRoutes:
         mock_tracker = MagicMock()
         mock_tracker.get_status.return_value = {"status": "active"}
 
-        with patch("core.admin_routes.services") as mock_services:
+        with patch("api.routes.admin_routes.services") as mock_services:
             mock_services.get_tracker = MagicMock(return_value=mock_tracker)
             with patch.dict(
                 "sys.modules",
@@ -303,7 +303,7 @@ class TestAdminRoutes:
 
     def test_gcp_health(self, client):
         """GCP health endpoint."""
-        with patch("core.admin_routes.services") as mock_services:
+        with patch("api.routes.admin_routes.services") as mock_services:
             mock_services.gcp_router.health_check.return_value = {"status": "ok"}
             mock_services.verification_queue.provider = "firestore"
             mock_services.gcp_pubsub_queue.provider = "pubsub"
@@ -314,35 +314,35 @@ class TestAdminRoutes:
 
     def test_gcp_verification_queue_stats(self, client):
         """GCP verification queue stats."""
-        with patch("core.admin_routes.services") as mock_services:
+        with patch("api.routes.admin_routes.services") as mock_services:
             mock_services.verification_queue.stats.return_value = {"total": 0}
             response = client.get("/gcp/verification-queue/stats")
             assert response.status_code == 200
 
     def test_gcp_pubsub_stats(self, client):
         """GCP pubsub stats."""
-        with patch("core.admin_routes.services") as mock_services:
+        with patch("api.routes.admin_routes.services") as mock_services:
             mock_services.gcp_pubsub_queue.stats.return_value = {"messages": 0}
             response = client.get("/gcp/pubsub/stats")
             assert response.status_code == 200
 
     def test_get_admin_rules(self, client):
         """Get admin rules endpoint."""
-        with patch("core.admin_routes.services") as mock_services:
+        with patch("api.routes.admin_routes.services") as mock_services:
             mock_services.rules_engine.rules = {"test": "rule"}
             response = client.get("/admin/rules")
             assert response.status_code == 200
 
     def test_post_admin_rules(self, client):
         """Post admin rules endpoint."""
-        with patch("core.admin_routes.services") as mock_services:
+        with patch("api.routes.admin_routes.services") as mock_services:
             mock_services.rules_engine.save_rules.return_value = True
             response = client.post("/admin/rules", json={"rules": {"new": "rule"}})
             assert response.status_code == 200
 
     def test_post_admin_rules_failure(self, client):
         """Post admin rules failure."""
-        with patch("core.admin_routes.services") as mock_services:
+        with patch("api.routes.admin_routes.services") as mock_services:
             mock_services.rules_engine.save_rules.return_value = False
             response = client.post("/admin/rules", json={"rules": {"new": "rule"}})
             assert response.status_code == 200
@@ -356,12 +356,12 @@ class TestAdminRoutes:
 class TestGetCurrentAdminGuard:
     """Regression tests for get_current_admin() — previously referenced an
     undefined HTTP_403_FORBIDDEN name, so a non-admin request crashed with an
-    unhandled NameError (-> 500) instead of a clean 403. See core/admin_routes.py.
+    unhandled NameError (-> 500) instead of a clean 403. See api/routes/admin_routes.py.
     """
 
     def test_non_admin_role_raises_403(self):
         """অ-এডমিন role হলে পরিষ্কার 403 HTTPException রেইজ হওয়া উচিত, NameError না।"""
-        from core.admin_routes import get_current_admin
+        from api.routes.admin_routes import get_current_admin
 
         with pytest.raises(HTTPException) as exc_info:
             get_current_admin({"role": "user", "sub": "someone@example.com"})
@@ -371,7 +371,7 @@ class TestGetCurrentAdminGuard:
 
     def test_missing_role_raises_403(self):
         """payload-এ role কী-ই না থাকলেও 403 হওয়া উচিত।"""
-        from core.admin_routes import get_current_admin
+        from api.routes.admin_routes import get_current_admin
 
         with pytest.raises(HTTPException) as exc_info:
             get_current_admin({"sub": "someone@example.com"})
@@ -380,7 +380,7 @@ class TestGetCurrentAdminGuard:
 
     def test_admin_role_passes_through(self):
         """role == 'admin' হলে payload অপরিবর্তিত রিটার্ন হবে, কোনো exception ছাড়াই।"""
-        from core.admin_routes import get_current_admin
+        from api.routes.admin_routes import get_current_admin
 
         payload = {"role": "admin", "sub": "admin@example.com"}
         result = get_current_admin(payload)
