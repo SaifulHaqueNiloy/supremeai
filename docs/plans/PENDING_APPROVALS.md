@@ -43,6 +43,22 @@ target_scope: supremeai_internal
 
 > **Protocol note (honest disclosure):** this Tier-3 change reached `main` through the workspace's automated committer rather than an isolated PR. It is recorded here for human ratification, and the production-env prerequisite above must be confirmed before the next production deploy.
 
+### `TASK-003` — HITL approve now EXECUTES approved actions (Crown Jewel Module 17 §P-B)
+
+| Field | Value |
+|---|---|
+| **Timestamp** | `2026-09-19T09:15:00+06:00` |
+| **Severity** | HIGH (governance-sensitive state-machine semantics: approval now triggers side effects) |
+| **Risk tier** | Tier 3 — approval-lifecycle behavior change |
+| **Branch** | pushed directly to `main` (workspace automated committer, concurrency-storm window) |
+| **Commit** | `01125a43` — *feat(m17): P-B নির্বাহক-জন্ম — approve-পরবর্তী dispatch executor (fail-closed)* |
+| **Files** | `backend/services/hitl/dispatch.py` (new); `backend/services/hitl/engine.py`; `backend/tests/services/test_hitl_dispatch.py` (16 tests); generated regen (`docs/generated/module_capability_matrix.json`, `docs/generated/backend_import_graph.json`) |
+| **Behavior before** | `HITLEngine.approve()` only flipped status to `approved` — the approved action NEVER executed (frontend consumes `/api/v1/hitl/approve`; executor-equipped `approval_manager` surface is route-shadowed with zero producers — proven in M17 P-A) |
+| **Behavior now** | Approve resolves a data-file dispatch executor BEFORE the status flip (unknown target → loud `ApprovalDispatchError`, record stays pending — "approved but nothing happened" is structurally impossible); after flip the executor runs (`skills/{name}` → AICodeValidator + realpath-guard + bounded backend/skills write — same contract as `approval_manager`); success → `execution_status=executed` + ledger `approval_executed`; runtime failure → `execution_status=failed` + `execution_error` + ledger `approval_execution_failed` + loud re-raise. State machine intact: duplicate approve still rejected → no double-execution. |
+| **Verification evidence** | 16/16 new contract tests; hitl-adjacent suites 34/34; missions 62/62; vitest 544/544; typecheck 0; lint_plans 0 errors; STATUS_PROOF PASS; architecture ratchet violations=0; in the CI run whose tree contains this commit, all 36 substantive jobs succeeded (Backend Tests ×4 shards incl. services, Contract Gate, Coverage Gate, Integration, Frontend, Security, Deploy) |
+| **Ratification needed** | Confirm the founder wants `skills/{name}` HITL approvals to auto-deploy skill files to `backend/skills/` on approve (this is the documented M17 P-B intent — "নির্বাহক-জন্ম"), and that fail-closed loud rejection of future unknown `target_resource` values is the desired default |
+| **Approval command** | `/admin-api/approvals/TASK-003/approve` |
+
 ## Instructions
 
 - Tier 3 (High-Risk) autonomous remediations MUST log here before proceeding.
