@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-19 12:18 UTC
+- **Date:** 2026-09-19 12:20 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,11 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/index.css`
-  - `docker-compose.production.yml`
   - `frontend/src/contexts/ThemeProvider.test.tsx`
-  - `frontend/src/components/dashboard/DashboardLayout.tsx`
   - `frontend/src/components/dashboard/SettingsPage.tsx`
+  - `docs/security/HS-01-REMEDIATION.md`
+  - `frontend/src/components/dashboard/DashboardLayout.tsx`
+  - `CHECKPOINT.md`
+  - `frontend/src/index.css`
 
 ## Pending (Carry Forward)
 - 103 active skipped test markers triage across 53 files towards <30 (reconciled in docs/SKIPPED_TESTS.md)

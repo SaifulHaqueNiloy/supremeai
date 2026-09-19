@@ -16,8 +16,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ title, childre
     setSidebarOpen(!sidebarOpen);
   };
 
-  const headerTheme = (theme === 'light' ? 'light' : 'dark') as 'light' | 'dark';
-
   return (
     <div className="dashboard-aurora flex h-screen bg-gray-50 dark:bg-slate-950">
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
