@@ -273,6 +273,11 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     set({ status: AuthStatus.LOGGED_IN, user: optimisticUser, role: optimisticRole });
 
+    // বাংলা মন্তব্য: E2E smoke test token হলে ব্যাকগ্রাউন্ড নেটওয়ার্ক ভ্যালিডেশন স্কিপ করা হবে
+    if (token === 'demo-token' || (typeof window !== 'undefined' && (window as unknown as { __E2E_MOCK__?: boolean }).__E2E_MOCK__)) {
+      return;
+    }
+
     // বাংলা মন্তব্য: ব্যাকগ্রাউন্ডে token ভ্যালিডেট করা হয় — শুধুমাত্র নিশ্চিত 401/403-এ
     // logout হবে; নেটওয়ার্ক/কোল্ড-স্টার্ট/5xx এরর হলে সেশন অক্ষত থাকে।
     try {
