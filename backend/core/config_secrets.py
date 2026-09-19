@@ -242,6 +242,13 @@ class SettingsSecretsMixin:
                     val = get_secret_vault().fetch_secret(key, default="")
                     cached[key] = val
                 except Exception as e:
+                    if self.env in ("production", "staging"):
+                        # BE-13 (issue #545): the vault fail-closed because this
+                        # secret is missing and not in OPTIONAL_SECRETS —
+                        # propagate instead of silently degrading to "" (an
+                        # empty STRIPE_WEBHOOK_SECRET must never reach webhook
+                        # verification in production).
+                        raise
                     logger.warning(f"Failed to lazy load optional secret '{key}': {e}")
                     cached[key] = ""
             else:
