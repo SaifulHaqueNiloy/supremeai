@@ -6,6 +6,7 @@ from api.dependencies import get_tenant_db
 from api.deps import get_current_user_token
 from brain.supreme_learning_engine import get_learning_engine
 from context_engine import ContextBlock, ContextEngine, Section
+from context_engine.budget import context_engine_enabled
 from core.cache.multi_layer_cache import multi_layer_cache
 from core.circuit_breaker import RedisCircuitBreaker
 from core.llm.llm_gateway import llm_gateway
@@ -221,12 +222,21 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
             }
 
         # M2 Context Engine: budgeted, smallest-sufficient-context prompt
-        assembled = ContextEngine().assemble(context_blocks)
-        enriched_prompt = assembled.prompt
-        logger.info(
-            f"🧩 Context Engine: {assembled.report.total_tokens}/{assembled.report.budget} tokens, "
-            f"kept={len(assembled.report.kept)}, dropped={len(assembled.report.dropped)}"
-        )
+        # বাংলা (M07 P-F): kill-switch SUPREMEAI_CONTEXT_ENGINE=off → raw-prompt
+        # passthrough (budget ছাড়া) — লাউড-লগ, নীরব ভাব নয়।
+        if context_engine_enabled():
+            assembled = ContextEngine().assemble(context_blocks)
+            enriched_prompt = assembled.prompt
+            logger.info(
+                f"🧩 Context Engine: {assembled.report.total_tokens}/{assembled.report.budget} tokens, "
+                f"kept={len(assembled.report.kept)}, dropped={len(assembled.report.dropped)}"
+            )
+        else:
+            enriched_prompt = payload.prompt
+            logger.info(
+                "🧩 Context Engine OFF (SUPREMEAI_CONTEXT_ENGINE=off) — "
+                "raw prompt passthrough; budget assembly skipped"
+            )
 
         if await main_llm_circuit.should_attempt_external():
             try:
@@ -389,12 +399,21 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                 logger.debug(f"RAG Retrieval bypassed in stream: {rag_err}")
 
             # M2 Context Engine: budgeted, smallest-sufficient-context prompt
-            assembled = ContextEngine().assemble(context_blocks)
-            enriched_prompt = assembled.prompt
-            logger.info(
-                f"🧩 Context Engine: {assembled.report.total_tokens}/{assembled.report.budget} tokens, "
-                f"kept={len(assembled.report.kept)}, dropped={len(assembled.report.dropped)}"
-            )
+            # বাংলা (M07 P-F): kill-switch SUPREMEAI_CONTEXT_ENGINE=off → raw-prompt
+            # passthrough (budget ছাড়া) — লাউড-লগ, নীরব ভাব নয়।
+            if context_engine_enabled():
+                assembled = ContextEngine().assemble(context_blocks)
+                enriched_prompt = assembled.prompt
+                logger.info(
+                    f"🧩 Context Engine: {assembled.report.total_tokens}/{assembled.report.budget} tokens, "
+                    f"kept={len(assembled.report.kept)}, dropped={len(assembled.report.dropped)}"
+                )
+            else:
+                enriched_prompt = payload.prompt
+                logger.info(
+                    "🧩 Context Engine OFF (SUPREMEAI_CONTEXT_ENGINE=off) — "
+                    "raw prompt passthrough; budget assembly skipped"
+                )
 
             if await main_llm_circuit.should_attempt_external():
                 try:

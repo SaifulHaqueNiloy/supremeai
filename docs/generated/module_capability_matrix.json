@@ -11040,6 +11040,15 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/context_engine/test_budget_config.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/context_engine/test_context_engine.py"
     },
     {
@@ -24820,5 +24829,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2859
+  "source_file_count": 2860
 }

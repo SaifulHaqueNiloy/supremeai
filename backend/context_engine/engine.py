@@ -18,7 +18,12 @@ import enum
 from dataclasses import dataclass, field
 from typing import Any
 
-from context_engine.budget import SECTION_CAPS, estimate_tokens, resolve_input_budget
+from context_engine.budget import (
+    SECTION_CAPS,
+    estimate_tokens,
+    resolve_input_budget,
+    resolve_section_caps,
+)
 
 _TRUNCATION_MARK = "\n…[context truncated]"
 
@@ -156,6 +161,9 @@ class ContextEngine:
         kept_by_section: dict[Section, list[ContextBlock]] = {s: [] for s in SECTION_ORDER}
         used = 0
 
+        # M07 P-F: caps env-চালিত (zero-hardcode) — ডিফল্ট SECTION_CAPS অপরিবর্তিত।
+        caps = resolve_section_caps()
+
         # 1) USER — hard reserve. Never dropped; any user block that alone
         #    exceeds half the budget is hard-truncated (P-G honesty: the
         #    truncation is always reported — নীরব বাজেট-উল্লঙ্ঘন নিষিদ্ধ),
@@ -183,7 +191,7 @@ class ContextEngine:
             if i > 0:
                 report.dropped.append(b.block_id or f"{Section.SYSTEM.value}#{b.priority}")
                 continue
-            sys_cap = int(budget * SECTION_CAPS["system"])
+            sys_cap = int(budget * caps["system"])
             t = b.tokens
             if t <= sys_cap:
                 kept_by_section[Section.SYSTEM].append(b)
@@ -199,7 +207,7 @@ class ContextEngine:
         # 3) Best-fit greedy fill for the droppable sections.
         for section in (Section.MEMORY, Section.KNOWLEDGE, Section.HISTORY):
             remaining = budget - used
-            cap = int(budget * SECTION_CAPS.get(section.value, 1.0))
+            cap = int(budget * caps.get(section.value, 1.0))
             section_used = 0
             ordered = sorted(
                 by_section.get(section, []),
