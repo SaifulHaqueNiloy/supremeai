@@ -105,3 +105,56 @@ Deterministic, stdlib-only (`xml.etree` + `git diff`) — কোনো LLM/শ�
 | [`OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md`](file:///f:/supremeai/docs/master_docs/OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md) | মাল্টি-এজেন্ট শর্ট-লিভড ব্রাঞ্চিং, মিউটেক্স লকিং ও রিবেস লাইফসাইকেল |
 | [`GITHUB_TOKEN_CANONICALIZATION_PLAN.md`](file:///f:/supremeai/docs/security/GITHUB_TOKEN_CANONICALIZATION_PLAN.md) | একক ক্যানোনিকাল GITHUB_TOKEN আর্কিটেকচার ও প্ল্যাটফর্ম ভেরিফিকেশন |
 
+
+
+---
+
+## 🔄 GAP-12 Fix: After-Block Recovery Protocol
+
+যখন PR Helper কোনো PR-কে `pr-helper:blocked` লেবেল দেয় (Branch B2 — unattributable regression), তখন Agent কী করবে তার স্পষ্ট protocol নিচে দেওয়া হলো:
+
+### Step-by-Step Recovery Flow
+
+```mermaid
+flowchart TD
+    BL["🛑 PR blocked<br/>label: pr-helper:blocked<br/>(Branch B2 — fatal)"] --> DIAG{"নতুন commit<br/>একই branch-এ?"}
+    DIAG -- "হ্যাঁ" --> SYNC["🔄 Synchronize event<br/>PR Helper auto re-run"]
+    DIAG -- "না" --> DEC{"Agent কি নতুন<br/>branch বানাবে?"}
+    DEC -- "একই branch" --> PUSH["১. একই branch-এ fix commit push<br/>২. pr-helper:blocked label সরানোর দরকার নেই<br/>৩. PR Helper নতুন SHA-তে auto re-run হবে"]
+    DEC -- "নতুন branch" --> NEW["১. নতুন branch তৈরি (issue-N-fix-v2)<br/>২. পুরোনো PR close করুন<br/>৩. নতুন PR খুলুন<br/>৪. পুরোনো PR-এ 'superseded by #N' comment"]
+    SYNC --> RECHECK{"নতুন run-এ classification?"}
+    PUSH --> RECHECK
+    NEW --> RECHECK
+    RECHECK -- "pure-improvement" --> MERGE["✅ Step 5 auto-merge<br/>pr-helper:blocked label সরে যায়"]
+    RECHECK -- "regression এখনও" --> BL
+```
+
+### Recovery Checklist (Agent-এর জন্য)
+
+| ধাপ | করণীয় | স্বয়ংক্রিয়? |
+|---|---|---|
+| ১ | `pr-helper:blocked` issue comment পড়ে root cause বুঝুন | Manual |
+| ২ | প্রয়োজনে `gh run view` দিয়ে Step 3/4 logs পড়ুন | Manual |
+| ৩ | ফিক্স করুন (ruff --fix আগে, তারপর manual) | Manual |
+| ৪ | একই branch-এ commit push করুন | Manual |
+| ৫ | `synchronize` event ট্রিগার হবে → PR Helper auto re-run | ✅ Automatic |
+| ৬ | পুরোনো `pr-helper:blocked` label সরানোর দরকার নেই — নতুন run পাস করলে স্বয়ংক্রিয়ভাবে Step 5 মার্জ করবে | ✅ Automatic |
+| ৭ | যদি নতুন run-ও block করে → Step ১-এ ফিরে যান | Manual |
+
+### Label Lifecycle
+
+- `pr-helper:blocked` → যখন Step 4 attribution ব্যর্থ (Branch B2)
+- `pr-helper:isolated` → যখন Step 4 cherry-pick সফল (Branch B1, নতুন clean branch)
+- `pr-helper:auto-approved` → যখন Step 5 pure-improvement (Branch A)
+- `pr-helper:self-modification` → যখন PR Helper নিজের ফাইল পরিবর্তন করে (GAP-06, SG-11)
+
+### Important Notes
+
+- **একই branch-এ push করলে synchronize ট্রিগার হয়** — নতুন PR খোলার দরকার নেই।
+- **pr-helper:blocked label ম্যানুয়ালি সরাবেন না** — নতুন run পাস করলে স্বয়ংক্রিয়ভাবে Step 5 merge করবে, blocked label থাকলেও নতুন SHA-তে কনফ্লিক্ট নেই।
+- **Force-push নিষিদ্ধ** — author-এর consent ছাড়া branch history rewrite করবেন না।
+- **নতুন branch বানালে** পুরোনো PR-এ "superseded by #N" comment করুন, যাতে reviewer ট্র্যাক রাখতে পারেন।
+
+---
+
+*GAP-12 fix — সেপ্টেম্বর ২০২৬ · PR Helper Block Recovery Protocol*

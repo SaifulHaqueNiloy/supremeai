@@ -36,6 +36,13 @@ on:
         description: 'PR number to analyze'
         required: true
         type: string
+  # Phase 2: allow unified pr-pipeline.yml to call this workflow
+  workflow_call:
+    inputs:
+      pr_number:
+        description: 'PR number to analyze (from caller)'
+        required: true
+        type: string
 
 env:
   PYTHON_VERSION: '3.11'
@@ -101,7 +108,7 @@ jobs:
 
           echo "PR=$PR head=$HEAD_SHA base=$BASE_SHA proceed=$PROCEED"
 
-      - name: Scope filter (backend touched?)
+      - name: Scope filter (backend touched? + self-modification detection)
         id: scope
         run: |
           set -euo pipefail
@@ -111,6 +118,17 @@ jobs:
           else
             echo "backend_changed=false" >> "$GITHUB_OUTPUT"
           fi
+
+          # GAP-06 fix: Detect self-modification of PR Helper logic (bootstrap trust, SG-11)
+          # If PR modifies pr-helper.yml or delta_analysis.py or hunk_isolation.py
+          # → auto-merge MUST be disabled, mandatory human review required.
+          if echo "$CHANGED" | grep -qE '^(\.github/workflows/pr-helper\.yml|\.github/scripts/pr_helper/|docs/security/SECURITY_GUARDIAN\.md|security/policies/)'; then
+            echo "self_modification_detected=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::Self-modification detected (GAP-06/SG-11) — auto-merge will be DISABLED, mandatory human review required"
+          else
+            echo "self_modification_detected=false" >> "$GITHUB_OUTPUT"
+          fi
+
           echo "--- changed files (first 30) ---"
           echo "$CHANGED" | head -30
 
@@ -336,7 +354,8 @@ jobs:
         needs.step3-delta.outputs.classification == 'pure-improvement' &&
         needs.step3-delta.outputs.head_incomplete == 'false' &&
         needs.step2-audit.outputs.conflicts == 'false' &&
-        needs.step2-audit.outputs.lint == 'pass'
+        needs.step2-audit.outputs.lint == 'pass' &&
+        needs.guard.outputs.self_modification_detected == 'false'
       }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
