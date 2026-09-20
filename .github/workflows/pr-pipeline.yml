@@ -611,12 +611,12 @@ jobs:
 
           STATUS="PASS"
           REASON="No new findings introduced"
+          BLOCK_COUNT=0
 
           if [[ -n "$STEP_CRASH" ]]; then
             STATUS="BLOCK"
             REASON="Internal security check failure in step(s): $STEP_CRASH (SG-08: Unknown security state must never be treated as confirmed-safe)"
           else
-            BLOCK_COUNT=0
             BLOCK_COUNT=$((BLOCK_COUNT + SECRET_LEAKS_INT))
             BLOCK_COUNT=$((BLOCK_COUNT + SHELL_VIOLATIONS_INT))
             [[ "$AUTH_BOUNDARY_B" == "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
@@ -643,6 +643,7 @@ jobs:
 
           export STATUS REASON RISK_CLASS PROTECTED_SCOPE_B SELF_MOD_B PROTECTED_PATHS
           export LITE_VIOLATIONS_B LITE_COUNT_INT SECRET_LEAKS_INT SHELL_VIOLATIONS_INT PERMS_VIOLATIONS_INT
+          DEEP_RESULT="${DEEP_RESULT:-skipped}"
           export DEEP_RESULT DEEP_VIOLATIONS_B DEEP_COUNT_INT AUTH_BOUNDARY_B HITL_BYPASS_B
           export ISSUE_LINKED_B ISSUE_REFS PRESERVATION_OK_B DELETED_PROTECTED_INT
           export CHANGED_FILES_COUNT BLOCK_COUNT PR
