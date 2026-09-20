@@ -8,11 +8,10 @@ from __future__ import annotations
 
 import json
 import os
-import urllib.error
-import urllib.request
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
+from core.clients.render_api import render_get_json
 from core.logging_config import logger
 from database.supabase_client import db
 
@@ -22,15 +21,6 @@ MAX_BACKOFF_DAYS = 30
 
 class RenderAccountService:
     """Service for querying Render accounts, computing usage, and tracking status."""
-
-    @staticmethod
-    def _get_json(url: str, key: str | None = None) -> Any:
-        headers = {"Accept": "application/json"}
-        if key:
-            headers["Authorization"] = f"Bearer {key}"
-        request = urllib.request.Request(url, headers=headers)
-        with urllib.request.urlopen(request, timeout=15) as response:
-            return json.loads(response.read().decode("utf-8"))
 
     @staticmethod
     def get_configured_accounts() -> list[dict[str, Any]]:
@@ -221,10 +211,11 @@ class RenderAccountService:
             )
             return state_dict
 
-        # Query Render API for deploys
+        # Query Render API for deploys (single-sourced transport — core.clients.render_api)
         try:
-            url = f"https://api.render.com/v1/services/{service_id}/deploys?limit=100"
-            payload = cls._get_json(url, api_key)
+            payload = render_get_json(
+                f"/services/{service_id}/deploys", api_key=api_key, query={"limit": 100}
+            )
             deploys = payload if isinstance(payload, list) else payload.get("deploys", [])
             usage = round(cls.calculate_monthly_usage_minutes(deploys), 2)
 
