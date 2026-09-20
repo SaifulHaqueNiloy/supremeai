@@ -1,3 +1,4 @@
+import logging
 import os
 import sys
 from logging.config import fileConfig
@@ -18,6 +19,8 @@ config = context.config
 
 import socket
 import urllib.parse
+
+logger = logging.getLogger(__name__)
 
 # বাংলা মন্তব্য: মাইগ্রেশনের জন্য ডিরেক্ট রাইটার (SUPABASE_DATABASE_URL_WRITER) অগ্রাধিকার পাবে,
 # কারণ PgBouncer ট্রানজ্যাকশন পুলে DDL / মাইগ্রেশন লকিং স্টেটমেন্ট প্রত্যাখ্যাত হতে পারে।
@@ -49,7 +52,15 @@ def _resolve_reachable_url(url: str) -> str:
                 res = socket.getaddrinfo(hostname, parsed.port or 5432, socket.AF_INET)
                 if res:
                     can_ipv4 = True
-            except Exception:
+            except OSError as exc:
+                # DNS resolution failure is expected on IPv6-only hosts — the
+                # pooler fallback below is exactly the remedy. Kept observable
+                # (Constitution REL-002) without failing the migration run.
+                logger.warning(
+                    "IPv4 resolution failed for %s (%s); trying Supavisor pooler fallback",
+                    hostname,
+                    exc,
+                )
                 can_ipv4 = False
 
             if not can_ipv4:
@@ -70,7 +81,13 @@ def _resolve_reachable_url(url: str) -> str:
                     (parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment)
                 )
     except Exception:
-        pass
+        # REL-001 (Constitution): never swallow silently — log with traceback
+        # and fall back to the caller-provided URL. The fallback preserves the
+        # pre-fix behavior (migrations proceed with the raw URL); the log line
+        # makes the degradation visible in CI and production logs.
+        logger.exception(
+            "Supabase reachability probe failed; migrations will use the URL as provided"
+        )
     return url
 
 
