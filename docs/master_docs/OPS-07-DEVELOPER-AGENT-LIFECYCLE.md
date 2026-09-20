@@ -1,4 +1,6 @@
-# OPS-07 — External AI Developer Lifecycle (Engineering & Contribution Protocol)
+# OPS-07 — Developer Agent Lifecycle (Engineering & Contribution Protocol)
+
+> **রিনেম নোট (GAP-09 fix):** আগের শিরোনামে "External" ছিল, কিন্তু SupremeAI নিজেও এই পুলের অংশ — তাই "External" শব্দটি সরানো হয়েছে।
 
 > **ডকুমেন্ট আইডি:** OPS-07 · **স্ট্যাটাস:** সক্রিয় (ACTIVE) · **ভার্সন:** ১.০ (২০২৬-০৯)  
 > **প্রযোজ্য:** এক্সটার্নাল কোডিং এআই এজেন্ট (Antigravity, Cursor, Claude Code, Cline, Windsurf, DevIn, Agent-1..N) যারা SupremeAI রিপোজিটরির ডেভেলপমেন্ট, বাগ ফিক্স এবং ফিচার তৈরিতে কাজ করে।  
