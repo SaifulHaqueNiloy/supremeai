@@ -35,7 +35,7 @@ def _existing_tables_offline_safe(conn):
     # still guards with the real inspector.
     from alembic import context
 
-    if _alembic_context.is_offline_mode:
+    if _alembic_context.is_offline_mode():
         return set()
     inspector = (
         Inspector.from_engine(conn.engine)
@@ -64,7 +64,7 @@ def upgrade():
         # probed (execute() returns None). Treat the enum as absent so the
         # generated SQL plan contains the CREATE TYPE; the live run still
         # probes pg_type for real.
-        if _alembic_context.is_offline_mode:
+        if _alembic_context.is_offline_mode():
             exists = False
         else:
             exists = bool(

@@ -34,7 +34,7 @@ def upgrade() -> None:
     bind = op.get_bind()
     # Issue #478: offline mode cannot reflect a MockConnection — treat the
     # table as absent in the generated plan; the live run still reflects.
-    if _alembic_context.is_offline_mode:
+    if _alembic_context.is_offline_mode():
         existing_tables: list[str] = []
     else:
         existing_tables = sa.inspect(bind).get_table_names()
