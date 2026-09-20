@@ -1,7 +1,7 @@
 # বাংলা কমেন্ট: #781 ফিক্স — Origin Shield Middleware (Cloudflare Worker প্রি-শেয়ার্ড সিক্রেট ভ্যালিডেশন)।
 #
 # সমস্যা: Render free-tier সার্ভিসের ipAllowList 0.0.0.0/0 থাকতেই হয় (Render-এর নিজস্ব
-# health probe + dynamic egress IP এর জন্য)। ফলে যে কেউ সরাসরি https://supremeai-primary-node.onrender.com
+# health probe + dynamic egress IP এর জন্য)। ফলে যে কেউ সরাসরি Render-এর ডিফল্ট ডোমেইনে
 # হিট করে backend-এ ঢুকে যেতে পারে।
 #
 # সমাধান (Option 1 — Zero-cost Cloudflare Fronting):
@@ -11,15 +11,15 @@
 #   3. /health, /health/live, /api/v1/health পাথগুলো Render-এর নিজস্ব health probe-এর জন্য
 #      উন্মুক্ত থাকে (bypass)।
 #   4. অন্য সমস্ত রিকোয়েস্টে বৈধ X-Origin-Verify-Key হেডার থাকতেই হবে — নাহলে 403 Forbidden।
-#   5. ডিরেক্ট .onrender.com হিট (Worker ছাড়া) হেডার পাবে না → ব্লক হবে।
+#   5. ডিরেক্ট Render অরিজিন হিট (Worker ছাড়া) হেডার পাবে না → ব্লক হবে।
 #
 # Fail-closed: প্রোডাকশনে key সেট থাকলে অথেনটিকেটেড রিকোয়েস্ট ছাড়া কিছুই ঢুকবে না।
 # Fail-open: ডেভ/টেস্ট env বা key সেট না থাকলে middleware no-op (যাতে লোকাল dev ব্রেক না হয়)।
 from __future__ import annotations
 
-import os
 import hmac
-from typing import Iterable
+import os
+from collections.abc import Iterable
 
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
@@ -30,13 +30,13 @@ from core.logging_config import logger
 # বাংলা: এই পাথগুলো Render-এর নিজস্ব health probe + Firebase init-এর জন্য উন্মুক্ত থাকবে।
 # এগুলো কোনো sensitive ডেটা রিটার্ন করে না, তাই অরিজিন শিল্ড বাইপাস করা নিরাপদ।
 _PUBLIC_BYPASS_PREFIXES: tuple[str, ...] = (
-    "/health",          # /health, /health/live, /health/ready
-    "/api/v1/health",   # legacy admin health path
+    "/health",  # /health, /health/live, /health/ready
+    "/api/v1/health",  # legacy admin health path
     "/api/v1/public/",  # explicitly public API surface (read-only, no auth)
-    "/__/firebase/",    # Firebase Hosting reserved init endpoint
-    "/favicon",         # static favicon
-    "/manifest.json",   # PWA manifest
-    "/robots.txt",      # robots
+    "/__/firebase/",  # Firebase Hosting reserved init endpoint
+    "/favicon",  # static favicon
+    "/manifest.json",  # PWA manifest
+    "/robots.txt",  # robots
 )
 
 # বাংলা: docs/openapi প্রোডাকশনে অন্য DocsAuthMiddleware দিয়ে সুরক্ষিত —
@@ -100,7 +100,9 @@ class OriginShieldMiddleware(BaseHTTPMiddleware):
         path = request.url.path
 
         # Public health + static + docs পাথ bypass
-        if _path_matches(path, _PUBLIC_BYPASS_PREFIXES) or _path_matches(path, _DOCS_BYPASS_PREFIXES):
+        if _path_matches(path, _PUBLIC_BYPASS_PREFIXES) or _path_matches(
+            path, _DOCS_BYPASS_PREFIXES
+        ):
             return await call_next(request)
 
         # মূল চেক: X-Origin-Verify-Key হেডার timing-safe ম্যাচ
