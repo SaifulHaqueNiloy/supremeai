@@ -19406,32 +19406,6 @@
       "path": "frontend/src/lib/componentEventBus.ts"
     },
     {
-      "capability_signals": [
-        "capability",
-        "health",
-        "mcp",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/ecosystem/api.ts"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "execute",
-        "health",
-        "mcp",
-        "memory",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/lib/ecosystem/types.ts"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -20318,13 +20292,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/shared/supremeShared.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/store/adminSessionPersistence.test.ts"
     },
     {
@@ -20602,9 +20569,7 @@
       "path": "frontend/src/types/approval.ts"
     },
     {
-      "capability_signals": [
-        "browser"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
@@ -20808,41 +20773,11 @@
       "path": "infrastructure/check_deploy_gate.py"
     },
     {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "infrastructure/cloudflare/enhanced-worker.js"
-    },
-    {
       "capability_signals": [],
-      "classification": "dormant_or_dynamic",
+      "classification": "human_review",
       "entrypoints": [],
       "kind": "js",
-      "path": "infrastructure/cloudflare/worker-modules/auth-checker.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "infrastructure/cloudflare/worker-modules/cache-handler.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "infrastructure/cloudflare/worker-modules/response-builder.js"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "js",
-      "path": "infrastructure/cloudflare/worker-modules/router.js"
+      "path": "infrastructure/cloudflare/index.js"
     },
     {
       "capability_signals": [
@@ -21008,6 +20943,7 @@
     },
     {
       "capability_signals": [
+        "execute",
         "health"
       ],
       "classification": "adapter",
@@ -23740,7 +23676,9 @@
     {
       "capability_signals": [],
       "classification": "human_review",
-      "entrypoints": [],
+      "entrypoints": [
+        "main"
+      ],
       "kind": "py",
       "path": "scripts/deploy/check_render.py"
     },
@@ -23754,7 +23692,9 @@
     {
       "capability_signals": [],
       "classification": "human_review",
-      "entrypoints": [],
+      "entrypoints": [
+        "main"
+      ],
       "kind": "py",
       "path": "scripts/deploy/check_render_svc.py"
     },
@@ -23800,7 +23740,9 @@
     {
       "capability_signals": [],
       "classification": "human_review",
-      "entrypoints": [],
+      "entrypoints": [
+        "main"
+      ],
       "kind": "py",
       "path": "scripts/deploy/trigger_render_deploy.py"
     },
@@ -24304,6 +24246,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "scripts/lib/render_client.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "scripts/maintenance/__init__.py"
     },
     {
@@ -24770,7 +24719,9 @@
       "path": "scripts/security/auto_repair_cloudflare_vault.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [
         "main"
@@ -25113,5 +25064,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2890
+  "source_file_count": 2884
 }
