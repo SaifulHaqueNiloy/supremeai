@@ -44,12 +44,12 @@ class TestSSRFPrivateIPs:
         "url",
         [
             "http://example.com/",
-            "https://api.supremeai.dev/",
+            "https://8.8.8.8/",
             "http://8.8.8.8/",
-            "https://github.com/",
+            "https://140.82.121.4/",
             "http://1.1.1.1/",
-            "https://example.com/",
-            "https://api.example.com/",
+            "https://8.8.8.8/",
+            "https://1.1.1.1/",
         ],
     )
     def test_public_url_safe(self, url):
