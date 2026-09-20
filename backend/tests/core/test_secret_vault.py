@@ -122,6 +122,16 @@ class TestSecretVaultFallback:
         assert vault._fallback_to_env("RESEND_API_KEY", None) == ""
         assert vault._fallback_to_env("RESEND_API_KEY", "") == ""
 
+    def test_fallback_production_database_url_degrades(self, monkeypatch):
+        # Issue #856 / BE-13: DATABASE_URL is an optional alternative to
+        # SUPABASE_DATABASE_URL_POOLER. When absent in production, it must
+        # degrade gracefully to "" so settings can fall back to the Supabase pooler.
+        monkeypatch.delenv("DATABASE_URL", raising=False)
+        vault = ProductionSecretVault()
+        vault.env = "production"
+        vault.client = None
+        assert vault._fallback_to_env("DATABASE_URL", "") == ""
+
 
 class TestSecretVaultCache:
     """Tests for secret vault caching."""
