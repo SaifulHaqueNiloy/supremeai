@@ -49,6 +49,15 @@ GCP_CLOUD_RUN_URL = "https://supremeai-primary-node.onrender.com"
 GCP_REGION = "us-central1"
 GCP_WEIGHT = "25"
 
+# ── Keepalive targets (#824 + #825) ──────────────────────────────────────────
+# These vars are used by the scheduled handler (checkHealthAndStore, runs every
+# 8 min via cron) to ping Neon + Supabase in addition to the 4 Render backends.
+# SUPABASE_URL is a public URL (safe as [vars]). NEON_HOST is a public DNS name.
+# SUPABASE_KEY (anon) is public by design but set as a CF secret for cleanliness
+# (wrangler secret put SUPABASE_KEY — paste the anon JWT value).
+SUPABASE_URL = "https://xtvkltzmberxekoamala.supabase.co"
+NEON_HOST = "ep-frosty-surf-b3n7nx5b.c-4.ap-southeast-1.aws.neon.tech"
+
 # ── Origin Shield secret (#781) ───────────────────────────────────────────────
 # ORIGIN_VERIFY_KEY is a pre-shared secret injected by this worker on every
 # proxied request (withOriginShield → X-Origin-Verify-Key header). The FastAPI
