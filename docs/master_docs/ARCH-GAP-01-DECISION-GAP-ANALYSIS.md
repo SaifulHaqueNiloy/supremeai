@@ -142,7 +142,7 @@ VALID_PATTERN="^(agent-[0-9]+\/issue-[0-9]+-.+|feat\/|fix\/|hotfix\/|perf\/|chor
 - যেকেউ যেকোনো নামে ব্রাঞ্চ তৈরি করে PR দিতে পারবে এবং CI তাতে আপত্তি করবে না।
 
 ### সম্ভাব্য ফিক্স
-1. **[NEW]** `.github/workflows/branch-naming-guard.yml` তৈরি করা যা PR `opened` ইভেন্টে ব্রাঞ্চ নাম regex চেক করবে।
+1. **[RESOLVED]** `.github/workflows/pr-pipeline.yml`-এ `validate-branch-name` জব যোগ করা হয়েছে যা PR `opened/reopened/synchronize` ইভেন্টে ব্রাঞ্চ নাম regex চেক করে ব্লক করবে।
 2. **branch protection rules-এ** GitHub Repository Settings থেকে ব্রাঞ্চ নামের regex pattern enforce করা।
 
 ---

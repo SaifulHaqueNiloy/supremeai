@@ -19,15 +19,79 @@ concurrency:
   group: pr-pipeline-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
+  issues: write
   actions: read
   checks: write
 env:
   PYTHON_VERSION: '3.11'
 jobs:
+  validate-branch-name:
+    name: 🔤 Validate Branch Name
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    outputs:
+      valid: ${{ steps.validate.outputs.valid }}
+    steps:
+      - name: Validate branch name against OPS-06 regex
+        id: validate
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        run: |
+          set -euo pipefail
+          BRANCH="${BRANCH_NAME:-}"
+          if [[ -z "$BRANCH" && -n "${{ inputs.pr_number }}" ]]; then
+            BRANCH="$(gh pr view "${{ inputs.pr_number }}" --json headRefName -q .headRefName 2>/dev/null || echo '')"
+            PR_NUMBER="${{ inputs.pr_number }}"
+          fi
+          echo "Branch: $BRANCH"
+
+          VALID_PATTERN='^(agent-[0-9]+/issue-[0-9]+-.+|feat/.+|fix/.+|hotfix/.+|perf/.+|chore/.+|test/.+|docs/.+|refactor/.+|ci/.+|develop|main)$'
+
+          if [[ "$BRANCH" =~ $VALID_PATTERN ]]; then
+            echo "valid=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Branch name '$BRANCH' matches OPS-06 pattern"
+            gh pr edit "$PR_NUMBER" --remove-label "branch:invalid" 2>/dev/null || true
+          else
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            echo "❌ Branch name '$BRANCH' does NOT match OPS-06 pattern"
+            echo "Expected one of: agent-N/issue-N-slug, feat/, fix/, hotfix/, perf/, chore/, test/, docs/, refactor/, ci/"
+
+            gh label create "branch:invalid" --color "D93F0B" \
+              --description "Branch name does not match OPS-06 regex" --force 2>/dev/null || true
+            gh pr edit "$PR_NUMBER" --add-label "branch:invalid" 2>/dev/null || true
+
+            cat > /tmp/branch-error.md << 'MD'
+          ## ❌ Branch Naming Violation (GAP-05 / OPS-06 Safeguard 4)
+
+          এই PR-এর branch name OPS-06 স্ট্যান্ডার্ড প্যাটার্নে মেলে না।
+
+          **Valid patterns:**
+          - `agent-N/issue-N-<slug>` (agent slots, e.g., `agent-1/issue-900-fix-login`)
+          - `feat/<slug>` (feature work)
+          - `fix/<slug>` (bug fixes)
+          - `hotfix/<slug>` (urgent production fixes)
+          - `perf/<slug>` (performance improvements)
+          - `chore/<slug>` (maintenance)
+          - `test/<slug>` (test branches)
+          - `docs/<slug>` (documentation)
+          - `refactor/<slug>` (refactoring)
+          - `ci/<slug>` (CI/CD changes)
+
+          **Action required:** branch rename করুন অথবা maintainer-এর অনুমতি নিন।
+          MD
+            gh pr comment "$PR_NUMBER" --body-file /tmp/branch-error.md 2>/dev/null || true
+            echo "::error::Branch name '$BRANCH' violates OPS-06 naming convention"
+            exit 1
+          fi
+
   detect-scope:
     name: 🧭 Detect Scope & Risk
+    needs: validate-branch-name
     runs-on: ubuntu-latest
     timeout-minutes: 3
     outputs:
@@ -426,3 +490,14 @@ jobs:
       if: always()
       run: "{\n  echo \"## \U0001F6A6 Unified PR Gate\"\n  echo \"\"\n  echo \"Final status: **${{ steps.contract.outputs.status }}**\"\n  echo \"Risk class: ${{ steps.contract.outputs.risk_class }}\"\n\
         \  echo \"\"\n  echo \"Security Decision Contract posted as PR comment.\"\n} >> \"$GITHUB_STEP_SUMMARY\"\n"
+
+  pr-lifecycle:
+    name: 🤖 PR Lifecycle (PR Helper)
+    needs:
+      - detect-scope
+      - pr-gate
+    if: needs.pr-gate.outputs.status != 'BLOCK'
+    uses: ./.github/workflows/pr-helper.yml
+    with:
+      pr_number: ${{ needs.detect-scope.outputs.pr_number }}
+    secrets: inherit

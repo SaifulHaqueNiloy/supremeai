@@ -28,15 +28,13 @@ concurrency:
   cancel-in-progress: true
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
     inputs:
       pr_number:
         description: 'PR number to analyze'
         required: true
         type: string
-  # Phase 2: allow unified pr-pipeline.yml to call this workflow
+  # Invoked as reusable workflow by the unified pr-pipeline.yml
   workflow_call:
     inputs:
       pr_number:
