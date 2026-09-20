@@ -5461,6 +5461,16 @@
       "path": "backend/core/middleware/health_aware_middleware.py"
     },
     {
+      "capability_signals": [
+        "dispatch",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/middleware/origin_shield.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -25064,5 +25074,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2884
+  "source_file_count": 2885
 }
