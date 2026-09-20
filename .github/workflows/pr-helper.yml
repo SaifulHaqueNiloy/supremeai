@@ -111,7 +111,7 @@ jobs:
       - name: Scope filter (backend touched? + self-modification detection)
         id: scope
         run: |
-          set -euo pipefail
+          set -uo pipefail  # NO -e: grep -qE returns 1 on no-match, which is valid for if/else
           CHANGED="$(git diff --name-only '${{ steps.meta.outputs.base_sha }}...${{ steps.meta.outputs.head_sha }}')"
           if echo "$CHANGED" | grep -qE '^(backend/|scripts/ci/plan_backend_test_groups\.py)'; then
             echo "backend_changed=true" >> "$GITHUB_OUTPUT"
