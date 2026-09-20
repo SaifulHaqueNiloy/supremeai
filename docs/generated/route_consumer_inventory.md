@@ -4,24 +4,24 @@
 
 | metric | value |
 |---|---|
-| backend routes | 799 |
-| routes with frontend consumer | 300 |
-| unique frontend `/api/...` refs | 169 |
+| backend routes | 800 |
+| routes with frontend consumer | 257 |
+| unique frontend `/api/...` refs | 140 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
-| api-only routes (allowlisted) | 269 |
-| api-only families | 156 |
+| api-only routes (allowlisted) | 286 |
+| api-only families | 157 |
 
 ## Classification legend
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 173 | frontend consumer matched |
-| `admin-only` | 320 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `user-facing` | 156 | frontend consumer matched |
+| `admin-only` | 321 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 37 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 269 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `api-only` | 286 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families
@@ -123,12 +123,13 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | `/api/tts/voices` | 1 |
 | `/api/v1/agent_review_workflow` | 2 |
 | `/api/v1/analytics` | 3 |
-| `/api/v1/auth` | 1 |
+| `/api/v1/auth` | 4 |
 | `/api/v1/browse` | 1 |
 | `/api/v1/cache` | 1 |
 | `/api/v1/circles` | 3 |
 | `/api/v1/cognitive` | 1 |
 | `/api/v1/deep` | 1 |
+| `/api/v1/ecosystem` | 14 |
 | `/api/v1/engine` | 1 |
 | `/api/v1/graph` | 2 |
 | `/api/v1/healing` | 1 |
@@ -631,6 +632,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/v1/admin/crawler/policies/:param/enable` | `backend/api/routes/crawler_admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | POST | `/api/v1/admin/render/accounts/:param/override` | `backend/api/routes/render_preflight_admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | POST | `/api/v1/admin/render/accounts/:param/recheck` | `backend/api/routes/render_preflight_admin.py` | admin-only | `frontend/src/utils/api.ts` |
+| GET | `/api/v1/admin/render/accounts/health` | `backend/api/routes/render_preflight_admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/v1/admin/render/events` | `backend/api/routes/render_preflight_admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/v1/admin/render/preflight` | `backend/api/routes/render_preflight_admin.py` | admin-only | `frontend/src/components/admin/RenderPreflightWidget.tsx` |
 | GET | `/api/v1/admin/stats` | `backend/api/routes/admin_v1.py` | admin-only | `frontend/src/utils/api.ts` |
@@ -650,13 +652,13 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/analytics/business` | `backend/api/routes/analytics.py` | api-only | NONE |
 | POST | `/api/v1/analytics/predict-churn` | `backend/api/routes/analytics.py` | api-only | NONE |
 | POST | `/api/v1/analytics/report` | `backend/api/routes/analytics.py` | api-only | NONE |
-| POST | `/api/v1/auth/login` | `backend/api/routes/auth.py` | user-facing | `frontend/src/lib/ecosystem/api.ts`, `frontend/src/services/apiClient.test.ts`, `frontend/src/store/authStore.ts` |
-| POST | `/api/v1/auth/logout` | `backend/api/routes/auth.py` | user-facing | `frontend/src/lib/ecosystem/api.ts`, `frontend/src/services/apiClient.ts` |
-| GET | `/api/v1/auth/me` | `backend/api/routes/auth.py` | user-facing | `frontend/src/config/permissions.ts`, `frontend/src/lib/ecosystem/api.ts`, `frontend/src/services/apiClient.test.ts` (+3 more) |
-| POST | `/api/v1/auth/refresh` | `backend/api/routes/auth.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/auth/register` | `backend/api/routes/auth.py` | user-facing | `frontend/src/lib/ecosystem/api.ts`, `frontend/src/store/authStore.ts` |
-| GET | `/api/v1/auth/users` | `backend/api/routes/auth.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| PATCH | `/api/v1/auth/users/:param/role` | `backend/api/routes/auth.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
+| POST | `/api/v1/auth/login` | `backend/api/routes/auth.py` | user-facing | `frontend/src/services/apiClient.test.ts`, `frontend/src/store/authStore.ts` |
+| POST | `/api/v1/auth/logout` | `backend/api/routes/auth.py` | user-facing | `frontend/src/services/apiClient.ts` |
+| GET | `/api/v1/auth/me` | `backend/api/routes/auth.py` | user-facing | `frontend/src/config/permissions.ts`, `frontend/src/services/apiClient.test.ts`, `frontend/src/services/apiClient.ts` (+2 more) |
+| POST | `/api/v1/auth/refresh` | `backend/api/routes/auth.py` | api-only | NONE |
+| POST | `/api/v1/auth/register` | `backend/api/routes/auth.py` | user-facing | `frontend/src/store/authStore.ts` |
+| GET | `/api/v1/auth/users` | `backend/api/routes/auth.py` | api-only | NONE |
+| PATCH | `/api/v1/auth/users/:param/role` | `backend/api/routes/auth.py` | api-only | NONE |
 | GET | `/api/v1/auth/verify` | `backend/api/routes/auth.py` | api-only | NONE |
 | POST | `/api/v1/browse` | `backend/api/routes/scraper.py` | api-only | NONE |
 | GET | `/api/v1/cache/predictions/:param` | `backend/api/routes/cache_predictions.py` | api-only | NONE |
@@ -677,48 +679,48 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/v1/conversations` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/customer/UserDashboard.tsx` |
 | POST | `/api/v1/conversations/:param/messages` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/customer/UserDashboard.tsx` |
 | GET | `/api/v1/deep` | `backend/api/routes/health.py` | api-only | NONE |
-| POST | `/api/v1/ecosystem/admin/capabilities` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| DELETE | `/api/v1/ecosystem/admin/capabilities/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/capabilities/:param/archive` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/capabilities/:param/lifecycle` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/capabilities/:param/promote` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
+| POST | `/api/v1/ecosystem/admin/capabilities` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| DELETE | `/api/v1/ecosystem/admin/capabilities/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/capabilities/:param/archive` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/capabilities/:param/lifecycle` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/capabilities/:param/promote` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
 | GET | `/api/v1/ecosystem/admin/decisions` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
-| GET | `/api/v1/ecosystem/admin/governance/budgets` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/governance/decisions` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/learned` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| DELETE | `/api/v1/ecosystem/admin/learned/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/learned/prune` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/opportunities` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/opportunities` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/opportunities/:param/advance` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/overview` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/policies` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/policies` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| DELETE | `/api/v1/ecosystem/admin/policies/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/policies/match` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/proposals` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/proposals` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/proposals/:param/decide` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/proposals/:param/decisions` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/sources` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/admin/sources/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/sources/:param/transition` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/admin/sources/discover` | `backend/api/routes/ecosystem_admin.py` | admin-only | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/capabilities` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/capabilities/:param` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/capabilities/search` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/deployments` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/deployments/trace/:param` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/health` | `backend/api/routes/ecosystem.py` | internal | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/mcp/call` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/mcp/manifest` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/resources` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/resources` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/tasks` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/tasks` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| GET | `/api/v1/ecosystem/tasks/:param` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/tasks/:param/deliver` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
-| POST | `/api/v1/ecosystem/tasks/:param/transition` | `backend/api/routes/ecosystem.py` | user-facing | `frontend/src/lib/ecosystem/api.ts` |
+| GET | `/api/v1/ecosystem/admin/governance/budgets` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/governance/decisions` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/learned` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| DELETE | `/api/v1/ecosystem/admin/learned/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/learned/prune` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/opportunities` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/opportunities` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/opportunities/:param/advance` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/overview` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/policies` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/policies` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| DELETE | `/api/v1/ecosystem/admin/policies/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/policies/match` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/proposals` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/proposals` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/proposals/:param/decide` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/proposals/:param/decisions` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/sources` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/admin/sources/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/sources/:param/transition` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| POST | `/api/v1/ecosystem/admin/sources/discover` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
+| GET | `/api/v1/ecosystem/capabilities` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| GET | `/api/v1/ecosystem/capabilities/:param` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| POST | `/api/v1/ecosystem/capabilities/search` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| GET | `/api/v1/ecosystem/deployments` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| GET | `/api/v1/ecosystem/deployments/trace/:param` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| GET | `/api/v1/ecosystem/health` | `backend/api/routes/ecosystem.py` | internal | NONE |
+| POST | `/api/v1/ecosystem/mcp/call` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| GET | `/api/v1/ecosystem/mcp/manifest` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| GET | `/api/v1/ecosystem/resources` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| POST | `/api/v1/ecosystem/resources` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| GET | `/api/v1/ecosystem/tasks` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| POST | `/api/v1/ecosystem/tasks` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| GET | `/api/v1/ecosystem/tasks/:param` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| POST | `/api/v1/ecosystem/tasks/:param/deliver` | `backend/api/routes/ecosystem.py` | api-only | NONE |
+| POST | `/api/v1/ecosystem/tasks/:param/transition` | `backend/api/routes/ecosystem.py` | api-only | NONE |
 | POST | `/api/v1/engine/solve` | `backend/api/routes/living_engine.py` | api-only | NONE |
 | POST | `/api/v1/evolution/breed` | `backend/api/routes/evolution.py` | admin-only | NONE |
 | POST | `/api/v1/evolution/canary/:param/observation` | `backend/api/routes/evolution.py` | admin-only | NONE |
