@@ -22,9 +22,7 @@ class AutoPRPipeline:
 
     def __init__(self, github_token: str | None = None, repo_name: str | None = None):
         # বাংলা মন্তব্য: আগে "mock-token" ছিল fallback — এখন token না থাকলে প্রোডাকশনে ব্যর্থ হবে
-        self.github_token = (
-            github_token or os.getenv("GITHUB_TOKEN") or os.getenv("SUPREMEAI_GITHUB_TOKEN", "")
-        )
+        self.github_token = github_token or os.getenv("GITHUB_TOKEN", "")
         self.repo_name = repo_name or os.getenv("GITHUB_REPOSITORY", "paykaribazaronline/supremeai")
 
     async def create_patch_pr(
@@ -45,9 +43,7 @@ class AutoPRPipeline:
         )
 
         if not self.github_token:
-            logger.error(
-                "AutoPRPipeline: No GitHub token configured. Set GITHUB_TOKEN or SUPREMEAI_GITHUB_TOKEN."
-            )
+            logger.error("AutoPRPipeline: No GitHub token configured. Set GITHUB_TOKEN.")
             return {
                 "status": "failed",
                 "reason": "GitHub token not configured. Set GITHUB_TOKEN environment variable.",

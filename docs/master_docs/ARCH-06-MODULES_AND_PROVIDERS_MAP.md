@@ -123,10 +123,13 @@ flowchart LR
 
 ## 6️⃣ CI Workflow Family (গুরুত্বপূর্ণগুলো)
 
-| Workflow | কাজ |
+| Workflow / Runbook | কাজ |
 |---|---|
 | `ci.yml` | Main gate — dynamic backend matrix, coverage, security |
-| `pr-helper.yml` | **5-Step PR lifecycle** (দেখুন `OPS-05-PR-HELPER-LIFECYCLE.md`) |
+| `pr-helper.yml` | **5-Step PR lifecycle** (দেখুন [`OPS-05-PR-HELPER-LIFECYCLE.md`](file:///f:/supremeai/docs/master_docs/OPS-05-PR-HELPER-LIFECYCLE.md)) |
+| Multi-Agent Lifecycle | **Ephemeral branching & mutex locking** (দেখুন [`OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md`](file:///f:/supremeai/docs/master_docs/OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md)) |
+| External AI Dev Lifecycle | **বাহ্যিক কোডিং এআই ডেভেলপমেন্ট প্রটোকল** (দেখুন [`OPS-07-EXTERNAL-AI-DEVELOPER-LIFECYCLE.md`](file:///f:/supremeai/docs/master_docs/OPS-07-EXTERNAL-AI-DEVELOPER-LIFECYCLE.md)) |
+| SupremeAI Runtime Process | **প্ল্যাটফর্মের অভ্যন্তরীণ অটোনোমাস রানটাইম ইঞ্জিন** (দেখুন [`OPS-08-SUPREMEAI-RUNTIME-WORK-PROCESS.md`](file:///f:/supremeai/docs/master_docs/OPS-08-SUPREMEAI-RUNTIME-WORK-PROCESS.md)) |
 | `ci-doctor.yml` | Reusable failure-engine — CI ব্যর্থতার রুট কারণ বের করে |
 | `audit-release.yml` | Release center (⚠️ `cancel-in-progress` fix pending) |
 | `keepalive/08/09-*` | Pre-deploy preflight + post-deploy smoke |

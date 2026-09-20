@@ -78,9 +78,15 @@ Deterministic, stdlib-only (`xml.etree` + `git diff`) — কোনো LLM/শ�
 
 ## 🔐 Permission ও নিরাপত্তা
 
-- Fork PR-এ helper চলে না (same-repo guard) — token শুধু same-repo-তে write করে।
-- নিজের PR approve করা GitHub-এ নিষিদ্ধ — সেক্ষেত্রে approve/auto-merge skip (notice সহ), classification comment থাকে।
-- Push শুধু `pr-helper/clean-pr#N` নামের আলাদা branch-এ — **কখনোই PR branch force-push নয়** (author-এর consent ছাড়া)।
+- **ক্যানোনিকাল টোকেন রিকোয়ারমেন্ট (`GITHUB_TOKEN`):**
+  PR Helper-এর স্বয়ংক্রিয় একশনগুলোর (Labeling, PR Approve/Merge, Issue Creation) জন্য টোকেনের নিচের পারমিশন থাকা বাধ্যতামূলক:
+  - `issues: write` — লেবেল অ্যাসাইন (`pr-helper:auto-approved`, `pr-helper:blocked`), স্ট্যাটাস আপডেট ও ব্লকার ইস্যু তৈরির জন্য।
+  - `pull-requests: write` — PR রিভিউ, এপ্রুভাল, কমেন্ট এবং অটো-মার্জ এক্সিকিউশনের জন্য।
+  - `contents: write` — আইসোলেটেড প্যাচ ব্রাঞ্চ (`pr-helper/clean-pr#N`) তৈরি ও পুশের জন্য।
+- **Fork PR সেফগার্ড:** Fork PR-এ helper চলে না (same-repo guard) — টোকেন শুধু same-repo-তে write করে।
+- **Self-Approval Guard:** নিজের PR নিজে approve করা GitHub-এ নিষিদ্ধ — সেক্ষেত্রে approve/auto-merge skip (notice সহ), classification comment থাকে।
+- **Non-Destructive Branches:** Push শুধু `pr-helper/clean-pr#N` নামের আলাদা branch-এ — **কখনোই PR branch force-push নয়** (author-এর consent ছাড়া)।
+- **স্ক্রিপ্ট চেকাউট স্ট্যাবিলিটি (PR #834 ফিক্স):** Step 3 ও Step 4-এ হেল্পার স্ক্রিপ্টগুলো (`delta_analysis.py`, `hunk_isolation.py`) সর্বদা `base_sha` (`main`) থেকে চেকাউট করা হয়। এর ফলে পুরনো ব্রাঞ্চগুলোতে স্ক্রিপ্ট ডিরেক্টরি অনুপস্থিত থাকলেও `[Errno 2] No such file or directory` সমস্যা তৈরি হয় না।
 - সব actions SHA-pinned (repo convention)।
 
 ## 🧪 রান করানো
@@ -88,7 +94,7 @@ Deterministic, stdlib-only (`xml.etree` + `git diff`) — কোনো LLM/শ�
 - Automatic: প্রতি PR-এ (opened/synchronize/reopened)।
 - Manual: `gh workflow run pr-helper.yml -f pr_number=123`
 
-## 📁 ফাইল ম্যাপ
+## 📁 ফাইল ম্যাপ ও সম্পর্কিত স্পেক
 
 | ফাইল | ভূমিকা |
 |---|---|
@@ -96,3 +102,6 @@ Deterministic, stdlib-only (`xml.etree` + `git diff`) — কোনো LLM/শ�
 | `.github/scripts/pr_helper/delta_analysis.py` | Step 3: JUnit delta → classification + GitHub outputs |
 | `.github/scripts/pr_helper/hunk_isolation.py` | Step 4: attribution → clean patch / fatal |
 | Artifacts | `pr-helper-diag-base/head`, `pr-helper-delta`, `pr-helper-isolation` (7-14 দিন retention) |
+| [`OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md`](file:///f:/supremeai/docs/master_docs/OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md) | মাল্টি-এজেন্ট শর্ট-লিভড ব্রাঞ্চিং, মিউটেক্স লকিং ও রিবেস লাইফসাইকেল |
+| [`GITHUB_TOKEN_CANONICALIZATION_PLAN.md`](file:///f:/supremeai/docs/security/GITHUB_TOKEN_CANONICALIZATION_PLAN.md) | একক ক্যানোনিকাল GITHUB_TOKEN আর্কিটেকচার ও প্ল্যাটফর্ম ভেরিফিকেশন |
+
