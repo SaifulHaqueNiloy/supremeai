@@ -113,7 +113,7 @@ def upgrade() -> None:
             query_embedding VECTOR(384),
             match_threshold FLOAT DEFAULT 0.55,
             match_count     INT DEFAULT 5,
-            filter_user_id  TEXT DEFAULT NULL
+            p_user_id     TEXT DEFAULT NULL
         )
         RETURNS TABLE (
             id          UUID,
@@ -137,7 +137,7 @@ def upgrade() -> None:
                 created_at,
                 1 - (embedding <=> query_embedding) AS similarity
             FROM ai_memory
-            WHERE (filter_user_id IS NULL OR user_id = filter_user_id)
+            WHERE (p_user_id IS NULL OR user_id = p_user_id)
               AND 1 - (embedding <=> query_embedding) >= match_threshold
             ORDER BY embedding <=> query_embedding
             LIMIT match_count;
