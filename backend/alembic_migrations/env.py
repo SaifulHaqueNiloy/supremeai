@@ -133,6 +133,30 @@ def run_migrations_offline() -> None:
         context.run_migrations()
 
 
+def _sync_psycopg2_ssl_args() -> dict:
+    """psycopg2-compatible SSL args mirroring build_supabase_ssl_context().
+
+    বাংলা: psycopg2-তে Python SSLContext অবজেক্ট পাঠানো যায় না — connect_args-এর
+    অজানা key DSN option হিসেবে ঢুকে যায় → `invalid dsn: invalid connection
+    option "sslcontext"` (Production Deploy/Migration Gate fail, 2026-09-20)।
+    asyncpg-এর `sslcontext`-এর psycopg2-সমতুল্য হলো file-based `sslrootcert`
+    + `sslmode=verify-full` (host verify সহ)। Explicit Supabase CA থাকলে সেটি,
+    নইলে certifi bundle — db_ssl-এর একই অগ্রাধিকার।
+    """
+    import tempfile
+
+    import certifi
+
+    ca_pem = getattr(settings, "supabase_db_ca_cert", None)
+    if ca_pem and "-----BEGIN" in ca_pem:
+        fd, ca_path = tempfile.mkstemp(prefix="supabase-ca-", suffix=".pem")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(ca_pem)
+        return {"sslmode": "verify-full", "sslrootcert": ca_path}
+
+    return {"sslmode": "verify-full", "sslrootcert": certifi.where()}
+
+
 def run_migrations_online() -> None:
     """Run migrations in 'online' mode.
 
@@ -141,11 +165,17 @@ def run_migrations_online() -> None:
 
     """
     connect_args = {}
-    if "postgresql" in (config.get_main_option("sqlalchemy.url") or ""):
-        from core.db_ssl import build_supabase_ssl_context
-
-        connect_args["sslcontext"] = build_supabase_ssl_context()
+    migration_url = config.get_main_option("sqlalchemy.url") or ""
+    if "postgresql" in migration_url:
         connect_args["connect_timeout"] = 10
+        if "asyncpg" in migration_url:
+            # asyncpg accepts a Python SSLContext object directly.
+            from core.db_ssl import build_supabase_ssl_context
+
+            connect_args["sslcontext"] = build_supabase_ssl_context()
+        else:
+            # psycopg2 (sync alembic driver): file-based SSL args only.
+            connect_args.update(_sync_psycopg2_ssl_args())
 
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
