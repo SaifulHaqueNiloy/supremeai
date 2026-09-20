@@ -1,6 +1,6 @@
 # OPS-05 — PR Helper Lifecycle (State-based Locking)
 
-> **Workflow:** `.github/workflows/pr-helper.yml` · **Scripts:** `.github/scripts/pr_helper/`
+> **Workflow:** `.github/workflows/pr-helper.yml` (Orchestrated by `.github/workflows/pr-pipeline.yml`) · **Scripts:** `.github/scripts/pr_helper/`
 > **ফিলসফি:** PR একটি **state machine** — প্রতিটি PR-এর state শুধুমাত্র প্রমাণ (test delta, conflict, quality) দিয়ে নির্ধারিত হয়। GitHub/AWS/Google-এর মতো industry-standard state-based locking lifecycle।
 
 ## 🗺️ পূর্ণ Lifecycle Diagram
