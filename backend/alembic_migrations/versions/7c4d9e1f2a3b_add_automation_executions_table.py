@@ -33,7 +33,7 @@ def _existing_tables_offline_safe(bind) -> set[str]:
     the live run still guards with the real inspector."""
     from alembic import context
 
-    if context.is_offline_mode:
+    if context.is_offline_mode():
         return set()
     return set(sa.inspect(bind).get_table_names())
 
