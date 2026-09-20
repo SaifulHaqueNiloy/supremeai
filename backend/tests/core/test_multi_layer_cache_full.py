@@ -15,8 +15,10 @@ import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
-import fakeredis.aioredis
 import pytest
+
+fakeredis = pytest.importorskip("fakeredis", reason="fakeredis not installed")
+import fakeredis.aioredis
 
 import core.cache.multi_layer_cache as mlc
 

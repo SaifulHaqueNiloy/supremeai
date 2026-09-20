@@ -31,9 +31,11 @@ import time
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
+
+fakeredis = pytest.importorskip("fakeredis", reason="fakeredis not installed")
 import fakeredis.aioredis
 import jwt as pyjwt
-import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient

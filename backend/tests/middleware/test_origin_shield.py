@@ -27,6 +27,7 @@ skip_in_ci = pytest.mark.skipif(
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
 from starlette.responses import JSONResponse
+from starlette.routing import Route
 from starlette.testclient import TestClient
 
 from core.middleware.origin_shield import OriginShieldMiddleware
@@ -49,14 +50,14 @@ def _make_app(env_overrides: dict[str, str] | None = None):
 
     app = Starlette(
         routes=[
-            Starlette.route("/", homepage, methods=["GET"]),
-            Starlette.route("/health", health, methods=["GET"]),
-            Starlette.route("/health/live", health, methods=["GET"]),
-            Starlette.route("/api/v1/health", health, methods=["GET"]),
-            Starlette.route("/api/v1/public/data", public_api, methods=["GET"]),
-            Starlette.route("/api/v1/users", homepage, methods=["GET"]),
-            Starlette.route("/docs", homepage, methods=["GET"]),
-            Starlette.route("/openapi.json", homepage, methods=["GET"]),
+            Route("/", homepage, methods=["GET"]),
+            Route("/health", health, methods=["GET"]),
+            Route("/health/live", health, methods=["GET"]),
+            Route("/api/v1/health", health, methods=["GET"]),
+            Route("/api/v1/public/data", public_api, methods=["GET"]),
+            Route("/api/v1/users", homepage, methods=["GET"]),
+            Route("/docs", homepage, methods=["GET"]),
+            Route("/openapi.json", homepage, methods=["GET"]),
         ],
         middleware=[Middleware(OriginShieldMiddleware)],
     )
