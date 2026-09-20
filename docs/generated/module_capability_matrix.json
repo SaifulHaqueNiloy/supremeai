@@ -3962,6 +3962,20 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/clients/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/clients/render_api.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/cloud_storage.py"
     },
     {
@@ -25074,5 +25088,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2885
+  "source_file_count": 2887
 }
