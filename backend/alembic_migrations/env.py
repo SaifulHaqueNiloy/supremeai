@@ -140,21 +140,38 @@ def _sync_psycopg2_ssl_args() -> dict:
     অজানা key DSN option হিসেবে ঢুকে যায় → `invalid dsn: invalid connection
     option "sslcontext"` (Production Deploy/Migration Gate fail, 2026-09-20)।
     asyncpg-এর `sslcontext`-এর psycopg2-সমতুল্য হলো file-based `sslrootcert`
-    + `sslmode=verify-full` (host verify সহ)। Explicit Supabase CA থাকলে সেটি,
-    নইলে certifi bundle — db_ssl-এর একই অগ্রাধিকার।
+    + `sslmode=verify-full` (host verify সহ)।
+
+    Trust priority (db_ssl-এর মতোই):
+    ১. SUPABASE_DB_CA_CERT (vault/CI env) — সত্যিকারের verify-full। Supabase
+       pooler-এর সার্ট public CA-সাইন করা না, তাই certifi-verify অবশ্যই ব্যর্থ হয়
+       (`SSL error: certificate verify failed`) — তাই certifi fallback নেই।
+    ২. CA অনুপস্থিত হলে `sslmode=require` — এনক্রিপশন নিশ্চিত, verify ছাড়া
+       (CI-র one-shot migration-এর জন্য গ্রহণযোগ্য ডিগ্রেডেশন; runtime-এ সবসময়
+       explicit CA সেট থাকে)।
     """
+    import logging
     import tempfile
 
-    import certifi
-
-    ca_pem = getattr(settings, "supabase_db_ca_cert", None)
-    if ca_pem and "-----BEGIN" in ca_pem:
+    ca_pem = getattr(settings, "supabase_db_ca_cert", None) or ""
+    is_valid_pem = "-----BEGIN CERTIFICATE-----" in ca_pem and "-----END CERTIFICATE-----" in ca_pem
+    if is_valid_pem:
         fd, ca_path = tempfile.mkstemp(prefix="supabase-ca-", suffix=".pem")
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             fh.write(ca_pem)
         return {"sslmode": "verify-full", "sslrootcert": ca_path}
 
-    return {"sslmode": "verify-full", "sslrootcert": certifi.where()}
+    if ca_pem:
+        logging.getLogger(__name__).warning(
+            "SUPABASE_DB_CA_CERT is set but not a valid PEM block — "
+            "falling back to sslmode=require for the migration connection."
+        )
+    else:
+        logging.getLogger(__name__).warning(
+            "SUPABASE_DB_CA_CERT not set for alembic — using sslmode=require "
+            "(encrypted, unverified). Set the CA secret for verify-full."
+        )
+    return {"sslmode": "require"}
 
 
 def run_migrations_online() -> None:
