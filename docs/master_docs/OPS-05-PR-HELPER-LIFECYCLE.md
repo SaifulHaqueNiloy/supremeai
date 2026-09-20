@@ -102,8 +102,8 @@ Deterministic, stdlib-only (`xml.etree` + `git diff`) — কোনো LLM/শ�
 | `.github/scripts/pr_helper/delta_analysis.py` | Step 3: JUnit delta → classification + GitHub outputs |
 | `.github/scripts/pr_helper/hunk_isolation.py` | Step 4: attribution → clean patch / fatal |
 | Artifacts | `pr-helper-diag-base/head`, `pr-helper-delta`, `pr-helper-isolation` (7-14 দিন retention) |
-| [`OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md`](file:///f:/supremeai/docs/master_docs/OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md) | মাল্টি-এজেন্ট শর্ট-লিভড ব্রাঞ্চিং, মিউটেক্স লকিং ও রিবেস লাইফসাইকেল |
-| [`GITHUB_TOKEN_CANONICALIZATION_PLAN.md`](file:///f:/supremeai/docs/security/GITHUB_TOKEN_CANONICALIZATION_PLAN.md) | একক ক্যানোনিকাল GITHUB_TOKEN আর্কিটেকচার ও প্ল্যাটফর্ম ভেরিফিকেশন |
+| [`OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md`](OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md) | মাল্টি-এজেন্ট শর্ট-লিভড ব্রাঞ্চিং, মিউটেক্স লকিং ও রিবেস লাইফসাইকেল |
+| [`GITHUB_TOKEN_CANONICALIZATION_PLAN.md`](../security/GITHUB_TOKEN_CANONICALIZATION_PLAN.md) | একক ক্যানোনিকাল GITHUB_TOKEN আর্কিটেকচার ও প্ল্যাটফর্ম ভেরিফিকেশন |
 
 
 

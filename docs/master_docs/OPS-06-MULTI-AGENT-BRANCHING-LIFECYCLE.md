@@ -1,6 +1,6 @@
 # OPS-06 — Multi-Agent Ephemeral Branching Lifecycle
 
-> **সম্পর্কিত ডকুমেন্ট:** [`OPS-05-PR-HELPER-LIFECYCLE.md`](file:///f:/supremeai/docs/master_docs/OPS-05-PR-HELPER-LIFECYCLE.md) · [`OPS-07-EXTERNAL-AI-DEVELOPER-LIFECYCLE.md`](file:///f:/supremeai/docs/master_docs/OPS-07-EXTERNAL-AI-DEVELOPER-LIFECYCLE.md) · [`OPS-08-SUPREMEAI-RUNTIME-WORK-PROCESS.md`](file:///f:/supremeai/docs/master_docs/OPS-08-SUPREMEAI-RUNTIME-WORK-PROCESS.md) · `AGENTS.md`  
+> **সম্পর্কিত ডকুমেন্ট:** [`OPS-05-PR-HELPER-LIFECYCLE.md`](OPS-05-PR-HELPER-LIFECYCLE.md) · [`OPS-07-DEVELOPER-AGENT-LIFECYCLE.md`](OPS-07-DEVELOPER-AGENT-LIFECYCLE.md) · [`OPS-08-SUPREMEAI-RUNTIME-WORK-PROCESS.md`](OPS-08-SUPREMEAI-RUNTIME-WORK-PROCESS.md) · `AGENTS.md`  
 > **উদ্দেশ্য:** সমান্তরালভাবে একাধিক এআই এজেন্ট (`agent-1`, `agent-2`, ..., `agent-N`) যাতে কোনো ধরনের রেস-কন্ডিশন, কোড ওভাররাইট বা ব্রাঞ্চ-ড্রিফ্ট ছাড়া সম্পূর্ণ আইসোলেটেড ও জিরো-কনফ্লিক্ট পরিবেশে কাজ করতে পারে তার প্রমিত ফ্রেমওয়ার্ক।
 
 ---
