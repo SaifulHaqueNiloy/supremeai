@@ -4982,6 +4982,16 @@
     {
       "evidence": [
         {
+          "line": 28,
+          "path": "scripts/security/auto_secret_rotate.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/tests/scout_tests/test_crawler_policy.py"
         }
