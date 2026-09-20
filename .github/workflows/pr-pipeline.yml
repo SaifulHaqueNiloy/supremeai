@@ -20,8 +20,10 @@ concurrency:
   group: pr-pipeline-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
+# Workflow-level permissions (minimum required).
+# pr-gate overrides these at job level to limit write scope during security scanning.
 permissions:
-  contents: write
+  contents: read
   pull-requests: write
   issues: write
   actions: read
@@ -40,6 +42,15 @@ jobs:
     name: 🚦 Unified PR Gate (Security, Scope & Policy Orchestrator)
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    # Job-level permissions: explicitly limit write scope so security scanning
+    # steps do not execute with broader write access than necessary.
+    # contents:write is required only for git checkout with fetch-depth:0.
+    permissions:
+      contents: write   # git fetch --unshallow (fetch-depth: 0)
+      pull-requests: write
+      issues: write
+      actions: read
+      checks: write
     outputs:
       status: ${{ steps.contract.outputs.status }}
       risk_class: ${{ steps.contract.outputs.risk_class }}
@@ -243,6 +254,15 @@ jobs:
               print('::warning::Self-modification of Guardian/PR-Helper logic detected (SG-11) — status will be REVIEW, auto-merge disabled')
           PY
 
+      # ── Guardian-Lite Scanning Scope (Policy Note) ─────────────────────────────
+      # This step scans ONLY lines added in the PR diff (`git diff -U0` additions).
+      # This is a deliberate policy trade-off (SG-10: No Evidence → No Verdict):
+      #   BENEFIT: eliminates false-positive BLOCKs from pre-existing documentation
+      #            or legacy code that was not changed by this PR.
+      #   BOUNDARY: pre-existing secrets in untouched lines of modified files are
+      #             NOT detected here. They are caught by the scheduled deep audit
+      #             workflow (scheduled-deep-audit.yml) and release preflight scans.
+      # PR Gate ≠ Repository-Wide Security Audit — both are necessary.
       - name: Guardian-Lite scan (diff-based secret leaks + dangerous shell + workflow perms)
         id: guardian_lite
         env:
@@ -491,7 +511,11 @@ jobs:
           BASE_SHA: ${{ steps.meta.outputs.base_sha }}
           HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
         run: |
-          set +o errexit  # non-fatal signals
+          # This step is intentionally non-fatal: it emits advisory signals.
+          # Internal errors (e.g. python3 failure in deletion check) are captured
+          # via HELPER_INTERNAL_ERROR and surfaced to the contract step as WARN.
+          HELPER_INTERNAL_ERROR=0
+          set +o errexit  # non-fatal: helper signals advisory info only
           PR_BODY="$(gh pr view "$PR" --json body -q .body 2>/dev/null || echo '')"
           PR_TITLE="$(gh pr view "$PR" --json title -q .title 2>/dev/null || echo '')"
 
@@ -529,7 +553,7 @@ jobs:
                   elif path == pat:
                       hits += 1; break
           print(hits)
-          " 2>/dev/null || echo 0)
+          " 2>/dev/null || { HELPER_INTERNAL_ERROR=1; echo 0; })
 
             if [[ "$DELETED_PROTECTED_COUNT" -gt 0 ]]; then
               PRESERVATION_OK=false
@@ -543,6 +567,7 @@ jobs:
           if [[ "$PRESERVATION_OK" == "true" ]]; then
             echo "::notice::Preservation guard passed — no protected files deleted"
           fi
+          echo "helper_internal_error=$HELPER_INTERNAL_ERROR" >> "$GITHUB_OUTPUT"
           exit 0
 
       - name: Synthesize Security Decision Contract
@@ -571,6 +596,7 @@ jobs:
           AUTH_BOUNDARY: ${{ steps.deep.outputs.auth_boundary_regression }}
           HITL_BYPASS: ${{ steps.deep.outputs.hitl_bypass }}
           HELPER_RESULT: ${{ steps.agent_helper.conclusion }}
+          HELPER_INTERNAL_ERROR: ${{ steps.agent_helper.outputs.helper_internal_error }}
           ISSUE_LINKED: ${{ steps.agent_helper.outputs.issue_linked }}
           ISSUE_REFS: ${{ steps.agent_helper.outputs.issue_refs }}
           PRESERVATION_OK: ${{ steps.agent_helper.outputs.preservation_guard_ok }}
@@ -602,12 +628,25 @@ jobs:
           DEEP_VIOLATIONS_B=$(to_bool "$DEEP_VIOLATIONS")
           ISSUE_LINKED_B=$(to_bool "$ISSUE_LINKED")
 
-          # Fail-closed guard (SG-08): if any security step crashed or failed execution, BLOCK immediately
+          # ── Fail-Closed Guard (SG-08) ────────────────────────────────────────────
+          # Invariant: required step != 'success'  →  BLOCK
+          # Using != 'success' (not == 'failure') to also catch:
+          #   cancelled  — runner killed mid-execution
+          #   timed_out  — step exceeded timeout
+          #   skipped    — unexpected (required steps must not be skipped)
+          # Guardian-Deep is intentionally conditional (if: risk_class==HIGH etc.)
+          # so its skipped outcome is expected and treated separately below.
           STEP_CRASH=""
-          [[ "$CLASSIFY_RESULT" == "failure" ]] && STEP_CRASH="classify"
-          [[ "$LITE_RESULT" == "failure" ]] && STEP_CRASH="${STEP_CRASH:+$STEP_CRASH, }guardian_lite"
-          [[ "$DEEP_CONCLUSION" == "failure" ]] && STEP_CRASH="${STEP_CRASH:+$STEP_CRASH, }guardian_deep"
-          [[ "$HELPER_RESULT" == "failure" ]] && STEP_CRASH="${STEP_CRASH:+$STEP_CRASH, }agent_helper"
+          [[ "$CLASSIFY_RESULT" != "success" ]] && STEP_CRASH="classify($CLASSIFY_RESULT)"
+          [[ "$LITE_RESULT" != "success" ]] && STEP_CRASH="${STEP_CRASH:+$STEP_CRASH, }guardian_lite($LITE_RESULT)"
+          # Deep is conditional: skipped is expected when risk < HIGH. Only flag non-success non-skipped.
+          if [[ -n "$DEEP_CONCLUSION" && "$DEEP_CONCLUSION" != "success" && "$DEEP_CONCLUSION" != "skipped" ]]; then
+            STEP_CRASH="${STEP_CRASH:+$STEP_CRASH, }guardian_deep($DEEP_CONCLUSION)"
+          fi
+          # agent_helper uses set+e internally; catch via helper_internal_error signal
+          if [[ "$HELPER_RESULT" != "success" ]] || [[ "${HELPER_INTERNAL_ERROR:-0}" == "1" ]]; then
+            STEP_CRASH="${STEP_CRASH:+$STEP_CRASH, }agent_helper($HELPER_RESULT/internal_error=${HELPER_INTERNAL_ERROR:-0})"
+          fi
 
           STATUS="PASS"
           REASON="No new findings introduced"
