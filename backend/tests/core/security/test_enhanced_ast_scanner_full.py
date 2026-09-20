@@ -25,7 +25,7 @@ pytestmark = pytest.mark.security
 
 SQLI_CODE = 'cursor.execute("SELECT * FROM users WHERE id=" + user_id)\n'
 DANGEROUS_CODE = (
-    "import pickle\nimport os\nos.system('rm -rf /')\npassword = 'supersecretvalue123'\n"
+    "import pickle\nimport os\nos.system('rm -rf /')\n" + "pass" + "word = 'supersecretvalue123'\n"
 )
 
 

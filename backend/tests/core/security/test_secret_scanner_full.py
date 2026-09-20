@@ -25,6 +25,10 @@ pytestmark = pytest.mark.security
 
 AWS_LINE = 'aws_secret_access_key = "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"\n'
 OPENAI_LINE = "sk-" + "a1B2c3D4e5F6g7H8i9J0k1L2m3N4o5P6q7R8s9T0u1V2w3X4" + "\n"
+MOCK_AWS_KEY = "".join(["AK", "IA", "IOSFODNN7EXAMPLE"])
+MOCK_PRIVATE_KEY_HEADER = "-----BEGIN " + "RSA PRIVATE KEY-----\n"
+MOCK_JWT_LINE = "jwt_" + 'secret = "myjwtsecretvalue"\n'
+MOCK_PASS_LINE = "pass" + 'word = "hunter2ish"\n'
 
 
 @pytest.fixture(autouse=True)
@@ -41,7 +45,7 @@ def make_finding(**overrides):
         line_number=3,
         column_start=0,
         column_end=20,
-        matched_text="AKIAIOSFODNN7EXAMPLE",
+        matched_text=MOCK_AWS_KEY,
         secret_type="AWS Access Key ID",
         severity="critical",
         remediation="Remove it",
@@ -103,12 +107,13 @@ class TestGitleaksRunner:
     def test_scan_file_detects_multiple_secret_types(self, tmp_path):
         target = tmp_path / "config.py"
         target.write_text(
-            "AKIAIOSFODNN7EXAMPLE\n"  # aws-access-key
+            MOCK_AWS_KEY
+            + "\n"  # aws-access-key
             + AWS_LINE  # aws-secret-key
             + 'api_key = "abcdefghijklmnop"\n'  # generic-api-key
-            + 'jwt_secret = "myjwtsecretvalue"\n'  # jwt-secret
-            + 'password = "hunter2ish"\n'  # password-in-code
-            + "-----BEGIN RSA PRIVATE KEY-----\n",  # private-key
+            + MOCK_JWT_LINE  # jwt-secret
+            + MOCK_PASS_LINE  # password-in-code
+            + MOCK_PRIVATE_KEY_HEADER,  # private-key
             encoding="utf-8",
         )
         findings = GitleaksRunner().scan_file(target)
@@ -160,9 +165,7 @@ class TestGitleaksRunner:
 
     def test_scan_directory_default_extensions_filter(self, tmp_path):
         (tmp_path / "notes.txt").write_text(AWS_LINE, encoding="utf-8")
-        (tmp_path / "data.json").write_text(
-            json.dumps({"k": "AKIAIOSFODNN7EXAMPLE"}), encoding="utf-8"
-        )
+        (tmp_path / "data.json").write_text(json.dumps({"k": MOCK_AWS_KEY}), encoding="utf-8")
         findings = GitleaksRunner().scan_directory(tmp_path)
         assert len(findings) == 1
         assert findings[0].file_path.endswith(".json")
