@@ -78,7 +78,7 @@ class TestRenderAccountService(unittest.TestCase):
                 ],
             ),
             patch.dict("os.environ", {"TEST_KEY": "dummy_secret"}),
-            patch.object(RenderAccountService, "_get_json", return_value=[]),
+            patch("services.render_account_service.render_get_json", return_value=[]),
             patch.object(
                 RenderAccountService, "calculate_monthly_usage_minutes", return_value=460.0
             ),
