@@ -305,7 +305,11 @@ export const useAdminStore = create<AdminState>((set, get) => ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {
       const msg = err && typeof err === 'object' && err.message ? String(err.message) : (typeof err === 'object' ? JSON.stringify(err) : String(err));
-      set({ adminError: 'Connection failed: ' + msg });
+      // STATE-LOCK lifecycle: backend 4xx policy messages (e.g. "2FA is already ACTIVE",
+      // "A TOTP enrollment is already pending") are deliberate security responses —
+      // surface them verbatim instead of mislabeling them as connection failures.
+      const isPolicyMessage = err && typeof err === 'object' && err.name === 'ApiError';
+      set({ adminError: isPolicyMessage ? msg : 'Connection failed: ' + msg });
     }
   },
 }));
