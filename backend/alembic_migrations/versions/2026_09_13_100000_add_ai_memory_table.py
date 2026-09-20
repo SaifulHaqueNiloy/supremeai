@@ -30,7 +30,7 @@ def _inspect_offline_safe(bind):
     """
     from alembic import context
 
-    if context.is_offline_mode:
+    if context.is_offline_mode():
         return None
     return sa.inspect(bind)
 
