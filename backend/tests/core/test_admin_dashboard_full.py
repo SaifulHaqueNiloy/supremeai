@@ -204,33 +204,44 @@ class TestGetCosts:
 
 
 class TestGetHealthMap:
-    def test_all_offline(self, monkeypatch):
-        """No services configured → all offline."""
+    @pytest.mark.asyncio
+    async def test_all_offline(self, monkeypatch):
+        """No services configured → unconfigured / degraded status."""
         from core.config import settings
 
+        monkeypatch.setattr(type(settings), "redis_url", property(lambda self: ""))
+        monkeypatch.setattr(type(settings), "supabase_database_url", property(lambda self: ""))
         monkeypatch.setattr(settings, "_get_cached_secret", lambda k: "")
-        result = get_health_map()
-        assert result["gcp"]["status"] == "offline"
-        assert result["railway"]["status"] == "offline"
-        assert result["render"]["status"] == "offline"
 
-    def test_all_healthy(self, monkeypatch):
-        """All services configured → all healthy."""
+        result = await get_health_map()
+        assert result["database"]["status"] == "degraded"
+        assert result["redis"]["status"] == "degraded"
+        assert result["cloudflare"]["status"] == "offline"
+        assert result["render"]["status"] == "healthy"
+
+    @pytest.mark.asyncio
+    async def test_all_healthy(self, monkeypatch):
+        """All services configured → healthy status with live telemetry."""
         from core.config import settings
 
-        secrets_map = {
-            "GCP_PROJECT_ID": "my-project",
-            "UPSTASH_REDIS_REST_URL": "https://redis.upstash.com",
-            "SUPABASE_DATABASE_URL_POOLER": "postgresql://db",
-        }
-        monkeypatch.setattr(settings, "_get_cached_secret", lambda k: secrets_map.get(k, ""))
-        result = get_health_map()
-        assert result["gcp"]["status"] == "healthy"
-        assert result["railway"]["status"] == "healthy"
+        monkeypatch.setattr(
+            type(settings), "redis_url", property(lambda self: "rediss://redis.upstash.com")
+        )
+        monkeypatch.setattr(
+            type(settings), "supabase_database_url", property(lambda self: "postgresql://db")
+        )
+        monkeypatch.setattr(
+            settings, "_get_cached_secret", lambda k: "fake-token" if "CLOUDFLARE" in k else ""
+        )
+
+        result = await get_health_map()
+        assert result["database"]["status"] == "healthy"
+        assert result["redis"]["status"] == "healthy"
+        assert result["cloudflare"]["status"] == "healthy"
         assert result["render"]["status"] == "healthy"
-        assert result["gcp"]["latency"] == "42ms"
-        assert result["railway"]["latency"] == "78ms"
-        assert result["render"]["latency"] == "120ms"
+        assert "latency_ms" in result["database"]
+        assert "latency_ms" in result["redis"]
+        assert "live_uptime_seconds" in result["render"]
 
 
 # ── trigger_deploy ─────────────────────────────────────────────────────
