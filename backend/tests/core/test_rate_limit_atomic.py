@@ -56,7 +56,6 @@ class TestAtomicWindowIncr:
 
         await atomic_window_incr(redis, "rl:test-key", window_seconds=120)
 
-        args = redis.eval.call_args[0]
         # args[1] is the keys list, args[2] is the ARGV — check window is 120
         # The exact arg position depends on implementation, just verify eval was called
         assert redis.eval.called
