@@ -135,10 +135,19 @@ flowchart TD
 | **১** | **Task Claim (Claim-then-Verify)** | `bash .github/scripts/claim_issue.sh $ID "agent-$N"` (exit 1 হলে অন্য ইস্যু নেবে) |
 | **২** | **Sync Main** | `git checkout main && git pull --rebase origin main` |
 | **৩** | **Create Branch** | `git checkout -b agent-$N/issue-$ID-$DESC` |
-| **৪** | **Code & Test** | কোড পরিবর্তন এবং সংশ্লিষ্ট টেস্ট চালানো (`pytest`, `vitest`, `ruff`) |
+| **৪** | **Code & Test (Auto-remediate → Confirm → Test)** | নিচের ধাপ-৪ explicit sequence চালান (`ruff check --fix` আগে — AGENTS.md Directive 10 / GAP-11) |
 | **৫** | **Pull-Before-Push** | `git pull --rebase origin main` (লোকাল কনফ্লিক্ট গার্ড) |
 | **৬** | **Push & PR** | `git push -u origin HEAD` এবং `gh pr create --title "..." --body "Fixes #$ID"` |
 | **৭** | **Handoff to PR Helper** | PR তৈরি হলে স্বয়ংক্রিয়ভাবে PR Helper দায়িত্ব নেবে এবং মার্জ সম্পন্ন করবে |
+---
+
+**ধাপ ৪-এর explicit sequence (auto-remediate-then-confirm — GAP-11, AGENTS.md Directive 10):**
+
+```bash
+ruff check --fix backend/    # ১. Auto-remediate first — যা auto-fixable নিজেই ঠিক করবে
+ruff check backend/          # ২. Confirm zero remaining errors — non-fixable থাকলে এখানেই ধরা পড়বে
+pytest backend/tests/ -q     # ৩. Then test — শুধু পরিষ্কার কোডে টেস্ট চলবে
+```
 
 ---
 
