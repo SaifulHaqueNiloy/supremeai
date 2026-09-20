@@ -259,7 +259,11 @@ jobs:
   step3-delta:
     name: 📊 Step 3 — Failure Delta Analysis
     needs: [guard, step1-diagnostic]
-    if: ${{ !cancelled() && needs.guard.outputs.proceed == 'true' && needs.step1-diagnostic.result == 'success' }}
+    # বাংলা মন্তব্য: step1 skipped হলেও (docs-only PR) delta চলবে — সেক্ষেত্রে
+    # ট্রিভিয়াল pure-improvement। step1 infra-fail হলে artifacts নেই →
+    # head_incomplete=true → step5 fail-closed ব্লক করবে। তাই এখানে result
+    # চেক নেই — শুধু guard-gate আর cancellation।
+    if: ${{ !cancelled() && needs.guard.outputs.proceed == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
