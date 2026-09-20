@@ -22,6 +22,7 @@
 | GAP-10 | HITL SupremeAI-এর নিজস্ব HITL কোড পরিবর্তনে প্রযোজ্য কিনা অস্পষ্ট | OPS-08, AGENTS.md | 🟡 Medium | ❌ Open |
 | GAP-11 | OPS-06 এজেন্ট চেকলিস্টে `ruff --fix` Auto-Commit স্টেপ নেই | OPS-06 ধাপ ৩ | 🟡 Medium | ❌ Open |
 | GAP-12 | PR Helper Block-এর পরে Re-run Protocol অস্পষ্ট | OPS-05, OPS-06 | 🟡 Medium | ❌ Open |
+| GAP-13 | Secret Vault Fail-Closed (BE-13) বনাম Dynamic Fallback কনফিগ মিসম্যাচ (`DATABASE_URL` ক্র্যাশ) | BE-13, config_secrets, secret_vault | 🔴 Critical | ✅ Resolved (PR #870) |
 
 ---
 
@@ -275,6 +276,64 @@ OPS-05 বা OPS-06-এ একটি explicit "After Block Recovery Protocol" �
 
 ---
 
+## 🔴 GAP-13 — Secret Vault Fail-Closed (BE-13) বনাম Dynamic Fallback কনফিগারেশন মিসম্যাচ
+
+### সমস্যার বিবরণ (Incident Context)
+রেন্ডার (Render) প্রোডাকশন পরিবেশে অ্যাপ্লিকেশনের লাইফস্প্যান বুটস্ট্র্যাপের সময় সার্ভার ক্র্যাশ করছে (`RuntimeError: Secret 'DATABASE_URL' is missing in production and is not in the optional allowlist (BE-13 fail-closed)`):
+
+```text
+2026-09-20T18:12:36.908602222Z   File "/app/core/app_builder.py", line 117, in _lifespan
+2026-09-20T18:12:36.908604812Z     result = validate_config()
+2026-09-20T18:12:36.908612023Z   File "/app/core/config_validator.py", line 386, in validate_config
+2026-09-20T18:12:36.908616313Z     error = _validate_var(var_def, settings)
+2026-09-20T18:12:36.908621484Z   File "/app/core/config_validator.py", line 268, in _validate_var
+2026-09-20T18:12:36.908624054Z     if hasattr(settings_obj, prop_name):
+2026-09-20T18:12:36.908629504Z   File "/app/core/config_secrets.py", line 273, in database_url
+2026-09-20T18:12:36.908637825Z     return self._get_cached_secret("DATABASE_URL") or self.supabase_database_url
+2026-09-20T18:12:36.908642915Z   File "/app/core/config_secrets.py", line 244, in _get_cached_secret
+2026-09-20T18:12:36.908645165Z     val = get_secret_vault().fetch_secret(key, default="")
+2026-09-20T18:12:36.908670337Z   File "/app/core/security/secret_vault.py", line 449, in _fallback_to_env
+2026-09-20T18:12:36.908673187Z     raise RuntimeError(
+2026-09-20T18:12:36.908677268Z RuntimeError: Secret 'DATABASE_URL' is missing in production and is not in the optional allowlist (BE-13 fail-closed). Provision it via Infisical/env, or add it to OPTIONAL_SECRETS in core/security/secret_vault.py if it is genuinely optional.
+```
+
+### কেন এবং কীভাবে এটি ঘটল (Root Cause & Traceback Flow)
+1. **ফলব্যাকের অভিপ্রায়:** `core/config_secrets.py`-এর `database_url` প্রোপার্টি ডিজাইন করা হয়েছিল এমনভাবে যাতে প্রোডাকশনে যদি সরাসরি `DATABASE_URL` না থাকে, তবে তা যেন সুপাবেস পুলার ইউআরএল (`supabase_database_url` / `SUPABASE_DATABASE_URL_POOLER`)-এ ফলব্যাক করে:
+   ```python
+   @property
+   def database_url(self) -> str:
+       return self._get_cached_secret("DATABASE_URL") or self.supabase_database_url
+   ```
+2. **BE-13 Fail-Closed ইনভ্যারিয়েন্ট:** `core/security/secret_vault.py`-এ কঠোর নিরাপত্তা পলিসি (`BE-13 Fail-Closed`) অনুযায়ী প্রোডাকশন মোডে কোনো আন-হুইসলিস্টেড কি (Key) অনুপস্থিত থাকলে ডিফল্ট মান বা খালি স্ট্রিং ফেরত দেওয়ার বদলে সরাসরি `RuntimeError` ছুড়ে সার্ভার এক্সিট করানো হয়।
+3. **অনুপস্থিত অ্যালোওলিস্ট এন্ট্রি:** `DATABASE_URL` কি-টি `secret_vault.py`-এর `OPTIONAL_SECRETS` সেটে তালিকাভুক্ত ছিল না।
+4. **অকাল ক্র্যাশ:** ফলস্বরূপ, কোডটি কখনো ডানপাশের `or self.supabase_database_url` মূল্যায়নে পৌঁছাতেই পারেনি—তার আগেই `RuntimeError` ছুড়ে স্টার্টআপে অ্যাপ্লিকেশন ক্র্যাশ করে (`Server exited unexpectedly: 3`).
+
+### লজিক্যাল ও আর্কিটেকচারাল গ্যাপ
+- **Dual Configuration Contract Mismatch:** যখন একটি আর্কিটেকচারাল কনফিগারেশনের সেকেন্ডারি অল্টারনেটিভ বা ডাইনামিক ফলব্যাক থাকে (যেমন সুপাবেস কানেকশন পুলার), তখন প্রাইমারি কি-টি হার্ড-রিকোয়ার্ড নাকি অপশনাল—এই চুক্তি `SecretVault` এবং `Settings` ক্লাসের মধ্যে বিচ্ছিন্ন ছিল।
+- **Eager Attribute Evaluation:** `config_validator.py` স্টার্টআপে রিফ্লেকশনের মাধ্যমে (`hasattr(settings_obj, prop_name)`) সমস্ত প্রোপার্টি রিড করে, যার ফলে আন-হুইসলিস্টেড অপশনাল সিক্রেটগুলোতে তাৎক্ষণিক এক্সেপশন ট্রিগার হয়।
+
+### স্থায়ী সমাধান (Fix & Mitigation Strategy — Merged in PR #870)
+PR #870 (`43feff63`)-এর মাধ্যমে এই গ্যাপটি মূল কোডবেজে স্থায়ীভাবে সমাধান করা হয়েছে:
+1. **Allowlist Update:** `backend/core/security/secret_vault.py`-এর `OPTIONAL_SECRETS` সেটে `"DATABASE_URL"`, `"NEON_DATABASE_URL"` এবং অন্যান্য ঐচ্ছিক ক্লাউড প্রোভাইডার কি-সমূহ যুক্ত করা হয়েছে।
+2. **Defensive Property Evaluation:** `backend/core/config_secrets.py`-এ `database_url`-এ ডিফেন্সিভ `try...except` সেফগার্ড ও লগিং যোগ করা হয়েছে:
+   ```python
+   @property
+   def database_url(self) -> str:
+       try:
+           val = self._get_cached_secret("DATABASE_URL")
+           if val:
+               return val
+       except Exception as exc:
+           logger.warning(
+               "DATABASE_URL not available (%s); falling back to SUPABASE_DATABASE_URL_POOLER",
+               exc,
+           )
+       return self.supabase_database_url
+   ```
+3. **Dynamic Keys Audit:** অন্যান্য সকল সেকেন্ডারি ফলব্যাক কি অডিট সম্পন্ন হয়েছে।
+
+---
+
 ## 📊 সারসংক্ষেপ ও অগ্রাধিকার তালিকা (Priority Matrix)
 
 ```
@@ -282,7 +341,7 @@ IMPACT
   ↑
   │  GAP-02 (Self-Approval)          GAP-01 (False Mutex)
   │  GAP-07 (Mode Switch Auth)       GAP-03 (Orphan Lock)
-  │  GAP-10 (HITL Self-Modify)
+  │  GAP-10 (HITL Self-Modify)       GAP-13 (BE-13 Secret Fallback)
   │
   │  GAP-04 (Rate Limit)             GAP-05 (Branch Guard CI)
   │  GAP-06 (PR Helper Bootstrap)
@@ -294,9 +353,10 @@ IMPACT
 ```
 
 ### তাৎক্ষণিক ফিক্স করার পরামর্শ (Low Effort, High Value)
-1. **GAP-05:** Branch naming regex CI workflow তৈরি করা — ১-২ ঘণ্টার কাজ।
-2. **GAP-09:** OPS-07 শিরোনাম পরিবর্তন — ৫ মিনিটের কাজ।
-3. **GAP-11:** OPS-06 Checklist-এ `ruff --fix` ধাপ যোগ করা — ১০ মিনিটের কাজ।
+1. **GAP-13:** `OPTIONAL_SECRETS`-এ `DATABASE_URL` যোগ ও `database_url` ডিফেন্সিভ ফলব্যাক — ৫ মিনিটের ক্রিটিক্যাল ফিক্স।
+2. **GAP-05:** Branch naming regex CI workflow তৈরি করা — ১-২ ঘণ্টার কাজ।
+3. **GAP-09:** OPS-07 শিরোনাম পরিবর্তন — ৫ মিনিটের কাজ।
+4. **GAP-11:** OPS-06 Checklist-এ `ruff --fix` ধাপ যোগ করা — ১০ মিনিটের কাজ।
 
 ### মাঝারি মেয়াদে ফিক্স করার পরামর্শ (Medium Effort)
 4. **GAP-03:** Stale mutex cleanup cron job তৈরি করা।

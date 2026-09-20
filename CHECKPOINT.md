@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-20 19:04 UTC
+- **Date:** 2026-09-20 21:09 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,9 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `scripts/security/internal_topology_baseline.txt`
+  - `docs/master_docs/ARCH-GAP-01-DECISION-GAP-ANALYSIS.md`
+  - `backend/core/security/secret_vault.py`
   - `backend/core/config_secrets.py`
   - `CHECKPOINT.md`
+  - `backend/tests/core/test_secret_vault.py`
+  - `scripts/security/internal_topology_baseline.txt`
 
 ## Pending (Carry Forward)
 - 103 active skipped test markers triage across 53 files towards <30 (reconciled in docs/SKIPPED_TESTS.md)
