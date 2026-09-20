@@ -41,7 +41,7 @@ def _reflection_offline_safe(bind):
     Degrade to empty reflection so the generated SQL plan contains the full
     unconditional DDL; the live run still reflects the real database.
     """
-    if _alembic_context.is_offline_mode:
+    if _alembic_context.is_offline_mode():
         return set(), set()
     inspector = sa.inspect(bind)
     existing_tables = set(inspector.get_table_names())

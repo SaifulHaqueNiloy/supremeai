@@ -29,7 +29,7 @@ def _table_exists(table_name: str) -> bool:
     """
     from alembic import context
 
-    if context.is_offline_mode:
+    if context.is_offline_mode():
         return True
     return inspect(op.get_bind()).has_table(table_name)
 
