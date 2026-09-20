@@ -1,0 +1,66 @@
+# Agent Slot Registry (GAP-08 fix)
+# ================================
+# পলিমরফিক এজেন্ট স্লট রেজিস্ট্রি — কে কোন স্লট, কতদিনের জন্য, কোন maintainer
+# অ্যাসাইন করেছেন তার living record।
+#
+# Problem (ARCH-GAP-01 GAP-08):
+#   OPS-06 বলছে agent-1=Antigravity, agent-2=Claude, agent-10=SupremeAI —
+#   কিন্তু এই ম্যাপিং কোথাও formally রেকর্ড করা হয়নি। একই সময়ে দুজন ভিন্ন
+#   maintainer দুটি ভিন্ন টুলকে agent-1 হিসেবে অ্যাসাইন করতে পারেন — কোনো
+#   conflict prevention নেই।
+#
+# Solution:
+#   এই YAML ফাইলটি single source of truth। প্রতিটি স্লট অ্যাসাইনমেন্টের জন্য:
+#     - slot: agent-N
+#     - tool: <tool name>
+#     - maintainer: <github username>
+#     - assigned_on: <date>
+#     - expires_on: <date>  (max 7 days, then auto-release)
+#     - active: true/false
+
+version: "1.0"
+
+# Currently active agent slot assignments
+# Empty initially — assignments added when maintainers activate agents
+slots: []  # empty initially — assignments added when maintainers activate agents
+  # Example template (commented out):
+  # - slot: agent-1
+  #   tool: "Antigravity"
+  #   maintainer: "@SaifulHaqueNiloy"
+  #   assigned_on: "2026-09-20"
+  #   expires_on: "2026-09-27"  # max 7 days
+  #   active: true
+  #   notes: "Working on backend auth refactor"
+
+  # - slot: agent-2
+  #   tool: "Claude Code"
+  #   maintainer: "@SaifulHaqueNiloy"
+  #   assigned_on: "2026-09-20"
+  #   expires_on: "2026-09-27"
+  #   active: true
+  #   notes: "Frontend test coverage"
+
+  # Reserved slot for SupremeAI itself (OPS-08)
+  # - slot: agent-10
+  #   tool: "SupremeAI"
+  #   maintainer: "@SaifulHaqueNiloy"
+  #   assigned_on: "2026-09-20"
+  #   expires_on: "2026-09-27"
+  #   active: true
+  #   notes: "Self-development mode"
+
+# Validation rules
+validation_rules:
+  - "slot MUST match pattern: agent-[0-9]+"
+  - "tool MUST be a non-empty string"
+  - "maintainer MUST be a GitHub username (starts with @)"
+  - "expires_on MUST be <= 7 days from assigned_on"
+  - "Only one active assignment per slot at a time"
+  - "Auto-expiry: assignments past expires_on are auto-deactivated"
+
+# How to claim/update a slot
+usage:
+  - "Maintainer edits this file directly via PR (protected scope per SECURITY_GUARDIAN.md)"
+  - "PR title: 'chore(agents): assign agent-N to <tool>'"
+  - "Previous slot holder MUST be notified via @mention in PR description"
+  - "If slot is being transferred, old assignment's expires_on MUST be set to today"
