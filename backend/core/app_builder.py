@@ -448,6 +448,16 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         ],
     )
 
+    from core.middleware.origin_shield import OriginShieldMiddleware
+
+    # বাংলা কমেন্ট: #781 fix — Origin Shield (Cloudflare pre-shared secret validation)।
+    # CORS-এর ঠিক পরে (দ্বিতীয় outermost layer) যোগ করা হয়েছে যাতে:
+    #   - CORS preflight (OPTIONS) আগে হ্যান্ডেল হয়
+    #   - তারপর direct-origin / non-Worker রিকোয়েস্ট 403 পায়
+    #   - /health* পাথ Render-এর নিজস্ব health probe-এর জন্য bypass হয়
+    # Fail-open: ENV ≠ production বা ORIGIN_VERIFY_KEY সেট না থাকলে middleware no-op।
+    app.add_middleware(OriginShieldMiddleware)
+
     # বাংলা মন্তব্ব্য: canonical browser session/action routes
     # Keep browser routes mounted explicitly so route discovery cannot depend on
     # the optional safe-import registry in api.routes.__init__.
