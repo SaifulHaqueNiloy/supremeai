@@ -8,6 +8,7 @@ Tests cover:
 - Fail-open: production without ORIGIN_VERIFY_KEY → no-op
 - Timing-safe comparison (wrong key → 403)
 """
+
 from __future__ import annotations
 
 import os

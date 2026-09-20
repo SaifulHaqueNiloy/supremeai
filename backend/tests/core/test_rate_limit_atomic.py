@@ -6,13 +6,14 @@ Tests cover:
 - Rate limit enforcement (returns count, allows/denies)
 - Atomicity guarantee (single Redis op, not pipeline)
 """
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from core.cache.rate_limit_atomic import atomic_window_incr, ATOMIC_WINDOW_LUA
+from core.cache.rate_limit_atomic import ATOMIC_WINDOW_LUA, atomic_window_incr
 
 
 class TestAtomicWindowIncr:

@@ -7,10 +7,12 @@ Tests cover:
 - TTL expiry
 - Idempotency key format (hitl: prefix)
 """
+
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, MagicMock
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock
 
 from services.hitl.engine import HITLEngine, HITLStateError
 
