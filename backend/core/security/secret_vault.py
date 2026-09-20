@@ -356,7 +356,9 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
 
         cached = self._cache.get(secret_id)
-        if cached and not cached.is_expired():
+        # FIX(test-campaign 7): is_expired is a @property — calling it as a
+        # method raised TypeError on every async cache hit. Sync path was correct.
+        if cached and not cached.is_expired:
             return cached.value
 
         if not self.client:

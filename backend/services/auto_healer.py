@@ -147,7 +147,10 @@ ERROR_PATTERNS: list[dict[str, Any]] = [
         "automatic": False,
     },
     {
-        "pattern": r"(?i)infisical.*(?i)(401|unauthorized|authentication)",
+        # FIX(test-campaign 7): mid-string "(?i)" raised re.error on Python 3.11+ for every
+        # unmatched error reaching this pattern, crashing diagnose(). Leading (?i) already
+        # covers the whole expression, so the inner flag was redundant.
+        "pattern": r"(?i)infisical.*(401|unauthorized|authentication)",
         "category": IssueCategory.AUTHENTICATION,
         "severity": Severity.CRITICAL,
         "title": "Infisical Authentication Failed",
@@ -189,7 +192,7 @@ ERROR_PATTERNS: list[dict[str, Any]] = [
     },
     # ── Database Issues ─────────────────────────────────────────────────
     {
-        "pattern": r"(?i)(database|db|postgres|supabase).*(?i)(connection|connect).*(?i)(fail|error|refused)",
+        "pattern": r"(?i)(database|db|postgres|supabase).*(connection|connect).*(fail|error|refused)",
         "category": IssueCategory.DATABASE,
         "severity": Severity.CRITICAL,
         "title": "Database Connection Failed",
