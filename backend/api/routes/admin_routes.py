@@ -63,6 +63,10 @@ from core.logging_config import logger
 # বাংলা মন্তব্য: TOTP ব্রুট-ফোর্স প্রতিরোধে Redis lockout constants
 _TOTP_MAX_ATTEMPTS = 5
 _TOTP_LOCKOUT_SECONDS = 600  # 10 minutes
+# STATE-LOCK LIFECYCLE (2026-09-20): Display-Once + Instant Lock policy —
+# বাংলা মন্তব্য: freshly issued temp TOTP secret সর্বোচ্চ ১০ মিনিট বৈধ থাকবে;
+# এর পরে pending enrollment বাতিল গণ্য হবে এবং ACTIVE secret-এ fallback হবে।
+_TOTP_PENDING_TTL_SECONDS = 600  # 10 minutes to verify a freshly issued QR
 _TRUSTED_BROWSER_COOKIE = "supreme_admin_trusted_browser"
 _TRUSTED_BROWSER_TTL = 7 * 24 * 60 * 60
 
@@ -357,16 +361,49 @@ def admin_firebase_totp_setup(payload: AdminFirebaseTotpSetupRequest):
     # SECURITY FIX (P0): admin role verification before issuing TOTP material
     _ensure_admin_authorized(uid, email)
 
+    # STATE-LOCK LIFECYCLE (P0, 2026-09-20): guard before issuing ANY TOTP material.
+    # বাংলা মন্তব্য: 2FA ইতিমধ্যে ACTIVE থাকলে নতুন QR/secret/recovery-codes ইস্যু করা
+    # যাবে না — নইলে যেকোনো চুরি হওয়া Firebase ID token দিয়ে TOTP + recovery codes
+    # ঘুরিয়ে ফেলে পুরো 2FA বাইপাস করা যেত। Re-enroll করতে হলে recovery code
+    # (/api/admin/firebase-totp-recover) বাধ্যতামূলক — এটাই Instant Lock নীতি।
+    db = get_firestore_client()
+    if db:
+        try:
+            existing_doc = db.collection("admin_users").document(uid).get()
+            existing = existing_doc.to_dict() if existing_doc.exists else {}
+        except Exception as e:
+            logger.error(f"TOTP state lookup failed for uid={uid}: {e}")
+            raise HTTPException(status_code=503, detail="Security database unavailable") from e
+        if existing.get("totp_secret"):
+            raise HTTPException(
+                status_code=400,
+                detail="2FA is already ACTIVE. Use a recovery code via /api/admin/firebase-totp-recover to re-enroll.",
+            )
+        pending_secret = existing.get("temp_totp_secret")
+        pending_created = existing.get("temp_totp_created_at")
+        # বাংলা মন্তব্য: টাটকা pending enrollment থাকলে re-issue ব্লক — QR একবারই (Display-Once)
+        # দেখানো হবে এবং pending অবস্থায় recovery codes বারবার rotate করা যাবে না।
+        if (
+            pending_secret
+            and isinstance(pending_created, (int, float))
+            and (time.time() - float(pending_created)) < _TOTP_PENDING_TTL_SECONDS
+        ):
+            raise HTTPException(
+                status_code=409,
+                detail="A TOTP enrollment is already pending. Verify the code you scanned, or wait 10 minutes for it to expire.",
+            )
+
     secret = base64.b32encode(os.urandom(10)).decode("utf-8")
     recovery_codes = [secrets.token_urlsafe(10) for _ in range(8)]
     recovery_hashes = [hashlib.sha256(code.encode()).hexdigest() for code in recovery_codes]
 
-    db = get_firestore_client()
+    # বাংলা মন্তব্য: db guard-এর আগেই STATE-LOCK lookup হয়ে গেছে; এখানে শুধু লেখা হচ্ছে।
     if db:
         try:
             db.collection("admin_users").document(uid).set(
                 {
                     "temp_totp_secret": secret,
+                    "temp_totp_created_at": int(time.time()),
                     "recovery_code_hashes": recovery_hashes,
                 },
                 merge=True,
@@ -389,7 +426,7 @@ class AdminRecoveryRequest(BaseModel):
 
 
 @router.post("/api/admin/firebase-totp-recover")
-def admin_firebase_totp_recover(payload: AdminRecoveryRequest):
+async def admin_firebase_totp_recover(payload: AdminRecoveryRequest):
     """Consume one single-use recovery code and issue a fresh TOTP enrollment."""
     try:
         if payload.id_token.startswith("mock-"):
@@ -415,17 +452,73 @@ def admin_firebase_totp_recover(payload: AdminRecoveryRequest):
     db = get_firestore_client()
     if not db:
         raise HTTPException(status_code=503, detail="Security database unavailable")
+
+    # STATE-LOCK LIFECYCLE (P0, 2026-09-20): recovery-code অনলাইন brute-force প্রতিরোধে
+    # verify route-এর মতো Redis lockout (৫ বার ভুল → ১০ মিনিট লক, fail-closed)।
+    # বাংলা মন্তব্য: verify route-এর সাথে consistent — Redis ইমপোর্ট ব্যর্থ হলে (dev, redis ছাড়া)
+    # এগোনো যাবে, কিন্তু Redis আছে অথচ ত্রুটি হলে fail-closed (৫০৩)।
+    recover_lockout_key = f"admin:totp:recover:lockout:{uid}"
+    recover_attempt_key = f"admin:totp:recover:attempts:{uid}"
+    _redis = None
+    try:
+        from core.cache.redis_manager import redis_manager
+
+        _redis = redis_manager.client
+    except Exception as e:
+        logger.debug(f"Redis client not available: {e}")
+
+    if _redis:
+        try:
+            if await _redis.get(recover_lockout_key):
+                raise HTTPException(
+                    status_code=429,
+                    detail="Recovery locked. Please wait 10 minutes.",
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            logger.critical(f"Redis recovery-lockout check failed — blocking (fail-closed): {e}")
+            raise HTTPException(
+                status_code=503,
+                detail="Authentication service temporarily unavailable. Please try again later.",
+            )
+
     ref = db.collection("admin_users").document(uid)
     doc = ref.get()
     data = doc.to_dict() if doc.exists else {}
     digest = hashlib.sha256(payload.recovery_code.strip().encode()).hexdigest()
     hashes = data.get("recovery_code_hashes", [])
     if digest not in hashes:
+        if _redis:
+            try:
+                attempts = await _redis.incr(recover_attempt_key)
+                await _redis.expire(recover_attempt_key, _TOTP_LOCKOUT_SECONDS)
+                if int(attempts) >= _TOTP_MAX_ATTEMPTS:
+                    await _redis.setex(recover_lockout_key, _TOTP_LOCKOUT_SECONDS, "locked")
+                    logger.critical(
+                        f"TOTP recovery lockout triggered for uid={uid} after {attempts} failed attempts"
+                    )
+            except Exception as e:
+                logger.warning(f"Redis recovery attempt tracking failed: {e}")
         raise HTTPException(status_code=401, detail="Invalid or already used recovery code")
+
+    # বাংলা মন্তব্য: সফল recovery-তে attempt counter রিসেট
+    if _redis:
+        try:
+            await _redis.delete(recover_attempt_key)
+        except Exception as e:
+            logger.debug(f"Failed to clear Redis recovery attempts: {e}")
 
     secret = base64.b32encode(os.urandom(10)).decode("utf-8")
     remaining = [item for item in hashes if item != digest]
-    ref.set({"temp_totp_secret": secret, "recovery_code_hashes": remaining}, merge=True)
+    ref.set(
+        {
+            "temp_totp_secret": secret,
+            "temp_totp_created_at": int(time.time()),
+            "recovery_code_hashes": remaining,
+        },
+        merge=True,
+    )
     provisioning_uri = f"otpauth://totp/SupremeAI:{email}?secret={secret}&issuer=SupremeAI&digits=6"
     logger.warning("Admin %s used a single-use TOTP recovery code", uid)
     return {"secret": secret, "provisioning_uri": provisioning_uri}
@@ -464,6 +557,7 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, re
     db = get_firestore_client()
     totp_secret = None
     temp_totp_secret = None
+    temp_created_at = None
 
     if db:
         try:
@@ -472,16 +566,37 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, re
                 data = doc.to_dict()
                 totp_secret = data.get("totp_secret")
                 temp_totp_secret = data.get("temp_totp_secret")
+                temp_created_at = data.get("temp_totp_created_at")
         except Exception as e:
             logger.error(f"Failed to retrieve TOTP secret: {e}")
 
     # বাংলা মন্তব্য: temp_totp_secret (সবচেয়ে নতুন setup request) আগে ব্যবহার করা হয়।
-    # পুরনো totp_secret থাকলেও reset/regenerate-এর পরে নতুন সিক্রেট দিয়েই OTP ���াচাই হবে।
-    secret_to_use = temp_totp_secret or totp_secret
+    # বাংলা মন্তব্য: reset/regenerate-এর পরে নতুন pending secret দিয়েই OTP যাচাই হবে — নিচের PENDING-TTL logic দেখুন।
+    # PENDING-TTL (STATE-LOCK LIFECYCLE, 2026-09-20):
+    # বাংলা মন্তব্য: temp_totp_secret শুধুমাত্র ইস্যুর ১০ মিনিটের মধ্যে বৈধ। TTL পার হলে
+    # pending enrollment বাতিল গণ্য হবে এবং ACTIVE totp_secret-এ fallback হবে।
+    # Timestamp নেই এমন legacy pending secret-ও বাতিল গণ্য হবে (fail-closed)।
+    temp_is_fresh = (
+        bool(temp_totp_secret)
+        and isinstance(temp_created_at, (int, float))
+        and (time.time() - float(temp_created_at)) <= _TOTP_PENDING_TTL_SECONDS
+    )
+
+    if temp_is_fresh:
+        secret_to_use = temp_totp_secret
+    else:
+        secret_to_use = totp_secret
     if not secret_to_use:
-        secret_to_use = os.getenv("SUPREMEAI_ADMIN_TOTP_SECRET")
+        # STATE-LOCK LIFECYCLE: shared env fallback শুধুমাত্র local/test mock flow-এ অনুমোদিত।
+        # বাংলা মন্তব্য: প্রোডাকশনে per-user Firestore secret ছাড়া OTP যাচাই অসম্ভব (fail-closed) —
+        # ফলে publicly-known example key (SUPREMEAI_ADMIN_TOTP_SECRET) আর কোনো কাজে আসবে না।
+        if _mock_token_allowed():
+            secret_to_use = os.getenv("SUPREMEAI_ADMIN_TOTP_SECRET")
         if not secret_to_use:
-            raise HTTPException(status_code=500, detail="TOTP secret not configured on server")
+            raise HTTPException(
+                status_code=500,
+                detail="TOTP is not enrolled for this account. Please complete TOTP setup first.",
+            )
 
     # বাংলা মন্তব্য: Redis TOTP lockout — ব্রুট-ফোর্স অ্যাটাক প্রতিরোধ (Patch 3 fix)
     lockout_key = f"admin:totp:lockout:{uid}"
@@ -532,18 +647,33 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, re
         except Exception as e:
             logger.debug(f"Failed to clear Redis attempts: {e}")
 
-    if temp_totp_secret and db:
-        try:
-            from google.cloud import firestore
+    if db and temp_totp_secret:
+        from google.cloud import firestore
 
-            db.collection("admin_users").document(uid).update(
-                {
-                    "totp_secret": temp_totp_secret,
-                    "temp_totp_secret": firestore.DELETE_FIELD,
-                }
-            )
+        try:
+            if temp_is_fresh and secret_to_use == temp_totp_secret:
+                # বাংলা মন্তব্য: OTP যাচাই হয়েছে টাটকা pending secret দিয়ে — এখন সেটিই ACTIVE
+                # হবে (promotion) এবং pending মুছে যাবে। এটাই Instant Lock: পুরনো secret
+                # সাথে সাথে অচল হয়ে যায়।
+                db.collection("admin_users").document(uid).update(
+                    {
+                        "totp_secret": temp_totp_secret,
+                        "temp_totp_secret": firestore.DELETE_FIELD,
+                        "temp_totp_created_at": firestore.DELETE_FIELD,
+                    }
+                )
+            else:
+                # STATE-LOCK LIFECYCLE: সফল লগইন যদি ACTIVE secret দিয়েই হয়, তবে
+                # stale/expired pending enrollment পরিষ্কার হবে — stale temp কখনও
+                # ACTIVE secret-কে replace করতে পারবে না।
+                db.collection("admin_users").document(uid).update(
+                    {
+                        "temp_totp_secret": firestore.DELETE_FIELD,
+                        "temp_totp_created_at": firestore.DELETE_FIELD,
+                    }
+                )
         except Exception as e:
-            logger.error(f"Failed to promote temp TOTP secret: {e}")
+            logger.error(f"Failed to finalize TOTP state: {e}")
 
     import jwt
 

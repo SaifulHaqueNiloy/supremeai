@@ -29,7 +29,7 @@ class TestCloudConnector:
             "type": "service_account",
             "project_id": "test-project-123",
             "private_key_id": "abcd123",
-            ***REMOVED***",
+            "private_key": "***REMOVED***",
             "client_email": "test-sa@test-project-123.iam.gserviceaccount.com",
         }
 

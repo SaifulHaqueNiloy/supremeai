@@ -14,7 +14,7 @@ def test_byoc_credentials_upload_validates_and_encrypts():
             "type": "service_account",
             "project_id": "valid-gcp-project",
             "private_key_id": "pkey123",
-            ***REMOVED***",
+            "private_key": "***REMOVED***",
             "client_email": "sa@valid-gcp-project.iam.gserviceaccount.com",
         },
     }
@@ -72,7 +72,7 @@ def test_byoc_deployment_triggers_quota_enforcement():
             "type": "service_account",
             "project_id": "valid-gcp-project",
             "private_key_id": "pkey123",
-            ***REMOVED***",
+            "private_key": "***REMOVED***",
             "client_email": "sa@valid-gcp-project.iam.gserviceaccount.com",
         },
     }
