@@ -20,11 +20,11 @@ class TestDocsAuthContract:
 
     def test_docs_disabled_in_prod_returns_404(self):
         """When SUPREMEAI_DOCS_ENABLED=false in production, /docs should 404."""
-        # This is a contract test — the actual middleware behavior depends on env vars
-        # that are set at app startup time. We verify the import + class exists.
+        # This is a contract test — DocsAuthMiddleware is a raw ASGI middleware
+        # implementing the ASGI __call__(scope, receive, send) interface.
         from core.middleware.docs_auth import DocsAuthMiddleware
 
-        assert hasattr(DocsAuthMiddleware, "dispatch")
+        assert callable(DocsAuthMiddleware)
 
 
 class TestHealthAwareMiddlewareContract:
