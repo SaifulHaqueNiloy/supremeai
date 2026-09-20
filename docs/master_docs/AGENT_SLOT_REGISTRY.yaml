@@ -56,6 +56,7 @@ validation_rules:
   - "maintainer MUST be a GitHub username (starts with @)"
   - "expires_on MUST be <= 7 days from assigned_on"
   - "Only one active assignment per slot at a time"
+  - "Active slots MUST be <= 5 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)"
   - "Auto-expiry: assignments past expires_on are auto-deactivated"
 
 # How to claim/update a slot
