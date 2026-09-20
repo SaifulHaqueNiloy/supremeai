@@ -16,18 +16,65 @@ from models.base import Base
 # access to the values within the .ini file in use.
 config = context.config
 
+import socket
+import urllib.parse
+
 # বাংলা মন্তব্য: মাইগ্রেশনের জন্য ডিরেক্ট রাইটার (SUPABASE_DATABASE_URL_WRITER) অগ্রাধিকার পাবে,
 # কারণ PgBouncer ট্রানজ্যাকশন পুলে DDL / মাইগ্রেশন লকিং স্টেটমেন্ট প্রত্যাখ্যাত হতে পারে।
-migration_url = (
+raw_migration_url = (
     os.getenv("SUPABASE_DATABASE_URL_WRITER")
     or getattr(settings, "database_url", None)
     or getattr(settings, "supabase_database_url", None)
 )
-if not migration_url:
+if not raw_migration_url:
     raise RuntimeError(
         "Database URL is required for Alembic. Set SUPABASE_DATABASE_URL_WRITER "
         "or the canonical database URL setting before running migrations."
     )
+
+
+def _resolve_reachable_url(url: str) -> str:
+    """Ensure endpoint is reachable over IPv4 (GitHub Actions runners lack IPv6 egress).
+
+    If the endpoint is a Supabase direct host (db.<ref>.supabase.co) that cannot be
+    resolved over IPv4, fallback to Supavisor Pooler on port 5432 (Session mode),
+    which supports IPv4 and standard DDL / Alembic migrations.
+    """
+    try:
+        parsed = urllib.parse.urlsplit(url)
+        hostname = parsed.hostname or ""
+        if "supabase.co" in hostname:
+            can_ipv4 = False
+            try:
+                res = socket.getaddrinfo(hostname, parsed.port or 5432, socket.AF_INET)
+                if res:
+                    can_ipv4 = True
+            except Exception:
+                can_ipv4 = False
+
+            if not can_ipv4:
+                parts = hostname.split(".")
+                ref = parts[1] if len(parts) > 1 else ""
+                user = parsed.username or "postgres"
+                if ref and not user.endswith(f".{ref}"):
+                    user = f"{user}.{ref}"
+                pooler_host = os.getenv(
+                    "SUPABASE_POOLER_HOST", "aws-0-ap-southeast-1.pooler.supabase.com"
+                )
+                netloc = (
+                    f"{user}:{parsed.password}@{pooler_host}:5432"
+                    if parsed.password
+                    else f"{user}@{pooler_host}:5432"
+                )
+                return urllib.parse.urlunsplit(
+                    (parsed.scheme, netloc, parsed.path, parsed.query, parsed.fragment)
+                )
+    except Exception:
+        pass
+    return url
+
+
+migration_url = _resolve_reachable_url(raw_migration_url)
 config.set_main_option("sqlalchemy.url", migration_url)
 
 # Interpret the config file for Python logging.
@@ -76,10 +123,18 @@ def run_migrations_online() -> None:
     and associate a connection with the context.
 
     """
+    connect_args = {}
+    if "postgresql" in (config.get_main_option("sqlalchemy.url") or ""):
+        from core.db_ssl import build_supabase_ssl_context
+
+        connect_args["sslcontext"] = build_supabase_ssl_context()
+        connect_args["connect_timeout"] = 10
+
     connectable = engine_from_config(
         config.get_section(config.config_ini_section, {}),
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
+        connect_args=connect_args,
     )
 
     with connectable.connect() as connection:
