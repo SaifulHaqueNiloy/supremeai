@@ -270,7 +270,17 @@ class SettingsSecretsMixin:
 
     @property
     def database_url(self) -> str:
-        return self._get_cached_secret("DATABASE_URL") or self.supabase_database_url
+        try:
+            val = self._get_cached_secret("DATABASE_URL")
+            if val:
+                return val
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "DATABASE_URL not available (%s); falling back to SUPABASE_DATABASE_URL_POOLER",
+                exc,
+            )
+        return self.supabase_database_url
+
 
     @property
     def supabase_db_ca_cert(self) -> str:
