@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-20 21:56 UTC
+- **Date:** 2026-09-20 22:01 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -11,12 +11,9 @@
 
 ## Files Changed
   - `.github/workflows/pr-pipeline.yml`
-  - `.github/workflows/pr-helper.yml`
-  - `.github/workflows/ci.yml`
-  - `.github/workflows/branch-naming-guard.yml`
   - `CHECKPOINT.md`
-  - `docs/master_docs/ARCH-GAP-01-DECISION-GAP-ANALYSIS.md`
-  - `docs/master_docs/OPS-05-PR-HELPER-LIFECYCLE.md`
+  - `.github/workflows/branch-naming-guard.yml`
+  - `.github/workflows/pr-helper.yml`
 
 ## Pending (Carry Forward)
 - 103 active skipped test markers triage across 53 files towards <30 (reconciled in docs/SKIPPED_TESTS.md)

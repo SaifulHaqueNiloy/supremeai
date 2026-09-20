@@ -1,0 +1,14 @@
+# Deprecated: Functionality consolidated into .github/workflows/pr-pipeline.yml (validate-branch-name).
+# Retained as an architectural placeholder to satisfy the Preservation Guard (SG-09).
+name: Branch Naming Guard (Deprecated)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deprecated-noop:
+    name: 🔤 Branch Naming Guard (Consolidated into PR Pipeline)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Notice
+        run: echo "Branch naming validation is now orchestrated by pr-pipeline.yml"

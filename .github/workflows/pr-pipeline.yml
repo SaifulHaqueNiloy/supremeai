@@ -331,7 +331,7 @@ jobs:
           HEAD_SHA: ${{ needs.detect-scope.outputs.head_sha }}
         run: |
           # Non-fatal: this step outputs signals, pr-gate synthesizes final decision.
-          set +e  # CRITICAL: do not exit on error
+          set +o errexit  # CRITICAL: do not exit on error
           
           PR_BODY="$(gh pr view "$PR" --json body -q .body 2>/dev/null || echo '')"
           PR_TITLE="$(gh pr view "$PR" --json title -q .title 2>/dev/null || echo '')"

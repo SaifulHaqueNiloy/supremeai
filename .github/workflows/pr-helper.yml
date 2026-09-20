@@ -197,7 +197,7 @@ jobs:
         # সব তথ্য (junit + log) সংগ্রহ করা; পাস/ফেল সিদ্ধান্ত Step 3 নেবে।
         run: |
           mkdir -p ../pr-helper
-          set +e
+          set +o errexit
           poetry run pytest tests/ \
             -o 'addopts=-ra --tb=short --strict-markers --strict-config --import-mode=importlib' \
             -m "${{ env.PR_HELPER_MARKERS }}" \
@@ -205,7 +205,7 @@ jobs:
             -o junit_family=xunit2 \
             > ../pr-helper/pytest-${{ matrix.side }}.log 2>&1
           RC=$?
-          set -e
+          set -o errexit
           echo "$RC" > ../pr-helper/rc-${{ matrix.side }}.txt
           echo "pytest (${{ matrix.side }}) exit code: $RC"
           tail -30 ../pr-helper/pytest-${{ matrix.side }}.log || true
