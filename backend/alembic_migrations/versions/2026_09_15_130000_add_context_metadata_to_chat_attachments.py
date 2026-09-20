@@ -8,7 +8,12 @@ database নয় — roadmap doctrine: extend existing Files surface)।
 - summary_l1  JSONB (structured summary)
 - content_ref TEXT  (raw source reference, L2)
 - content_hash VARCHAR(64) + index (sha256; chroma convention)
-- parent_id   UUID self-FK SET NULL + index (hierarchical collections)
+- parent_id   self-FK SET NULL + index (hierarchical collections)
+  2026-09-20: column type follows the LIVE prod table — `chat_attachments.id`
+  is TEXT there (legacy runtime-created schema, pre-UUID model), and a UUID
+  FK to a TEXT column cannot be implemented (DatatypeMismatch, run
+  35496566026). TEXT keeps the FK implementable; the ORM type mismatch is
+  tracked separately as pre-existing model/prod drift.
 - version     INTEGER NOT NULL DEFAULT 1
 - workspace_id / project_id VARCHAR(255) + index (scope chain)
 - updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -42,7 +47,7 @@ def upgrade() -> None:
         "chat_attachments",
         sa.Column(
             "parent_id",
-            _UUID,
+            sa.Text(),
             sa.ForeignKey("chat_attachments.id", ondelete="SET NULL"),
             nullable=True,
         ),
