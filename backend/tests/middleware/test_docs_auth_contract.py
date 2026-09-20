@@ -1,6 +1,9 @@
 """Contract tests for docs_auth middleware — production gate on /docs, /redoc, /openapi.json."""
+
 from __future__ import annotations
+
 import os
+
 import pytest
 from starlette.applications import Starlette
 from starlette.responses import JSONResponse
@@ -12,6 +15,7 @@ class TestDocsAuthContract:
 
     def test_importable(self):
         from core.middleware.docs_auth import DocsAuthMiddleware
+
         assert DocsAuthMiddleware is not None
 
     def test_docs_disabled_in_prod_returns_404(self):
@@ -19,7 +23,8 @@ class TestDocsAuthContract:
         # This is a contract test — the actual middleware behavior depends on env vars
         # that are set at app startup time. We verify the import + class exists.
         from core.middleware.docs_auth import DocsAuthMiddleware
-        assert hasattr(DocsAuthMiddleware, 'dispatch')
+
+        assert hasattr(DocsAuthMiddleware, "dispatch")
 
 
 class TestHealthAwareMiddlewareContract:
@@ -27,6 +32,7 @@ class TestHealthAwareMiddlewareContract:
 
     def test_importable(self):
         from core.middleware.health_aware_middleware import HealthAwareMiddleware
+
         assert HealthAwareMiddleware is not None
 
 
@@ -35,6 +41,7 @@ class TestDbSchemaGateContract:
 
     def test_importable(self):
         from core.db_schema_gate import production_schema_incompatible
+
         assert callable(production_schema_incompatible)
 
 
@@ -43,6 +50,7 @@ class TestHoneypotContract:
 
     def test_importable(self):
         from core.security.protection.honeypot import HoneypotMiddleware
+
         assert HoneypotMiddleware is not None
 
 
@@ -51,6 +59,7 @@ class TestPromptFirewallContract:
 
     def test_importable(self):
         from core.security.protection.prompt_firewall import PromptFirewall
+
         assert PromptFirewall is not None
 
 
@@ -59,6 +68,7 @@ class TestPeriodicTaskSchedulerContract:
 
     def test_importable(self):
         from core.orchestration.periodic_task_scheduler import PeriodicTaskScheduler
+
         assert PeriodicTaskScheduler is not None
 
 
@@ -67,6 +77,7 @@ class TestKernelDispatcherContract:
 
     def test_importable(self):
         from core.kernel.dispatcher import KernelRequest, KernelResponse
+
         assert KernelRequest is not None
         assert KernelResponse is not None
 
@@ -76,6 +87,7 @@ class TestMultiLayerCacheContract:
 
     def test_importable(self):
         from core.cache.multi_layer_cache import MultiLayerCache
+
         assert MultiLayerCache is not None
 
 
@@ -84,4 +96,5 @@ class TestLLMGatewayRegistryContract:
 
     def test_importable(self):
         from core.llm.llm_gateway.registry import _ProviderKeyPool
+
         assert _ProviderKeyPool is not None

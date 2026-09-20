@@ -7,6 +7,7 @@ Tests cover:
 - Redirect-following re-validation
 - Public URL allow-pass
 """
+
 from __future__ import annotations
 
 import pytest
@@ -17,34 +18,40 @@ from core.security.protection.ssrf_protection import is_safe_url
 class TestSSRFPrivateIPs:
     """Private/internal IPs should be flagged as unsafe."""
 
-    @pytest.mark.parametrize("url", [
-        "http://127.0.0.1/",
-        "http://localhost/",
-        "http://10.0.0.1/",
-        "http://10.255.255.255/",
-        "http://172.16.0.1/",
-        "http://172.31.255.255/",
-        "http://192.168.1.1/",
-        "http://192.168.0.0/",
-        "http://169.254.169.254/latest/meta-data/",  # AWS metadata
-        "http://169.254.170.2/",  # ECS task metadata
-        "http://0.0.0.0/",
-        "http://[::1]/",  # IPv6 loopback
-        "http://[fc00::1]/",  # IPv6 ULA
-        "http://[fe80::1]/",  # IPv6 link-local
-    ])
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http://127.0.0.1/",
+            "http://localhost/",
+            "http://10.0.0.1/",
+            "http://10.255.255.255/",
+            "http://172.16.0.1/",
+            "http://172.31.255.255/",
+            "http://192.168.1.1/",
+            "http://192.168.0.0/",
+            "http://169.254.169.254/latest/meta-data/",  # AWS metadata
+            "http://169.254.170.2/",  # ECS task metadata
+            "http://0.0.0.0/",
+            "http://[::1]/",  # IPv6 loopback
+            "http://[fc00::1]/",  # IPv6 ULA
+            "http://[fe80::1]/",  # IPv6 link-local
+        ],
+    )
     def test_private_ip_unsafe(self, url):
         assert is_safe_url(url) is False, f"{url} should be unsafe"
 
-    @pytest.mark.parametrize("url", [
-        "http://example.com/",
-        "https://api.supremeai.dev/",
-        "http://8.8.8.8/",
-        "https://github.com/",
-        "http://1.1.1.1/",
-        "https://supremeai-primary-node.onrender.com/",
-        "https://xtvkltzmberxekoamala.supabase.co/",
-    ])
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "http://example.com/",
+            "https://api.supremeai.dev/",
+            "http://8.8.8.8/",
+            "https://github.com/",
+            "http://1.1.1.1/",
+            "https://supremeai-primary-node.onrender.com/",
+            "https://xtvkltzmberxekoamala.supabase.co/",
+        ],
+    )
     def test_public_url_safe(self, url):
         assert is_safe_url(url) is True, f"{url} should be safe"
 

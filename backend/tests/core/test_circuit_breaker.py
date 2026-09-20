@@ -7,6 +7,7 @@ Tests cover:
 - State normalization (normalize_circuit_state)
 - Auto-recovery after timeout
 """
+
 from __future__ import annotations
 
 import time
@@ -117,7 +118,9 @@ class TestNormalizeCircuitState:
     def test_normalizes_enum(self):
         assert normalize_circuit_state(CircuitBreakerState.OPEN) == CircuitBreakerState.OPEN
         assert normalize_circuit_state(CircuitBreakerState.CLOSED) == CircuitBreakerState.CLOSED
-        assert normalize_circuit_state(CircuitBreakerState.HALF_OPEN) == CircuitBreakerState.HALF_OPEN
+        assert (
+            normalize_circuit_state(CircuitBreakerState.HALF_OPEN) == CircuitBreakerState.HALF_OPEN
+        )
 
     def test_unknown_returns_closed(self):
         assert normalize_circuit_state("unknown") == CircuitBreakerState.CLOSED
