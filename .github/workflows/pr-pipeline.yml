@@ -20,10 +20,10 @@ concurrency:
   group: pr-pipeline-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
-# Workflow-level permissions (minimum required).
-# pr-gate overrides these at job level to limit write scope during security scanning.
+# Workflow-level permissions: contents: write is required for the reusable
+# workflow (pr-helper.yml) which performs branch patch pushes and auto-merge.
 permissions:
-  contents: read
+  contents: write
   pull-requests: write
   issues: write
   actions: read
