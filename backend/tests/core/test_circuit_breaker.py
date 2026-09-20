@@ -47,7 +47,9 @@ class TestCircuitBreakerStates:
 
     def test_opens_after_threshold(self):
         cb = CircuitBreaker("test", failure_threshold=3, recovery_timeout=30)
-        fail_fn = lambda: (_ for _ in ()).throw(ValueError("fail"))
+
+        def fail_fn():
+            raise ValueError("fail")
 
         for _ in range(3):
             with pytest.raises(ValueError):
@@ -57,7 +59,9 @@ class TestCircuitBreakerStates:
 
     def test_open_fails_fast(self):
         cb = CircuitBreaker("test", failure_threshold=1, recovery_timeout=30)
-        fail_fn = lambda: (_ for _ in ()).throw(ValueError("fail"))
+
+        def fail_fn():
+            raise ValueError("fail")
 
         # Trip the breaker
         with pytest.raises(ValueError):
@@ -70,7 +74,9 @@ class TestCircuitBreakerStates:
 
     def test_open_transitions_to_half_open_after_timeout(self):
         cb = CircuitBreaker("test", failure_threshold=1, recovery_timeout=0)
-        fail_fn = lambda: (_ for _ in ()).throw(ValueError("fail"))
+
+        def fail_fn():
+            raise ValueError("fail")
 
         with pytest.raises(ValueError):
             cb.call(fail_fn)
@@ -86,7 +92,9 @@ class TestCircuitBreakerStates:
 
     def test_half_open_failure_reopens(self):
         cb = CircuitBreaker("test", failure_threshold=1, recovery_timeout=0)
-        fail_fn = lambda: (_ for _ in ()).throw(ValueError("fail"))
+
+        def fail_fn():
+            raise ValueError("fail")
 
         # Trip
         with pytest.raises(ValueError):
