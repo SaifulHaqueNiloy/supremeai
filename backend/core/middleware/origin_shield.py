@@ -1,6 +1,6 @@
 # বাংলা কমেন্ট: #781 ফিক্স — Origin Shield Middleware (Cloudflare Worker প্রি-শেয়ার্ড সিক্রেট ভ্যালিডেশন)।
 #
-# সমস্যা: Render free-tier সার্ভিসের ipAllowList 0.0.0.0/0 থাকতেই হয় (Render-এর নিজস্ব
+# সমস্যা: Render free-tier সার্ভিসের ipAllowList আনরেস্ট্রিক্টেড থাকতেই হয় (Render-এর নিজস্ব
 # health probe + dynamic egress IP এর জন্য)। ফলে যে কেউ সরাসরি Render-এর ডিফল্ট ডোমেইনে
 # হিট করে backend-এ ঢুকে যেতে পারে।
 #
