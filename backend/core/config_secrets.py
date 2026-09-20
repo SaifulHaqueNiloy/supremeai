@@ -345,6 +345,19 @@ class SettingsSecretsMixin:
                 pool.append((u, t))
         return pool
 
+    # Issue #775 (MA-10): declare multi-account env vars as typed settings so the
+    # settings model becomes the canonical declaration list. Previously these were
+    # accessed via `getattr(settings, "cloudflare_api_token", None)` which silently
+    # returns "" when the property doesn't exist — making missing settings
+    # indistinguishable from present-but-empty secrets.
+    @property
+    def cloudflare_api_token(self) -> str:
+        return self._get_cached_secret("CLOUDFLARE_API_TOKEN")
+
+    @property
+    def cloudflare_account_id(self) -> str:
+        return self._get_cached_secret("CLOUDFLARE_ACCOUNT_ID")
+
     def _set_cached_secret(self, key: str, value: Any) -> None:
         self._ensure_secrets_loaded()
         self._get_private_state()["_cached_secrets"][key] = str(value) if value is not None else ""
