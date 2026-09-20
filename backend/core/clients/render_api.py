@@ -44,9 +44,7 @@ def render_get_json(
     """
     url = f"{RENDER_API_BASE}{path}"
     if query:
-        url += "?" + urllib.parse.urlencode(
-            {k: v for k, v in query.items() if v is not None}
-        )
+        url += "?" + urllib.parse.urlencode({k: v for k, v in query.items() if v is not None})
 
     headers = {"Accept": "application/json"}
     if api_key:
