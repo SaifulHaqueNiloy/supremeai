@@ -16,6 +16,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
+# Skip production-mode tests in CI/test env — the middleware is a no-op (fail-open)
+# when _is_test_env() returns True (CI=true or ENV=test). These tests only pass
+# when ENV=production + ORIGIN_VERIFY_KEY is set.
 skip_in_ci = pytest.mark.skipif(
     os.getenv("CI", "").lower() == "true" or os.getenv("ENV", "").lower() in ("test", "testing"),
     reason="OriginShieldMiddleware is no-op in CI/test env (fail-open design)",
