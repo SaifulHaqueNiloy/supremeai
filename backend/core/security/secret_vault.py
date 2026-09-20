@@ -79,6 +79,24 @@ OPTIONAL_SECRETS: set[str] = {
     # real-boot probes caught this before a deploy did).
     "STRIPE_API_KEY",
     "STRIPE_WEBHOOK_SECRET",
+    # Alternate / generic database URL: when absent in production, system falls back to SUPABASE_DATABASE_URL_POOLER
+    "DATABASE_URL",
+    "NEON_DATABASE_URL",
+    "NEON_API_KEY",
+    # Additional AI / cloud providers (optional integrations)
+    "ANTHROPIC_API_KEY",
+    "MISTRAL_API_KEY",
+    "COHERE_API_KEY",
+    "TOGETHER_API_KEY",
+    "FIRECRAWL_API_KEY",
+    "RUNPOD_API_KEY",
+    "LANGFUSE_PUBLIC_KEY",
+    "LANGFUSE_SECRET_KEY",
+    "CLOUDFLARE_API_TOKEN",
+    "CLOUDFLARE_ACCOUNT_ID",
+    "BYNARA_API_KEY",
+    "BAI_API_KEY",
+    "V0_API_KEY",
     # validate_all warns ("Production missing config vars: CI_WEBHOOK_SECRET.
     # Running in degraded zero-cost mode") and continues - warn-optional.
     "CI_WEBHOOK_SECRET",

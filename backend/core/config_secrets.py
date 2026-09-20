@@ -270,7 +270,13 @@ class SettingsSecretsMixin:
 
     @property
     def database_url(self) -> str:
-        return self._get_cached_secret("DATABASE_URL") or self.supabase_database_url
+        try:
+            val = self._get_cached_secret("DATABASE_URL")
+            if val:
+                return val
+        except Exception:
+            pass
+        return self.supabase_database_url
 
     @property
     def supabase_db_ca_cert(self) -> str:
