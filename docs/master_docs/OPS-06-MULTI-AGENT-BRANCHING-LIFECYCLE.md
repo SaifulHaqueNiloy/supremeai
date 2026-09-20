@@ -13,7 +13,7 @@ flowchart TD
 
     subgraph Phase1["১. মিউটেক্স টাস্ক ক্লেইম (Atomic Mutex Locking)"]
         ISSUE["GitHub Issue (#ID)"] -->|Query: no:assignee| AGENT["Agent Worker (e.g. agent-1)"]
-        AGENT -->|Atomic Lock| ASSIGN["Assign @agent-1 + label: status:in-progress"]
+        AGENT -->|Claim-then-Verify| ASSIGN["claim_issue.sh + assign + label: in-progress"]
     end
 
     subgraph Phase2["২. শর্ট-লিভড ব্রাঞ্চ তৈরি (Ephemeral Branching)"]
@@ -62,18 +62,29 @@ flowchart TD
   * GitHub Repo Settings (`Settings -> General -> Pull Requests`) থেকে **`Automatically delete head branches`** বাধ্যতামূলক অন রাখা।
   * PR মার্জ হওয়ার সাথে সাথে গিটহাব নিজে থেকেই `agent-<id>/...` ব্রাঞ্চ সার্ভার থেকে ডিলিট করে দেবে।
 
-### সেফগার্ড ৩: অ্যাটমিক মিউটেক্স লকিং (Race Condition Protection)
+### সেফগার্ড ৩: ক্লেইম-থেন-ভেরিফাই মিউটেক্স লকিং (Race Condition Protection)
 * **সমস্যা:** দুটি এজেন্ট একই সময়ে একই ইস্যু পিক করলে কাজের পুনরাবৃত্তি ও কনফ্লিক্ট ঘটে।
-* **সমাধান:** 
+* **⚠️ সতর্কতা:** GitHub REST API-র issue assignment কোনো Compare-and-Swap (CAS) নয় — দুটি এজেন্ট প্রায় একই মুহূর্তে claim করলে **দুজনেইই** assignee হয়ে যেতে পারে। তাই শুধু claim করেই ধরে নেওয়া যাবে না, claim-এর **পরে verify** করতে হবে।
+* **সমাধান — Claim-then-Verify pattern:**
   * এজেন্ট কেবল সেই ইস্যুগুলো ফিল্টার করবে যেগুলোতে কোনো অ্যাসাইনমেন্ট নেই:
     ```bash
     gh issue list --search "no:assignee is:open" --limit 10
     ```
-  * টাস্ক শুরুর পূর্বে অ্যাটমিকভাবে ক্লেইম করবে:
+  * helper script দিয়ে claim → verify → race হলে auto-release:
     ```bash
-    gh issue edit <ISSUE_ID> --add-assignee "agent-1" --add-label "status:in-progress"
+    bash .github/scripts/claim_issue.sh <ISSUE_ID> "agent-1"
+    # Exit 0 = sole owner (কাজ শুরু করা যাবে)
+    # Exit 1 = claim lost (অন্য ইস্যু বেছে নেবে)
     ```
-  * কোনো এজেন্ট ইতিমধ্যে অ্যাসাইন করা বা `status:in-progress` থাকা ইস্যুতে হাত দিতে পারবে না।
+  * script-এর ভেতরের ধাপ: (১) pre-check — assignee থাকলে বাদ দেবে, (২) `gh issue edit --add-assignee --add-label "in-progress"`, (৩) ৩ সেকেন্ড পর assignees re-read — ১-এর বেশি হলে নিজের claim release + step-back comment।
+  * হাতে চালাতে চাইলে:
+    ```bash
+    gh issue edit <ISSUE_ID> --add-assignee "agent-1" --add-label "in-progress"
+    sleep 3
+    N=$(gh issue view <ISSUE_ID> --json assignees -q '.assignees | length')
+    [ "$N" -eq 1 ] || echo "concurrent claim — step back"
+    ```
+  * কোনো এজেন্ট ইতিমধ্যে অ্যাসাইন করা বা `in-progress` থাকা ইস্যুতে হাত দিতে পারবে না।
 
 ### সেফগার্ড ৪: ব্রাঞ্চ নেমিং প্যাটার্ন এনফোর্সমেন্ট (Format Guard)
 * **পলিসি:** মানব ডেভেলপার ও এআই এজেন্টের ব্রাঞ্চ নাম সুস্পষ্ট ও সুনির্দিষ্ট প্যাটার্ন মেনে চলতে হবে:
@@ -121,7 +132,7 @@ flowchart TD
 
 | ক্রম | ধাপ | নির্দেশিত কমান্ড |
 |---|---|---|
-| **১** | **Task Claim** | `gh issue edit $ID --add-assignee "agent-$N" --add-label "status:in-progress"` |
+| **১** | **Task Claim (Claim-then-Verify)** | `bash .github/scripts/claim_issue.sh $ID "agent-$N"` (exit 1 হলে অন্য ইস্যু নেবে) |
 | **২** | **Sync Main** | `git checkout main && git pull --rebase origin main` |
 | **৩** | **Create Branch** | `git checkout -b agent-$N/issue-$ID-$DESC` |
 | **৪** | **Code & Test** | কোড পরিবর্তন এবং সংশ্লিষ্ট টেস্ট চালানো (`pytest`, `vitest`, `ruff`) |
@@ -158,10 +169,10 @@ sequenceDiagram
     participant A3 as 🤖 Agent-3
     participant PRH as ⚡ PR Helper (CI)
 
-    Note over A1,A3: ধাপ ১: অ্যাটমিক মিউটেক্স লকিং (Issue Claim)
-    A1->>Main: Claim Issue #837 (add-label status:in-progress, assignee agent-1)
-    A2->>Main: Claim Issue #838 (add-label status:in-progress, assignee agent-2)
-    A3->>Main: Claim Issue #840 (add-label status:in-progress, assignee agent-3)
+    Note over A1,A3: ধাপ ১: ক্লেইম-থেন-ভেরিফাই (Issue Claim)
+    A1->>Main: claim_issue.sh 837 (assignee agent-1 + label in-progress, verified)
+    A2->>Main: claim_issue.sh 838 (assignee agent-2 + label in-progress, verified)
+    A3->>Main: claim_issue.sh 840 (assignee agent-3 + label in-progress, verified)
 
     Note over A1,A3: ধাপ ২: শর্ট-লিভড ব্রাঞ্চ স্পনিং
     A1->>A1: git checkout -b agent-1/issue-837-ruff-imports
@@ -197,7 +208,7 @@ sequenceDiagram
 1. **টাস্ক ডিসকভারি ও লক:**
    ```bash
    gh issue list --search "no:assignee is:open" --limit 5
-   gh issue edit 837 --add-assignee "agent-1" --add-label "status:in-progress"
+   bash .github/scripts/claim_issue.sh 837 "agent-1"   # claim → verify → race হলে auto-release
    gh issue comment 837 --body "🤖 Agent-1: Claimed task. Starting work on branch."
    ```
 2. **ফ্রেশ ব্রাঞ্চ তৈরি:**
@@ -224,7 +235,7 @@ sequenceDiagram
 1. **টাস্ক লক (Issue #837 এড়িয়ে #838 নেওয়া):**
    ```bash
    # Issue #837 ইতিমধ্যে agent-1 এর কাছে লকড, তাই Agent-2 নেবে #838
-   gh issue edit 838 --add-assignee "agent-2" --add-label "status:in-progress"
+   bash .github/scripts/claim_issue.sh 838 "agent-2"   # exit 1 হলে অন্য ইস্যু নেবে
    gh issue comment 838 --body "🤖 Agent-2: Claimed task. Starting mock fixes."
    ```
 2. **ব্রাঞ্চ তৈরি:**
@@ -253,7 +264,7 @@ sequenceDiagram
 #### 🔹 Agent-3 এর রোল (Task C — ফিচার/মনিটরিং):
 1. **টাস্ক লক (পরবর্তী ফ্রি ইস্যু #840):**
    ```bash
-   gh issue edit 840 --add-assignee "agent-3" --add-label "status:in-progress"
+   bash .github/scripts/claim_issue.sh 840 "agent-3"   # claim → verify → race হলে auto-release
    ```
 2. **ব্রাঞ্চ ও ডেভ:**
    ```bash
@@ -284,7 +295,7 @@ sequenceDiagram
 ### ৪. ক্রুশিয়াল নিয়মাবলী (Golden Rules for All Agents)
 1. 🛑 **কখনোই লোকাল `main` ব্রাঞ্চে সরাসরি কমিট বা পুশ করবে না।**
 2. 🛑 **কখনোই অন্য এজেন্টের চলমান ব্রাঞ্চে হাত দেবে না বা ফোর্স পুশ করবে না।**
-3. 🛑 **কখনোই `status:in-progress` লেবেল থাকা ইস্যুতে হাত দেবে না।**
+3. 🛑 **কখনোই `in-progress` লেবেল থাকা (বা assignee-যুক্ত) ইস্যুতে হাত দেবে না।**
 4. ✅ **সর্বদা একক ক্যানোনিকাল `GITHUB_TOKEN` ব্যবহার করবে (যা সকল এজেন্টের জন্য রিড/রাইট পারমিশনযুক্ত)।**
 5. ✅ **PR টাইটেলে ও বডিতে অবশ্যই `Fixes #<ID>` উল্লেখ করবে যাতে মার্জ হওয়ার সাথে সাথে ইস্যু স্বয়ংক্রিয়ভাবে ক্লোজ হয়ে যায়।**
 
