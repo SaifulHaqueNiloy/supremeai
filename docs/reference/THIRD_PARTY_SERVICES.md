@@ -557,38 +557,54 @@ curl -H "api-key: $QDRANT_API_KEY" $QDRANT_URL/collections
 
 ---
 
-## 🟦 15. KAGGLE (ML Datasets — Multi-Token ×8)
+## 🟦 15. KAGGLE (ML Datasets — Multi-Token ×6)
 
 ### What it does
 Access to Kaggle datasets and ML competitions for the self-learning/evolution engine.
 
 ### Multi-Account Setup ⭐
-8 Kaggle API tokens in a pool:
-| Secret | Purpose |
+**6 unique tokens** across 7 slots (KAGGLE_API_TOKEN = KAGGLE_API_TOKEN_1 — duplicate):
+
+| Secret | Status |
 |---|---|
-| `KAGGLE_API_TOKEN` | Token #0 (base) — **only one actually used** by `checkKaggle()` |
-| `KAGGLE_API_TOKEN_1` through `_6` | Tokens #1-6 (pooled but unused — see MA-06/#771) |
-| `KAGGLE_API_TOKENS` | JSON array aggregate (preferred by MCP env.ts) |
+| `KAGGLE_API_TOKENS` (aggregate) | ✅ **6 comma-separated unique tokens — code reads this** (env.ts:156 prefers aggregate) |
+| `KAGGLE_API_TOKEN` | duplicate of `_1` (same value) |
+| `KAGGLE_API_TOKEN_1` through `_6` | 6 unique values total (since _0 = _1) |
 
-**How it works (intended):** MCP `env.ts:138-150` collects all 8 into `env.kaggle.tokens`. Should round-robin on quota exhaustion.
+### Design Intent
+`env.ts:153` comment: `── Kaggle (6-account pool)`
 
-**Actual behavior:** `adapters/misc/index.ts:88` uses `tokens[0]` only — the other 7 sit idle. When token 0 hits Kaggle's daily quota, no failover occurs.
+**6 accounts × 30h/week = 180h > 168h (1 week)** → full weekly Kaggle GPU/runtime coverage at $0.
+
+### How it works (FIXED — was tokens[0] only)
+- `env.ts:154-166`: collects tokens — prefers `KAGGLE_API_TOKENS` aggregate (6 unique), falls back to individual `_1..6` + base
+- `adapters/misc/index.ts:84`: `const kagglePool = new AIKeyPool(env.kaggle.tokens)`
+- `adapters/ai/key-pool.ts`: `AIKeyPool` class implements:
+  - `getNextKey()` — round-robin: `currentIndex = (currentIndex + 1) % keys.length`
+  - `execute()` — tries each key; on rate-limit (429), falls back to next
+  - Retries up to `keys.length` attempts before throwing
+
+**Issue #771 (MA-06) is FIXED** — the old `tokens[0]`-only code was replaced with `AIKeyPool` round-robin with rate-limit fallback.
 
 ### Plan/Status
-- 8 tokens declared, 1 used
-- Free tier (Kaggle API has rate limits per token)
+- 6 unique tokens in pool (verified live from Infisical)
+- Free tier (Kaggle API: 30h/week GPU + API rate limits per account)
+- All 6 tokens actively round-robined — 180h/week total coverage
 
 ### Key Files
-- `infrastructure/mcp-control-plane/src/lib/env.ts:138-150` (token collection)
-- `infrastructure/mcp-control-plane/src/adapters/misc/index.ts:88` (`tokens[0]` usage)
-- `backend/core/config_secrets.py:465-480` (`kaggle_api_keys` property — declared but no consumer)
+- `infrastructure/mcp-control-plane/src/lib/env.ts:153-167` (token collection, prefers aggregate)
+- `infrastructure/mcp-control-plane/src/adapters/misc/index.ts:84` (AIKeyPool usage)
+- `infrastructure/mcp-control-plane/src/adapters/ai/key-pool.ts` (AIKeyPool class — round-robin + rate-limit fallback)
+- `backend/core/config_secrets.py:503` (`kaggle_api_keys` property — declared but backend doesn't consume)
 
 ### Check if working
 ```bash
-# Test token 0
+# Check pool size live (MCP tower health)
+curl https://supremeai-mcp-tower.onrender.com/health | jq .checks.kaggle
+# Should show poolSize: 6
+
+# Test individual token
 curl -u "username:$KAGGLE_API_TOKEN" https://www.kaggle.com/api/v1/datasets/list
-# MCP health probe
-curl https://supremeai-mcp-tower.onrender.com/health  # check kaggle status
 ```
 
 ---
