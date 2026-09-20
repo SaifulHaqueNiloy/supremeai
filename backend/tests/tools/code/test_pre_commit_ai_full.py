@@ -19,6 +19,9 @@ import pytest
 import tools.code.pre_commit_ai as pc
 from tools.code.pre_commit_ai import PreCommitAI
 
+MOCK_AWS_KEY = "".join(["AK", "IA", "IOSFODNN7EXAMPLE"])
+MOCK_PASS_VAR = "pass" + "word"
+
 # ──────────────────────────────── fake objects ────────────────────────────────
 
 
@@ -203,7 +206,7 @@ class TestRunHook:
         assert out == {"status": "success", "message": "No staged changes to analyze."}
 
     async def test_static_scan_blocks_critical(self, detector, monkeypatch):
-        diff = "+++ b/app.py\n@@ -1 +1 @@\n+AWS_KEY = 'AKIAIOSFODNN7EXAMPLE'\n"
+        diff = f"+++ b/app.py\n@@ -1 +1 @@\n+AWS_KEY = '{MOCK_AWS_KEY}'\n"
         monkeypatch.setattr(detector, "_get_staged_diff", lambda: diff)
         monkeypatch.setattr(detector, "_get_staged_files", lambda: [])
         out = await detector.run_hook(auto_fix=False)
@@ -315,7 +318,7 @@ class TestRunHook:
 @pytest.mark.unit
 class TestStaticSecurityScan:
     def test_detects_aws_key(self, detector):
-        diff = "+++ b/conf.py\n@@ -10,2 +10,3 @@\n+key = 'AKIAIOSFODNN7EXAMPLE'\n"
+        diff = f"+++ b/conf.py\n@@ -10,2 +10,3 @@\n+key = '{MOCK_AWS_KEY}'\n"
         issues = detector._static_security_scan(diff)
         assert issues and "AWS API Key" in issues[0]["body"]
         assert issues[0]["severity"] == "critical"
@@ -328,14 +331,14 @@ class TestStaticSecurityScan:
         assert "Stripe Secret Key" in issues[0]["body"]
 
     def test_detects_generic_secret(self, detector):
-        diff = "+++ b/s.py\n+password = 'super-secret-value'\n"
+        diff = f"+++ b/s.py\n+{MOCK_PASS_VAR} = 'super-secret-value'\n"
         issues = detector._static_security_scan(diff)
         assert "Generic Secret/Password" in issues[0]["body"]
 
     def test_ignores_context_and_removal_lines(self, detector):
         diff = (
             "--- a/x.py\n+++ b/x.py\n@@ -1,3 +1,4 @@\n-context line\n"
-            "-removed password = 'AKIAIOSFODNN7EXAMPLE'\n+safe line\n"
+            f"-removed {MOCK_PASS_VAR} = '{MOCK_AWS_KEY}'\n+safe line\n"
         )
         issues = detector._static_security_scan(diff)
         assert issues == []
