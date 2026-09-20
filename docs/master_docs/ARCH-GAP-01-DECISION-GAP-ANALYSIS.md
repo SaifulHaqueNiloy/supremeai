@@ -10,19 +10,35 @@
 
 | # | গ্যাপ শিরোনাম | সম্পর্কিত ডকুমেন্ট | তীব্রতা | স্ট্যাটাস |
 |---|---|---|---|---|
-| GAP-01 | মিউটেক্স লকিং অ্যাটমিক নয় | OPS-06 সেফগার্ড ৩ | 🔴 Critical | ❌ Open |
-| GAP-02 | সুপ্রিমএআই নিজের PR-এ Self-Approval কনফ্লিক্ট | OPS-05, OPS-06, OPS-08 | 🔴 Critical | ❌ Open |
-| GAP-03 | স্টল্ড এজেন্ট রিকভারি (Orphan Mutex) কোনো Watchdog নেই | OPS-06, OPS-07 | 🟠 High | ❌ Open |
-| GAP-04 | শুধুমাত্র একটি শেয়ার্ড `GITHUB_TOKEN` — Rate Limit ঝুঁকি | OPS-07, CANONICALIZATION_PLAN | 🟠 High | ❌ Open |
-| GAP-05 | Branch Naming Regex CI-তে অনুপস্থিত | OPS-06 সেফগার্ড ৪ | 🟠 High | ❌ Open |
-| GAP-06 | PR Helper নিজেকে নিজে Validate করতে পারে না | OPS-05 | 🟠 High | ❌ Open |
-| GAP-07 | SupremeAI-এর Developer/Runtime মোড সুইচে Authorization নেই | OPS-07, OPS-08 | 🟠 High | ❌ Open |
-| GAP-08 | পলিমরফিক এজেন্ট স্লট রেজিস্ট্রি নেই | OPS-06, OPS-07 | 🟡 Medium | ❌ Open |
-| GAP-09 | OPS-07 শিরোনাম বনাম কনটেন্টে নামের অসামঞ্জস্য | OPS-07 | 🟡 Medium | ❌ Open |
-| GAP-10 | HITL SupremeAI-এর নিজস্ব HITL কোড পরিবর্তনে প্রযোজ্য কিনা অস্পষ্ট | OPS-08, AGENTS.md | 🟡 Medium | ❌ Open |
-| GAP-11 | OPS-06 এজেন্ট চেকলিস্টে `ruff --fix` Auto-Commit স্টেপ নেই | OPS-06 ধাপ ৩ | 🟡 Medium | ❌ Open |
-| GAP-12 | PR Helper Block-এর পরে Re-run Protocol অস্পষ্ট | OPS-05, OPS-06 | 🟡 Medium | ❌ Open |
+| GAP-01 | মিউটেক্স লকিং অ্যাটমিক নয় | OPS-06 সেফগার্ড ৩ | 🔴 Critical | 🟡 Fix in review (PR #888 — claim-then-verify) |
+| GAP-02 | সুপ্রিমএআই নিজের PR-এ Self-Approval কনফ্লিক্ট | OPS-05, OPS-06, OPS-08 | 🔴 Critical | 🟡 Partial — Option B adopted; Option C hang-guard in PR #890 |
+| GAP-03 | স্টল্ড এজেন্ট রিকভারি (Orphan Mutex) কোনো Watchdog নেই | OPS-06, OPS-07 | 🟠 High | ✅ Fixed (stale-mutex-cleanup.yml) |
+| GAP-04 | শুধুমাত্র একটি শেয়ার্ড `GITHUB_TOKEN` — Rate Limit ঝুঁকি | OPS-07, CANONICALIZATION_PLAN | 🟠 High | 🟡 Partial — monitor shipped; policy in PR #891 |
+| GAP-05 | Branch Naming Regex CI-তে অনুপস্থিত | OPS-06 সেফগার্ড ৪ | 🟠 High | ✅ Fixed (branch-naming-guard.yml) |
+| GAP-06 | PR Helper নিজেকে নিজে Validate করতে পারে না | OPS-05 | 🟠 High | ✅ Fixed (pr-helper self-modification guard) |
+| GAP-07 | SupremeAI-এর Developer/Runtime মোড সুইচে Authorization নেই | OPS-07, OPS-08 | 🟠 High | 🟡 Fix in review (PR #889 — dev_mode_trigger.sh) |
+| GAP-08 | পলিমরফিক এজেন্ট স্লট রেজিস্ট্রি নেই | OPS-06, OPS-07 | 🟡 Medium | ✅ Fixed (AGENT_SLOT_REGISTRY.yaml) |
+| GAP-09 | OPS-07 শিরোনাম বনাম কনটেন্টে নামের অসামঞ্জস্য | OPS-07 | 🟡 Medium | ✅ Fixed (OPS-07 → DEVELOPER-AGENT-LIFECYCLE rename) |
+| GAP-10 | HITL SupremeAI-এর নিজস্ব HITL কোড পরিবর্তনে প্রযোজ্য কিনা অস্পষ্ট | OPS-08, AGENTS.md | 🟡 Medium | 🟡 Partial — scope clarified via ghost-path fix (#875, PR #887) |
+| GAP-11 | OPS-06 এজেন্ট চেকলিস্টে `ruff --fix` Auto-Commit স্টেপ নেই | OPS-06 ধাপ ৩ | 🟡 Medium | 🟡 Fix in review (PR #892) |
+| GAP-12 | PR Helper Block-এর পরে Re-run Protocol অস্পষ্ট | OPS-05, OPS-06 | 🟡 Medium | ✅ Fixed (OPS-05 After-Block Recovery) |
 | GAP-13 | Secret Vault Fail-Closed (BE-13) বনাম Dynamic Fallback কনফিগ মিসম্যাচ (`DATABASE_URL` ক্র্যাশ) | BE-13, config_secrets, secret_vault | 🔴 Critical | ✅ Resolved (PR #870) |
+
+---
+
+## 🧾 2026-09-20 কোড-লেভেল ভেরিফিকেশন অ্যাডেন্ডাম (Code-Level Verification Addendum)
+
+উপরের ইনডেক্স 2026-09-20 তারিখে প্রতিটি দাবির কোড-লেভেল যাচাইয়ের ভিত্তিতে হালনাগাদ। মূল বিশ্লেষণের পরে **নতুন ৫টি গ্যাপ**ও শনাক্ত হয়েছে — প্রতিটির ট্র্যাকিং issue:
+
+| নতুন গ্যাপ | বিবরণ | Tracking |
+|---|---|---|
+| NEW-GAP-A (P0) | Ghost paths — protected-scopes / Guardian-Deep / CODEOWNERS অস্তিত্বহীন পাথ রক্ষা করছিল → HITL/auth গভর্ন্যান্স স্ট্যাক নীরবে অকার্যকর | #875 (fixed: PR #887) |
+| NEW-GAP-B | GAP-02-এর Option C hang-guard অনুপস্থিত (own PR auto-merge চিরকাল অপেক্ষা করে) | #878 |
+| NEW-GAP-C | audit-release.yml unconditional self-cancel (scheduled main audit বাতিল হতে পারে) | #881 |
+| NEW-GAP-D | master docs-এ file:/// machine-local মরা লিংক + পুরনো OPS-07 filename | #881 |
+| NEW-GAP-E | repo-র ARCH-GAP-01 অপ্রচলিত স্ট্যাটাস | #881 (এই আপডেট) |
+
+**Evidence sources:** `.github/workflows/` (pr-pipeline, pr-helper, audit-release, rate-limit-monitor, stale-mutex-cleanup, branch-naming-guard), `security/policies/protected-scopes.yml`, `.github/CODEOWNERS`, `docs/master_docs/OPS-05..08`, `backend/core/security/secret_vault.py`, `backend/core/config_secrets.py`।
 
 ---
 
@@ -279,7 +295,7 @@ OPS-05 বা OPS-06-এ একটি explicit "After Block Recovery Protocol" �
 ## 🔴 GAP-13 — Secret Vault Fail-Closed (BE-13) বনাম Dynamic Fallback কনফিগারেশন মিসম্যাচ
 
 ### সমস্যার বিবরণ (Incident Context)
-রেন্ডার (Render) প্রোডাকশন পরিবেশে অ্যাপ্লিকেশনের লাইফস্প্যান বুটস্ট্র্যাপের সময় সার্ভার ক্র্যাশ করছে (`RuntimeError: Secret 'DATABASE_URL' is missing in production and is not in the optional allowlist (BE-13 fail-closed)`):
+রেন্ডার (Render) প্রোডাকশন পরিবেশে অ্যাপ্লিকেশনের লাইফস্প্যান বুটস্ট্র্যাপের সময় সার্ভার ক্র্যাশ করছে (`RuntimeError: Secret 'DATABASE_URL' is missing in production and is not in the optional allowlist (BE-13 fail-closed)`):
 
 ```text
 2026-09-20T18:12:36.908602222Z   File "/app/core/app_builder.py", line 117, in _lifespan
@@ -298,24 +314,24 @@ OPS-05 বা OPS-06-এ একটি explicit "After Block Recovery Protocol" �
 ```
 
 ### কেন এবং কীভাবে এটি ঘটল (Root Cause & Traceback Flow)
-1. **ফলব্যাকের অভিপ্রায়:** `core/config_secrets.py`-এর `database_url` প্রোপার্টি ডিজাইন করা হয়েছিল এমনভাবে যাতে প্রোডাকশনে যদি সরাসরি `DATABASE_URL` না থাকে, তবে তা যেন সুপাবেস পুলার ইউআরএল (`supabase_database_url` / `SUPABASE_DATABASE_URL_POOLER`)-এ ফলব্যাক করে:
+1. **ফলব্যাকের অভিপ্রায়:** `core/config_secrets.py`-এর `database_url` প্রোপার্টি ডিজাইন করা হয়েছিল এমনভাবে যাতে প্রোডাকশনে যদি সরাসরি `DATABASE_URL` না থাকে, তবে তা যেন সুপাবেস পুলার ইউআরএল (`supabase_database_url` / `SUPABASE_DATABASE_URL_POOLER`)-এ ফলব্যাক করে:
    ```python
    @property
    def database_url(self) -> str:
        return self._get_cached_secret("DATABASE_URL") or self.supabase_database_url
    ```
-2. **BE-13 Fail-Closed ইনভ্যারিয়েন্ট:** `core/security/secret_vault.py`-এ কঠোর নিরাপত্তা পলিসি (`BE-13 Fail-Closed`) অনুযায়ী প্রোডাকশন মোডে কোনো আন-হুইসলিস্টেড কি (Key) অনুপস্থিত থাকলে ডিফল্ট মান বা খালি স্ট্রিং ফেরত দেওয়ার বদলে সরাসরি `RuntimeError` ছুড়ে সার্ভার এক্সিট করানো হয়।
+2. **BE-13 Fail-Closed ইনভ্যারিয়েন্ট:** `core/security/secret_vault.py`-এ কঠোর নিরাপত্তা পলিসি (`BE-13 Fail-Closed`) অনুযায়ী প্রোডাকশন মোডে কোনো আন-হুইসলিস্টেড কি (Key) অনুপস্থিত থাকলে ডিফল্ট মান বা খালি স্ট্রিং ফেরত দেওয়ার বদলে সরাসরি `RuntimeError` ছুড়ে সার্ভার এক্সিট করানো হয়।
 3. **অনুপস্থিত অ্যালোওলিস্ট এন্ট্রি:** `DATABASE_URL` কি-টি `secret_vault.py`-এর `OPTIONAL_SECRETS` সেটে তালিকাভুক্ত ছিল না।
-4. **অকাল ক্র্যাশ:** ফলস্বরূপ, কোডটি কখনো ডানপাশের `or self.supabase_database_url` মূল্যায়নে পৌঁছাতেই পারেনি—তার আগেই `RuntimeError` ছুড়ে স্টার্টআপে অ্যাপ্লিকেশন ক্র্যাশ করে (`Server exited unexpectedly: 3`).
+4. **অকাল ক্র্যাশ:** ফলস্বরূপ, কোডটি কখনো ডানপাশের `or self.supabase_database_url` মূল্যায়নে পৌঁছাতেই পারেনি—তার আগেই `RuntimeError` ছুড়ে স্টার্টআপে অ্যাপ্লিকেশন ক্র্যাশ করে (`Server exited unexpectedly: 3`).
 
 ### লজিক্যাল ও আর্কিটেকচারাল গ্যাপ
-- **Dual Configuration Contract Mismatch:** যখন একটি আর্কিটেকচারাল কনফিগারেশনের সেকেন্ডারি অল্টারনেটিভ বা ডাইনামিক ফলব্যাক থাকে (যেমন সুপাবেস কানেকশন পুলার), তখন প্রাইমারি কি-টি হার্ড-রিকোয়ার্ড নাকি অপশনাল—এই চুক্তি `SecretVault` এবং `Settings` ক্লাসের মধ্যে বিচ্ছিন্ন ছিল।
-- **Eager Attribute Evaluation:** `config_validator.py` স্টার্টআপে রিফ্লেকশনের মাধ্যমে (`hasattr(settings_obj, prop_name)`) সমস্ত প্রোপার্টি রিড করে, যার ফলে আন-হুইসলিস্টেড অপশনাল সিক্রেটগুলোতে তাৎক্ষণিক এক্সেপশন ট্রিগার হয়।
+- **Dual Configuration Contract Mismatch:** যখন একটি আর্কিটেকচারাল কনফিগারেশনের সেকেন্ডারি অল্টারনেটিভ বা ডাইনামিক ফলব্যাক থাকে (যেমন সুপাবেস কানেকশন পুলার), তখন প্রাইমারি কি-টি হার্ড-রিকোয়ার্ড নাকি অপশনাল—এই চুক্তি `SecretVault` এবং `Settings` ক্লাসের মধ্যে বিচ্ছিন্ন ছিল।
+- **Eager Attribute Evaluation:** `config_validator.py` স্টার্টআপে রিফ্লেকশনের মাধ্যমে (`hasattr(settings_obj, prop_name)`) সমস্ত প্রোপার্টি রিড করে, যার ফলে আন-হুইসলিস্টেড অপশনাল সিক্রেটগুলোতে তাৎক্ষণিক এক্সেপশন ট্রিগার হয়।
 
-### স্থায়ী সমাধান (Fix & Mitigation Strategy — Merged in PR #870)
-PR #870 (`43feff63`)-এর মাধ্যমে এই গ্যাপটি মূল কোডবেজে স্থায়ীভাবে সমাধান করা হয়েছে:
-1. **Allowlist Update:** `backend/core/security/secret_vault.py`-এর `OPTIONAL_SECRETS` সেটে `"DATABASE_URL"`, `"NEON_DATABASE_URL"` এবং অন্যান্য ঐচ্ছিক ক্লাউড প্রোভাইডার কি-সমূহ যুক্ত করা হয়েছে।
-2. **Defensive Property Evaluation:** `backend/core/config_secrets.py`-এ `database_url`-এ ডিফেন্সিভ `try...except` সেফগার্ড ও লগিং যোগ করা হয়েছে:
+### স্থায়ী সমাধান (Fix & Mitigation Strategy — Merged in PR #870)
+PR #870 (`43feff63`)-এর মাধ্যমে এই গ্যাপটি মূল কোডবেজে স্থায়ীভাবে সমাধান করা হয়েছে:
+1. **Allowlist Update:** `backend/core/security/secret_vault.py`-এর `OPTIONAL_SECRETS` সেটে `"DATABASE_URL"`, `"NEON_DATABASE_URL"` এবং অন্যান্য ঐচ্ছিক ক্লাউড প্রোভাইডার কি-সমূহ যুক্ত করা হয়েছে।
+2. **Defensive Property Evaluation:** `backend/core/config_secrets.py`-এ `database_url`-এ ডিফেন্সিভ `try...except` সেফগার্ড ও লগিং যোগ করা হয়েছে:
    ```python
    @property
    def database_url(self) -> str:
@@ -330,7 +346,7 @@ PR #870 (`43feff63`)-এর মাধ্যমে এই গ্যাপটি �
            )
        return self.supabase_database_url
    ```
-3. **Dynamic Keys Audit:** অন্যান্য সকল সেকেন্ডারি ফলব্যাক কি অডিট সম্পন্ন হয়েছে।
+3. **Dynamic Keys Audit:** অন্যান্য সকল সেকেন্ডারি ফলব্যাক কি অডিট সম্পন্ন হয়েছে।
 
 ---
 

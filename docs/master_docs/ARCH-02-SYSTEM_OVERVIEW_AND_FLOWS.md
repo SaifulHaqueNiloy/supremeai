@@ -3220,7 +3220,7 @@ Areas needing help:
 > 2. Maintain the format: Date, Status, Context, Decision, Consequences.
 > 3. DO NOT modify past decisions unless the context explicitly supersedes it.
 >
-> **Single Source of Truth:** [`STATUS.md`](file:///f:/supremeai/STATUS.md) | [`CHECKPOINT.md`](file:///f:/supremeai/CHECKPOINT.md)  
+> **Single Source of Truth:** [`STATUS.md`](../../STATUS.md) | [`CHECKPOINT.md`](../../CHECKPOINT.md)  
 > **Consolidated Authorities:** Unifies `architecture_decision_records.md`, `PLUGIN_ARCHITECTURE_DECISION.md`, `PLUGIN_SDK.md`, `CONVENTIONS.md`, `ADR-001-firestore-for-tenancy.md`, `DFD-001-new-user-signup.md`, and `SEQ-001-canary-deployment.md`.
 
 ---
@@ -3659,7 +3659,7 @@ _This register is a manual handoff, not a claim that the tasks are complete._
 
 SupremeAI-এর মডিউলার আর্কিটেকচার এখন পূর্বের চেয়ে অনেক বেশি সংহত ও ইন্টারকানেক্টেড। সাম্প্রতিক রিফ্যাক্টরিং এবং অডিট ফিক্সের ফলে:
 1. **Hub-and-Spoke Governance:** কেন্দ্রীয় `ConversationOrchestrator` (`/api/chat/orchestrate`) এবং `ExecutionRecorder`-এর মাধ্যমে চ্যাটকে কোর কন্ট্রোল প্লেন করে ৯টি স্পোক (`chat`, `memory`, `browser`, `task`, `realtime`, `artifact`, `admin`, `evolution`, `external`) ইন্টারকানেক্ট করা হয়েছে।
-2. **Tenant-Scoped Admin & HITL Interconnection:** [`backend/api/dependencies.py`](file:///f:/supremeai/backend/api/dependencies.py)-তে `get_project_admin` এনফোর্স করে [`backend/api/routes/approval_manager.py`](file:///f:/supremeai/backend/api/routes/approval_manager.py), [`backend/core/target_registry.py`](file:///f:/supremeai/backend/core/target_registry.py), [`backend/api/routes/workspaces_route.py`](file:///f:/supremeai/backend/api/routes/workspaces_route.py), এবং [`backend/api/routes/crawler_admin.py`](file:///f:/supremeai/backend/api/routes/crawler_admin.py)-কে সম্পূর্ণ ডাটাবেজ এবং টেন্যান্ট বাউন্ডারির সাথে কানেক্ট করা হয়েছে।
+2. **Tenant-Scoped Admin & HITL Interconnection:** [`backend/api/dependencies.py`](../../backend/api/dependencies.py)-তে `get_project_admin` এনফোর্স করে [`backend/api/routes/approval_manager.py`](../../backend/api/routes/approval_manager.py), [`backend/core/target_registry.py`](../../backend/core/target_registry.py), [`backend/api/routes/workspaces_route.py`](../../backend/api/routes/workspaces_route.py), এবং [`backend/api/routes/crawler_admin.py`](../../backend/api/routes/crawler_admin.py)-কে সম্পূর্ণ ডাটাবেজ এবং টেন্যান্ট বাউন্ডারির সাথে কানেক্ট করা হয়েছে।
 3. **Ghost UI Elimination:** ফ্রন্টএন্ডে পূর্বে বিচ্ছিন্ন থাকা প্যানেলগুলো (`DeepResearchPanel`, `ScheduledTasksPanel`, `CostDashboard`, `MemoryPanel`, `SecretsPage`, `MCPConnector`) এখন `App.tsx` এবং `navigationRegistry.ts`-এর মাধ্যমে সক্রিয় রাউটিংয়ে সম্পূর্ণরূপে সংযুক্ত।
 4. **Router & Security Wiring Verification:** ১২৩টি `ALL_ROUTERS` এবং ১২টি Tier-S স্পেশালাইজড ফিচার রাউটার সফলভাবে মাউন্ট করা এবং `tests/security/test_dead_route_wiring.py` দ্বারা রিগ্রেশন-লকড।
 
@@ -11861,23 +11861,23 @@ Codebase-এ বিভিন্ন AI model নাম hardcode অবস্থ�
 
 | ফাইল / কম্পোনেন্ট | প্ল্যানের প্রস্তাবনা | বর্তমান কোডের বাস্তব অবস্থা (Current Reality) | বর্তমান স্ট্যাটাস |
 |---|---|---|---|
-| [`backend/core/config_fields.py`](file:///f:/supremeai/backend/core/config_fields.py) | `model_coding`, `model_reasoning`, `model_vision`, `model_chat`, `model_general`, `model_multilingual`, `embedding_model`, `route_ladder_*` যোগ করা | ইতোমধ্যে সম্পন্ন (`model_coding`, `model_reasoning`, `model_vision`, `model_chat`, `model_general`, `model_multilingual`, `embedding_model`, `route_ladder_simple`, `route_ladder_medium`, `route_ladder_complex` এবং `task_models`, `route_ladders` properties বিদ্যমান)। | ✅ **COMPLETED** |
-| [`backend/engine/cost_optimizer.py`](file:///f:/supremeai/backend/engine/cost_optimizer.py) | `ROUTE_LADDER` ডাইনামিক করা | সম্পন্ন (`settings.route_ladders` ব্যবহার করছে, কোনো হার্ডকোডেড ডিকশনারি নেই)। ইউনিট টেস্ট ১০০% পাস। | ✅ **COMPLETED** |
-| [`backend/engine/smart_router.py`](file:///f:/supremeai/backend/engine/smart_router.py) | `model_map` কে `settings` থেকে নেওয়া | সম্পন্ন (`settings.task_models` থেকে ডাইনামিকালি `coding`, `reasoning`, `chat`, `general` ম্যাপ করছে)। | ✅ **COMPLETED** |
-| [`backend/memory/supabase_store.py`](file:///f:/supremeai/backend/memory/supabase_store.py) | Embedding model ডাইনামিক করা | সম্পন্ন (`settings.embedding_model` ব্যবহার করছে)। | ✅ **COMPLETED** |
-| [`backend/core/embeddings.py`](file:///f:/supremeai/backend/core/embeddings.py) | Remote embedding model ডাইনামিক করা | সম্পন্ন (`_REMOTE_MODEL = settings.embedding_model`)। | ✅ **COMPLETED** |
-| [`backend/services/llm/providers.py`](file:///f:/supremeai/backend/services/llm/providers.py) | `GroqProvider` default model ডাইনামিক করা | সম্পন্ন (`getattr(settings, "model_general", "llama-3.3-70b-versatile")` ব্যবহার করছে)। | ✅ **COMPLETED** |
-| [`backend/core/tier8/*.py`](file:///f:/supremeai/backend/core/tier8) | Tier 8 এজেন্ট মডেল ডাইনামিক করা | সম্পন্ন (`SWARM_MODEL`, `SELF_IMPROVE_MODEL`, `EVO_MODEL` এবং `settings.model_general`/`model_coding` ফলব্যাক যুক্ত)। | ✅ **COMPLETED** |
-| [`backend/core/config_classification.py`](file:///f:/supremeai/backend/core/config_classification.py) | কনফিগ ক্লাসিফিকেশন ও অডিট স্পেক যুক্ত করা | সম্পন্ন (`MODEL_CODING`, `MODEL_REASONING`, `MODEL_VISION`, `MODEL_CHAT`, `MODEL_GENERAL`, `MODEL_MULTILINGUAL`, `EMBEDDING_MODEL`, `ROUTE_LADDER_*` অন্তর্ভুক্ত)। | ✅ **COMPLETED** |
-| [`backend/api/routes/public_config.py`](file:///f:/supremeai/backend/api/routes/public_config.py) | Frontend ও Client-এর জন্য public model config endpoint | সম্পন্ন (`/config/public` এ `chat`, `general`, `multilingual` মডেল এবং `/config/public/branding` এ মডেল ও প্রোভাইডার ডিসপ্লে ম্যাপ এক্সপোজড)। | ✅ **COMPLETED** |
-| [`backend/core/language_router.py`](file:///f:/supremeai/backend/core/language_router.py) | `LANGUAGE_MODEL_MAP` ডাইনামিক করা | সম্পন্ন (PR `#257`, commit `ca45f964f3`: `route_by_language()` এখন সরাসরি `settings.model_multilingual` এবং `settings.model_general` ব্যবহার করে)। | ✅ **COMPLETED** |
-| [`backend/tools/social/telegram_bot.py`](file:///f:/supremeai/backend/tools/social/telegram_bot.py) | Gemini URL এ ডাইনামিক মডেল ব্যবহার | সম্পন্ন (PR `#257`, commit `ca45f964f3`: `getattr(settings, "model_vision", "gemini/gemini-2.0-flash")` থেকে ডাইনামিক মডেল পাথ ব্যবহার করছে)। | ✅ **COMPLETED** |
-| [`infrastructure/mcp-control-plane/src/adapters/ai/analyze.ts`](file:///f:/supremeai/infrastructure/mcp-control-plane/src/adapters/ai/analyze.ts) | MCP Tower models env-driven করা | সম্পন্ন (PR `#257`, commit `ca45f964f3`: `MCP_GEMINI_MODEL`, `MCP_GROQ_MODEL`, `MCP_OPENROUTER_MODEL`, `MCP_GITHUB_MODEL`, `MCP_MISTRAL_MODEL` env ওভাররাইড কার্যকর)। | ✅ **COMPLETED** |
-| [`frontend/src/lib/llm.router.ts`](file:///f:/supremeai/frontend/src/lib/llm.router.ts) | Frontend LLM Router কে server config ভিত্তিক করা | সম্পন্ন (PR `#257`, commit `ca45f964f3`: `loadRuntimeModelConfig()` মেথড `/api/config/public` কল করে প্রোভাইডার মডেল ওভাররাইড করছে)। | ✅ **COMPLETED** |
-| [`backend/core/llm/advanced_model_router.py`](file:///f:/supremeai/backend/core/llm/advanced_model_router.py) | `_load_model_preferences()` ডাইনামিক করা | সম্পন্ন (`settings.model_coding`, `model_reasoning`, `model_multilingual`, `model_general` এবং `model_chat` ডাইনামিকালি অগ্রাধিকার দিয়ে ফলব্যাক-সেফ প্রেফারেন্স লিস্ট কনফিগার করা হয়েছে)। | ✅ **COMPLETED** |
-| [`backend/brain/expert_router.py`](file:///f:/supremeai/backend/brain/expert_router.py) | MoE Facade মডেল ফলব্যাক ডাইনামিক করা | সম্পন্ন (`settings.model_general` ডাইনামিকালি ফলব্যাক হিসেবে যুক্ত করা হয়েছে)। | ✅ **COMPLETED** |
-| [`backend/brain/cognitive_router.py`](file:///f:/supremeai/backend/brain/cognitive_router.py) | ফলব্যাক মডেল রিটার্ন ডাইনামিক করা | সম্পন্ন (`settings.model_general` থেকে প্রোভাইডার ও মডেল ডাইনামিকালি পার্স করে রিটার্ন করা হচ্ছে)। | ✅ **COMPLETED** |
-| [`frontend/src/components/Onboarding/StepModelSelect.tsx`](file:///f:/supremeai/frontend/src/components/Onboarding/StepModelSelect.tsx) | অনবোর্ডিং মডেল সিলেক্টর ডাইনামিক করা | সম্পন্ন (`modelBranding.ts`-এর ক্যানোনিক্যাল `SUPREME_AVAILABLE_MODELS` ও `loadSupremeBranding()` ব্যবহার করে ডাইনামিক ব্র্যান্ডেড নাম ডিসপ্লে করা হয়েছে)। | ✅ **COMPLETED** |
+| [`backend/core/config_fields.py`](../../backend/core/config_fields.py) | `model_coding`, `model_reasoning`, `model_vision`, `model_chat`, `model_general`, `model_multilingual`, `embedding_model`, `route_ladder_*` যোগ করা | ইতোমধ্যে সম্পন্ন (`model_coding`, `model_reasoning`, `model_vision`, `model_chat`, `model_general`, `model_multilingual`, `embedding_model`, `route_ladder_simple`, `route_ladder_medium`, `route_ladder_complex` এবং `task_models`, `route_ladders` properties বিদ্যমান)। | ✅ **COMPLETED** |
+| [`backend/engine/cost_optimizer.py`](../../backend/engine/cost_optimizer.py) | `ROUTE_LADDER` ডাইনামিক করা | সম্পন্ন (`settings.route_ladders` ব্যবহার করছে, কোনো হার্ডকোডেড ডিকশনারি নেই)। ইউনিট টেস্ট ১০০% পাস। | ✅ **COMPLETED** |
+| [`backend/engine/smart_router.py`](../../backend/engine/smart_router.py) | `model_map` কে `settings` থেকে নেওয়া | সম্পন্ন (`settings.task_models` থেকে ডাইনামিকালি `coding`, `reasoning`, `chat`, `general` ম্যাপ করছে)। | ✅ **COMPLETED** |
+| [`backend/memory/supabase_store.py`](../../backend/memory/supabase_store.py) | Embedding model ডাইনামিক করা | সম্পন্ন (`settings.embedding_model` ব্যবহার করছে)। | ✅ **COMPLETED** |
+| [`backend/core/embeddings.py`](../../backend/core/embeddings.py) | Remote embedding model ডাইনামিক করা | সম্পন্ন (`_REMOTE_MODEL = settings.embedding_model`)। | ✅ **COMPLETED** |
+| [`backend/services/llm/providers.py`](../../backend/services/llm/providers.py) | `GroqProvider` default model ডাইনামিক করা | সম্পন্ন (`getattr(settings, "model_general", "llama-3.3-70b-versatile")` ব্যবহার করছে)। | ✅ **COMPLETED** |
+| [`backend/core/tier8/*.py`](../../backend/core/tier8) | Tier 8 এজেন্ট মডেল ডাইনামিক করা | সম্পন্ন (`SWARM_MODEL`, `SELF_IMPROVE_MODEL`, `EVO_MODEL` এবং `settings.model_general`/`model_coding` ফলব্যাক যুক্ত)। | ✅ **COMPLETED** |
+| [`backend/core/config_classification.py`](../../backend/core/config_classification.py) | কনফিগ ক্লাসিফিকেশন ও অডিট স্পেক যুক্ত করা | সম্পন্ন (`MODEL_CODING`, `MODEL_REASONING`, `MODEL_VISION`, `MODEL_CHAT`, `MODEL_GENERAL`, `MODEL_MULTILINGUAL`, `EMBEDDING_MODEL`, `ROUTE_LADDER_*` অন্তর্ভুক্ত)। | ✅ **COMPLETED** |
+| [`backend/api/routes/public_config.py`](../../backend/api/routes/public_config.py) | Frontend ও Client-এর জন্য public model config endpoint | সম্পন্ন (`/config/public` এ `chat`, `general`, `multilingual` মডেল এবং `/config/public/branding` এ মডেল ও প্রোভাইডার ডিসপ্লে ম্যাপ এক্সপোজড)। | ✅ **COMPLETED** |
+| [`backend/core/language_router.py`](../../backend/core/language_router.py) | `LANGUAGE_MODEL_MAP` ডাইনামিক করা | সম্পন্ন (PR `#257`, commit `ca45f964f3`: `route_by_language()` এখন সরাসরি `settings.model_multilingual` এবং `settings.model_general` ব্যবহার করে)। | ✅ **COMPLETED** |
+| [`backend/tools/social/telegram_bot.py`](../../backend/tools/social/telegram_bot.py) | Gemini URL এ ডাইনামিক মডেল ব্যবহার | সম্পন্ন (PR `#257`, commit `ca45f964f3`: `getattr(settings, "model_vision", "gemini/gemini-2.0-flash")` থেকে ডাইনামিক মডেল পাথ ব্যবহার করছে)। | ✅ **COMPLETED** |
+| [`infrastructure/mcp-control-plane/src/adapters/ai/analyze.ts`](../../infrastructure/mcp-control-plane/src/adapters/ai/analyze.ts) | MCP Tower models env-driven করা | সম্পন্ন (PR `#257`, commit `ca45f964f3`: `MCP_GEMINI_MODEL`, `MCP_GROQ_MODEL`, `MCP_OPENROUTER_MODEL`, `MCP_GITHUB_MODEL`, `MCP_MISTRAL_MODEL` env ওভাররাইড কার্যকর)। | ✅ **COMPLETED** |
+| [`frontend/src/lib/llm.router.ts`](../../frontend/src/lib/llm.router.ts) | Frontend LLM Router কে server config ভিত্তিক করা | সম্পন্ন (PR `#257`, commit `ca45f964f3`: `loadRuntimeModelConfig()` মেথড `/api/config/public` কল করে প্রোভাইডার মডেল ওভাররাইড করছে)। | ✅ **COMPLETED** |
+| [`backend/core/llm/advanced_model_router.py`](../../backend/core/llm/advanced_model_router.py) | `_load_model_preferences()` ডাইনামিক করা | সম্পন্ন (`settings.model_coding`, `model_reasoning`, `model_multilingual`, `model_general` এবং `model_chat` ডাইনামিকালি অগ্রাধিকার দিয়ে ফলব্যাক-সেফ প্রেফারেন্স লিস্ট কনফিগার করা হয়েছে)। | ✅ **COMPLETED** |
+| [`backend/brain/expert_router.py`](../../backend/brain/expert_router.py) | MoE Facade মডেল ফলব্যাক ডাইনামিক করা | সম্পন্ন (`settings.model_general` ডাইনামিকালি ফলব্যাক হিসেবে যুক্ত করা হয়েছে)। | ✅ **COMPLETED** |
+| [`backend/brain/cognitive_router.py`](../../backend/brain/cognitive_router.py) | ফলব্যাক মডেল রিটার্ন ডাইনামিক করা | সম্পন্ন (`settings.model_general` থেকে প্রোভাইডার ও মডেল ডাইনামিকালি পার্স করে রিটার্ন করা হচ্ছে)। | ✅ **COMPLETED** |
+| [`frontend/src/components/Onboarding/StepModelSelect.tsx`](../../frontend/src/components/Onboarding/StepModelSelect.tsx) | অনবোর্ডিং মডেল সিলেক্টর ডাইনামিক করা | সম্পন্ন (`modelBranding.ts`-এর ক্যানোনিক্যাল `SUPREME_AVAILABLE_MODELS` ও `loadSupremeBranding()` ব্যবহার করে ডাইনামিক ব্র্যান্ডেড নাম ডিসপ্লে করা হয়েছে)। | ✅ **COMPLETED** |
 
 ---
 
@@ -11972,11 +11972,11 @@ route_ladder_complex: str | list[str] = Field(
 4. **`frontend/src/lib/llm.router.ts`**: `loadRuntimeModelConfig()` মেথড `/api/config/public` কল করে প্রোভাইডার মডেল ওভাররাইড কার্যকর করছে।
 
 ### ধাপ ২: সর্বশেষ সমন্বিত কার্যাবলী (Completed in Follow-up Phase) ✅
-1. **[`backend/core/llm/advanced_model_router.py`](file:///f:/supremeai/backend/core/llm/advanced_model_router.py)**:
+1. **[`backend/core/llm/advanced_model_router.py`](../../backend/core/llm/advanced_model_router.py)**:
    `_load_model_preferences()`-এ `settings.model_coding`, `settings.model_reasoning`, `settings.model_general` এবং `settings.model_multilingual` কে অগ্রাধিকার দিয়ে ফলব্যাক-সেফ ডাইনামিক প্রেফারেন্স লিস্টে সংযুক্ত করা হয়েছে।
-2. **[`backend/brain/expert_router.py`](file:///f:/supremeai/backend/brain/expert_router.py) & [`backend/brain/cognitive_router.py`](file:///f:/supremeai/backend/brain/cognitive_router.py)**:
+2. **[`backend/brain/expert_router.py`](../../backend/brain/expert_router.py) & [`backend/brain/cognitive_router.py`](../../backend/brain/cognitive_router.py)**:
    Legacy facades-এর হার্ডকোডেড ফলব্যাকগুলোকে `settings.model_general` এ ডাইনামিকালি কানেক্ট করা হয়েছে।
-3. **[`frontend/src/components/Onboarding/StepModelSelect.tsx`](file:///f:/supremeai/frontend/src/components/Onboarding/StepModelSelect.tsx)**:
+3. **[`frontend/src/components/Onboarding/StepModelSelect.tsx`](../../frontend/src/components/Onboarding/StepModelSelect.tsx)**:
    লোকাল ৩টি মডেলের হার্ডকোড লিস্ট বাদ দিয়ে `modelBranding.ts`-এর `SUPREME_AVAILABLE_MODELS` ও `loadSupremeBranding()` ব্যবহার করে ডাইনামিক ব্র্যান্ডেড ডিসপ্লে নিশ্চিত করা হয়েছে।
 
 ---
@@ -14391,9 +14391,9 @@ This deep-dive proves that SupremeAI 2.0's ToM and Digital-Twin subsystems are f
 ## Transforming from "Platform-Admin Locked" to "User-Owned Project Admin"
 
 > **Status:** Strategic Architectural Blueprint & Control Plane Master Spec (Version 2.3.0 — Codebase Verified & Consolidated)  
-> **Target Alignment:** [`docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md`](file:///f:/supremeai/docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md) §7 (*User-Owned SupremeAI*)  
+> **Target Alignment:** [`docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md`](../architecture/SUPREMEAI_CORE_CONSTITUTION.md) §7 (*User-Owned SupremeAI*)  
 > **Date:** September 2026  
-> **Single Source of Truth:** [`STATUS.md`](file:///f:/supremeai/STATUS.md) | [`CHECKPOINT.md`](file:///f:/supremeai/CHECKPOINT.md)  
+> **Single Source of Truth:** [`STATUS.md`](../../STATUS.md) | [`CHECKPOINT.md`](../../CHECKPOINT.md)  
 > **Consolidated Authorities:** Incorporates and unifies canonical control plane boundaries and product surfaces.
 
 ---
@@ -14411,18 +14411,18 @@ In simple terms:
 ### The Current Code Reality (The Paradox & Progress)
 During our in-depth codebase audit across backend routes, MCP tools, and frontend views:
 1. **Milestones Completed & Verified in Codebase (Commit 598763c18b):**
-   - **Auth dependency separation:** [`get_current_platform_admin`](file:///f:/supremeai/backend/api/dependencies.py#L154-L170) strictly enforces `settings.admin_emails` checks for cross-tenant operations, while [`get_project_admin`](file:///f:/supremeai/backend/api/dependencies.py#L143-L152) validates tenant context and project administrator roles (`owner`, `admin`, `project_admin`, `tenant_admin`) without relying on spoofable client headers.
-   - **Tenant binding in models:** Tenant columns (`tenant_id`, `created_by`, `payload_hash`, `expires_at`) are fully enforced in [`backend/models/pending_tasks.py`](file:///f:/supremeai/backend/models/pending_tasks.py#L70-L85), and task status updates/listings require matching `tenant_id`.
-   - **Tenant-Scoped HITL Approvals:** [`backend/api/routes/approval_manager.py`](file:///f:/supremeai/backend/api/routes/approval_manager.py) now guards `/pending` and `/approve/{task_id}` with `Depends(get_project_admin)` and scopes task resolution to `user["tenant_id"]`.
-   - **Target Registry Tenant Partitioning:** [`backend/core/target_registry.py`](file:///f:/supremeai/backend/core/target_registry.py) partitions targets with `tenant_id: str | None`, enabling `list_targets(tenant_id)` and preventing cross-tenant repository mutation. [`backend/api/routes/workspaces_route.py`](file:///f:/supremeai/backend/api/routes/workspaces_route.py) uses `get_project_admin`.
-   - **Tenant-Scoped Crawler Policies:** [`backend/api/routes/crawler_admin.py`](file:///f:/supremeai/backend/api/routes/crawler_admin.py) scopes crawler rules and policies per `tenant_id` under `get_project_admin`.
-   - **Data Isolation Leaks Resolved:** [`backend/api/routes/repos.py`](file:///f:/supremeai/backend/api/routes/repos.py) and [`backend/api/routes/usage_metrics.py`](file:///f:/supremeai/backend/api/routes/usage_metrics.py) now enforce explicit `tenant_id` filtering on Supabase table queries.
-   - **Browser session scoping:** Browser sessions and actions (`/automation/sessions`, `/automation/actions`, `/tasks`) in [`backend/api/routes/browser.py`](file:///f:/supremeai/backend/api/routes/browser.py) are user-scoped via `get_current_user_token`.
-   - **Frontend route parity:** Parity live in [`frontend/src/App.tsx`](file:///f:/supremeai/frontend/src/App.tsx) and [`frontend/src/config/navigationRegistry.ts`](file:///f:/supremeai/frontend/src/config/navigationRegistry.ts) (Deep Research, Scheduled Tasks, Neural Memory, API Keys, and MCP Connector are fully routed).
+   - **Auth dependency separation:** [`get_current_platform_admin`](../../backend/api/dependencies.py#L154-L170) strictly enforces `settings.admin_emails` checks for cross-tenant operations, while [`get_project_admin`](../../backend/api/dependencies.py#L143-L152) validates tenant context and project administrator roles (`owner`, `admin`, `project_admin`, `tenant_admin`) without relying on spoofable client headers.
+   - **Tenant binding in models:** Tenant columns (`tenant_id`, `created_by`, `payload_hash`, `expires_at`) are fully enforced in [`backend/models/pending_tasks.py`](../../backend/models/pending_tasks.py#L70-L85), and task status updates/listings require matching `tenant_id`.
+   - **Tenant-Scoped HITL Approvals:** [`backend/api/routes/approval_manager.py`](../../backend/api/routes/approval_manager.py) now guards `/pending` and `/approve/{task_id}` with `Depends(get_project_admin)` and scopes task resolution to `user["tenant_id"]`.
+   - **Target Registry Tenant Partitioning:** [`backend/core/target_registry.py`](../../backend/core/target_registry.py) partitions targets with `tenant_id: str | None`, enabling `list_targets(tenant_id)` and preventing cross-tenant repository mutation. [`backend/api/routes/workspaces_route.py`](../../backend/api/routes/workspaces_route.py) uses `get_project_admin`.
+   - **Tenant-Scoped Crawler Policies:** [`backend/api/routes/crawler_admin.py`](../../backend/api/routes/crawler_admin.py) scopes crawler rules and policies per `tenant_id` under `get_project_admin`.
+   - **Data Isolation Leaks Resolved:** [`backend/api/routes/repos.py`](../../backend/api/routes/repos.py) and [`backend/api/routes/usage_metrics.py`](../../backend/api/routes/usage_metrics.py) now enforce explicit `tenant_id` filtering on Supabase table queries.
+   - **Browser session scoping:** Browser sessions and actions (`/automation/sessions`, `/automation/actions`, `/tasks`) in [`backend/api/routes/browser.py`](../../backend/api/routes/browser.py) are user-scoped via `get_current_user_token`.
+   - **Frontend route parity:** Parity live in [`frontend/src/App.tsx`](../../frontend/src/App.tsx) and [`frontend/src/config/navigationRegistry.ts`](../../frontend/src/config/navigationRegistry.ts) (Deep Research, Scheduled Tasks, Neural Memory, API Keys, and MCP Connector are fully routed).
 2. **Remaining Areas for Ongoing Evolution:**
-   - **DevOps & Code Quality Splitting:** [`backend/api/routes/tools_ops.py`](file:///f:/supremeai/backend/api/routes/tools_ops.py) still gates all endpoints under `_require_admin` (platform admin). Read-only code-smell analysis and vulnerability scans can be decoupled for project admins while retaining on-prem Docker/Helm generation behind platform admin.
-   - **Browser Credentials Vault:** [`backend/api/routes/browser.py`](file:///f:/supremeai/backend/api/routes/browser.py#L312-L389) maintains platform `require_admin_token` for `/credentials` and `/urls/allowed`, which should be partitioned by tenant.
-   - **MCP Tools Request-Scoped Tenancy:** Legacy standalone MCP servers ([`backend/tools/mcp/mcp_workspace.py`](file:///f:/supremeai/backend/tools/mcp/mcp_workspace.py), [`backend/tools/mcp/mcp_cloud_deploy.py`](file:///f:/supremeai/backend/tools/mcp/mcp_cloud_deploy.py), [`backend/tools/mcp/mcp_github_cicd.py`](file:///f:/supremeai/backend/tools/mcp/mcp_github_cicd.py), and [`backend/tools/mcp/mcp_neon.py`](file:///f:/supremeai/backend/tools/mcp/mcp_neon.py)) rely on global `is_admin_authorized()` environment checks; they need dynamic tenant credential injection when called from tenant agents.
+   - **DevOps & Code Quality Splitting:** [`backend/api/routes/tools_ops.py`](../../backend/api/routes/tools_ops.py) still gates all endpoints under `_require_admin` (platform admin). Read-only code-smell analysis and vulnerability scans can be decoupled for project admins while retaining on-prem Docker/Helm generation behind platform admin.
+   - **Browser Credentials Vault:** [`backend/api/routes/browser.py`](../../backend/api/routes/browser.py#L312-L389) maintains platform `require_admin_token` for `/credentials` and `/urls/allowed`, which should be partitioned by tenant.
+   - **MCP Tools Request-Scoped Tenancy:** Legacy standalone MCP servers ([`backend/tools/mcp/mcp_workspace.py`](../../backend/tools/mcp/mcp_workspace.py), [`backend/tools/mcp/mcp_cloud_deploy.py`](../../backend/tools/mcp/mcp_cloud_deploy.py), [`backend/tools/mcp/mcp_github_cicd.py`](../../backend/tools/mcp/mcp_github_cicd.py), and [`backend/tools/mcp/mcp_neon.py`](../../backend/tools/mcp/mcp_neon.py)) rely on global `is_admin_authorized()` environment checks; they need dynamic tenant credential injection when called from tenant agents.
 
 ---
 
@@ -14432,13 +14432,13 @@ During our in-depth codebase audit across backend routes, MCP tools, and fronten
 
 | Concern | Canonical Authority | Compatibility / Governance Rule |
 |---|---|---|
-| **Identity & Session** | [`frontend/src/store/authStore.ts`](file:///f:/supremeai/frontend/src/store/authStore.ts) | Do not read role from URL or ad-hoc storage keys. Server JWT is final. |
-| **Admin Step-Up** | [`frontend/src/store/adminStore.ts`](file:///f:/supremeai/frontend/src/store/adminStore.ts) | Keep separate from regular user session until backend unification is complete. |
-| **Route UX Policy** | [`frontend/src/auth/routePolicies.ts`](file:///f:/supremeai/frontend/src/auth/routePolicies.ts) | Backend authorization remains authoritative over frontend navigation. |
-| **Visible Navigation** | [`frontend/src/config/navigationRegistry.ts`](file:///f:/supremeai/frontend/src/config/navigationRegistry.ts) | Deprecated advanced routes remain routable but are not shown in core user navigation. |
-| **Command Access** | [`frontend/src/config/commandRegistry.ts`](file:///f:/supremeai/frontend/src/config/commandRegistry.ts) | Commands are filtered by runtime portal context. |
-| **User Shell** | [`frontend/src/components/layout/WorkspaceLayout.tsx`](file:///f:/supremeai/frontend/src/components/layout/WorkspaceLayout.tsx) | Routes through Unified App Shell. |
-| **Shared UI State** | [`frontend/src/hooks/useWorkspaceSettings.ts`](file:///f:/supremeai/frontend/src/hooks/useWorkspaceSettings.ts) | Single source of truth for modular layout & settings. |
+| **Identity & Session** | [`frontend/src/store/authStore.ts`](../../frontend/src/store/authStore.ts) | Do not read role from URL or ad-hoc storage keys. Server JWT is final. |
+| **Admin Step-Up** | [`frontend/src/store/adminStore.ts`](../../frontend/src/store/adminStore.ts) | Keep separate from regular user session until backend unification is complete. |
+| **Route UX Policy** | [`frontend/src/auth/routePolicies.ts`](../../frontend/src/auth/routePolicies.ts) | Backend authorization remains authoritative over frontend navigation. |
+| **Visible Navigation** | [`frontend/src/config/navigationRegistry.ts`](../../frontend/src/config/navigationRegistry.ts) | Deprecated advanced routes remain routable but are not shown in core user navigation. |
+| **Command Access** | [`frontend/src/config/commandRegistry.ts`](../../frontend/src/config/commandRegistry.ts) | Commands are filtered by runtime portal context. |
+| **User Shell** | [`frontend/src/components/layout/WorkspaceLayout.tsx`](../../frontend/src/components/layout/WorkspaceLayout.tsx) | Routes through Unified App Shell. |
+| **Shared UI State** | [`frontend/src/hooks/useWorkspaceSettings.ts`](../../frontend/src/hooks/useWorkspaceSettings.ts) | Single source of truth for modular layout & settings. |
 | **Server Data** | TanStack Query (`@tanstack/react-query`) | Direct server caching; do not mirror query data into Zustand without documented need. |
 
 ### 2.2 Portal & Route Ownership Boundaries
@@ -14492,10 +14492,10 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Target Binding** | [`backend/api/routes/workspaces_route.py`](file:///f:/supremeai/backend/api/routes/workspaces_route.py) | `prefix="/admin-api/workspaces"`, `Depends(get_current_admin)`, `check_totp_code` (`X-JIT-OTP`) | Customers cannot bind their own GitHub repository or cloud target with READ_ONLY or FULL_CONTROL scope. Requires admin token AND valid JIT OTP header. |
-| **Workspace Context** | [`backend/tools/mcp/mcp_workspace.py`](file:///f:/supremeai/backend/tools/mcp/mcp_workspace.py#L190-L198) | `is_admin_authorized()` in `workspace_set_context` | When agents execute MCP workspace operations for administrative projects (`WorkspaceType.ADMIN_PANEL`), the tool rejects unless global `ADMIN_AUTHORIZED=true` is set. |
+| **Target Binding** | [`backend/api/routes/workspaces_route.py`](../../backend/api/routes/workspaces_route.py) | `prefix="/admin-api/workspaces"`, `Depends(get_current_admin)`, `check_totp_code` (`X-JIT-OTP`) | Customers cannot bind their own GitHub repository or cloud target with READ_ONLY or FULL_CONTROL scope. Requires admin token AND valid JIT OTP header. |
+| **Workspace Context** | [`backend/tools/mcp/mcp_workspace.py`](../../backend/tools/mcp/mcp_workspace.py#L190-L198) | `is_admin_authorized()` in `workspace_set_context` | When agents execute MCP workspace operations for administrative projects (`WorkspaceType.ADMIN_PANEL`), the tool rejects unless global `ADMIN_AUTHORIZED=true` is set. |
 
-- **Root Cause & Code Reality:** [`backend/core/target_registry.py`](file:///f:/supremeai/backend/core/target_registry.py) stores `_targets: dict[str, TargetEntity]` in an unpartitioned in-memory singleton with a hardcoded `main-repository` default. It lacks tenant partition keys (`tenant_id`), meaning target binding is treated as a global platform operation rather than tenant-scoped project workspaces.
+- **Root Cause & Code Reality:** [`backend/core/target_registry.py`](../../backend/core/target_registry.py) stores `_targets: dict[str, TargetEntity]` in an unpartitioned in-memory singleton with a hardcoded `main-repository` default. It lacks tenant partition keys (`tenant_id`), meaning target binding is treated as a global platform operation rather than tenant-scoped project workspaces.
 
 ---
 
@@ -14503,9 +14503,9 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Cloud Deploy Service** | [`backend/tools/mcp/mcp_cloud_deploy.py`](file:///f:/supremeai/backend/tools/mcp/mcp_cloud_deploy.py) | `is_admin_authorized()` in `cloud_deploy_service` | Agent cannot deploy customer apps to Render, Railway, or Oracle Cloud on the user's behalf without `ADMIN_AUTHORIZED=true`. |
-| **Cloud Scale & Status** | [`backend/tools/mcp/mcp_cloud_deploy.py`](file:///f:/supremeai/backend/tools/mcp/mcp_cloud_deploy.py) | `is_admin_authorized()` in `cloud_scale_service`, `cloud_get_deploy_status` | Customers cannot scale their project services or query deploy status via agent. |
-| **On-Premise & Docker/Helm** | [`backend/api/routes/tools_ops.py`](file:///f:/supremeai/backend/api/routes/tools_ops.py#L18-L34) | `router` level `_require_admin` (`payload.get("role") != "admin"`) | Customers cannot generate Helm charts or Docker Compose deployment files (`/tools/devops/on-prem/docker-compose`, `/tools/devops/on-prem/helm`) for their own on-prem project infrastructure. |
+| **Cloud Deploy Service** | [`backend/tools/mcp/mcp_cloud_deploy.py`](../../backend/tools/mcp/mcp_cloud_deploy.py) | `is_admin_authorized()` in `cloud_deploy_service` | Agent cannot deploy customer apps to Render, Railway, or Oracle Cloud on the user's behalf without `ADMIN_AUTHORIZED=true`. |
+| **Cloud Scale & Status** | [`backend/tools/mcp/mcp_cloud_deploy.py`](../../backend/tools/mcp/mcp_cloud_deploy.py) | `is_admin_authorized()` in `cloud_scale_service`, `cloud_get_deploy_status` | Customers cannot scale their project services or query deploy status via agent. |
+| **On-Premise & Docker/Helm** | [`backend/api/routes/tools_ops.py`](../../backend/api/routes/tools_ops.py#L18-L34) | `router` level `_require_admin` (`payload.get("role") != "admin"`) | Customers cannot generate Helm charts or Docker Compose deployment files (`/tools/devops/on-prem/docker-compose`, `/tools/devops/on-prem/helm`) for their own on-prem project infrastructure. |
 
 - **Root Cause & Code Reality:** Deployment tools pull credentials directly from global platform settings (`_get_render_api_key()`, `_get_railway_token()`, `_get_oracle_api_key()`). There is no mechanism for tenants to supply their own cloud provider tokens or target their own isolated project environments.
 
@@ -14515,9 +14515,9 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Create Pull Request** | [`backend/tools/mcp/mcp_github_cicd.py`](file:///f:/supremeai/backend/tools/mcp/mcp_github_cicd.py) | `is_admin_authorized()` in `github_create_pull_request` | Customers cannot have the agent open a Pull Request against their own GitHub repository. |
-| **Run Auto-Fix** | [`backend/tools/mcp/mcp_github_cicd.py`](file:///f:/supremeai/backend/tools/mcp/mcp_github_cicd.py) | `is_autofix_authorized()` in `github_run_auto_fix` | Auto-fix workflow requires platform-level `AUTOFIX_AUTHORIZED=true`. |
-| **Trigger Workflows** | [`backend/tools/mcp/mcp_github_cicd.py`](file:///f:/supremeai/backend/tools/mcp/mcp_github_cicd.py) | `is_admin_authorized()` in `github_trigger_workflow` | Customers cannot run CI/CD workflows for their own projects. |
+| **Create Pull Request** | [`backend/tools/mcp/mcp_github_cicd.py`](../../backend/tools/mcp/mcp_github_cicd.py) | `is_admin_authorized()` in `github_create_pull_request` | Customers cannot have the agent open a Pull Request against their own GitHub repository. |
+| **Run Auto-Fix** | [`backend/tools/mcp/mcp_github_cicd.py`](../../backend/tools/mcp/mcp_github_cicd.py) | `is_autofix_authorized()` in `github_run_auto_fix` | Auto-fix workflow requires platform-level `AUTOFIX_AUTHORIZED=true`. |
+| **Trigger Workflows** | [`backend/tools/mcp/mcp_github_cicd.py`](../../backend/tools/mcp/mcp_github_cicd.py) | `is_admin_authorized()` in `github_trigger_workflow` | Customers cannot run CI/CD workflows for their own projects. |
 
 - **Root Cause & Code Reality:** `mcp_github_cicd.py` uses a single static repository (`GITHUB_REPO = os.environ.get("GITHUB_REPOSITORY", "SaifulHaqueNiloy/supremeai")`) and single static `GITHUB_TOKEN`. It does not accept user-specified repos or tenant GitHub tokens.
 
@@ -14527,11 +14527,11 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Pending Approvals** | [`backend/api/routes/approval_manager.py`](file:///f:/supremeai/backend/api/routes/approval_manager.py#L99-L105) | `verify_admin_session_fail_closed` on `/api/v1/hitl/pending` | Customer cannot retrieve tasks requiring review for their own workspace. |
-| **Approve / Reject Task** | [`backend/api/routes/approval_manager.py`](file:///f:/supremeai/backend/api/routes/approval_manager.py#L107-L130) | `verify_admin_session_fail_closed` on `/approve/{task_id}`, `/reject/{task_id}` | Only users with a valid platform admin cookie/session can approve or reject tasks. |
-| **Cancel Task** | [`backend/api/routes/approval_manager.py`](file:///f:/supremeai/backend/api/routes/approval_manager.py#L216-L230) | `verify_admin_session_fail_closed` on `/cancel/{task_id}` | Customers cannot cancel tasks initiated by their own agents. |
+| **Pending Approvals** | [`backend/api/routes/approval_manager.py`](../../backend/api/routes/approval_manager.py#L99-L105) | `verify_admin_session_fail_closed` on `/api/v1/hitl/pending` | Customer cannot retrieve tasks requiring review for their own workspace. |
+| **Approve / Reject Task** | [`backend/api/routes/approval_manager.py`](../../backend/api/routes/approval_manager.py#L107-L130) | `verify_admin_session_fail_closed` on `/approve/{task_id}`, `/reject/{task_id}` | Only users with a valid platform admin cookie/session can approve or reject tasks. |
+| **Cancel Task** | [`backend/api/routes/approval_manager.py`](../../backend/api/routes/approval_manager.py#L216-L230) | `verify_admin_session_fail_closed` on `/cancel/{task_id}` | Customers cannot cancel tasks initiated by their own agents. |
 
-- **Root Cause & Code Reality:** In [`backend/models/pending_tasks.py`](file:///f:/supremeai/backend/models/pending_tasks.py#L70-L85), the schema already includes `tenant_id` and `created_by` columns, and `list_pending(tenant_id: str | None)` accepts a tenant filter! However, [`backend/api/routes/approval_manager.py`](file:///f:/supremeai/backend/api/routes/approval_manager.py#L104) calls `list_pending()` with zero arguments and guards the entire endpoint behind `verify_admin_session_fail_closed`.
+- **Root Cause & Code Reality:** In [`backend/models/pending_tasks.py`](../../backend/models/pending_tasks.py#L70-L85), the schema already includes `tenant_id` and `created_by` columns, and `list_pending(tenant_id: str | None)` accepts a tenant filter! However, [`backend/api/routes/approval_manager.py`](../../backend/api/routes/approval_manager.py#L104) calls `list_pending()` with zero arguments and guards the entire endpoint behind `verify_admin_session_fail_closed`.
 
 ---
 
@@ -14539,10 +14539,10 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Crawl Policy Engine** | [`backend/api/routes/crawler_admin.py`](file:///f:/supremeai/backend/api/routes/crawler_admin.py#L21-L25) | `router` level `Depends(get_current_admin)` | Customers cannot configure which domains their agents can crawl, rate limits, or depth rules (`/api/v1/admin/crawler/policies`). |
-| **Browser Credentials Vault** | [`backend/api/routes/browser.py`](file:///f:/supremeai/backend/api/routes/browser.py#L312-L580) | `Depends(require_admin_token)` on `POST /credentials`, `/credentials/{id}/use`, `DELETE /credentials/{id}` | Storing or utilizing login credentials for browser automation sessions requires platform admin token. |
-| **URL Allowed / Denied Rules** | [`backend/api/routes/browser.py`](file:///f:/supremeai/backend/api/routes/browser.py#L655-L700) | `Depends(require_admin_token)` on `/urls/allowed`, `/urls/denied`, `/urls/allowAll`, `/urls/requests/{id}/decision` | Project owners cannot whitelist or authorize URLs their browser agents are permitted to visit. |
-| **Autonomous Web Automation** | [`backend/api/routes/browser.py`](file:///f:/supremeai/backend/api/routes/browser.py#L48-L100) | Authenticated user (`get_current_user_token`) with owner scoping | `/automation/sessions`, `/automation/actions`, `/tasks`, `/policy` are owner-scoped, but governance and credentials are admin-locked. |
+| **Crawl Policy Engine** | [`backend/api/routes/crawler_admin.py`](../../backend/api/routes/crawler_admin.py#L21-L25) | `router` level `Depends(get_current_admin)` | Customers cannot configure which domains their agents can crawl, rate limits, or depth rules (`/api/v1/admin/crawler/policies`). |
+| **Browser Credentials Vault** | [`backend/api/routes/browser.py`](../../backend/api/routes/browser.py#L312-L580) | `Depends(require_admin_token)` on `POST /credentials`, `/credentials/{id}/use`, `DELETE /credentials/{id}` | Storing or utilizing login credentials for browser automation sessions requires platform admin token. |
+| **URL Allowed / Denied Rules** | [`backend/api/routes/browser.py`](../../backend/api/routes/browser.py#L655-L700) | `Depends(require_admin_token)` on `/urls/allowed`, `/urls/denied`, `/urls/allowAll`, `/urls/requests/{id}/decision` | Project owners cannot whitelist or authorize URLs their browser agents are permitted to visit. |
+| **Autonomous Web Automation** | [`backend/api/routes/browser.py`](../../backend/api/routes/browser.py#L48-L100) | Authenticated user (`get_current_user_token`) with owner scoping | `/automation/sessions`, `/automation/actions`, `/tasks`, `/policy` are owner-scoped, but governance and credentials are admin-locked. |
 
 - **Root Cause & Code Reality:** Session automation is owner-scoped, but the governance layer (credentials, crawl policies, URL whitelist decisions, and admin policies) was routed through admin gates to enforce safety, locking out legitimate project admins from controlling their own browser agents.
 
@@ -14552,9 +14552,9 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Evolution Forge & Swarm UI** | [`frontend/src/config/navigationRegistry.ts`](file:///f:/supremeai/frontend/src/config/navigationRegistry.ts#L125-L129) | `status: 'deprecated'` for `nav-swarm`, `nav-evolution-forge`, `nav-architect-tower`, `nav-runs` | Self-evolution and swarm topology are routable in `App.tsx` but marked deprecated in user navigation rails. |
-| **Evolution API Endpoints** | [`backend/api/routes/evolution.py`](file:///f:/supremeai/backend/api/routes/evolution.py#L51-L135) | `require_admin_token` on `/evolution/start`, `/metrics`, `/quarantine`, `/auto-patch`, `/calibration-report` | Project owners cannot inspect evolutionary calibration, token estimation errors, or proposal success rates for their own runs. |
-| **Librarian Queue** | [`backend/api/routes/admin_librarian.py`](file:///f:/supremeai/backend/api/routes/admin_librarian.py#L10-L15) | `router` level `Depends(get_current_admin)` | Customers cannot review quarantine proposals or approve ephemeral AI patches for skills. |
+| **Evolution Forge & Swarm UI** | [`frontend/src/config/navigationRegistry.ts`](../../frontend/src/config/navigationRegistry.ts#L125-L129) | `status: 'deprecated'` for `nav-swarm`, `nav-evolution-forge`, `nav-architect-tower`, `nav-runs` | Self-evolution and swarm topology are routable in `App.tsx` but marked deprecated in user navigation rails. |
+| **Evolution API Endpoints** | [`backend/api/routes/evolution.py`](../../backend/api/routes/evolution.py#L51-L135) | `require_admin_token` on `/evolution/start`, `/metrics`, `/quarantine`, `/auto-patch`, `/calibration-report` | Project owners cannot inspect evolutionary calibration, token estimation errors, or proposal success rates for their own runs. |
+| **Librarian Queue** | [`backend/api/routes/admin_librarian.py`](../../backend/api/routes/admin_librarian.py#L10-L15) | `router` level `Depends(get_current_admin)` | Customers cannot review quarantine proposals or approve ephemeral AI patches for skills. |
 
 - **Root Cause & Code Reality:** Self-evolution was originally conceived as a single global engine modifying the server runtime (`skills/` on disk), instead of tenant-scoped custom skills sandboxed in isolated tenant storage.
 
@@ -14564,8 +14564,8 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Site Action Registry** | [`backend/api/routes/site_actions.py`](file:///f:/supremeai/backend/api/routes/site_actions.py) | `router` level `Depends(get_current_admin)` | Customers cannot register site actions (e.g. click selector patterns, fallback selectors) for their web apps. |
-| **Selector Healing Review** | [`backend/api/routes/selector_healing.py`](file:///f:/supremeai/backend/api/routes/selector_healing.py) | `router` level `Depends(get_current_admin)` | Customers cannot review or approve healed CSS/XPath selectors detected by Playwright agents. |
+| **Site Action Registry** | [`backend/api/routes/site_actions.py`](../../backend/api/routes/site_actions.py) | `router` level `Depends(get_current_admin)` | Customers cannot register site actions (e.g. click selector patterns, fallback selectors) for their web apps. |
+| **Selector Healing Review** | [`backend/api/routes/selector_healing.py`](../../backend/api/routes/selector_healing.py) | `router` level `Depends(get_current_admin)` | Customers cannot review or approve healed CSS/XPath selectors detected by Playwright agents. |
 
 - **Root Cause & Code Reality:** Site actions are stored in `data/site_actions.db` (SQLite) without a `tenant_id` column. Because all records are unpartitioned, endpoints cannot safely expose writes to non-admin users without risking cross-tenant pollution.
 
@@ -14575,9 +14575,9 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Code Smell Detector** | [`backend/api/routes/tools_ops.py`](file:///f:/supremeai/backend/api/routes/tools_ops.py#L34-L46) | `router` level `_require_admin` on `POST /tools/code/smell` | Customers cannot invoke automated code smell detection across their project repository via API. |
-| **Vulnerability Predictor** | [`backend/api/routes/tools_ops.py`](file:///f:/supremeai/backend/api/routes/tools_ops.py#L48-L60) | `router` level `_require_admin` on `POST /tools/security/predict` | Customers cannot scan diffs or files for vulnerability patterns using SupremeAI security tooling. |
-| **Domain Adapter & Skill Recommender** | [`backend/api/routes/tools_ops.py`](file:///f:/supremeai/backend/api/routes/tools_ops.py#L140-L175) | `router` level `_require_admin` on `/tools/learning/domain/adapt`, `/tools/learning/skills/recommend` | Customers cannot trigger domain adaptation or receive tailored skill recommendations for their project. |
+| **Code Smell Detector** | [`backend/api/routes/tools_ops.py`](../../backend/api/routes/tools_ops.py#L34-L46) | `router` level `_require_admin` on `POST /tools/code/smell` | Customers cannot invoke automated code smell detection across their project repository via API. |
+| **Vulnerability Predictor** | [`backend/api/routes/tools_ops.py`](../../backend/api/routes/tools_ops.py#L48-L60) | `router` level `_require_admin` on `POST /tools/security/predict` | Customers cannot scan diffs or files for vulnerability patterns using SupremeAI security tooling. |
+| **Domain Adapter & Skill Recommender** | [`backend/api/routes/tools_ops.py`](../../backend/api/routes/tools_ops.py#L140-L175) | `router` level `_require_admin` on `/tools/learning/domain/adapt`, `/tools/learning/skills/recommend` | Customers cannot trigger domain adaptation or receive tailored skill recommendations for their project. |
 
 - **Root Cause & Code Reality:** In `tools_ops.py`, DevOps write operations (Docker Compose / Helm chart generation) and read-only analysis tools (smell detection, vulnerability prediction) are bundled under a single router gated by `_require_admin`.
 
@@ -14587,8 +14587,8 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Neon Branch Management** | [`backend/tools/mcp/mcp_neon.py`](file:///f:/supremeai/backend/tools/mcp/mcp_neon.py) | `is_admin_authorized()` in `neon_create_branch`, `neon_delete_branch` | Customers cannot have AI agents create isolated preview branches of their Neon Postgres database or delete temporary branches. |
-| **Destructive SQL Guard** | [`backend/tools/mcp/mcp_neon.py`](file:///f:/supremeai/backend/tools/mcp/mcp_neon.py), [`backend/tools/mcp/mcp_supabase.py`](file:///f:/supremeai/backend/tools/mcp/mcp_supabase.py) | `is_admin_authorized()` on queries containing `DROP`, `DELETE`, `TRUNCATE`, `ALTER` | Table migrations and schema updates are blocked unless global `ADMIN_AUTHORIZED=true` is set. |
+| **Neon Branch Management** | [`backend/tools/mcp/mcp_neon.py`](../../backend/tools/mcp/mcp_neon.py) | `is_admin_authorized()` in `neon_create_branch`, `neon_delete_branch` | Customers cannot have AI agents create isolated preview branches of their Neon Postgres database or delete temporary branches. |
+| **Destructive SQL Guard** | [`backend/tools/mcp/mcp_neon.py`](../../backend/tools/mcp/mcp_neon.py), [`backend/tools/mcp/mcp_supabase.py`](../../backend/tools/mcp/mcp_supabase.py) | `is_admin_authorized()` on queries containing `DROP`, `DELETE`, `TRUNCATE`, `ALTER` | Table migrations and schema updates are blocked unless global `ADMIN_AUTHORIZED=true` is set. |
 
 - **Root Cause & Code Reality:** The DDL guard checks `is_admin_authorized()` against server environment variables rather than checking if the target database connection string belongs to the tenant's own external database resource.
 
@@ -14598,8 +14598,8 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Admin Telegram Control** | [`backend/tools/social/telegram_bot/handler.py`](file:///f:/supremeai/backend/tools/social/telegram_bot/handler.py#L307-L363) | `is_admin(chat_id, user_id)` resolves admin identities from vault/env only (`ADMIN_TELEGRAM_CHAT_ID` + legacy `TELEGRAM_CHAT_ID`), fail-closed, zero hardcode | Only configured admin identities get the administrative dashboard, `/sys_status`, `/backup_now`, and `/admin`. |
-| **Critical Command Approval** | [`backend/tools/social/telegram_bot/updates.py`](file:///f:/supremeai/backend/tools/social/telegram_bot/updates.py) | `not self.is_admin(chat_id, user_id)` rejects critical actions with "Access Denied" | Customers managing their projects via Telegram cannot approve critical actions via TOTP 2FA. |
+| **Admin Telegram Control** | [`backend/tools/social/telegram_bot/handler.py`](../../backend/tools/social/telegram_bot/handler.py#L307-L363) | `is_admin(chat_id, user_id)` resolves admin identities from vault/env only (`ADMIN_TELEGRAM_CHAT_ID` + legacy `TELEGRAM_CHAT_ID`), fail-closed, zero hardcode | Only configured admin identities get the administrative dashboard, `/sys_status`, `/backup_now`, and `/admin`. |
+| **Critical Command Approval** | [`backend/tools/social/telegram_bot/updates.py`](../../backend/tools/social/telegram_bot/updates.py) | `not self.is_admin(chat_id, user_id)` rejects critical actions with "Access Denied" | Customers managing their projects via Telegram cannot approve critical actions via TOTP 2FA. |
 
 - **Root Cause & Code Reality:** In `backend/tools/social/telegram_bot/handler.py`, admin status now resolves from vault/env only (`ADMIN_TELEGRAM_CHAT_ID` + legacy `TELEGRAM_CHAT_ID`), **fails closed** when unconfigured, and is compared against the *sender's* `from.id` (group-chat safe); the hardcoded personal chat ID and its unrevocable duplicate check were removed in Crown Jewel Module 18 §P-B (`backend/tools/social/telegram_bot/handler.py`; tests `backend/tests/security/test_telegram_admin_identity.py`). Remaining gap: there is still no link between Telegram accounts and tenant project ownership.
 
@@ -14609,8 +14609,8 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Living Brain Metrics** | [`backend/api/routes/living_brain.py`](file:///f:/supremeai/backend/api/routes/living_brain.py) | `router` level `Depends(get_current_admin)` | Customers cannot see how well SupremeAI has adapted to their project domain, learning progress, and self-sufficiency rate (`/api/living-brain/status`, `/metrics`). |
-| **Learning Timeline & Costs** | [`backend/api/routes/living_brain.py`](file:///f:/supremeai/backend/api/routes/living_brain.py) | `router` level `Depends(get_current_admin)` | Learning timeline events and cost breakdowns are visible only to platform admins. |
+| **Living Brain Metrics** | [`backend/api/routes/living_brain.py`](../../backend/api/routes/living_brain.py) | `router` level `Depends(get_current_admin)` | Customers cannot see how well SupremeAI has adapted to their project domain, learning progress, and self-sufficiency rate (`/api/living-brain/status`, `/metrics`). |
+| **Learning Timeline & Costs** | [`backend/api/routes/living_brain.py`](../../backend/api/routes/living_brain.py) | `router` level `Depends(get_current_admin)` | Learning timeline events and cost breakdowns are visible only to platform admins. |
 
 - **Root Cause & Code Reality:** `living_brain.py` aggregates data from the global `SupremeLearningEngine` and `SupabaseStore` without tenant filtering. Exposing this directly without tenant isolation would leak cross-tenant system metrics.
 
@@ -14620,8 +14620,8 @@ User / Project Admin / Agent
 
 | Component | Code Location | Enforced Gate | Current Impact on Customer |
 |---|---|---|---|
-| **Platform Tenant Management** | [`backend/api/routes/tenant_admin.py`](file:///f:/supremeai/backend/api/routes/tenant_admin.py) | `router` level `Depends(get_current_platform_admin)` | Strictly guarded for platform administration (tenant creation, tier updates, global billing), which is correct. However, organization owners lack a delegated sub-user quota endpoint. |
-| **Execution Timeout & Budgets** | [`backend/api/routes/execution_policies.py`](file:///f:/supremeai/backend/api/routes/execution_policies.py) | `router` level `Depends(get_current_admin)` | Project owners cannot configure maximum compute budget (USD) or timeout windows for their project workflows (`/api/admin/execution-policies`). |
+| **Platform Tenant Management** | [`backend/api/routes/tenant_admin.py`](../../backend/api/routes/tenant_admin.py) | `router` level `Depends(get_current_platform_admin)` | Strictly guarded for platform administration (tenant creation, tier updates, global billing), which is correct. However, organization owners lack a delegated sub-user quota endpoint. |
+| **Execution Timeout & Budgets** | [`backend/api/routes/execution_policies.py`](../../backend/api/routes/execution_policies.py) | `router` level `Depends(get_current_admin)` | Project owners cannot configure maximum compute budget (USD) or timeout windows for their project workflows (`/api/admin/execution-policies`). |
 
 - **Root Cause & Code Reality:** `execution_policies.py` operates on a global `ExecutionPolicy` table without tenant partitioning. While platform-level limits are already correctly guarded by `get_current_platform_admin`, project-level budget caps lack a dedicated tenant-scoped API.
 
@@ -14631,8 +14631,8 @@ User / Project Admin / Agent
 
 | Component | Code Location | Vulnerability / Gap | Current Impact on Customer |
 |---|---|---|---|
-| **Repository Listing** | [`backend/api/routes/repos.py`](file:///f:/supremeai/backend/api/routes/repos.py#L41-L67) | `select("*").eq("status", status)` without `tenant_id` filter; `POST /` inserts without `owner_id` | `GET /repos/` lists all repositories from `github_repos` across all users; any user can view or modify other tenants' repos. |
-| **Usage Metrics Query** | [`backend/api/routes/usage_metrics.py`](file:///f:/supremeai/backend/api/routes/usage_metrics.py#L24-L43) | `select("*")` on `usage_metrics` without user/tenant filter | Any authenticated user can view aggregated global platform usage data. |
+| **Repository Listing** | [`backend/api/routes/repos.py`](../../backend/api/routes/repos.py#L41-L67) | `select("*").eq("status", status)` without `tenant_id` filter; `POST /` inserts without `owner_id` | `GET /repos/` lists all repositories from `github_repos` across all users; any user can view or modify other tenants' repos. |
+| **Usage Metrics Query** | [`backend/api/routes/usage_metrics.py`](../../backend/api/routes/usage_metrics.py#L24-L43) | `select("*")` on `usage_metrics` without user/tenant filter | Any authenticated user can view aggregated global platform usage data. |
 
 - **Root Cause & Code Reality:** `repos.py` and `usage_metrics.py` query Supabase directly without applying `eq("tenant_id", current_tenant)` or `eq("owner_id", user_id)`.
 
@@ -14679,8 +14679,8 @@ To restore alignment with the SupremeAI Core Constitution, we enforce the **Two-
 ## 5. Step-by-Step Evolution Roadmap & Current Implementation Status
 
 ### Phase 1: Authentication & Role Differentiation
-- [x] **Platform Admin Distinction:** Created `get_current_platform_admin` in [`backend/api/dependencies.py`](file:///f:/supremeai/backend/api/dependencies.py#L154-L170) (enforces `settings.admin_emails` check for cross-tenant operations).
-- [x] **Project Admin Helper:** Added `get_project_admin` in [`backend/api/dependencies.py`](file:///f:/supremeai/backend/api/dependencies.py#L143-L152): Grants administrative privileges scoped strictly to the user's specific `tenant_id` from cryptographically verified token payload (never accepting unverified request headers).
+- [x] **Platform Admin Distinction:** Created `get_current_platform_admin` in [`backend/api/dependencies.py`](../../backend/api/dependencies.py#L154-L170) (enforces `settings.admin_emails` check for cross-tenant operations).
+- [x] **Project Admin Helper:** Added `get_project_admin` in [`backend/api/dependencies.py`](../../backend/api/dependencies.py#L143-L152): Grants administrative privileges scoped strictly to the user's specific `tenant_id` from cryptographically verified token payload (never accepting unverified request headers).
 - [x] **Tenant Scope Propagation:** `tenant_id` and project roles (`owner`, `admin`, `project_admin`, `tenant_admin`) are enforced in request contexts.
 
 ### Phase 2: Decoupling the MCP Tools & Target Registry
@@ -14698,18 +14698,18 @@ To restore alignment with the SupremeAI Core Constitution, we enforce the **Two-
   - Distinguish between platform databases and tenant-owned database connections; allow DDL operations on customer databases.
 
 ### Phase 3: Tenant-Scoped HITL Approval Manager & Code Review
-- [x] Refactored [`backend/api/routes/approval_manager.py`](file:///f:/supremeai/backend/api/routes/approval_manager.py):
+- [x] Refactored [`backend/api/routes/approval_manager.py`](../../backend/api/routes/approval_manager.py):
   - Gated with `Depends(get_project_admin)` and passes `user["tenant_id"]` to `list_pending(tenant_id)` in `GET /api/v1/hitl/pending`.
   - Scoped task resolution and approval in `POST /api/v1/hitl/approve/{task_id}` to `user["tenant_id"]`.
-- [ ] Make [`backend/api/routes/tools_ops.py`](file:///f:/supremeai/backend/api/routes/tools_ops.py) code smell and vulnerability prediction endpoints accessible to project owners for their own codebase (split DevOps file writes from read-only code analysis).
+- [ ] Make [`backend/api/routes/tools_ops.py`](../../backend/api/routes/tools_ops.py) code smell and vulnerability prediction endpoints accessible to project owners for their own codebase (split DevOps file writes from read-only code analysis).
 
 ### Phase 4: Safe Multi-Tenant Browser Automation & Crawling
-- [ ] Make browser credentials vault (`/api/browser/credentials` in [`backend/api/routes/browser.py`](file:///f:/supremeai/backend/api/routes/browser.py)) owner-scoped rather than requiring `require_admin_token`.
-- [x] Maintain hard SSRF protection (`_host_is_blocked` and private IP rejection) in [`backend/api/routes/browser.py`](file:///f:/supremeai/backend/api/routes/browser.py), ensuring safe multi-tenant usage.
-- [x] Scoped crawl policies in [`backend/api/routes/crawler_admin.py`](file:///f:/supremeai/backend/api/routes/crawler_admin.py) to `tenant_id` for authenticated project owners via `Depends(get_project_admin)`.
+- [ ] Make browser credentials vault (`/api/browser/credentials` in [`backend/api/routes/browser.py`](../../backend/api/routes/browser.py)) owner-scoped rather than requiring `require_admin_token`.
+- [x] Maintain hard SSRF protection (`_host_is_blocked` and private IP rejection) in [`backend/api/routes/browser.py`](../../backend/api/routes/browser.py), ensuring safe multi-tenant usage.
+- [x] Scoped crawl policies in [`backend/api/routes/crawler_admin.py`](../../backend/api/routes/crawler_admin.py) to `tenant_id` for authenticated project owners via `Depends(get_project_admin)`.
 
 ### Phase 5: Fixing Cross-Tenant Data Gaps
-- [x] Enforced `tenant_id` filtering on [`backend/api/routes/repos.py`](file:///f:/supremeai/backend/api/routes/repos.py) (`github_repos`) and [`backend/api/routes/usage_metrics.py`](file:///f:/supremeai/backend/api/routes/usage_metrics.py).
+- [x] Enforced `tenant_id` filtering on [`backend/api/routes/repos.py`](../../backend/api/routes/repos.py) (`github_repos`) and [`backend/api/routes/usage_metrics.py`](../../backend/api/routes/usage_metrics.py).
 - [ ] Scope `site_actions.db` by adding `tenant_id` column.
 
 
@@ -14720,7 +14720,7 @@ To restore alignment with the SupremeAI Core Constitution, we enforce the **Two-
 ### Phase 7: Elevating Customer UI Parity
 - [x] **Route Ghost Panels in `App.tsx`:** Deep Research (`/research`), Scheduled Tasks (`/scheduled-tasks`), Cost Dashboard (`/usage`), Memory (`/memory`), Secrets (`/settings/api-keys`), and MCP Connector (`/integrations` tab) are live.
 - [ ] Replace placeholder cards in `WorkspaceModulePage.tsx` (`projects`, `activity`, `runs`) with live tenant-filtered modules.
-- [ ] Reactivate `/evolution-forge` and `/swarm` in [`frontend/src/config/navigationRegistry.ts`](file:///f:/supremeai/frontend/src/config/navigationRegistry.ts) as standard user capabilities under the "Build" and "Observe" groups once tenant sandboxing is complete.
+- [ ] Reactivate `/evolution-forge` and `/swarm` in [`frontend/src/config/navigationRegistry.ts`](../../frontend/src/config/navigationRegistry.ts) as standard user capabilities under the "Build" and "Observe" groups once tenant sandboxing is complete.
 
 ---
 
@@ -19794,8 +19794,8 @@ URL নিজে authority নয়। Provider consent, credentials, risk checks,
 # SupremeAI Codebase Consolidation & Structural Simplification Master Plan
 
 > **Document Version:** 2.0.0 (Consolidated Canonical Architecture Refactor Plan)  
-> **Target Alignment:** [`docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md`](file:///f:/supremeai/docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md)  
-> **Single Source of Truth:** [`STATUS.md`](file:///f:/supremeai/STATUS.md) | [`CHECKPOINT.md`](file:///f:/supremeai/CHECKPOINT.md)  
+> **Target Alignment:** [`docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md`](../architecture/SUPREMEAI_CORE_CONSTITUTION.md)  
+> **Single Source of Truth:** [`STATUS.md`](../../STATUS.md) | [`CHECKPOINT.md`](../../CHECKPOINT.md)  
 > **Consolidated Authorities:** Unifies `BACKEND_SIMPLIFICATION_PLAN.md`, `FRONTEND_SIMPLIFICATION_PLAN.md`, and `ROOT_STRUCTURE_ORGANIZATION_PLAN.md`.
 
 ---

@@ -4,7 +4,7 @@
 
 > **ডকুমেন্ট আইডি:** OPS-07 · **স্ট্যাটাস:** সক্রিয় (ACTIVE) · **ভার্সন:** ১.০ (২০২৬-০৯)  
 > **প্রযোজ্য:** এক্সটার্নাল কোডিং এআই এজেন্ট (Antigravity, Cursor, Claude Code, Cline, Windsurf, DevIn, Agent-1..N) যারা SupremeAI রিপোজিটরির ডেভেলপমেন্ট, বাগ ফিক্স এবং ফিচার তৈরিতে কাজ করে।  
-> **মূল রেফারেন্স:** [`AGENTS.md`](file:///f:/supremeai/AGENTS.md) · [`OPS-05`](file:///f:/supremeai/docs/master_docs/OPS-05-PR-HELPER-LIFECYCLE.md) · [`OPS-06`](file:///f:/supremeai/docs/master_docs/OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md) · [`OPS-01`](file:///f:/supremeai/docs/master_docs/OPS-01-TESTING_STRATEGY_AND_TIERS.md)
+> **মূল রেফারেন্স:** [`AGENTS.md`](../../AGENTS.md) · [`OPS-05`](OPS-05-PR-HELPER-LIFECYCLE.md) · [`OPS-06`](OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md) · [`OPS-01`](OPS-01-TESTING_STRATEGY_AND_TIERS.md)
 
 ---
 
@@ -100,7 +100,7 @@ flowchart TD
 
 ### ধাপ ৬: PR Helper হ্যান্ডঅফ ও পরিচ্ছন্নতা (Zero-Touch Lifecycle)
 * PR সাবমিট করার পর এজেন্টের কাজ শেষ। 
-* CI-এর **PR Helper ([OPS-05](file:///f:/supremeai/docs/master_docs/OPS-05-PR-HELPER-LIFECYCLE.md))** স্বয়ংক্রিয়ভাবে JUnit XML ডেল্টা অ্যানালাইসিস করবে।
+* CI-এর **PR Helper ([OPS-05](OPS-05-PR-HELPER-LIFECYCLE.md))** স্বয়ংক্রিয়ভাবে JUnit XML ডেল্টা অ্যানালাইসিস করবে।
 * কোনো নতুন রিগ্রেশন না থাকলে PR Helper স্বয়ংক্রিয়ভাবে PR অ্যাপ্রুভ ও মার্জ করে হেড ব্রাঞ্চটি সার্ভার থেকে ডিলিট করে দেবে।
 
 ---

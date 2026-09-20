@@ -1,8 +1,8 @@
 # OPS-08 — SupremeAI Native Autonomous Work Process (Platform Runtime Execution Engine)
 
-> **ডকুমেন্ট আইডি:** OPS-08 · **স্ট্যাটাস:** সক্রিয় (ACTIVE) · **ভার্সন:** ১.০ (২০২৬-০৯)  
-> **প্রযোজ্য:** সুপ্রিমএআই প্ল্যাটফর্মের নিজস্ব অভ্যন্তরীণ অটোনোমাস ইঞ্জিন, রানটাইম এআই এজেন্ট, ওয়ার্কার পুল, এবং মাইক্রোসার্ভিস ক্লাস্টার।  
-> **মূল রেফারেন্স:** [`AIBRAIN-01`](file:///f:/supremeai/docs/master_docs/AIBRAIN-01-MASTER_AGENT_SPECIFICATION.md) · [`ARCH-01`](file:///f:/supremeai/docs/master_docs/ARCH-01-MASTER_CONSTITUTION.md) · [`ARCH-02`](file:///f:/supremeai/docs/master_docs/ARCH-02-SYSTEM_OVERVIEW_AND_FLOWS.md) · [`SEC-01`](file:///f:/supremeai/docs/master_docs/SEC-01-30_CATEGORY_SECURITY_MATRIX.md)
+> **ডকুমেন্ট আইডি:** OPS-08 · **স্ট্যাটাস:** সক্রিয় (ACTIVE) · **ভার্সন:** ১.০ (২০২৬-০৯)  
+> **প্রযোজ্য:** সুপ্রিমএআই প্ল্যাটফর্মের নিজস্ব অভ্যন্তরীণ অটোনোমাস ইঞ্জিন, রানটাইম এআই এজেন্ট, ওয়ার্কার পুল, এবং মাইক্রোসার্ভিস ক্লাস্টার।  
+> **মূল রেফারেন্স:** [`AIBRAIN-01`](AIBRAIN-01-MASTER_AGENT_SPECIFICATION.md) · [`ARCH-01`](ARCH-01-MASTER_CONSTITUTION.md) · [`ARCH-02`](ARCH-02-SYSTEM_OVERVIEW_AND_FLOWS.md) · [`SEC-01`](SEC-01-30_CATEGORY_SECURITY_MATRIX.md)
 
 ---
 
@@ -11,7 +11,7 @@
 এই ডকুমেন্টটি বর্ণনা করে **SupremeAI-এর নিজস্ব প্ল্যাটফর্ম কীভাবে চলে**—অর্থাৎ ক্লাউডে ডেপ্লয়ড সুপ্রিমএআই-এর ব্যাকএন্ড, ওয়ার্কার ক্লাস্টার, ব্রেইন ইঞ্জিন এবং অভ্যন্তরীণ এজেন্টরা কীভাবে ব্যবহারকারীর রিকোয়েস্ট প্রসেস করে, সিদ্ধান্ত নেয়, মেমোরি ব্যবহার করে এবং নিরাপদ স্বয়ংক্রিয় একশন সম্পন্ন করে।
 
 > ⚡ **পার্থক্য মনে রাখুন:**  
-> - **[OPS-07](file:///f:/supremeai/docs/master_docs/OPS-07-EXTERNAL-AI-DEVELOPER-LIFECYCLE.md):** এক্সটার্নাল এআই ডেভেলপাররা কীভাবে কোড লেখে ও পিআর পাঠায়।  
+> - **[`OPS-07`](OPS-07-DEVELOPER-AGENT-LIFECYCLE.md):** এক্সটার্নাল এআই ডেভেলপাররা কীভাবে কোড লেখে ও পিআর পাঠায়।  
 > - **OPS-08 (এই ডকুমেন্ট):** সুপ্রিমএআই রানটাইম সফটওয়্যার নিজে কীভাবে ব্যবহারকারীর কাজ সম্পন্ন করে।
 
 ---
@@ -131,7 +131,7 @@ flowchart TD
     PR --> PRH["⚡ PR Helper নিরপেক্ষ মার্জ (OPS-05)"]
 ```
 
-1. **রোল ট্রানজিশন (Role Transition):** সুপ্রিমএআই সাধারণ এন্ড-ইউজার সার্ভিসিং থেকে সরে এসে [OPS-07](OPS-07-EXTERNAL-AI-DEVELOPER-LIFECYCLE.md) ও [OPS-06](OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md)-এর ডেভেলপার প্রটোকলে প্রবেশ করে।
+1. **রোল ট্রানজিশন (Role Transition):** সুপ্রিমএআই সাধারণ এন্ড-ইউজার সার্ভিসিং থেকে সরে এসে [`OPS-07`](OPS-07-DEVELOPER-AGENT-LIFECYCLE.md) ও [`OPS-06`](OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md)-এর ডেভেলপার প্রটোকলে প্রবেশ করে।
 2. **মিউটেক্স লক:** নিজের নির্ধারিত স্লটে (`agent-X`) ক্লেইম-থেন-ভেরিফাই দিয়ে ইস্যু ক্লেইম করে (`bash .github/scripts/claim_issue.sh $ID "agent-X"` — OPS-06 Safeguard 3)।
 3. **আইসোলেটেড ব্রাঞ্চিং:** `agent-X/issue-$ID-...` শর্ট-লিভড ব্রাঞ্চ স্পন করে।
 4. **টেস্ট ও পিআর সাবমিশন:** কোড পরিবর্তন করে টেস্ট গ্রিন কনফার্ম করে এবং `git pull --rebase origin main` চালিয়ে PR ওপেন করে।

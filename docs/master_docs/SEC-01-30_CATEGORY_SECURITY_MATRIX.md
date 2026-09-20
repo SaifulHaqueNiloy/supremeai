@@ -490,8 +490,8 @@ own policy layer (`docs/security/TOOL_EXECUTION_INVENTORY.md` row 4).
 > **Document Version:** 3.1.0 (Consolidated Canonical Security Master Spec)  
 > **System Phase:** **Phase 3: Self-Evolving & Multi-Agent Swarm**  
 > **Classification:** Enterprise Security, Threat Modeling, Secrets Management & Zero-Trust Governance  
-> **Target Alignment:** [`docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md`](file:///f:/supremeai/docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md)  
-> **Single Source of Truth:** [`STATUS.md`](file:///f:/supremeai/STATUS.md) | [`CHECKPOINT.md`](file:///f:/supremeai/CHECKPOINT.md)  
+> **Target Alignment:** [`docs/architecture/SUPREMEAI_CORE_CONSTITUTION.md`](../architecture/SUPREMEAI_CORE_CONSTITUTION.md)  
+> **Single Source of Truth:** [`STATUS.md`](../../STATUS.md) | [`CHECKPOINT.md`](../../CHECKPOINT.md)  
 > **Consolidated Authorities:** Incorporates and supersedes `threat-model.md`, `THREAT-MODEL-001-authentication.md`, and `secrets-management.md`.
 
 ---
