@@ -48,8 +48,8 @@ class TestSSRFPrivateIPs:
             "http://8.8.8.8/",
             "https://github.com/",
             "http://1.1.1.1/",
-            "https://supremeai-primary-node.onrender.com/",
-            "https://xtvkltzmberxekoamala.supabase.co/",
+            "https://example.com/",
+            "https://api.example.com/",
         ],
     )
     def test_public_url_safe(self, url):
