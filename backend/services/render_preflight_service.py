@@ -6,13 +6,13 @@ Render API usage calculations, and manual override tracking.
 
 from __future__ import annotations
 
-import json
 import logging
 import os
 import urllib.error
-import urllib.request
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
+
+from core.clients.render_api import render_get_json
 
 logger = logging.getLogger(__name__)
 
@@ -140,14 +140,11 @@ class RenderPreflightService:
                         exc,
                     )
 
-        # Query Render API
-        url = f"https://api.render.com/v1/services/{svc_id}/deploys?limit=100"
-        headers = {"Accept": "application/json", "Authorization": f"Bearer {api_key}"}
-        req = urllib.request.Request(url, headers=headers)
-
+        # Query Render API (single-sourced transport — core.clients.render_api)
         try:
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                data = json.loads(resp.read().decode("utf-8"))
+            data = render_get_json(
+                f"/services/{svc_id}/deploys", api_key=api_key, query={"limit": 100}
+            )
         except urllib.error.HTTPError as err:
             err_msg = f"HTTP {err.code}: {err.reason}"
             if err.code == 429 or "limit" in err.reason.lower():
