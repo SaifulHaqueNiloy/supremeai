@@ -32,12 +32,12 @@ from pydantic import BaseModel, Field
 from core.logging_config import logger
 from core.presence_registry import (
     DEFAULT_STALE_AFTER_SECONDS,
+    VALID_NODE_TYPES,
+    VALID_ROLES,
     HeartbeatResult,
     NodeLoad,
     NodeRecord,
     PresenceRegistry,
-    VALID_NODE_TYPES,
-    VALID_ROLES,
     get_presence_registry,
 )
 
@@ -56,9 +56,7 @@ class HeartbeatRequest(BaseModel):
     """POST /api/v1/nodes/heartbeat — request body schema (issue #939 spec-এর সাথে মিল)।"""
 
     node_id: str = Field(..., min_length=1, max_length=128, description="Unique node identifier")
-    node_type: str = Field(
-        ..., description=f"One of {sorted(VALID_NODE_TYPES)}"
-    )
+    node_type: str = Field(..., description=f"One of {sorted(VALID_NODE_TYPES)}")
     role: str = Field(..., description=f"One of {sorted(VALID_ROLES)}")
     capabilities: list[str] = Field(default_factory=list)
     timestamp: str | None = Field(

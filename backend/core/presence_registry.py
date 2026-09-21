@@ -139,9 +139,7 @@ class PresenceRegistry:
     @staticmethod
     def _validate_role(role: str) -> None:
         if role not in VALID_ROLES:
-            raise ValueError(
-                f"invalid role {role!r}; expected one of {sorted(VALID_ROLES)}"
-            )
+            raise ValueError(f"invalid role {role!r}; expected one of {sorted(VALID_ROLES)}")
 
     async def _redis_persist(self, record: NodeRecord) -> None:
         """Best-effort Redis write — Redis unavailable হলে নীরবে skip।"""
@@ -197,18 +195,20 @@ class PresenceRegistry:
 
         now_epoch = self._now_epoch()
         now_iso = self._now_iso()
-        lease_expires_iso = (
-            datetime.fromtimestamp(now_epoch + self._lease_seconds, tz=UTC).isoformat()
-        )
+        lease_expires_iso = datetime.fromtimestamp(
+            now_epoch + self._lease_seconds, tz=UTC
+        ).isoformat()
 
         # Preserve assigned_tasks / metadata of existing record যাতে lease রিফ্রেশে
         # অর্পিত কাজ হারিয়ে না যায় (lease continuation contract)।
         existing = self._nodes.get(node_id)
-        preserved_tasks = assigned_tasks if assigned_tasks is not None else (
-            existing.assigned_tasks if existing else []
+        preserved_tasks = (
+            assigned_tasks
+            if assigned_tasks is not None
+            else (existing.assigned_tasks if existing else [])
         )
-        preserved_metadata = metadata if metadata is not None else (
-            existing.metadata if existing else {}
+        preserved_metadata = (
+            metadata if metadata is not None else (existing.metadata if existing else {})
         )
 
         record = NodeRecord(
@@ -280,9 +280,7 @@ class PresenceRegistry:
             updated = record.model_copy(update={"role": role})
             self._nodes[node_id] = updated
             await self._redis_persist(updated)
-        logger.info(
-            "presence_registry: role changed node_id=%s new_role=%s", node_id, role
-        )
+        logger.info("presence_registry: role changed node_id=%s new_role=%s", node_id, role)
         return updated
 
     async def release_stale_leases(
