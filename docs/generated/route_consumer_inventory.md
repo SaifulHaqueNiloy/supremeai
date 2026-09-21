@@ -5,23 +5,23 @@
 | metric | value |
 |---|---|
 | backend routes | 814 |
-| routes with frontend consumer | 267 |
+| routes with frontend consumer | 257 |
 | unique frontend `/api/...` refs | 140 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
-| api-only routes (allowlisted) | 290 |
-| api-only families | 158 |
+| api-only routes (allowlisted) | 300 |
+| api-only families | 159 |
 
 ## Classification legend
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 166 | frontend consumer matched |
+| `user-facing` | 156 | frontend consumer matched |
 | `admin-only` | 321 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 37 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 290 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `api-only` | 300 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families
@@ -140,6 +140,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | `/api/v1/maintenance` | 1 |
 | `/api/v1/markdown` | 7 |
 | `/api/v1/mcp` | 13 |
+| `/api/v1/mesh` | 10 |
 | `/api/v1/missions` | 11 |
 | `/api/v1/nodes` | 4 |
 | `/api/v1/onboarding` | 5 |
@@ -792,6 +793,16 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/mcp/gateway` | `backend/api/routes/mcp_hub.py` | api-only | NONE |
 | POST | `/api/v1/mcp/slug/claim` | `backend/api/routes/mcp_hub.py` | api-only | NONE |
 | POST | `/api/v1/media/generate-upload-url` | `backend/api/routes/media.py` | user-facing | `frontend/src/services/storageApi.test.ts` |
+| GET | `/api/v1/mesh/tasks` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| POST | `/api/v1/mesh/tasks` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| GET | `/api/v1/mesh/tasks/:param` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| POST | `/api/v1/mesh/tasks/:param/cancel` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| POST | `/api/v1/mesh/tasks/:param/claim` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| POST | `/api/v1/mesh/tasks/:param/complete` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| POST | `/api/v1/mesh/tasks/:param/fail` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| POST | `/api/v1/mesh/tasks/:param/lease` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| GET | `/api/v1/mesh/tasks/queue/stats` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
+| POST | `/api/v1/mesh/tasks/reap` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
 | POST | `/api/v1/meta-ai/breed` | `backend/api/routes/agent_breeding.py` | admin-only | NONE |
 | POST | `/api/v1/meta-ai/metrics` | `backend/api/routes/agent_breeding.py` | admin-only | NONE |
 | GET | `/api/v1/meta-ai/metrics/:param` | `backend/api/routes/agent_breeding.py` | admin-only | NONE |
@@ -862,19 +873,9 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/stream/voice` | `backend/api/routes/stream_voice_sse.py` | api-only | NONE |
 | GET | `/api/v1/swarm/stream` | `backend/api/routes/swarm_stream.py` | api-only | NONE |
 | POST | `/api/v1/syncguard/audit` | `backend/api/routes/syncguard.py` | api-only | NONE |
-| GET | `/api/v1/tasks` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| POST | `/api/v1/tasks` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | POST | `/api/v1/tasks` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| GET | `/api/v1/tasks/:param` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | GET | `/api/v1/tasks/:param` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| POST | `/api/v1/tasks/:param/cancel` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | POST | `/api/v1/tasks/:param/cancel` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| POST | `/api/v1/tasks/:param/claim` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| POST | `/api/v1/tasks/:param/complete` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| POST | `/api/v1/tasks/:param/fail` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| POST | `/api/v1/tasks/:param/lease` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| GET | `/api/v1/tasks/queue/stats` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
-| POST | `/api/v1/tasks/reap` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | GET | `/api/v1/telegram/health` | `backend/tools/social/telegram_bot/router.py` | internal | NONE |
 | POST | `/api/v1/telegram/webhook` | `backend/tools/social/telegram_bot/router.py` | internal | NONE |
 | GET | `/api/v1/tools-registry` | `backend/api/routes/tools_registry.py` | api-only | NONE |
