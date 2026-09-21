@@ -11,16 +11,16 @@ presence (MESH-1):
 - PATCH  /api/v1/nodes/{node_id}        — node-এর role পরিবর্তন (MESH-2 dropdown)
 
 task queue (MESH-6):
-- POST   /api/v1/tasks                  — নতুন task submit (Telegram /task, MCP tools এটাই কল করে)
-- GET    /api/v1/tasks?status=          — queue snapshot + filter
-- GET    /api/v1/tasks/{task_id}        — task detail
-- POST   /api/v1/tasks/{task_id}/claim   — CAS atomic claim (node capabilities অনুযায়ী)
-- POST   /api/v1/tasks/{task_id}/lease   — lease renewal (heartbeat continuation)
-- POST   /api/v1/tasks/{task_id}/complete — সফল সমাপ্তি (leased-by check সহ)
-- POST   /api/v1/tasks/{task_id}/fail    — ব্যর্থতা → retry/failed (Zero Zombie)
-- POST   /api/v1/tasks/{task_id}/cancel  — operator cancel
-- POST   /api/v1/tasks/reap              — expired lease re-queue (failover trigger)
-- GET    /api/v1/tasks/queue/stats       — per-status count (visibility)
+- POST   /api/v1/mesh/tasks                  — নতুন task submit (Telegram /task, MCP tools এটাই কল করে)
+- GET    /api/v1/mesh/tasks?status=          — queue snapshot + filter
+- GET    /api/v1/mesh/tasks/{task_id}        — task detail
+- POST   /api/v1/mesh/tasks/{task_id}/claim   — CAS atomic claim (node capabilities অনুযায়ী)
+- POST   /api/v1/mesh/tasks/{task_id}/lease   — lease renewal (heartbeat continuation)
+- POST   /api/v1/mesh/tasks/{task_id}/complete — সফল সমাপ্তি (leased-by check সহ)
+- POST   /api/v1/mesh/tasks/{task_id}/fail    — ব্যর্থতা → retry/failed (Zero Zombie)
+- POST   /api/v1/mesh/tasks/{task_id}/cancel  — operator cancel
+- POST   /api/v1/mesh/tasks/reap              — expired lease re-queue (failover trigger)
+- GET    /api/v1/mesh/tasks/queue/stats       — per-status count (visibility)
 
 heartbeat-এ auto-dispatch: node heartbeat দিলে Tower স্বয়ংক্রিয়ভাবে তার capabilities
 মেলানো pending task claim করে response-এর assigned_tasks-এ পাঠায় — এটাই
