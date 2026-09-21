@@ -280,7 +280,7 @@ class TestHappyPaths:
         head_sha = "abc123def456"
         client = FakeAsyncClient(
             {
-                f"GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/pulls/12": _mk_response(
+                "GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/pulls/12": _mk_response(
                     200, {"head": {"sha": head_sha}}
                 ),
                 f"GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/commits/{head_sha}/status": _mk_response(
@@ -333,7 +333,7 @@ class TestErrorPaths:
         head_sha = "head_405_test"
         client = FakeAsyncClient(
             {
-                f"GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/pulls/3": _mk_response(
+                "GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/pulls/3": _mk_response(
                     200, {"head": {"sha": head_sha}}
                 ),
                 f"GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/commits/{head_sha}/status": _mk_response(

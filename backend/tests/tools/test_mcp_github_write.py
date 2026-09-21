@@ -45,7 +45,9 @@ REPO = "SaifulHaqueNiloy/supremeai"
 API = "https://api.github.com"
 
 
-def _mk_response(status_code: int, data: dict[str, Any] | list[Any] | None = None) -> httpx.Response:
+def _mk_response(
+    status_code: int, data: dict[str, Any] | list[Any] | None = None
+) -> httpx.Response:
     """httpx.Response ফ্যাক্টরি — সব fake client কলের জন্য।"""
     request = httpx.Request("GET", "https://api.github.com/test")
     if data is None:
@@ -169,9 +171,7 @@ class TestInputValidation:
 
     def test_commit_files_too_many_files_rejected(self):
         # max_length=100 → 101 files rejected
-        files = [
-            gh.FileContentItem(path=f"f{i}.txt", content="x") for i in range(101)
-        ]
+        files = [gh.FileContentItem(path=f"f{i}.txt", content="x") for i in range(101)]
         with pytest.raises(ValidationError):
             gh.CommitFilesInput(branch="b", message="m", files=files)
 
@@ -311,9 +311,7 @@ class TestHelpers:
 class TestCommitFilesHappyPath:
     """github_commit_files — atomic multi-file commit happy path।"""
 
-    async def test_commit_files_single_file(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_commit_files_single_file(self, authorized, monkeypatch: pytest.MonkeyPatch):
         parent_sha = "parent123abc"
         tree_sha = "tree456def"
         new_commit_sha = "newcommit789"
@@ -327,9 +325,7 @@ class TestCommitFilesHappyPath:
                 ),
                 f"POST {API}/repos/{REPO}/git/blobs": _mk_response(201, {"sha": "blob-sha-1"}),
                 f"POST {API}/repos/{REPO}/git/trees": _mk_response(201, {"sha": tree_sha}),
-                f"POST {API}/repos/{REPO}/git/commits": _mk_response(
-                    201, {"sha": new_commit_sha}
-                ),
+                f"POST {API}/repos/{REPO}/git/commits": _mk_response(201, {"sha": new_commit_sha}),
                 f"PATCH {API}/repos/{REPO}/git/refs/heads/mesh/task-1": _mk_response(
                     200, {"object": {"sha": new_commit_sha}}
                 ),
@@ -355,9 +351,7 @@ class TestCommitFilesHappyPath:
         assert authorized[0][0] == "github_commit_files"
         assert authorized[0][1] == "ALLOW"
 
-    async def test_commit_files_multiple_files(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_commit_files_multiple_files(self, authorized, monkeypatch: pytest.MonkeyPatch):
         parent_sha = "p"
         new_commit_sha = "c"
         client = FakeAsyncClient(
@@ -370,9 +364,7 @@ class TestCommitFilesHappyPath:
                 ),
                 f"POST {API}/repos/{REPO}/git/blobs": _mk_response(201, {"sha": "blob"}),
                 f"POST {API}/repos/{REPO}/git/trees": _mk_response(201, {"sha": "newtree"}),
-                f"POST {API}/repos/{REPO}/git/commits": _mk_response(
-                    201, {"sha": new_commit_sha}
-                ),
+                f"POST {API}/repos/{REPO}/git/commits": _mk_response(201, {"sha": new_commit_sha}),
                 f"PATCH {API}/repos/{REPO}/git/refs/heads/main": _mk_response(
                     200, {"object": {"sha": new_commit_sha}}
                 ),
@@ -426,9 +418,7 @@ class TestCommitFilesHappyPath:
                 ),
                 f"POST {API}/repos/{REPO}/git/blobs": _mk_response(201, {"sha": "blob"}),
                 f"POST {API}/repos/{REPO}/git/trees": _mk_response(201, {"sha": "t"}),
-                f"POST {API}/repos/{REPO}/git/commits": _mk_response(
-                    201, {"sha": new_commit_sha}
-                ),
+                f"POST {API}/repos/{REPO}/git/commits": _mk_response(201, {"sha": new_commit_sha}),
                 f"PATCH {API}/repos/{REPO}/git/refs/heads/main": _mk_response(
                     200, {"object": {"sha": new_commit_sha}}
                 ),
@@ -444,9 +434,7 @@ class TestCommitFilesHappyPath:
                     branch="main",
                     message="feat: binary blob",
                     files=[
-                        gh.FileContentItem(
-                            path="assets/blob.bin", content=b64, encoding="base64"
-                        )
+                        gh.FileContentItem(path="assets/blob.bin", content=b64, encoding="base64")
                     ],
                 )
             )
@@ -473,9 +461,7 @@ class TestCommitFilesHappyPath:
                 ),
                 f"POST {API}/repos/{REPO}/git/blobs": _mk_response(201, {"sha": "blob"}),
                 f"POST {API}/repos/{REPO}/git/trees": _mk_response(201, {"sha": "t"}),
-                f"POST {API}/repos/{REPO}/git/commits": _mk_response(
-                    201, {"sha": new_commit_sha}
-                ),
+                f"POST {API}/repos/{REPO}/git/commits": _mk_response(201, {"sha": new_commit_sha}),
                 f"PATCH {API}/repos/{REPO}/git/refs/heads/main": _mk_response(
                     200, {"object": {"sha": new_commit_sha}}
                 ),
@@ -519,9 +505,7 @@ class TestPathAllowlist:
                     branch="main",
                     message="try core write",
                     files=[
-                        gh.FileContentItem(
-                            path="backend/core/config.py", content="os.environ..."
-                        )
+                        gh.FileContentItem(path="backend/core/config.py", content="os.environ...")
                     ],
                     # allow_protected_paths=False (default)
                 )
@@ -534,9 +518,7 @@ class TestPathAllowlist:
         # NO HTTP call should have been made
         assert client.calls == []
         # DENY audit recorded
-        assert any(
-            a[0] == "github_commit_files" and a[1] == "DENY" for a in authorized
-        )
+        assert any(a[0] == "github_commit_files" and a[1] == "DENY" for a in authorized)
 
     async def test_github_dir_blocked_without_override(
         self, authorized, monkeypatch: pytest.MonkeyPatch
@@ -575,7 +557,8 @@ class TestPathAllowlist:
                     files=[
                         gh.FileContentItem(path="docs/safe.md", content="ok"),
                         gh.FileContentItem(
-                            path="backend/core/secret.py", content="KEY=..."  # protected
+                            path="backend/core/secret.py",
+                            content="KEY=...",  # protected
                         ),
                     ],
                 )
@@ -601,9 +584,7 @@ class TestPathAllowlist:
                 ),
                 f"POST {API}/repos/{REPO}/git/blobs": _mk_response(201, {"sha": "blob"}),
                 f"POST {API}/repos/{REPO}/git/trees": _mk_response(201, {"sha": "t"}),
-                f"POST {API}/repos/{REPO}/git/commits": _mk_response(
-                    201, {"sha": new_commit_sha}
-                ),
+                f"POST {API}/repos/{REPO}/git/commits": _mk_response(201, {"sha": new_commit_sha}),
                 f"PATCH {API}/repos/{REPO}/git/refs/heads/main": _mk_response(
                     200, {"object": {"sha": new_commit_sha}}
                 ),
@@ -615,11 +596,7 @@ class TestPathAllowlist:
                 gh.CommitFilesInput(
                     branch="main",
                     message="protected override",
-                    files=[
-                        gh.FileContentItem(
-                            path=".github/CODEOWNERS", content="* @owner"
-                        )
-                    ],
+                    files=[gh.FileContentItem(path=".github/CODEOWNERS", content="* @owner")],
                     allow_protected_paths=True,
                 )
             )
@@ -628,9 +605,7 @@ class TestPathAllowlist:
         assert result["protected_paths_overridden"] is True
         assert result["commit_sha"] == new_commit_sha
 
-    async def test_safe_path_no_override_needed(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_safe_path_no_override_needed(self, authorized, monkeypatch: pytest.MonkeyPatch):
         """non-protected path → allow_protected_paths=False (default) এ চলে।"""
         parent_sha = "p"
         new_commit_sha = "c"
@@ -644,9 +619,7 @@ class TestPathAllowlist:
                 ),
                 f"POST {API}/repos/{REPO}/git/blobs": _mk_response(201, {"sha": "blob"}),
                 f"POST {API}/repos/{REPO}/git/trees": _mk_response(201, {"sha": "t"}),
-                f"POST {API}/repos/{REPO}/git/commits": _mk_response(
-                    201, {"sha": new_commit_sha}
-                ),
+                f"POST {API}/repos/{REPO}/git/commits": _mk_response(201, {"sha": new_commit_sha}),
                 f"PATCH {API}/repos/{REPO}/git/refs/heads/feat/x": _mk_response(
                     200, {"object": {"sha": new_commit_sha}}
                 ),
@@ -692,9 +665,7 @@ class TestCommitFilesGates:
         )
         assert "Admin authorization" in result["error"]
 
-    async def test_token_absence_blocks(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_token_absence_blocks(self, authorized, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(gh, "_get_github_token", lambda: "")
         result = json.loads(
             await gh.github_commit_files(
@@ -707,9 +678,7 @@ class TestCommitFilesGates:
         )
         assert "GITHUB_TOKEN not configured" in result["error"]
 
-    async def test_branch_ref_404(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_branch_ref_404(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"GET {API}/repos/{REPO}/git/ref/heads/nonexistent": _mk_response(
@@ -726,21 +695,15 @@ class TestCommitFilesGates:
             )
         )
         assert result.startswith("Error:")
-        assert any(
-            a[0] == "github_commit_files" and a[1] == "ERROR" for a in authorized
-        )
+        assert any(a[0] == "github_commit_files" and a[1] == "ERROR" for a in authorized)
 
-    async def test_blob_create_500(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_blob_create_500(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"GET {API}/repos/{REPO}/git/ref/heads/main": _mk_response(
                     200, {"object": {"sha": "p"}}
                 ),
-                f"GET {API}/repos/{REPO}/git/commits/p": _mk_response(
-                    200, {"tree": {"sha": "bt"}}
-                ),
+                f"GET {API}/repos/{REPO}/git/commits/p": _mk_response(200, {"tree": {"sha": "bt"}}),
                 f"POST {API}/repos/{REPO}/git/blobs": _mk_response(500, {"message": "boom"}),
             }
         )
@@ -763,9 +726,7 @@ class TestCommitFilesGates:
 class TestPRComment:
     """github_pr_comment — PR-এ কমেন্ট যোগ।"""
 
-    async def test_pr_comment_happy_path(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_pr_comment_happy_path(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"POST {API}/repos/{REPO}/issues/42/comments": _mk_response(
@@ -776,9 +737,7 @@ class TestPRComment:
         )
         _install(monkeypatch, client)
         result = json.loads(
-            await gh.github_pr_comment(
-                gh.PRCommentInput(pr_number=42, body="LGTM :tada:")
-            )
+            await gh.github_pr_comment(gh.PRCommentInput(pr_number=42, body="LGTM :tada:"))
         )
         assert result["success"] is True
         assert result["pr_number"] == 42
@@ -793,23 +752,17 @@ class TestPRComment:
 
     async def test_pr_comment_admin_gate_blocks(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(gh, "is_admin_authorized", lambda: False)
-        result = json.loads(
-            await gh.github_pr_comment(gh.PRCommentInput(pr_number=1, body="x"))
-        )
+        result = json.loads(await gh.github_pr_comment(gh.PRCommentInput(pr_number=1, body="x")))
         assert "Admin authorization" in result["error"]
 
     async def test_pr_comment_token_absence_blocks(
         self, authorized, monkeypatch: pytest.MonkeyPatch
     ):
         monkeypatch.setattr(gh, "_get_github_token", lambda: "")
-        result = json.loads(
-            await gh.github_pr_comment(gh.PRCommentInput(pr_number=1, body="x"))
-        )
+        result = json.loads(await gh.github_pr_comment(gh.PRCommentInput(pr_number=1, body="x")))
         assert "GITHUB_TOKEN not configured" in result["error"]
 
-    async def test_pr_comment_404_pr_not_found(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_pr_comment_404_pr_not_found(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"POST {API}/repos/{REPO}/issues/9999/comments": _mk_response(
@@ -818,13 +771,9 @@ class TestPRComment:
             }
         )
         _install(monkeypatch, client)
-        result = await gh.github_pr_comment(
-            gh.PRCommentInput(pr_number=9999, body="x")
-        )
+        result = await gh.github_pr_comment(gh.PRCommentInput(pr_number=9999, body="x"))
         assert result.startswith("Error:")
-        assert any(
-            a[0] == "github_pr_comment" and a[1] == "ERROR" for a in authorized
-        )
+        assert any(a[0] == "github_pr_comment" and a[1] == "ERROR" for a in authorized)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -849,9 +798,7 @@ class TestCloseIssue:
             }
         )
         _install(monkeypatch, client)
-        result = json.loads(
-            await gh.github_close_issue(gh.CloseIssueInput(issue_number=77))
-        )
+        result = json.loads(await gh.github_close_issue(gh.CloseIssueInput(issue_number=77)))
         assert result["success"] is True
         assert result["state"] == "closed"
         assert result["state_reason"] == "completed"
@@ -863,9 +810,7 @@ class TestCloseIssue:
         assert client.payloads[-1] == {"state": "closed"}
         assert authorized[0] == ("github_close_issue", "ALLOW", None)
 
-    async def test_close_issue_with_comment(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_close_issue_with_comment(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"POST {API}/repos/{REPO}/issues/77/comments": _mk_response(
@@ -916,36 +861,26 @@ class TestCloseIssue:
 
     async def test_close_issue_admin_gate_blocks(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(gh, "is_admin_authorized", lambda: False)
-        result = json.loads(
-            await gh.github_close_issue(gh.CloseIssueInput(issue_number=1))
-        )
+        result = json.loads(await gh.github_close_issue(gh.CloseIssueInput(issue_number=1)))
         assert "Admin authorization" in result["error"]
 
     async def test_close_issue_token_absence_blocks(
         self, authorized, monkeypatch: pytest.MonkeyPatch
     ):
         monkeypatch.setattr(gh, "_get_github_token", lambda: "")
-        result = json.loads(
-            await gh.github_close_issue(gh.CloseIssueInput(issue_number=1))
-        )
+        result = json.loads(await gh.github_close_issue(gh.CloseIssueInput(issue_number=1)))
         assert "GITHUB_TOKEN not configured" in result["error"]
 
     async def test_close_issue_404_issue_not_found(
         self, authorized, monkeypatch: pytest.MonkeyPatch
     ):
         client = FakeAsyncClient(
-            {
-                f"PATCH {API}/repos/{REPO}/issues/9999": _mk_response(
-                    404, {"message": "Not Found"}
-                )
-            }
+            {f"PATCH {API}/repos/{REPO}/issues/9999": _mk_response(404, {"message": "Not Found"})}
         )
         _install(monkeypatch, client)
         result = await gh.github_close_issue(gh.CloseIssueInput(issue_number=9999))
         assert result.startswith("Error:")
-        assert any(
-            a[0] == "github_close_issue" and a[1] == "ERROR" for a in authorized
-        )
+        assert any(a[0] == "github_close_issue" and a[1] == "ERROR" for a in authorized)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -956,9 +891,7 @@ class TestCloseIssue:
 class TestAddLabels:
     """github_add_labels — issue/PR-তে labels যোগ।"""
 
-    async def test_add_labels_happy_path(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_add_labels_happy_path(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"POST {API}/repos/{REPO}/issues/55/labels": _mk_response(
@@ -989,9 +922,7 @@ class TestAddLabels:
     async def test_add_labels_admin_gate_blocks(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(gh, "is_admin_authorized", lambda: False)
         result = json.loads(
-            await gh.github_add_labels(
-                gh.AddLabelsInput(issue_number=1, labels=["x"])
-            )
+            await gh.github_add_labels(gh.AddLabelsInput(issue_number=1, labels=["x"]))
         )
         assert "Admin authorization" in result["error"]
 
@@ -1000,30 +931,18 @@ class TestAddLabels:
     ):
         monkeypatch.setattr(gh, "_get_github_token", lambda: "")
         result = json.loads(
-            await gh.github_add_labels(
-                gh.AddLabelsInput(issue_number=1, labels=["x"])
-            )
+            await gh.github_add_labels(gh.AddLabelsInput(issue_number=1, labels=["x"]))
         )
         assert "GITHUB_TOKEN not configured" in result["error"]
 
-    async def test_add_labels_410_issue_locked(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_add_labels_410_issue_locked(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
-            {
-                f"POST {API}/repos/{REPO}/issues/1/labels": _mk_response(
-                    410, {"message": "Gone"}
-                )
-            }
+            {f"POST {API}/repos/{REPO}/issues/1/labels": _mk_response(410, {"message": "Gone"})}
         )
         _install(monkeypatch, client)
-        result = await gh.github_add_labels(
-            gh.AddLabelsInput(issue_number=1, labels=["x"])
-        )
+        result = await gh.github_add_labels(gh.AddLabelsInput(issue_number=1, labels=["x"]))
         assert result.startswith("Error:")
-        assert any(
-            a[0] == "github_add_labels" and a[1] == "ERROR" for a in authorized
-        )
+        assert any(a[0] == "github_add_labels" and a[1] == "ERROR" for a in authorized)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1034,9 +953,7 @@ class TestAddLabels:
 class TestCreatePRFixesNEnforcement:
     """github_create_pull_request — `Fixes #N` issue-link বাধ্যতামূলক (issue-first policy #925)।"""
 
-    async def test_pr_without_issue_link_denied(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_pr_without_issue_link_denied(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient({})  # no HTTP should be made
         _install(monkeypatch, client)
         result = json.loads(
@@ -1054,20 +971,14 @@ class TestCreatePRFixesNEnforcement:
         # NO HTTP call made
         assert client.calls == []
         # DENY audit recorded
-        assert any(
-            a[0] == "github_create_pull_request" and a[1] == "DENY" for a in authorized
-        )
+        assert any(a[0] == "github_create_pull_request" and a[1] == "DENY" for a in authorized)
 
-    async def test_pr_with_empty_body_denied(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_pr_with_empty_body_denied(self, authorized, monkeypatch: pytest.MonkeyPatch):
         # body="" fails min_length=1 already at pydantic level → ValidationError
         with pytest.raises(ValidationError):
             gh.CreatePRInput(title="t", body="", head="h")
 
-    async def test_pr_with_fixes_link_accepted(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_pr_with_fixes_link_accepted(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"POST {API}/repos/{REPO}/pulls": _mk_response(
@@ -1090,9 +1001,7 @@ class TestCreatePRFixesNEnforcement:
         assert result["pr_number"] == 99
         assert client.calls[-1] == ("POST", f"{API}/repos/{REPO}/pulls")
 
-    async def test_pr_with_closes_link_accepted(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_pr_with_closes_link_accepted(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"POST {API}/repos/{REPO}/pulls": _mk_response(
@@ -1157,15 +1066,11 @@ class TestCreatePRFixesNEnforcement:
 class TestMergePRCICheck:
     """P0 policy: merge করার আগে CI status `success` হতে হবে (no bypass)।"""
 
-    async def test_merge_blocked_when_ci_failure(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_merge_blocked_when_ci_failure(self, authorized, monkeypatch: pytest.MonkeyPatch):
         head_sha = "head789ghi"
         client = FakeAsyncClient(
             {
-                f"GET {API}/repos/{REPO}/pulls/12": _mk_response(
-                    200, {"head": {"sha": head_sha}}
-                ),
+                f"GET {API}/repos/{REPO}/pulls/12": _mk_response(200, {"head": {"sha": head_sha}}),
                 f"GET {API}/repos/{REPO}/commits/{head_sha}/status": _mk_response(
                     200, {"state": "failure"}
                 ),
@@ -1173,9 +1078,7 @@ class TestMergePRCICheck:
             }
         )
         _install(monkeypatch, client)
-        result = json.loads(
-            await gh.github_merge_pull_request(gh.MergePRInput(pr_number=12))
-        )
+        result = json.loads(await gh.github_merge_pull_request(gh.MergePRInput(pr_number=12)))
         assert "error" in result
         assert "P0 CI-green policy" in result["error"]
         assert "failure" in result["error"]
@@ -1186,28 +1089,20 @@ class TestMergePRCICheck:
         assert len(get_calls) == 2
         assert put_calls == []
         # DENY audit recorded
-        assert any(
-            a[0] == "github_merge_pull_request" and a[1] == "DENY" for a in authorized
-        )
+        assert any(a[0] == "github_merge_pull_request" and a[1] == "DENY" for a in authorized)
 
-    async def test_merge_blocked_when_ci_pending(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_merge_blocked_when_ci_pending(self, authorized, monkeypatch: pytest.MonkeyPatch):
         head_sha = "head_pending"
         client = FakeAsyncClient(
             {
-                f"GET {API}/repos/{REPO}/pulls/12": _mk_response(
-                    200, {"head": {"sha": head_sha}}
-                ),
+                f"GET {API}/repos/{REPO}/pulls/12": _mk_response(200, {"head": {"sha": head_sha}}),
                 f"GET {API}/repos/{REPO}/commits/{head_sha}/status": _mk_response(
                     200, {"state": "pending"}
                 ),
             }
         )
         _install(monkeypatch, client)
-        result = json.loads(
-            await gh.github_merge_pull_request(gh.MergePRInput(pr_number=12))
-        )
+        result = json.loads(await gh.github_merge_pull_request(gh.MergePRInput(pr_number=12)))
         assert "error" in result
         assert "pending" in result["error"]
         # NO PUT /pulls/12/merge
@@ -1220,14 +1115,13 @@ class TestMergePRCICheck:
         client = FakeAsyncClient(
             {
                 f"GET {API}/repos/{REPO}/pulls/12": _mk_response(
-                    200, {"head": {}}  # no sha
+                    200,
+                    {"head": {}},  # no sha
                 ),
             }
         )
         _install(monkeypatch, client)
-        result = json.loads(
-            await gh.github_merge_pull_request(gh.MergePRInput(pr_number=12))
-        )
+        result = json.loads(await gh.github_merge_pull_request(gh.MergePRInput(pr_number=12)))
         assert "error" in result
         assert "head sha not found" in result["error"]
 
@@ -1237,9 +1131,7 @@ class TestMergePRCICheck:
         head_sha = "head_green"
         client = FakeAsyncClient(
             {
-                f"GET {API}/repos/{REPO}/pulls/12": _mk_response(
-                    200, {"head": {"sha": head_sha}}
-                ),
+                f"GET {API}/repos/{REPO}/pulls/12": _mk_response(200, {"head": {"sha": head_sha}}),
                 f"GET {API}/repos/{REPO}/commits/{head_sha}/status": _mk_response(
                     200, {"state": "success"}
                 ),
@@ -1251,9 +1143,7 @@ class TestMergePRCICheck:
         )
         _install(monkeypatch, client)
         result = json.loads(
-            await gh.github_merge_pull_request(
-                gh.MergePRInput(pr_number=12, merge_method="squash")
-            )
+            await gh.github_merge_pull_request(gh.MergePRInput(pr_number=12, merge_method="squash"))
         )
         assert result["success"] is True
         assert result["merged"] is True
@@ -1266,27 +1156,19 @@ class TestMergePRCICheck:
 
     async def test_merge_admin_gate_blocks(self, monkeypatch: pytest.MonkeyPatch):
         monkeypatch.setattr(gh, "is_admin_authorized", lambda: False)
-        result = json.loads(
-            await gh.github_merge_pull_request(gh.MergePRInput(pr_number=1))
-        )
+        result = json.loads(await gh.github_merge_pull_request(gh.MergePRInput(pr_number=1)))
         assert "Admin authorization" in result["error"]
 
-    async def test_merge_pr_fetch_404(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_merge_pr_fetch_404(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
-                f"GET {API}/repos/{REPO}/pulls/9999": _mk_response(
-                    404, {"message": "Not Found"}
-                ),
+                f"GET {API}/repos/{REPO}/pulls/9999": _mk_response(404, {"message": "Not Found"}),
             }
         )
         _install(monkeypatch, client)
         result = await gh.github_merge_pull_request(gh.MergePRInput(pr_number=9999))
         assert result.startswith("Error:")
-        assert any(
-            a[0] == "github_merge_pull_request" and a[1] == "ERROR" for a in authorized
-        )
+        assert any(a[0] == "github_merge_pull_request" and a[1] == "ERROR" for a in authorized)
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -1297,9 +1179,7 @@ class TestMergePRCICheck:
 class TestAuditTrail:
     """Constitution Law #19 — প্রতিটি write op-এর observable audit trail (including DENY)।"""
 
-    async def test_deny_audit_for_protected_path(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_deny_audit_for_protected_path(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient({})  # no HTTP should be made
         _install(monkeypatch, client)
         await gh.github_commit_files(
@@ -1310,9 +1190,7 @@ class TestAuditTrail:
             )
         )
         # DENY audit recorded with protected-path reason
-        deny_audits = [
-            a for a in authorized if a[0] == "github_commit_files" and a[1] == "DENY"
-        ]
+        deny_audits = [a for a in authorized if a[0] == "github_commit_files" and a[1] == "DENY"]
         assert len(deny_audits) == 1
         assert "protected path" in (deny_audits[0][2] or "")
 
@@ -1325,39 +1203,27 @@ class TestAuditTrail:
             gh.CreatePRInput(title="t", body="no link here", head="h")
         )
         deny_audits = [
-            a
-            for a in authorized
-            if a[0] == "github_create_pull_request" and a[1] == "DENY"
+            a for a in authorized if a[0] == "github_create_pull_request" and a[1] == "DENY"
         ]
         assert len(deny_audits) == 1
         assert "issue-link" in (deny_audits[0][2] or "")
 
-    async def test_deny_audit_for_ci_not_green(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_deny_audit_for_ci_not_green(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
-                f"GET {API}/repos/{REPO}/pulls/12": _mk_response(
-                    200, {"head": {"sha": "x"}}
-                ),
-                f"GET {API}/repos/{REPO}/commits/x/status": _mk_response(
-                    200, {"state": "failure"}
-                ),
+                f"GET {API}/repos/{REPO}/pulls/12": _mk_response(200, {"head": {"sha": "x"}}),
+                f"GET {API}/repos/{REPO}/commits/x/status": _mk_response(200, {"state": "failure"}),
             }
         )
         _install(monkeypatch, client)
         await gh.github_merge_pull_request(gh.MergePRInput(pr_number=12))
         deny_audits = [
-            a
-            for a in authorized
-            if a[0] == "github_merge_pull_request" and a[1] == "DENY"
+            a for a in authorized if a[0] == "github_merge_pull_request" and a[1] == "DENY"
         ]
         assert len(deny_audits) == 1
         assert "CI not green" in (deny_audits[0][2] or "")
 
-    async def test_allow_audit_for_close_issue(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_allow_audit_for_close_issue(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
                 f"PATCH {API}/repos/{REPO}/issues/5": _mk_response(
@@ -1369,20 +1235,14 @@ class TestAuditTrail:
         await gh.github_close_issue(gh.CloseIssueInput(issue_number=5))
         assert authorized[0] == ("github_close_issue", "ALLOW", None)
 
-    async def test_allow_audit_for_add_labels(
-        self, authorized, monkeypatch: pytest.MonkeyPatch
-    ):
+    async def test_allow_audit_for_add_labels(self, authorized, monkeypatch: pytest.MonkeyPatch):
         client = FakeAsyncClient(
             {
-                f"POST {API}/repos/{REPO}/issues/5/labels": _mk_response(
-                    200, [{"name": "bug"}]
-                ),
+                f"POST {API}/repos/{REPO}/issues/5/labels": _mk_response(200, [{"name": "bug"}]),
             }
         )
         _install(monkeypatch, client)
-        await gh.github_add_labels(
-            gh.AddLabelsInput(issue_number=5, labels=["bug"])
-        )
+        await gh.github_add_labels(gh.AddLabelsInput(issue_number=5, labels=["bug"]))
         assert authorized[0] == ("github_add_labels", "ALLOW", None)
 
 
@@ -1422,9 +1282,7 @@ class TestRateLimit:
         gh._write_op_times.clear()
         now = _time.monotonic()
         gh._write_op_times.extend([now] * gh.WRITE_MAX_PER_WINDOW)
-        result = json.loads(
-            await gh.github_pr_comment(gh.PRCommentInput(pr_number=1, body="x"))
-        )
+        result = json.loads(await gh.github_pr_comment(gh.PRCommentInput(pr_number=1, body="x")))
         assert "rate limit" in result["error"].lower()
 
     async def test_close_issue_blocked_when_rate_limit_exceeded(
@@ -1435,9 +1293,7 @@ class TestRateLimit:
         gh._write_op_times.clear()
         now = _time.monotonic()
         gh._write_op_times.extend([now] * gh.WRITE_MAX_PER_WINDOW)
-        result = json.loads(
-            await gh.github_close_issue(gh.CloseIssueInput(issue_number=1))
-        )
+        result = json.loads(await gh.github_close_issue(gh.CloseIssueInput(issue_number=1)))
         assert "rate limit" in result["error"].lower()
 
     async def test_add_labels_blocked_when_rate_limit_exceeded(
@@ -1449,9 +1305,7 @@ class TestRateLimit:
         now = _time.monotonic()
         gh._write_op_times.extend([now] * gh.WRITE_MAX_PER_WINDOW)
         result = json.loads(
-            await gh.github_add_labels(
-                gh.AddLabelsInput(issue_number=1, labels=["x"])
-            )
+            await gh.github_add_labels(gh.AddLabelsInput(issue_number=1, labels=["x"]))
         )
         assert "rate limit" in result["error"].lower()
 

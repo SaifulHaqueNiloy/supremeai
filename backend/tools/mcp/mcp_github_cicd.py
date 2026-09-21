@@ -629,7 +629,10 @@ async def _check_pr_ci_green(
 
     if state == "success":
         return True, head_sha
-    return False, f"CI state is '{state}' (expected 'success') — P0 policy requires green CI before merge"
+    return (
+        False,
+        f"CI state is '{state}' (expected 'success') — P0 policy requires green CI before merge",
+    )
 
 
 class CreateBranchInput(BaseModel):
@@ -1021,9 +1024,7 @@ async def github_merge_pull_request(params: MergePRInput) -> str:
                     "DENY",
                     error=f"CI not green: {ci_msg}",
                 )
-                return json_error(
-                    f"Merge blocked by P0 CI-green policy (#925): {ci_msg}"
-                )
+                return json_error(f"Merge blocked by P0 CI-green policy (#925): {ci_msg}")
 
             response = await client.put(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/pulls/{params.pr_number}/merge",
@@ -1128,9 +1129,7 @@ class AddLabelsInput(BaseModel):
     model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
 
     issue_number: int = Field(..., description="Issue অথবা PR নম্বর", ge=1)
-    labels: list[str] = Field(
-        ..., description="যোগ করার labels তালিকা (অন্তত ১টি)", min_length=1
-    )
+    labels: list[str] = Field(..., description="যোগ করার labels তালিকা (অন্তত ১টি)", min_length=1)
 
 
 @mcp.tool(
@@ -1469,9 +1468,7 @@ async def github_add_labels(params: AddLabelsInput) -> str:
             data = response.json()
 
         # data: list of label objects — extract names
-        final_labels = [
-            (lbl.get("name") if isinstance(lbl, dict) else lbl) for lbl in (data or [])
-        ]
+        final_labels = [(lbl.get("name") if isinstance(lbl, dict) else lbl) for lbl in (data or [])]
         _audit_write("github_add_labels", "ALLOW")
         return json.dumps(
             {
@@ -1480,8 +1477,7 @@ async def github_add_labels(params: AddLabelsInput) -> str:
                 "labels_added": params.labels,
                 "labels_now": final_labels,
                 "message": (
-                    f"Added {len(params.labels)} label(s) to "
-                    f"issue/PR #{params.issue_number}"
+                    f"Added {len(params.labels)} label(s) to issue/PR #{params.issue_number}"
                 ),
             },
             ensure_ascii=False,
