@@ -933,9 +933,9 @@ async def test_set_semantic_cache_failure_is_swallowed(monkeypatch):
 
 
 def _install_gateway_stub(monkeypatch, gateway):
-    stub = types.ModuleType("core.llm.llm_gateway_with_learning")
+    stub = types.ModuleType("core.llm.llm_gateway")
     stub.get_llm_gateway = lambda: gateway
-    monkeypatch.setitem(sys.modules, "core.llm.llm_gateway_with_learning", stub)
+    monkeypatch.setitem(sys.modules, "core.llm.llm_gateway", stub)
 
 
 async def test_summarize_uses_llm_dict_response(monkeypatch):
