@@ -10,7 +10,6 @@ from core.app import app
 pytestmark = pytest.mark.skip(reason="Pre-existing failure — needs rewrite")
 
 
-
 @pytest.fixture
 def client():
     return TestClient(app)
