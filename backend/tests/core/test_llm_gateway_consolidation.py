@@ -15,10 +15,6 @@ from core.resilience.circuit_breaker import CircuitBreaker
 from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
 from services.llm.llm_router import LLMRouter
 
-pytestmark = pytest.mark.skip(
-    reason="Test assertions stale — LLM gateway provider map changed (P0 audit)"
-)
-
 
 @pytest.fixture
 def llm_gateway():

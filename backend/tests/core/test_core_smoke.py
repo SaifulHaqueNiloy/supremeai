@@ -2,10 +2,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.skip(
-    reason="Test assertions stale — config validators + LLM gateway refactored (P0 audit)"
-)
-
 
 def test_setup_logging_runs():
     from core.logging_config import setup_logging
@@ -36,9 +32,16 @@ async def test_llm_gateway_acompletion_monkeypatched(monkeypatch, tmp_path):
         def __init__(self, msg):
             self.message = FakeChoiceMessage(msg)
 
+    class FakeUsage:
+        prompt_tokens = 1
+        completion_tokens = 1
+        total_tokens = 2
+
     class FakeResponse:
         def __init__(self, text):
             self.choices = [FakeChoice(text)]
+            self.usage = FakeUsage()
+            self.model = "test-model"
             self._response_metadata = {"api_cost": 0.001}
 
     async def fake_acompletion(*args, **kwargs):

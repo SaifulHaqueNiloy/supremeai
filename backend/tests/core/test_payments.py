@@ -1,3 +1,4 @@
+import os
 from unittest.mock import patch
 
 import jwt
@@ -25,27 +26,31 @@ def mock_stripe():
 
 
 def test_get_plans():
-    # Verify plans list
+    # Verify plans list — SUBSCRIPTION_PLANS is a dict keyed by plan name
     resp = client.get("/payments/plans", headers=auth_headers)
     assert resp.status_code == 200
     data = resp.json()
     assert "plans" in data
-    assert len(data["plans"]) == 3
-    assert data["plans"][0]["id"] == "price_basic_monthly"
+    plans = data["plans"]
+    assert "free" in plans
+    assert plans["free"]["id"] == "price_free"
 
 
 def test_create_checkout_session_mock():
-    # Because conftest sets dummy STRIPE_API_KEY, the API will hit the mocked Stripe method
-    resp = client.post(
-        "/payments/checkout",
-        json={
-            "price_id": "price_basic_monthly",
-            "success_url": "http://localhost/success",  # is_local()
-            "cancel_url": "http://localhost/cancel",  # is_local()
-            "user_id": "test-user-id",
-        },
-        headers=auth_headers,
-    )
+    # The endpoint validates the raw key shape before calling Stripe; provide
+    # a test-mode key via the env-backed secret cache so the (autouse-mocked)
+    # Stripe SDK path is exercised. stripe_api_key is a read-only property.
+    with patch.dict(os.environ, {"STRIPE_API_KEY": "sk_test_dummy_key"}):
+        resp = client.post(
+            "/payments/checkout",
+            json={
+                "price_id": "price_basic_monthly",
+                "success_url": "http://localhost/success",  # is_local()
+                "cancel_url": "http://localhost/cancel",  # is_local()
+                "user_id": "test-user-id",
+            },
+            headers=auth_headers,
+        )
     assert resp.status_code == 200
     data = resp.json()
     assert data["status"] == "success"
@@ -53,17 +58,12 @@ def test_create_checkout_session_mock():
     assert "https://stripe.com/test" in data["url"]
 
 
-from pydantic import SecretStr
-
-pytestmark = pytest.mark.skip(
-    reason="Pre-existing failure — code refactored, test not updated (P0 audit)"
-)
-
-
 def test_webhook_ignored_if_missing_config():
-    # Verify webhook behaves gracefully when credentials/key are missing
-    with patch("core.config.settings.STRIPE_WEBHOOK_SECRET", new=SecretStr("")):
-        headers = {**auth_headers, "stripe-signature": "invalid-sig"}
-        resp = client.post("/payments/webhook", headers=headers, content=b"some-payload")
-        assert resp.status_code == 200
-        assert resp.json()["status"] == "ignored"
+    # Verify webhook behaves gracefully when credentials/key are missing.
+    # stripe_webhook_secret is a read-only property over the env-backed secret
+    # cache; conftest does not set STRIPE_WEBHOOK_SECRET, so the ignore path
+    # is the production contract for unconfigured deployments.
+    headers = {**auth_headers, "stripe-signature": "invalid-sig"}
+    resp = client.post("/payments/webhook", headers=headers, content=b"some-payload")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ignored"
