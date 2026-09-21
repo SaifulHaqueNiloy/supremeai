@@ -47,6 +47,7 @@ async def atomic_window_incr(
     window: int | None = None,
     *,
     window_seconds: int | None = None,
+    raise_on_failure: bool = False,
 ) -> int:
     """INCR ``key`` and enforce a ``window``-second TTL in ONE billable Redis op.
 
@@ -58,6 +59,16 @@ async def atomic_window_incr(
     exception না তুলে 0 রিটার্ন করা হয় — "fail-open" semantic (rate-limiter কখনো
     user-কে block করবে না শুধু Redis ডাউন থাকার কারণে)। WRONGTYPE recovery path
     সংরক্ষিত: legacy ZSET key থাকলে একবার delete করে retry করা হয়।
+
+    Issue #936: `raise_on_failure=True` opt-in প্যারামিটার যোগ করা হয়েছে। ডিফল্ট False
+    — Issue #895 contract সংরক্ষিত (test_redis_error_returns_zero টেস্ট যা
+    `atomic_window_incr(redis, key, window_seconds=60)` দিয়ে কল করে ও 0 expect করে,
+    সে ক্ষেত্রেও কাজ করে)। callers যাদের নিজেদের fail-mode policy আছে (যেমন
+    middleware/tenant_rate_limiter.py::enforce_tenant_rate_limit — closed/fallback/open
+    mode), তারা `raise_on_failure=True` পাস করে exception propagate করিয়ে নিজেদের
+    except branch-এ fail_mode apply করতে পারবে। Issue #895-এর "fail-open return 0"
+    contract-এর সাথে Issue #936-এর "Redis বিভ্রাটে tenant fail_mode apply করো"
+    contract-কে reconcile করে।
     """
     # Issue #895: টেস্ট `window_seconds=60` কিওয়ার্ড দেয়; legacy callers `window`
     # positional দেয়। যেকোনো একটা থাকলেই হবে।
@@ -80,17 +91,26 @@ async def atomic_window_incr(
                 return int(
                     await client.eval(ATOMIC_WINDOW_LUA, 1, key, int(effective_window))
                 )
-            except Exception:
-                # WRONGTYPE recovery-ও ব্যর্থ হলে fail-open করা হবে (test contract)।
+            except Exception as recovery_exc:
+                # WRONGTYPE recovery-ও ব্যর্থ হলে: ডিফল্ট fail-open (Issue #895
+                # contract — test_redis_error_returns_zero expects 0), কিন্তু
+                # raise_on_failure=True হলে re-raise (Issue #936 — caller
+                # নিজেদের fail_mode policy apply করতে পারে)।
                 logger.warning(
                     f"atomic_window_incr WRONGTYPE recovery failed for key={key}: {exc}"
                 )
+                if raise_on_failure:
+                    raise recovery_exc from exc
                 return 0
         # Issue #895: Redis failure → return 0 (fail-open, per test contract).
-        # আগে এখানে `raise` ছিল — callers নিজেদের except branch-এ fallback
+        # আগে এখানে `raise` ছিল — callers নিজেদের except branch-ে fallback
         # trigger করত। নতুন contract: atomic_window_incr নিজেই fail-open করে।
+        # Issue #936: `raise_on_failure=True` opt-in হলে re-raise করো — caller
+        # (যেমন enforce_tenant_rate_limit) নিজেদের fail_mode policy apply করতে পারে।
         logger.warning(
             f"atomic_window_incr Redis failure for key={key}: {exc}. "
             "Returning 0 (fail-open per Issue #895 test contract)."
         )
+        if raise_on_failure:
+            raise
         return 0
