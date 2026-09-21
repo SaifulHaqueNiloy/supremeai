@@ -134,12 +134,12 @@ class TestSecurityPipelineNoSilentSkip:
         """OriginValidatorMiddleware নাম নেই, TrustedOriginMiddleware আছে; APIKeyLimiter
         facade ও APIKeyLimiterMiddleware ASGI wrapper আছে।"""
         # Import গুলো সফল হলেই test pass — ImportError হলে আগেই fail।
-        from core.security.origin_validator import (  # noqa: F401
-            TrustedOriginMiddleware,
-        )
         from core.security.api_key_limiter import (  # noqa: F401
             APIKeyLimiter,
             APIKeyLimiterMiddleware,
+        )
+        from core.security.origin_validator import (  # noqa: F401
+            TrustedOriginMiddleware,
         )
 
         assert issubclass(APIKeyLimiterMiddleware, _BaseHTTPMiddlewareClass())
@@ -207,9 +207,7 @@ class TestAPIKeyLimiterMiddlewareLive:
         """Rate limit exceeded → enforce 429 raise করে → middleware 429 response দেয়।"""
         from fastapi import HTTPException
 
-        async def fake_enforce_over_limit(
-            api_key_hash: str, max_requests: int = 60
-        ) -> None:
+        async def fake_enforce_over_limit(api_key_hash: str, max_requests: int = 60) -> None:
             raise HTTPException(status_code=429, detail="API key rate limit exceeded")
 
         import core.security.api_key_limiter as mod
@@ -264,9 +262,8 @@ class TestAPIKeyLimiterMiddlewareLive:
 
     def test_enforce_exception_fails_open(self, monkeypatch):
         """enforce নিজে exception ছাড়ালেও request চলবে (fail-open resilience)।"""
-        async def fake_enforce_error(
-            api_key_hash: str, max_requests: int = 60
-        ) -> None:
+
+        async def fake_enforce_error(api_key_hash: str, max_requests: int = 60) -> None:
             raise RuntimeError("redis down")
 
         import core.security.api_key_limiter as mod
