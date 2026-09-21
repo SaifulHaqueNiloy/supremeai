@@ -224,6 +224,35 @@ class ProductionSecretVault:
         self._circuit_breaker_open = False
         self._circuit_opened_at = None
 
+    def _resolve_infisical_environment(self) -> str:
+        """Resolve the Infisical environment slug — single source of truth.
+
+        বাংলা: Issue #899 — async fetch path পূর্বে hardcoded
+        `environment = "dev" if self.env == "local" else "prod"` ব্যবহার করত,
+        যার ফলে staging environment-এও production vault পড়া হতো (cross-env
+        isolation breach)। এই method কে sync (`fetch_secret`) ও bulk
+        (`fetch_all_secrets`) path-এর একই mapping + INFISICAL_ENV override
+        contract honor করানো হয়েছে।
+
+        Priority:
+            1. `INFISICAL_ENV` env var override (12-factor explicit override)
+            2. `self.env` থেকে derived slug:
+               - "production" → "prod"
+               - "staging"    → "staging"
+               - else         → "dev"
+
+        Returns:
+            str: Infisical environment slug ("prod" | "staging" | "dev" বা override)।
+        """
+        infisical_env = os.environ.get("INFISICAL_ENV")
+        if infisical_env:
+            return infisical_env
+        if self.env == "production":
+            return "prod"
+        if self.env == "staging":
+            return "staging"
+        return "dev"
+
     @with_error_bus("_init_infisical_client")
     def _init_infisical_client(self) -> None:
         """Initialize Infisical client with strict timeout protection."""
@@ -312,15 +341,10 @@ class ProductionSecretVault:
             return self._fallback_to_env(secret_id, default)
 
         try:
-            # বাংলা মন্তব্য: Infisical-এর ডিফল্ট স্লাগ হলো prod, staging, dev।
-            infisical_env = os.environ.get("INFISICAL_ENV")
-            if not infisical_env:
-                if self.env == "production":
-                    infisical_env = "prod"
-                elif self.env == "staging":
-                    infisical_env = "staging"
-                else:
-                    infisical_env = "dev"
+            # বাংলা মন্তব্য: Issue #899 — sync path এখন single source of truth
+            # `_resolve_infisical_environment()` ব্যবহার করে (async/bulk path-এর
+            # সাথে মিল রাখতে)।
+            infisical_env = self._resolve_infisical_environment()
 
             options = GetSecretOptions(
                 environment=infisical_env,
@@ -440,8 +464,14 @@ class ProductionSecretVault:
 
             from infisical_client import GetSecretOptions
 
+            # বাংলা মন্তব্য: Issue #899 — async path এখন single source of truth
+            # `_resolve_infisical_environment()` ব্যবহার করে। পূর্বে এখানে
+            # hardcoded `"dev" if self.env == "local" else "prod"` ছিল —
+            # যার ফলে staging environment-এও production vault পড়া হতো।
+            infisical_env = self._resolve_infisical_environment()
+
             options = GetSecretOptions(
-                environment="dev" if self.env == "local" else "prod",
+                environment=infisical_env,
                 project_id=self.project_id,
                 secret_name=secret_id,
             )
@@ -668,17 +698,13 @@ class ProductionSecretVault:
             return {}
 
         # Determine environment slug
-        if not environment:
-            infisical_env = os.environ.get("INFISICAL_ENV")
-            if not infisical_env:
-                if self.env == "production":
-                    infisical_env = "prod"
-                elif self.env == "staging":
-                    infisical_env = "staging"
-                else:
-                    infisical_env = "dev"
-        else:
+        # বাংলা মন্তব্য: Issue #899 — bulk path এখন single source of truth
+        # `_resolve_infisical_environment()` ব্যবহার করে (sync/async path-এর সাথে
+        # মিল রাখতে)। Explicit `environment` parameter সর্বদা priority পায়।
+        if environment:
             infisical_env = environment
+        else:
+            infisical_env = self._resolve_infisical_environment()
 
         try:
             import concurrent.futures
