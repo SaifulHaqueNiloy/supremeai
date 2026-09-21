@@ -444,6 +444,17 @@ ALL_ROUTERS = [
     # identity verified JWT থেকে derive হয় (get_current_user_token); ownership
     # enforcement রাউট-লেভেলেই (foreign run → 404, missions parity)।
     {"path": "runs.api", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── MESH-1 (#939): Tower presence endpoint — multi-agent mesh foundation
+    # (Phase A, P1-high)। রাউটার নিজস্ব prefix (/api/v1/nodes) সহ আসে, তাই
+    # registry prefix "" (নইলে URL দ্বিগুণ হয়ে যায়)। এই endpoints presence
+    # state ছাড়া আর কিছু স্পর্শ করে না — একটি follow-up issue (MESH-3) auth যোগ
+    # করবে; আপাতত pre-auth heartbeat support করা হয়েছে যাতে একটি fresh agent
+    # প্রথম কলেই registration করতে পারে। নতুন file: backend/core/presence_registry.py
+    {"path": "api.routes.mesh", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── MESH-6 (#926, P0): Tower-native Task Queue — /api/v1/tasks/*
+    # রাউটার নিজস্ব prefix (/api/v1/tasks) সহ আসে, তাই registry prefix ""।
+    # Core: backend/core/task_router.py (CAS claim + lease + Zero Zombie reap)।
+    {"path": "api.routes.mesh_tasks", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
 

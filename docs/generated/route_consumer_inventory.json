@@ -14,20 +14,20 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 800,
+    "backend_routes": 814,
     "frontend_unique_refs": 140,
-    "routes_with_frontend_consumer": 257,
+    "routes_with_frontend_consumer": 267,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
-    "api_only_routes": 286,
-    "api_only_families": 157,
+    "api_only_routes": 290,
+    "api_only_families": 158,
     "by_classification": {
-      "user-facing": 156,
+      "user-facing": 166,
       "admin-only": 321,
       "internal": 37,
       "deprecated": 0,
-      "api-only": 286,
+      "api-only": 290,
       "orphaned": 0
     }
   },
@@ -142,6 +142,7 @@
     "/api/v1/markdown": 7,
     "/api/v1/mcp": 13,
     "/api/v1/missions": 11,
+    "/api/v1/nodes": 4,
     "/api/v1/onboarding": 5,
     "/api/v1/plugins": 4,
     "/api/v1/pr-review": 1,
@@ -9333,6 +9334,62 @@
       "classification": "api-only"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/nodes",
+      "declared": "/api/v1/nodes",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh.py",
+      "module": "api.routes.mesh",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_active_nodes",
+      "frontend_consumers": [],
+      "classification": "api-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/nodes/:param",
+      "declared": "/api/v1/nodes/{node_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh.py",
+      "module": "api.routes.mesh",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_node_detail",
+      "frontend_consumers": [],
+      "classification": "api-only"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/nodes/:param",
+      "declared": "/api/v1/nodes/{node_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh.py",
+      "module": "api.routes.mesh",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "patch_node_role",
+      "frontend_consumers": [],
+      "classification": "api-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/nodes/heartbeat",
+      "declared": "/api/v1/nodes/heartbeat",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh.py",
+      "module": "api.routes.mesh",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "post_node_heartbeat",
+      "frontend_consumers": [],
+      "classification": "api-only"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/onboarding/complete",
       "declared": "/api/v1/onboarding/complete",
@@ -10016,6 +10073,38 @@
       "classification": "api-only"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/tasks",
+      "declared": "/api/v1/tasks",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_tasks",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tasks",
+      "declared": "/api/v1/tasks",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "submit_task",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/tasks",
       "declared": "/api/v1/tasks",
@@ -10026,6 +10115,22 @@
       "mounted": true,
       "is_admin": false,
       "operation": "submit_task",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tasks/:param",
+      "declared": "/api/v1/tasks/{task_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_task",
       "frontend_consumers": [
         "frontend/src/services/controlPlane.ts"
       ],
@@ -10052,12 +10157,124 @@
       "path": "/api/v1/tasks/:param/cancel",
       "declared": "/api/v1/tasks/{task_id}/cancel",
       "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "cancel_task",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tasks/:param/cancel",
+      "declared": "/api/v1/tasks/{task_id}/cancel",
+      "deprecated": false,
       "router_file": "backend/api/routes/task_gateway.py",
       "module": "api.routes.task_gateway",
       "registry_prefix": "",
       "mounted": true,
       "is_admin": false,
       "operation": "cancel_task",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tasks/:param/claim",
+      "declared": "/api/v1/tasks/{task_id}/claim",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "claim_task",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tasks/:param/complete",
+      "declared": "/api/v1/tasks/{task_id}/complete",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "complete_task",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tasks/:param/fail",
+      "declared": "/api/v1/tasks/{task_id}/fail",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "fail_task",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tasks/:param/lease",
+      "declared": "/api/v1/tasks/{task_id}/lease",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "renew_lease",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/tasks/queue/stats",
+      "declared": "/api/v1/tasks/queue/stats",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "queue_stats",
+      "frontend_consumers": [
+        "frontend/src/services/controlPlane.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/tasks/reap",
+      "declared": "/api/v1/tasks/reap",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh_tasks.py",
+      "module": "api.routes.mesh_tasks",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "reap_expired",
       "frontend_consumers": [
         "frontend/src/services/controlPlane.ts"
       ],

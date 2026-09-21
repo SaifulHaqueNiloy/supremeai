@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-21 10:59 UTC
+- **Date:** 2026-09-21 00:02 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,9 +10,9 @@
   - (see git log for details)
 
 ## Files Changed
-  - `AGENTS.md`
-  - `secrets_registry.yaml`
+  - `.github/workflows/pr-helper.yml`
   - `CHECKPOINT.md`
+  - `.github/workflows/pr-pipeline.yml`
 
 ## Pending (Carry Forward)
 - 103 active skipped test markers triage across 53 files towards <30 (reconciled in docs/SKIPPED_TESTS.md)

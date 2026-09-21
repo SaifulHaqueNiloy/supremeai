@@ -41,3 +41,35 @@ async def enforce_api_key_rate_limit(
         raise
     except Exception as exc:
         logger.warning(f"⚠️ API Key rate limiter error: {exc}. Failing open for resilience.")
+
+
+class APIKeyLimiter:
+    """Per-API-key rate limiter facade.
+
+    বাংলা: একক API key-ভিত্তিক rate limiter-এর class-based facade।
+    Issue #895: test contract (`backend/tests/core/test_security_and_intelligence_contracts.py`)
+    একটি `APIKeyLimiter` class expect করে। এই class বিদ্যমান
+    `enforce_api_key_rate_limit()` async function-এর চারপাশে thin wrapper — কোনো
+    নতুন behavior নয়, শুধু class-based API surface যাতে callers/test contract
+    match করে।
+
+    Usage::
+
+        limiter = APIKeyLimiter(max_requests=120)
+        await limiter.enforce(api_key_hash)
+    """
+
+    def __init__(self, max_requests: int = DEFAULT_MAX_REQUESTS_PER_MINUTE) -> None:
+        self.max_requests = max_requests
+
+    async def enforce(self, api_key_hash: str) -> None:
+        """Enforce the per-key rate limit (delegates to module-level function)."""
+        await enforce_api_key_rate_limit(api_key_hash, max_requests=self.max_requests)
+
+    # Allow `APIKeyLimiter(...)(api_key_hash)` shorthand too.
+    async def __call__(self, api_key_hash: str) -> None:
+        await self.enforce(api_key_hash)
+
+
+# Module-level convenience singleton (default 60 req/min ceiling).
+api_key_limiter = APIKeyLimiter()

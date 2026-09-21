@@ -106,6 +106,60 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["account_role"],
             },
         ),
+        # ── MESH-6 (#926): Tower task-queue tools (platform-level) ──
+        types.Tool(
+            name="mesh_dispatch_task",
+            description="MESH-6: Submit a new task to the Tower-native mesh task queue (CAS claim/lease/failover handled by Tower).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "task_type": {
+                        "type": "string",
+                        "description": "One of: bash, pytest, ollama, git_push, file_edit, custom",
+                    },
+                    "title": {"type": "string", "description": "Short human-readable task title"},
+                    "payload": {"type": "object", "description": "Task-type specific payload"},
+                    "required_capabilities": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Node capabilities required to claim this task",
+                    },
+                    "target_role": {
+                        "type": "string",
+                        "description": "Optional role restriction: planner|coder|tester|gate|observer",
+                    },
+                    "priority": {
+                        "type": "integer",
+                        "description": "0 (highest) to 9 (lowest), default 5",
+                    },
+                },
+                "required": ["task_type", "title"],
+            },
+        ),
+        types.Tool(
+            name="mesh_task_status",
+            description="MESH-6: Get a mesh task's state by task_id, or the whole queue snapshot (stats + tasks) when task_id is omitted.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "task_id": {
+                        "type": "string",
+                        "description": "Task id, or omit for full queue snapshot",
+                    },
+                },
+            },
+        ),
+        types.Tool(
+            name="mesh_release_task",
+            description="MESH-6: Cancel/release a pending or leased mesh task (operator action).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "task_id": {"type": "string", "description": "Task id to cancel"},
+                },
+                "required": ["task_id"],
+            },
+        ),
     ]
 
 
@@ -116,7 +170,11 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
         arguments = {}
 
     tenant_id = str(arguments.get("tenant_id") or "").strip()
-    if not tenant_id or tenant_id == "default":
+    # MESH-6 (#926): Tower task-queue tools are platform-level — mesh task-এ
+    # কোনো tenant context নেই, তাই এই ৩টি tool tenant check বাইপাস করে
+    # (বাকি সব tool-এর জন্য আগের মতোই বাধ্যতামূলক)।
+    _MESH_PLATFORM_TOOLS = ("mesh_dispatch_task", "mesh_task_status", "mesh_release_task")
+    if name not in _MESH_PLATFORM_TOOLS and (not tenant_id or tenant_id == "default"):
         return [types.TextContent(type="text", text=json.dumps({"error": "tenant_id is required"}))]
 
     # ── Policy evaluation (Constitution Law #11: Think Before You Act) ──
@@ -192,6 +250,56 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                 types.TextContent(
                     type="text",
                     text=f"Optimal execution path from {start} to {end}:\n{' -> '.join(path) if path else 'No path found.'}",
+                )
+            ]
+
+        elif name == "mesh_dispatch_task":
+            # MESH-6 (#926): নতুন task Tower queue-তে জমা দাও।
+            from core.task_router import get_task_router
+
+            _router = await get_task_router()
+            rec = await _router.submit_task(
+                task_type=str(arguments.get("task_type") or "custom"),
+                title=str(arguments.get("title") or ""),
+                payload=arguments.get("payload") or {},
+                required_capabilities=arguments.get("required_capabilities") or [],
+                target_role=arguments.get("target_role"),
+                priority=int(arguments.get("priority", 5)),
+            )
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps({"submitted": rec.task_id, "status": rec.status}, indent=2),
+                )
+            ]
+
+        elif name == "mesh_task_status":
+            # MESH-6 (#926): নির্দিষ্ট task বা পুরো queue-র বর্তমান state।
+            from core.task_router import get_task_router
+
+            _router = await get_task_router()
+            task_id = str(arguments.get("task_id") or "").strip()
+            if task_id:
+                rec = await _router.get_task(task_id)
+                payload_out = rec.model_dump() if rec else {"error": f"task {task_id!r} not found"}
+            else:
+                payload_out = {
+                    "stats": await _router.queue_stats(),
+                    "tasks": [t.model_dump() for t in await _router.list_tasks()],
+                }
+            return [types.TextContent(type="text", text=json.dumps(payload_out, indent=2))]
+
+        elif name == "mesh_release_task":
+            # MESH-6 (#926): task cancel/release (operator action)।
+            from core.task_router import get_task_router
+
+            _router = await get_task_router()
+            task_id = str(arguments.get("task_id") or "").strip()
+            rec = await _router.cancel_task(task_id)
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps({"released": rec.task_id, "status": rec.status}, indent=2),
                 )
             ]
 
