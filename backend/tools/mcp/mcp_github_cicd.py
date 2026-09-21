@@ -502,12 +502,8 @@ async def github_search_code(params: SearchCodeInput) -> str:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # বাংলা: CFG-001 সচেতনতা — runtime policy মান env-driven (registry ডিফল্ট সহ)
-WRITE_WINDOW_SECONDS = float(
-    os.environ.get("SUPREME_GITHUB_WRITE_WINDOW_SECONDS", "60")
-)
-WRITE_MAX_PER_WINDOW = int(
-    os.environ.get("SUPREME_GITHUB_WRITE_MAX_PER_WINDOW", "30")
-)
+WRITE_WINDOW_SECONDS = float(os.environ.get("SUPREME_GITHUB_WRITE_WINDOW_SECONDS", "60"))
+WRITE_MAX_PER_WINDOW = int(os.environ.get("SUPREME_GITHUB_WRITE_MAX_PER_WINDOW", "30"))
 _write_op_times: list[float] = []
 _write_op_lock = asyncio.Lock()
 

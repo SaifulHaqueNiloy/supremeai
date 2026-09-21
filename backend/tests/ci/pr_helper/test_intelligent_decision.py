@@ -19,8 +19,8 @@ SCRIPTS_DIR = Path(__file__).resolve().parents[3] / ".github" / "scripts" / "pr_
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from delta_analysis import _classify_failure_type, _enrich_failure
-from intent_extractor import extract_intention
 from fixability_scorer import score_failure
+from intent_extractor import extract_intention
 
 
 class TestFailureTaxonomy:
@@ -129,7 +129,12 @@ class TestFixabilityScorer:
             "auto_fix_strategy": "update_test_import_path",
         }
         intention = {"intention": "refactor", "confidence": 0.8}
-        rec = score_failure(failure, intention, ["backend/tests/test_x.py", "backend/core/y.py"], "refactor: move imports")
+        rec = score_failure(
+            failure,
+            intention,
+            ["backend/tests/test_x.py", "backend/core/y.py"],
+            "refactor: move imports",
+        )
         assert rec["score"] >= 70
         assert rec["verdict"] == "auto_fix"
 
@@ -163,7 +168,12 @@ class TestFixabilityScorer:
             "auto_fix_strategy": "compare_expected_vs_actual_semantically",
         }
         intention = {"intention": "change_secret_handling", "confidence": 0.9}
-        rec = score_failure(failure, intention, ["backend/tests/test_vault.py", "backend/core/security/secret_vault.py"], "fix(core): graceful degradation")
+        rec = score_failure(
+            failure,
+            intention,
+            ["backend/tests/test_vault.py", "backend/core/security/secret_vault.py"],
+            "fix(core): graceful degradation",
+        )
         assert rec["score"] >= 70
         assert rec["verdict"] == "auto_fix"
         assert rec["intention_match"] is True
