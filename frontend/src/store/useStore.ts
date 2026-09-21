@@ -31,6 +31,10 @@ interface EvolutionState {
 
 interface SupremeState extends EvolutionState, ConfigState {
   isServerOnline: boolean;
+  // #972 UX contract: true until the FIRST health probe resolves, so the
+  // GlobalHeader can honestly show "CHECKING…" instead of a misleading
+  // "SYSTEM UNAVAILABLE" during cold start. Cleared by setServerStatus.
+  isServerStatusChecking: boolean;
   sessionId: string | null;
   currentIdempotencyKey: string | null;
   isOrchestrating: boolean;
@@ -61,6 +65,7 @@ export const useStore = create<SupremeState>((set) => ({
   setConfig: (config) => set((state) => ({ systemConfig: { ...state.systemConfig, ...config }, isConfigLoaded: true })),
 
   isServerOnline: false,
+  isServerStatusChecking: true,
   sessionId: null,
   currentIdempotencyKey: null,
   isOrchestrating: false,
@@ -77,7 +82,7 @@ export const useStore = create<SupremeState>((set) => ({
   forgeFeedback: null,
   forgeSuccessCode: null,
 
-  setServerStatus: (online) => set({ isServerOnline: online }),
+  setServerStatus: (online) => set({ isServerOnline: online, isServerStatusChecking: false }),
   initializeSession: (id) => set({ sessionId: id }),
   generateIdempotencyKey: () => {
     const uniqueKey = crypto.randomUUID();
