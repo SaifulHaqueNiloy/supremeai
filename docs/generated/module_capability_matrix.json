@@ -6324,7 +6324,8 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "health"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -12497,7 +12498,9 @@
       "path": "backend/tests/core/test_grpc_client.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "capability"
+      ],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
