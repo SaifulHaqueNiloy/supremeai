@@ -117,12 +117,12 @@ status: historical
    - ল্যাপটপ বা মোবাইলে ব্যাটারি লো থাকলে বা ডিভাইস অতিরিক্ত গরম হলে ব্রাউজার নোড স্বয়ংক্রিয়ভাবে থ্রোটল (throttle) করবে বা নিজেকে নিষ্ক্রিয় রাখবে।
 
 ### 3.3 Active Codebase Components for Way 2
-- **P2P Resource Broker:** [`backend/p2p/resource_broker.py`](file:///f:/supremeai/backend/p2p/resource_broker.py)  
+- **P2P Resource Broker:** [`backend/p2p/resource_broker.py`](./backend/p2p/resource_broker.py)  
   - নোড রেজিস্ট্রেশন (`register_node`), হার্টবিট মনিটরিং এবং ম্যাচমেকিং।
   - ক্যাপাবিলিটি অনুযায়ী সেরা নোড নির্বাচন (`find_best_node`)।
-- **Zero-Trust MicroVM Sandbox:** [`backend/core/microvm_sandbox.py`](file:///f:/supremeai/backend/core/microvm_sandbox.py)  
+- **Zero-Trust MicroVM Sandbox:** [`backend/core/microvm_sandbox.py`](./backend/core/microvm_sandbox.py)  
   - অন্য কোনো পিয়ারের কোড যাতে হোস্ট ডিভাইসের ফাইল সিস্টেমে হাত দিতে না পারে, সেজন্য কঠোর স্যান্ডবক্সিং।
-- **P2P Credit & Incentive Engine:** [`backend/p2p/credit_system.py`](file:///f:/supremeai/backend/p2p/credit_system.py)  
+- **P2P Credit & Incentive Engine:** [`backend/p2p/credit_system.py`](./backend/p2p/credit_system.py)  
   - ব্যবহারকারী তার অলস ডিভাইস দিয়ে যতগুলো টাস্ক প্রসেস করবে, সে অনুপাতে সে SupremeAI প্রো ক্রেডিট বা ফ্রি টোকেন পাবে।
 
 ---

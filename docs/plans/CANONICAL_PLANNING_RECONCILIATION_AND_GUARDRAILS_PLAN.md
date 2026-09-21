@@ -68,10 +68,10 @@ target_scope: supremeai_internal
 ## ২. Current Repository Reality এবং Correction
 
 রিপোজিটরিতে ইতিমধ্যে বিদ্যমান ভিত্তিপ্রস্তরসমূহ:
-- [`docs/plans/PLAN_LIFECYCLE_POLICY.md`](file:///f:/supremeai/docs/plans/PLAN_LIFECYCLE_POLICY.md)
-- [`docs/plans/PLAN_TO_CODE_TRACEABILITY_MATRIX.md`](file:///f:/supremeai/docs/plans/PLAN_TO_CODE_TRACEABILITY_MATRIX.md)
-- [`docs/plans/phases/plan_reconciliation_register.md`](file:///f:/supremeai/docs/plans/phases/plan_reconciliation_register.md)
-- [`docs/plans/phases/file_disposition_and_retention_list.md`](file:///f:/supremeai/docs/plans/phases/file_disposition_and_retention_list.md)
+- [`docs/plans/PLAN_LIFECYCLE_POLICY.md`](./docs/plans/PLAN_LIFECYCLE_POLICY.md)
+- [`docs/plans/PLAN_TO_CODE_TRACEABILITY_MATRIX.md`](./docs/plans/PLAN_TO_CODE_TRACEABILITY_MATRIX.md)
+- [`docs/plans/phases/plan_reconciliation_register.md`](./docs/plans/phases/plan_reconciliation_register.md)
+- [`docs/plans/phases/file_disposition_and_retention_list.md`](./docs/plans/phases/file_disposition_and_retention_list.md)
 - ডোমেইন ফোল্ডারসমূহ: `architecture/`, `features/`, `infrastructure/`, `design/`, `phases/`
 
 ### সংশোধিত সিদ্ধান্তসমূহ (Corrected Posture):
@@ -277,9 +277,9 @@ graph LR
 * **প্রশ্ন:** Browser canonical plan-এর Owner Authority বাস্তব রিপোজিটরি অনুযায়ী কে?
 * **সিদ্ধান্ত:** **কোডবেস-ভেরিফায়েড স্পষ্ট বিভাজন।**
   - **Browser Execution & Session Lifecycle Authority:** `CircleName.BROWSER` (Browser Circle)  
-    *(রেফারেন্স: [`backend/core/circles/centers/browser_center.py`](file:///f:/supremeai/backend/core/circles/centers/browser_center.py) এবং `core.browser_session_manager`)*।
+    *(রেফারেন্স: [`backend/core/circles/centers/browser_center.py`](./backend/core/circles/centers/browser_center.py) এবং `core.browser_session_manager`)*।
   - **Credential Vault & Persistence Authority:** `CircleName.SECURITY` (Security Circle)  
-    *(রেফারেন্স: [`backend/core/security/secure_credential_store.py`](file:///f:/supremeai/backend/core/security/secure_credential_store.py))*।
+    *(রেফারেন্স: [`backend/core/security/secure_credential_store.py`](./backend/core/security/secure_credential_store.py))*।
 
 ---
 

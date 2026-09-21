@@ -301,13 +301,13 @@ target_scope: supremeai_internal
 1. __Backend Docker Image (`supremeai/backend:test`)__:
    - Python 3.11-slim ভিত্তিক multi-stage Poetry বিল্ড সম্পন্ন হয়েছে।
    - সিকিউরিটি কমপ্লায়েন্সের জন্য নন-রুট ইউজার (`supremeai`) ও গ্রুপ কনফিগার করা হয়েছে।
-   - রুট ডিরেক্টরিতে `/app/data` প্রি-ক্রিয়েট করে পারমিশন ফিক্স করা হয়েছে এবং [`feedback.py`](file:///F:/supremeai/backend/api/routes/feedback.py) মডিউলে SQLite ইনিশিয়ালাইজেশনে `tempfile.gettempdir()` ফলব্যাক মেকানিজম যুক্ত করা হয়েছে।
+   - রুট ডিরেক্টরিতে `/app/data` প্রি-ক্রিয়েট করে পারমিশন ফিক্স করা হয়েছে এবং [`feedback.py`](./backend/api/routes/feedback.py) মডিউলে SQLite ইনিশিয়ালাইজেশনে `tempfile.gettempdir()` ফলব্যাক মেকানিজম যুক্ত করা হয়েছে।
 
 2. __Frontend Docker Image (`supremeai/frontend:test`)__:
    - Node.js 20-alpine দিয়ে pnpm workspace ও Vite 7 বিল্ড সম্পন্ন হয়েছে (৩,২৯৫টি মডিউল বান্ডল করা হয়েছে)।
    - আল্ট্রা-লাইটওয়েট Nginx Alpine রানটাইম দিয়ে স্ট্যাটিক অ্যাসেট সার্ভ এবং `/api/` ট্রাফিক ব্যাকএন্ড কন্টেইনারে রিভার্স-প্রক্সি করার কনফিগারেশন যুক্ত হয়েছে।
 
-3. __Docker Compose Orchestration ([`docker-compose.yml`](file:///F:/supremeai/docker-compose.yml))__:
+3. __Docker Compose Orchestration ([`docker-compose.yml`](./docker-compose.yml))__:
    - `./backend:/app` হোস্ট মাউন্ট বাদ দিয়ে পিওর লিনাক্স `.venv` ইমেজ আইসোলেশন নিশ্চিত করা হয়েছে।
    - ব্রিজ নেটওয়ার্ক (`supremeai_supremeai-network`) এবং পারসিস্টেন্ট ভলিউম (`supremeai_supremeai_data`) মাউন্ট করা হয়েছে।
 
@@ -350,7 +350,7 @@ target_scope: supremeai_internal
   docker compose up -d
   ```
 
-সকল ডকুমেন্টেশন ও সিস্টেম স্টেট [`STATUS.md`](file:///F:/supremeai/STATUS.md), [`LESSONS_LEARNED.md`](file:///F:/supremeai/LESSONS_LEARNED.md) এবং [`walkthrough.md`](file:///C:/Users/N/.gemini/antigravity-ide/brain/caa3ab51-2c5f-4b25-9e83-9b54079f6ba9/walkthrough.md)-তে রেকর্ড করা হয়েছে।
+সকল ডকুমেন্টেশন ও সিস্টেম স্টেট [`STATUS.md`](./STATUS.md), [`LESSONS_LEARNED.md`](./LESSONS_LEARNED.md) এবং [`walkthrough.md`](file:///C:/Users/N/.gemini/antigravity-ide/brain/caa3ab51-2c5f-4b25-9e83-9b54079f6ba9/walkthrough.md)-তে রেকর্ড করা হয়েছে।
 
 Viewed docker-compose.yml:1-74
 Viewed nginx.conf:1-40
@@ -392,11 +392,11 @@ Ran command: `git status --short`
 
 - __সমস্যা দূরীকরণ:__ আগে `VITE_USER_BACKEND` এবং `VITE_ADMIN_BACKEND` দুটি আলাদা ভ্যারিয়েবল থাকার কারণে মনে হতো ২টি ফ্রন্টএন্ড ও ২টি আলাদা ব্যাকএন্ড কাজ করছে।
 - __সমাধান:__
-  - [`frontend/vite.config.ts`](file:///F:/supremeai/frontend/vite.config.ts) এবং [`frontend/src/utils/api.ts`](file:///F:/supremeai/frontend/src/utils/api.ts)-কে আপডেট করে একক __`VITE_API_URL`__ অথবা __`VITE_BACKEND_URL`__-কে মূল ও প্রাথমিক URL হিসেবে নির্ধারণ করা হয়েছে।
+  - [`frontend/vite.config.ts`](./frontend/vite.config.ts) এবং [`frontend/src/utils/api.ts`](./frontend/src/utils/api.ts)-কে আপডেট করে একক __`VITE_API_URL`__ অথবা __`VITE_BACKEND_URL`__-কে মূল ও প্রাথমিক URL হিসেবে নির্ধারণ করা হয়েছে।
   - অ্যাডমিন এবং ইউজার উভয় ইন্টারফেস একই ইউনিফাইড ব্যাকএন্ড গেটওয়েতে রিকোয়েস্ট পাঠাবে। অপ্রয়োজনীয় ওয়ার্নিং বন্ধ করা হয়েছে।
   - সমস্ত ইউনিট টেস্ট (`pnpm test src/utils/api.test.ts`) ১৭/১৭ পাস করেছে।
 
-#### ২. ডকারে ব্যাকএন্ড সার্ভিসগুলোর সুস্পষ্ট নামকরণ ([`docker-compose.yml`](file:///F:/supremeai/docker-compose.yml))
+#### ২. ডকারে ব্যাকএন্ড সার্ভিসগুলোর সুস্পষ্ট নামকরণ ([`docker-compose.yml`](./docker-compose.yml))
 
 আগে জেনেরিক নাম `backend` ছিল, যার ফলে কোন কন্টেইনার কী কাজ করছে তা বোঝা যাচ্ছিল না। এখন প্রতিটি সার্ভিসকে তাদের নির্দিষ্ট দায়িত্ব অনুযায়ী আলাদা নাম দেওয়া হয়েছে:
 
