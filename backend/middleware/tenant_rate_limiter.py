@@ -108,8 +108,18 @@ async def enforce_tenant_rate_limit(request: Request):
         # M13 P-B (union-merge): window config-চালিত — hardcode 60 নয়।
         from core.cache.rate_limit_atomic import atomic_window_incr
 
+        # Issue #936: raise_on_failure=True পাস করা হলো যাতে Redis pipeline/EVAL
+        # exception propagate করে নিচের `except Exception` branch-এ যায় — সেখানে
+        # `_degraded_response(identity, fail_mode)` tenant fail_mode policy apply
+        # করে (closed=429 / fallback=in-memory bounded / open=loud log bypass)।
+        # ডিফল্ট False হলে atomic_window_incr নিজেই fail-open return 0 করত (Issue
+        # #895 contract), কিন্তু তাতে fail_mode apply হত না — test_pipeline_error_
+        # applies_fail_mode contract ভেঙে যেত।
         current_hits = await atomic_window_incr(
-            redis_manager.client, cache_key, settings.tenant_rate_limit_window_seconds
+            redis_manager.client,
+            cache_key,
+            settings.tenant_rate_limit_window_seconds,
+            raise_on_failure=True,
         )
 
         if current_hits > settings.tenant_rate_limit_max_hits:
