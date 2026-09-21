@@ -4,8 +4,8 @@
 
 | metric | value |
 |---|---|
-| backend routes | 814 |
-| routes with frontend consumer | 257 |
+| backend routes | 815 |
+| routes with frontend consumer | 258 |
 | unique frontend `/api/...` refs | 140 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
@@ -19,7 +19,7 @@
 |---|---|---|
 | `user-facing` | 156 | frontend consumer matched |
 | `admin-only` | 321 | /admin path, admin router file or ALL_ROUTERS is_admin |
-| `internal` | 37 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
+| `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 300 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
@@ -759,6 +759,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/v1/integrations/discover` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/OneLinerMCPConnect.test.tsx`, `frontend/src/components/dashboard/OneLinerMCPConnect.tsx` |
 | GET | `/api/v1/integrations/github/callback` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
 | GET | `/api/v1/integrations/github/link` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
+| POST | `/api/v1/integrations/github/webhook` | `backend/integrations/github_webhook.py` | internal | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
 | POST | `/api/v1/kaggle/callback` | `backend/api/routes/kaggle.py` | api-only | NONE |
 | GET | `/api/v1/kaggle/jobs/:param` | `backend/api/routes/kaggle.py` | api-only | NONE |
 | GET | `/api/v1/kaggle/stats` | `backend/api/routes/kaggle.py` | api-only | NONE |
