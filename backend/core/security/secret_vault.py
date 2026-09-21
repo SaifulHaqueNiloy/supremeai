@@ -150,6 +150,15 @@ class ProductionSecretVault:
         self.client: InfisicalClient | None = None
         self._cache: dict[str, _CacheEntry] = {}
         self._circuit_breaker_open: bool = False
+        # Issue #901: half-open auto-recovery — once the circuit opens we
+        # remember when (monotonic time) so a single probe can be sent after
+        # `_half_open_after_seconds` cooldown. Without this the breaker stayed
+        # OPEN forever until process restart, so a transient Infisical outage
+        # permanently blocked every agent's secret fetch even after recovery.
+        self._circuit_opened_at: float | None = None
+        self._half_open_after_seconds: int = int(
+            os.getenv("VAULT_HALF_OPEN_AFTER") or "60"
+        )
 
         # TTL overrides for smart caching (Infisical API quota optimization)
         self._ttl_overrides: dict[str, int] = {
@@ -176,6 +185,48 @@ class ProductionSecretVault:
                 )
         else:
             logger.info("Infisical missing or no credentials found. Bypassing Cloud Vault.")
+
+    # ── Half-open recovery helpers (issue #901) ───────────────────────────────
+    def _should_attempt_half_open_recovery(self) -> bool:
+        """Return True iff the circuit is OPEN and cooldown has elapsed.
+
+        বাংলা: সার্কিট OPEN হলেও প্রতি _half_open_after_seconds সেকেন্ড পর একটি
+        probe রিকোয়েস্ট পাঠানোর অনুমতি দেয়। এটি একটি single-request probe:
+        সফল হলে _close_circuit() পুরো সার্কিট বন্ধ করে দেয়, ফেইল হলে
+        _open_circuit() টাইমার রিসেট করে। এইভাবে transient Infisical outage
+        থেকে স্বয়ংক্রিয়ভাবে recover হয় — manual restart লাগে না (issue #901)।
+        """
+        if not self._circuit_breaker_open or self._circuit_opened_at is None:
+            return False
+        return (time.monotonic() - self._circuit_opened_at) >= self._half_open_after_seconds
+
+    def _open_circuit(self) -> None:
+        """Open (or reopen) the circuit and (re)start the half-open cooldown.
+
+        বাংলা: সার্কিট OPEN করে + _circuit_opened_at রিকর্ড করে যাতে
+        _should_attempt_half_open_recovery() পরবর্তী probe এর জন্য cooldown
+        মাপতে পারে। Reopen হলেও (একটি ফেইল হওয়া probe থেকে) টাইমার রিসেট
+        হয়ে যায় — ফলে পরের probe অন্তত 60s পরেই চেষ্টা করবে।
+        """
+        if not self._circuit_breaker_open:
+            logger.warning(
+                f"Vault circuit breaker OPEN — half-open probe will retry in "
+                f"{self._half_open_after_seconds}s (issue #901)"
+            )
+        self._circuit_breaker_open = True
+        self._circuit_opened_at = time.monotonic()
+
+    def _close_circuit(self) -> None:
+        """Close the circuit after a successful probe.
+
+        বাংলা: সফল probe এর পর সার্কিট CLOSED করে — normal operation resume।
+        """
+        if self._circuit_breaker_open:
+            logger.info(
+                "Vault circuit breaker CLOSED — Infisical recovered (issue #901)"
+            )
+        self._circuit_breaker_open = False
+        self._circuit_opened_at = None
 
     @with_error_bus("_init_infisical_client")
     def _init_infisical_client(self) -> None:
@@ -228,9 +279,19 @@ class ProductionSecretVault:
         Raises:
             RuntimeError: If secret not found in Infisical or env in production.
         """
-        # Circuit Breaker check
+        # Circuit Breaker check — issue #901: allow ONE probe after cooldown so
+        # the breaker self-recovers instead of staying OPEN forever.
         if self._circuit_breaker_open:
-            return self._fallback_to_env(secret_id, default)
+            if not self._should_attempt_half_open_recovery():
+                return self._fallback_to_env(secret_id, default)
+            logger.info(
+                f"Vault circuit breaker HALF_OPEN — probe attempt for '{secret_id}' "
+                f"after {self._half_open_after_seconds}s cooldown (issue #901)"
+            )
+            # Drop any stale cached env-fallback value so the probe actually
+            # reaches Infisical instead of short-circuiting via the cache.
+            # If the probe fails, _fallback_to_env re-caches a fresh fallback.
+            self._cache.pop(secret_id, None)
 
         ttl = self._ttl_overrides.get(secret_id, CACHE_TTL_SECONDS)
 
@@ -277,6 +338,10 @@ class ProductionSecretVault:
                 try:
                     secret_value = self.client.getSecret(options=options).secret_value
                     self._cache[secret_id] = _CacheEntry(secret_value, ttl=ttl)
+                    # Issue #901: probe succeeded — close the circuit so normal
+                    # operation resumes without process restart.
+                    if self._circuit_breaker_open:
+                        self._close_circuit()
                     return secret_value
                 except (ConnectionError, TimeoutError) as exc:
                     if attempt < max_retries - 1:
@@ -306,7 +371,9 @@ class ProductionSecretVault:
             # বাংলা মন্তব্য: mypy-এর Missing return statement এরর এড়াতে লুপের শেষে raise দেওয়া হলো, যদিও বাস্তবে এটি কখনো রিচ হবে না।
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
-            self._circuit_breaker_open = True
+            # Issue #901: _open_circuit resets the half-open cooldown timer so
+            # a follow-up probe is attempted after the configured window.
+            self._open_circuit()
             logger.warning(
                 f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN. Using fallback environment."
             )
@@ -333,7 +400,7 @@ class ProductionSecretVault:
                 logger.warning(f"Secret '{secret_id}' not found in Infisical. Using fallback.")
                 return self._fallback_to_env(secret_id, default)
 
-            self._circuit_breaker_open = True
+            self._open_circuit()
             logger.opt(exception=True).warning(
                 f"Unexpected error fetching {secret_id} from Infisical. Circuit breaker OPEN. Using fallback."
             )
@@ -352,8 +419,16 @@ class ProductionSecretVault:
     @with_error_bus("fetch_secret_async")
     async def fetch_secret_async(self, secret_id: str, default: str | None = None) -> str:
         """Fetch a secret from Infisical asynchronously (Bug #5 fix)."""
+        # Issue #901: half-open probe (see fetch_secret docstring).
         if self._circuit_breaker_open:
-            return self._fallback_to_env(secret_id, default)
+            if not self._should_attempt_half_open_recovery():
+                return self._fallback_to_env(secret_id, default)
+            logger.info(
+                f"Vault circuit breaker HALF_OPEN — async probe for '{secret_id}' "
+                f"after {self._half_open_after_seconds}s cooldown (issue #901)"
+            )
+            # Drop stale cached fallback so the probe actually hits Infisical.
+            self._cache.pop(secret_id, None)
 
         cached = self._cache.get(secret_id)
         # FIX(test-campaign 7): is_expired is a @property — calling it as a
@@ -382,6 +457,9 @@ class ProductionSecretVault:
                         lambda: self.client.getSecret(options=options).secret_value
                     )
                     self._cache[secret_id] = _CacheEntry(secret_value, ttl=600)
+                    # Issue #901: probe succeeded — close the circuit.
+                    if self._circuit_breaker_open:
+                        self._close_circuit()
                     return secret_value
                 except (ConnectionError, TimeoutError) as exc:
                     if attempt < max_retries - 1:
@@ -394,7 +472,8 @@ class ProductionSecretVault:
                         raise exc from exc
             raise RuntimeError("Unexpected end of retry loop without success or exception")
         except (ConnectionError, TimeoutError) as exc:
-            self._circuit_breaker_open = True
+            # Issue #901: reset half-open cooldown timer so probe retries later.
+            self._open_circuit()
             logger.warning(
                 f"Unable to reach Infisical for {secret_id}: {exc}. Circuit breaker OPEN."
             )
@@ -410,7 +489,7 @@ class ProductionSecretVault:
                 logger.warning(f"Secret '{secret_id}' not found in Infisical. Using fallback.")
                 return self._fallback_to_env(secret_id, default)
 
-            self._circuit_breaker_open = True
+            self._open_circuit()
             logger.opt(exception=True).warning(
                 f"Unexpected error fetching {secret_id} from Infisical."
             )
@@ -543,9 +622,17 @@ class ProductionSecretVault:
             dict[str, str]: {"SECRET_KEY": "secret_value", ...}
             Circuit breaker open বা client missing হলে empty dict।
         """
+        # Issue #901: half-open probe path — allow bulk fetch to attempt
+        # recovery too (otherwise a stuck-open breaker would block every
+        # bulk preload until process restart).
         if self._circuit_breaker_open:
-            logger.debug("fetch_all_secrets: circuit breaker open, skipping bulk fetch.")
-            return {}
+            if not self._should_attempt_half_open_recovery():
+                logger.debug("fetch_all_secrets: circuit breaker open, skipping bulk fetch.")
+                return {}
+            logger.info(
+                "Vault circuit breaker HALF_OPEN — probe via bulk fetch "
+                "(issue #901)"
+            )
 
         if not self.client or not self.project_id:
             logger.debug("fetch_all_secrets: no Infisical client/project_id, skipping.")
@@ -596,6 +683,9 @@ class ProductionSecretVault:
                 f"✅ Bulk fetch complete: {len(result)} secrets loaded from Infisical "
                 f"(env={infisical_env}) in one HTTP call."
             )
+            # Issue #901: bulk probe succeeded — close the circuit.
+            if self._circuit_breaker_open:
+                self._close_circuit()
             return result
 
         except concurrent.futures.TimeoutError:
