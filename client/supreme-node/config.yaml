@@ -33,11 +33,11 @@ capabilities:
 
 # Tower REST base URL — heartbeat POST করার endpoint।
 # Production: set TOWER_URL env var (or uncomment + set here)
-tower_url: ${TOWER_URL:-https://supremeai-mcp-tower.onrender.com}  # env override
+tower_url: ${TOWER_URL}  # set via env var, e.g. https://your-tower.onrender.com
 
 # Tower WebSocket URL — task receive করার persistent channel।
 # Endpoint: /ws/node  (Tower side তৈরি থাকলে)
-tower_ws_url: ${TOWER_WS_URL:-wss://supremeai-mcp-tower.onrender.com/ws/node}  # env override
+tower_ws_url: ${TOWER_WS_URL}  # set via env var, e.g. wss://your-tower.onrender.com/ws/node
 
 # Tower REST heartbeat endpoint (MESH-1 #939 দ্বারা চালু করা)।
 # Full URL = tower_url + heartbeat_path
