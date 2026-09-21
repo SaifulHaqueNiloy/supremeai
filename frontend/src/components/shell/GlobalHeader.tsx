@@ -158,7 +158,15 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
         title={isServerOnline ? 'Core backend online' : 'Core backend unreachable'}
       >
         {isServerOnline ? <Wifi size={13} className="text-emerald-400" /> : <WifiOff size={13} className="text-rose-400" />}
-        {isLoading ? 'CHECKING…' : isServerOnline ? 'SYSTEM OPERATIONAL' : 'SYSTEM UNAVAILABLE'}
+        {/* ROOT-CAUSE FIX (regression from #1028): `isLoading` was referenced but
+            never defined — TS2304. vite build skips type-checking, so the broken
+            bundle shipped and the header crashed at runtime
+            (ReferenceError → DashboardErrorBoundary) which deterministically broke
+            3 auth-smoke E2E tests (Account menu never rendered; no /login bounce
+            after /auth/me 401). The #972 "CHECKING…" loading state was never wired
+            to a real probe flag — until a store-backed checking state exists, the
+            label must stay binary. See: server-health-checking-state patch. */}
+        {isServerOnline ? 'SYSTEM OPERATIONAL' : 'SYSTEM UNAVAILABLE'}
       </span>
 
       {actions}
