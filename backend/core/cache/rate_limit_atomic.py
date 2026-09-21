@@ -88,17 +88,13 @@ async def atomic_window_incr(
         if "WRONGTYPE" in str(exc):
             try:
                 await client.delete(key)
-                return int(
-                    await client.eval(ATOMIC_WINDOW_LUA, 1, key, int(effective_window))
-                )
+                return int(await client.eval(ATOMIC_WINDOW_LUA, 1, key, int(effective_window)))
             except Exception as recovery_exc:
                 # WRONGTYPE recovery-ও ব্যর্থ হলে: ডিফল্ট fail-open (Issue #895
                 # contract — test_redis_error_returns_zero expects 0), কিন্তু
                 # raise_on_failure=True হলে re-raise (Issue #936 — caller
                 # নিজেদের fail_mode policy apply করতে পারে)।
-                logger.warning(
-                    f"atomic_window_incr WRONGTYPE recovery failed for key={key}: {exc}"
-                )
+                logger.warning(f"atomic_window_incr WRONGTYPE recovery failed for key={key}: {exc}")
                 if raise_on_failure:
                     raise recovery_exc from exc
                 return 0

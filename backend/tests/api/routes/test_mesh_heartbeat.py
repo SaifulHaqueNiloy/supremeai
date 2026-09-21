@@ -155,9 +155,7 @@ class TestMeshHeartbeatEndpoint(unittest.TestCase):
         self.assertEqual(res.status_code, 200, res.text)
 
         # Now change role via PATCH
-        res = self.client.patch(
-            "/api/v1/nodes/bolt-agent", json={"role": "coder"}
-        )
+        res = self.client.patch("/api/v1/nodes/bolt-agent", json={"role": "coder"})
         self.assertEqual(res.status_code, 200, res.text)
         data = res.json()
         self.assertEqual(data["node"]["node_id"], "bolt-agent")
@@ -197,9 +195,7 @@ class TestMeshHeartbeatEndpoint(unittest.TestCase):
 
     # ── Test 7: PATCH /nodes/{unknown} returns 404 ────────────────────────────
     def test_patch_unknown_node_returns_404(self) -> None:
-        res = self.client.patch(
-            "/api/v1/nodes/ghost-node", json={"role": "tester"}
-        )
+        res = self.client.patch("/api/v1/nodes/ghost-node", json={"role": "tester"})
         self.assertEqual(res.status_code, 404)
 
     # ── Test 8: invalid node_type → 422 ───────────────────────────────────────
@@ -222,9 +218,7 @@ class TestMeshHeartbeatEndpoint(unittest.TestCase):
         res = self.client.post("/api/v1/nodes/heartbeat", json=body)
         self.assertEqual(res.status_code, 200, res.text)
 
-        res = self.client.patch(
-            "/api/v1/nodes/gemini-web", json={"role": "sorcerer"}
-        )
+        res = self.client.patch("/api/v1/nodes/gemini-web", json={"role": "sorcerer"})
         self.assertEqual(res.status_code, 422)
 
     # ── Test 11: stale lease release → lease_active=False ─────────────────────
