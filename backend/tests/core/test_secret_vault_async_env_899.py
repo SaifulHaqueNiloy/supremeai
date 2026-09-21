@@ -124,7 +124,7 @@ class TestAsyncPathUsesResolver:
         code_lines = [re.sub(r"#.*$", "", line) for line in src.splitlines()]
         code_only = "\n".join(code_lines)
         assert '"dev" if self.env == "local" else "prod"' not in code_only, (
-            "Issue #899: async path must NOT hardcode `\"dev\" if self.env == \"local\" else \"prod\"` "
+            'Issue #899: async path must NOT hardcode `"dev" if self.env == "local" else "prod"` '
             "— must use _resolve_infisical_environment() (single source of truth)"
         )
 

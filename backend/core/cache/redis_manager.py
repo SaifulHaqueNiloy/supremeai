@@ -513,9 +513,7 @@ async def release_idempotency_lock(key: str) -> bool:
         return False
 
 
-async def cache_response_and_release_lock(
-    key: str, data: str, ttl: int = 600
-) -> bool:
+async def cache_response_and_release_lock(key: str, data: str, ttl: int = 600) -> bool:
     """Cache a successful response payload AND release the idempotency lock atomically.
 
     বাংলা মন্তব্য: idempotency flow-তে সফল response cache করার পাশাপাশি lock
@@ -555,9 +553,7 @@ async def cache_response_and_release_lock(
         return True
     except Exception as exc:
         redis_manager.report_failure(exc)
-        logger.error(
-            f"[Idempotency] cache_response_and_release_lock failed for key '{key}': {exc}"
-        )
+        logger.error(f"[Idempotency] cache_response_and_release_lock failed for key '{key}': {exc}")
         # Best-effort lock release — যাতে duplicate request আটকে না থাকে।
         try:
             await redis_manager.delete(lock_key)

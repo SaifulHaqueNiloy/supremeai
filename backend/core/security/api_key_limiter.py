@@ -124,9 +124,7 @@ class APIKeyLimiterMiddleware(BaseHTTPMiddleware):
             # Privacy: hash করে পাঠানো হয় — raw key কখনো log/store নয়।
             api_key_hash = hashlib.sha256(api_key.encode("utf-8")).hexdigest()
             try:
-                await enforce_api_key_rate_limit(
-                    api_key_hash, max_requests=self.max_requests
-                )
+                await enforce_api_key_rate_limit(api_key_hash, max_requests=self.max_requests)
             except HTTPException as exc:
                 # 429 propagation — rate limit exceeded response।
                 if exc.status_code == 429:
