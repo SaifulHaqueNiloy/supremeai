@@ -15,7 +15,6 @@ import pytest
 
 
 class TestBrowserAgent:
-    @pytest.mark.skip(reason="Live example.com HTTP content fetch test")
     @pytest.mark.asyncio
     async def test_fetch_page_success(self):
         from tools.ai_agents.browser_agent import BrowserAgent
@@ -174,7 +173,6 @@ class TestStyleLearner:
 
 
 class TestDiagramToArchitecture:
-    @pytest.mark.skip(reason="DiagramToArchitecture mock_output attribute variance")
     def test_mock_output(self):
         from tools.code.diagram_to_architecture import DiagramToArchitecture
 

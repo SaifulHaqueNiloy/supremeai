@@ -109,8 +109,6 @@ class TestOptionalCurrentUser:
 
 
 class TestLoginEndpoint:
-    @pytest.mark.skip(reason="Needs update")
-    @pytest.mark.skip(reason="Needs update")
     def test_login_returns_501(self, client):
         with patch("api.routes.auth.settings.env", "production"):
             resp = client.post("/auth/login", json={"username": "test", "password": "test"})
