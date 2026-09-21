@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 556,
+    "backend_routes": 559,
     "frontend_unique_refs": 140,
     "matched": 240,
-    "orphan_routes": 316
+    "orphan_routes": 319
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -37,6 +37,7 @@
     "/api/v1/circles": 3,
     "/api/v1/localization": 3,
     "/api/memory/recall": 3,
+    "/api/v1/nodes": 3,
     "/api/v1/webhooks": 3,
     "/api/v1/payments": 3,
     "/api/v1/plugins": 3,
@@ -130,7 +131,7 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 240,
+    "unclassified-orphan": 243,
     "internal": 44,
     "admin-only": 32
   },
@@ -1624,6 +1625,27 @@
       "method": "POST",
       "declared": "/api/memory/session",
       "resolved": "/api/memory/session",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh.py",
+      "method": "POST",
+      "declared": "/api/v1/nodes/heartbeat",
+      "resolved": "/api/v1/nodes/heartbeat",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh.py",
+      "method": "GET",
+      "declared": "/api/v1/nodes/{node_id}",
+      "resolved": "/api/v1/nodes/:param",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh.py",
+      "method": "PATCH",
+      "declared": "/api/v1/nodes/{node_id}",
+      "resolved": "/api/v1/nodes/:param",
       "classification": "unclassified-orphan"
     },
     {
