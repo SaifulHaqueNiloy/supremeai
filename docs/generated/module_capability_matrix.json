@@ -10314,6 +10314,17 @@
       "path": "backend/tests/agents/test_agents_insight_mage.py"
     },
     {
+      "capability_signals": [
+        "execute",
+        "mcp",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/agents/test_agents_skill_ingestor.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -10760,6 +10771,16 @@
       "path": "backend/tests/api/test_api_key_middleware.py"
     },
     {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_api_keys.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -10795,6 +10816,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_app_contract.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_auth_routes.py"
     },
     {
       "capability_signals": [],
@@ -11662,6 +11690,15 @@
     },
     {
       "capability_signals": [
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_advanced_wiring.py"
+    },
+    {
+      "capability_signals": [
         "dispatch",
         "execute"
       ],
@@ -12015,6 +12052,16 @@
       "path": "backend/tests/core/test_core_config.py"
     },
     {
+      "capability_signals": [
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_core_config_comprehensive.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -12133,6 +12180,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_core_retry_handler.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_core_sandbox.py"
     },
     {
       "capability_signals": [
@@ -12291,6 +12347,15 @@
       "path": "backend/tests/core/test_dynamic_zero_key_resilience.py"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_e2e.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -12432,6 +12497,13 @@
       "path": "backend/tests/core/test_grpc_client.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_hallucination_guard.py"
+    },
+    {
       "capability_signals": [
         "health"
       ],
@@ -12484,7 +12556,9 @@
       "path": "backend/tests/core/test_idempotency_middleware.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
@@ -12700,6 +12774,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_memory_service.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_microvm_sandbox.py"
     },
     {
       "capability_signals": [
@@ -13424,6 +13508,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/factories/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/hitl/test_hitl_approval_contract.py"
     },
     {
       "capability_signals": [],
@@ -14383,6 +14477,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/services/test_memory_service.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/services/test_minio_client.py"
     },
     {
       "capability_signals": [],
@@ -25525,5 +25626,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2936
+  "source_file_count": 2947
 }

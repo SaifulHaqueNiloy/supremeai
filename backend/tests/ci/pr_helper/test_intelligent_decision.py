@@ -14,8 +14,9 @@ from pathlib import Path
 
 import pytest
 
-# Add scripts to path
-SCRIPTS_DIR = Path(__file__).resolve().parents[3] / ".github" / "scripts" / "pr_helper"
+# Add scripts to path — file is at backend/tests/ci/pr_helper/, so repo root
+# is parents[4] (pr_helper → ci → tests → backend → repo root).
+SCRIPTS_DIR = Path(__file__).resolve().parents[4] / ".github" / "scripts" / "pr_helper"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 from delta_analysis import _classify_failure_type, _enrich_failure

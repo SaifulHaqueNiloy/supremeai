@@ -2,10 +2,6 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-pytestmark = pytest.mark.skip(
-    reason="Test assertions stale — config validators + LLM gateway refactored (P0 audit)"
-)
-
 
 def test_setup_logging_runs():
     from core.logging_config import setup_logging
@@ -17,8 +13,10 @@ def test_setup_logging_runs():
 def test_config_validators_basic():
     from core.config import Settings
 
-    s = Settings(env="test", cors_origins=["http://127.0.0.1:3000"])  # is_local()
-    assert "127.0.0.1" in " ".join(s.cors_origins)  # is_local()
+    s = Settings(env="test")
+    # Default CORS origins are localhost dev URLs (127.0.0.1 is not in the
+    # default set; the cors_origins property is env-driven, not a field).
+    assert "localhost" in " ".join(s.cors_origins)  # is_local()
     # ensure debug remains a bool
     assert isinstance(s.debug, bool)
 
@@ -28,14 +26,22 @@ async def test_llm_gateway_acompletion_monkeypatched(monkeypatch, tmp_path):
     class FakeChoiceMessage:
         def __init__(self, content):
             self.content = content
+            self.role = "assistant"  # cloud_adapter reads message.role
 
     class FakeChoice:
         def __init__(self, msg):
             self.message = FakeChoiceMessage(msg)
 
+    class FakeUsage:
+        prompt_tokens = 1
+        completion_tokens = 1
+        total_tokens = 2
+
     class FakeResponse:
         def __init__(self, text):
             self.choices = [FakeChoice(text)]
+            self.usage = FakeUsage()
+            self.model = "test-model"
             self._response_metadata = {"api_cost": 0.001}
 
     async def fake_acompletion(*args, **kwargs):

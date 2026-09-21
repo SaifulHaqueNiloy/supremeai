@@ -50,10 +50,13 @@ class TestRegisterRouter:
                 register_router(app, "api.routes.test")
 
     def test_register_router_import_error_optional(self, app):
-        with patch("api.importlib.import_module") as mock_import:
-            mock_import.side_effect = ImportError("Module not found")
+        # NOTE: error_event_bus must be patched BEFORE import_module — patch()
+        # resolves its target via import_module, so an active side_effect on
+        # api.importlib.import_module would break the resolution itself.
+        with patch("api.error_event_bus") as mock_event_bus:
+            with patch("api.importlib.import_module") as mock_import:
+                mock_import.side_effect = ImportError("Module not found")
 
-            with patch("api.error_event_bus") as mock_event_bus:
                 # Should not raise for optional routers
                 register_router(app, "api.routes.optional", optional=True)
                 mock_event_bus.emit.assert_called_once()
@@ -66,10 +69,11 @@ class TestRegisterRouter:
                 register_router(app, "api.routes.required", optional=False)
 
     def test_register_router_type_error_optional(self, app):
-        with patch("api.importlib.import_module") as mock_import:
-            mock_import.side_effect = TypeError("Bad type")
+        # Same ordering constraint as test_register_router_import_error_optional.
+        with patch("api.error_event_bus") as mock_event_bus:
+            with patch("api.importlib.import_module") as mock_import:
+                mock_import.side_effect = TypeError("Bad type")
 
-            with patch("api.error_event_bus") as mock_event_bus:
                 # Should not raise for optional routers
                 register_router(app, "api.routes.test", optional=True)
                 mock_event_bus.emit.assert_not_called()
@@ -82,10 +86,11 @@ class TestRegisterRouter:
                 register_router(app, "api.routes.test", optional=False)
 
     def test_register_router_emits_error_on_failure(self, app):
-        with patch("api.importlib.import_module") as mock_import:
-            mock_import.side_effect = ImportError("Not found")
+        # Same ordering constraint as test_register_router_import_error_optional.
+        with patch("api.error_event_bus") as mock_event_bus:
+            with patch("api.importlib.import_module") as mock_import:
+                mock_import.side_effect = ImportError("Not found")
 
-            with patch("api.error_event_bus") as mock_event_bus:
                 with pytest.raises(ImportError):
                     register_router(app, "api.routes.critical", optional=False)
                 mock_event_bus.emit.assert_called_once()

@@ -47,6 +47,17 @@ def mock_dependencies():
 
 
 @pytest.fixture
+def valid_auth_headers():
+    """Authorization headers accepted by the test-environment auth chain.
+
+    conftest sets ALLOW_TEST_AUTH_BYPASS=true, so AuthMiddleware skips JWT
+    verification in the test environment; the bearer-shaped header is still
+    sent to exercise the middleware path exactly as production clients do.
+    """
+    return {"Authorization": "Bearer test-env-bypass-token"}
+
+
+@pytest.fixture
 def mock_session():
     import core.services as services_mod
     from core import services

@@ -22,10 +22,6 @@ def mock_redis(monkeypatch):
 
 import pytest
 
-pytestmark = pytest.mark.skip(
-    reason="Test assertions stale — auto_remediation refactored (P0 audit)"
-)
-
 
 @pytest.mark.asyncio
 async def test_auto_remediation_success(tmp_path):
@@ -42,24 +38,42 @@ async def test_auto_remediation_success(tmp_path):
             "text": "# Secure Patch Applied for: Hardcoded secret detected\npassword = os.getenv('DB_PASSWORD')"
         }
 
+    submitted = []
+
+    async def mock_submit(*args, **kwargs):
+        submitted.append(args)
+        return "submitted-remediation-123"
+
     with (
         patch("core.llm.llm_gateway.llm_gateway.acompletion", new=mock_acompletion),
         patch.object(remediator, "_validate_file_path", return_value=str(test_file)),
+        # The self-heal pipeline (sandbox AST validation + approval queue) is
+        # a separate concern; patch its submit boundary so this test verifies
+        # the AutoRemediation flow only.
+        patch(
+            "core.health.self_healer.RemediationPipeline.submit",
+            new=mock_submit,
+        ),
     ):
+        # tenant_id is now mandatory (tenant isolation guard in
+        # process_security_alert) — omitting it yields success=False.
         res = await remediator.process_security_alert(
             file_path=str(test_file),
             line_number=1,
             issue="Hardcoded secret detected",
             severity="high",
+            tenant_id="tenant-1",
         )
 
     assert res["success"] is True
     assert res["patch_applied"] is True
-    assert "supremeai-improvements" in res["branch"]
+    assert res["branch"] == "supremeai-improvements"
 
-    # Verify file content was patched (mock prefix added since api key is empty)
-    patched_content = test_file.read_text(encoding="utf-8")
-    assert "Secure Patch Applied" in patched_content
+    # The patch is applied asynchronously by the RemediationPipeline
+    # (submit -> sandbox validation -> apply), so the local file is unchanged
+    # here; verify the generated fix was submitted to the pipeline instead.
+    assert len(submitted) == 1
+    assert "Secure Patch Applied" in str(submitted[0])
 
 
 def test_rules_mutator_blocks_ip(mock_redis):

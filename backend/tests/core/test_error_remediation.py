@@ -19,20 +19,24 @@ class TestErrorRemediation:
 
     @pytest.mark.skip(reason="ErrorRemediation refactored — qdrant attribute removed")
     def test_init_no_qdrant(self):
-        """Qdrant ইনস্টল না থাকলে ইনিশialization করা হচ্ছে।"""
-        with patch("core.error_remediation.HAS_QDRANT", False):
+        """Qdrant ইনস্টল না থাকলেও initialization করা হয় (lazy client)।"""
+        # The class lives in core.errors.error_remediation (shim re-exports);
+        # patch the REAL module globals and the current _qdrant attribute.
+        with patch("core.errors.error_remediation.HAS_QDRANT", False):
             remediation = ErrorRemediation()
-            assert remediation.qdrant is None
+            assert remediation._qdrant is None
+            assert remediation._qdrant_initialized is False
 
     @pytest.mark.skip(reason="ErrorRemediation refactored — qdrant attribute removed")
     def test_init_with_qdrant(self):
-        """Qdrant ইনস্টল থাকলে ইনিশialization করা হচ্ছে।"""
+        """Qdrant client এখন lazy — প্রথম lookup-এ তৈরি হয়, __init__-এ নয়।"""
         _skip_if_no_qdrant()
-        mock_qdrant = MagicMock()
-        with patch("core.error_remediation.QdrantClient", return_value=mock_qdrant) as mock_client:
+        with patch(
+            "core.errors.error_remediation.QdrantClient", return_value=MagicMock()
+        ) as mock_client:
             remediation = ErrorRemediation()
-            mock_client.assert_called_once()
-            assert remediation.qdrant is mock_qdrant
+            mock_client.assert_not_called()
+            assert remediation._qdrant is None
 
     async def test_lookup_fix_no_qdrant(self):
         """Qdrant ছাড়াই লুকআপ ফিক্স ফলব্যাক রিটার্ন করে।"""

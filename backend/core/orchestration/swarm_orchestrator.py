@@ -152,7 +152,13 @@ class SwarmOrchestrator:
         from core.orchestration.agent_orchestrator import budget_aware_route
 
         route = budget_aware_route(prompt=prompt, task_type="general")
-        governed = self.intelligence_router.route(prompt, requested_tier=route.get("tier"))
+        # বাংলা: SmartSemanticRouter-এর tier একটি int complexity scale (1..3) —
+        # এটি IntelligenceTier string নয়। override_requested শুধু বৈধ string
+        # tier-এর জন্য পাঠানো হয়; সংখ্যা পাঠালে RoutingDecision validation
+        # ক্র্যাশ করত (pydantic str|None)।
+        raw_tier = route.get("tier")
+        requested_tier = raw_tier if isinstance(raw_tier, str) else None
+        governed = self.intelligence_router.route(prompt, requested_tier=requested_tier)
         workspace.work_product["governance"] = governed.model_dump(mode="json")
         workspace.log(
             f"SwarmOrchestrator: Governed route tier={governed.tier.value} classification={governed.classification.value} audit_id={governed.audit_id}"
