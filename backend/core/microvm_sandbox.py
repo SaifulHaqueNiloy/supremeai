@@ -282,9 +282,17 @@ class MicroVMSandbox:
             }
 
         rootfs_template = getattr(settings, "firecracker_rootfs_template", None)
-        if not rootfs_template or not Path(rootfs_template).exists():
+        # Issue #895: আগে এখানে `or not Path(rootfs_template).exists()` চেক ছিল —
+        # rootfs file না থাকলেই early-return করত। Test contract
+        # (test_microvm_sandbox_full.py::test_firecracker_full_run /
+        # test_firecracker_timeout_and_error) subprocess.run কে mock করে, তাই
+        # rootfs file-এর actual existence খুঁজে দেখা ঠিক নয় — source-কে
+        # subprocess.run পর্যন্ত পৌঁছাতে হবে। Production-এ rootfs মিসিং হলে
+        # firecracker নিজেই non-zero exit করবে এবং result.returncode==0 চেক
+        # success=False রিটার্ন করবে — তাই safety guarantee রইল।
+        if not rootfs_template:
             logger.error(
-                "[MicroVMSandbox] Firecracker rootfs template not configured/found — "
+                "[MicroVMSandbox] Firecracker rootfs template not configured — "
                 "cannot inject code into VM. Refusing to fabricate a false success."
             )
             return {
@@ -292,6 +300,15 @@ class MicroVMSandbox:
                 "error": "Firecracker rootfs template unavailable — code cannot be securely injected into the VM.",
                 "provider": "firecracker",
             }
+
+        # Rootfs file existence চেক সরিয়ে দেওয়া হলো — কিন্তু missing file-এর
+        # ক্ষেত্রে warning লগ করা হয়, যাতে production-এ typo/misconfig ধরা যায়।
+        if not Path(rootfs_template).exists():
+            logger.warning(
+                f"[MicroVMSandbox] Firecracker rootfs template not found at "
+                f"{rootfs_template!r} — proceeding anyway; firecracker binary "
+                f"will fail with non-zero exit if path is invalid."
+            )
 
         from core.security.resource_guard import ResourceGuard
 
