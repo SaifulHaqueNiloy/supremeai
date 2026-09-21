@@ -572,7 +572,9 @@ class TestGithubCICDMCPExtended:
         importlib.reload(tools.mcp.mcp_github_cicd)
         from tools.mcp.mcp_github_cicd import CreatePRInput, github_create_pull_request
 
-        params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+        # Issue-first gate (#925) runs before the token check — body must
+        # carry a valid issue-link so the missing-token path is exercised.
+        params = CreatePRInput(title="Test", body="Fixes #42", head="feature", base="main")
         result = await github_create_pull_request(params)
         data = json.loads(result)
         assert data["error"] == "GITHUB_TOKEN not configured"
@@ -594,7 +596,8 @@ class TestGithubCICDMCPExtended:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+            # Issue-first gate (#925) must pass so the API 401 path is reached.
+            params = CreatePRInput(title="Test", body="Fixes #42", head="feature", base="main")
             result = await github_create_pull_request(params)
             assert "Invalid API key" in result
 
