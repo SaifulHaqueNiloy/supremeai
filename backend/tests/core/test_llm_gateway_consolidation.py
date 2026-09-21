@@ -164,31 +164,36 @@ def test_gateway_health_endpoint_simulation():
 
     NOTE: must stay a SYNC test — TestClient.get() is a blocking portal call;
     inside an async test it deadlocks the running event loop.
+
+    ROOT-CAUSE FIX (issue #1068): uses a fresh FastAPI() app with ONLY the
+    llm-gateway router mounted and the auth dependency overridden. The previous
+    version mounted the router on the full main app (core.app); its middleware
+    stack performs async work inside TestClient's portal loop, which can hang
+    depending on tests that ran earlier (order-dependent state) and tripped the
+    core-unit suite timeout in CI. The handler + dependency are synchronous, so
+    a fresh app yields a deterministic response — and this now asserts the real
+    200 payload contract instead of accepting 401/403 as a pass.
     """
+    from fastapi import FastAPI
     from fastapi.testclient import TestClient
 
+    from api.dependencies import get_current_user_token
     from api.routes.llm_gateway_routes import router
 
-    # বাংলা মন্তব্য: মেইন মডিউলের বদলে core.app থেকে অ্যাপ ইমপোর্ট করা হলো
-    from core.app import app
+    probe = FastAPI()
+    probe.include_router(router)
+    probe.dependency_overrides[get_current_user_token] = lambda: {
+        "sub": "test_admin@supremeai.com",
+        "role": "admin",
+        "tenant_id": "test-tenant",
+    }
+    client = TestClient(probe)
 
-    # Add the router to the main app for testing
-    app.include_router(router)
-    client = TestClient(app)
-
-    # Test health endpoint (this might fail if auth is required, so we'll catch that)
-    try:
-        response = client.get("/llm-gateway/health")
-        # The response might be a 401 if authentication is required
-        # That's OK, we just want to verify the endpoint exists
-        assert response.status_code in [
-            200,
-            401,
-            403,
-        ], "Health endpoint should exist (even if auth required)"
-    except Exception as e:
-        # If we can't test the endpoint due to setup issues, that's OK
-        print(f"Could not test health endpoint (likely due to auth setup): {e}")
+    response = client.get("/llm-gateway/health")
+    assert response.status_code == 200, f"Health endpoint should exist: {response.status_code}"
+    body = response.json()
+    assert body["status"] == "healthy"
+    assert body["gateway_initialized"] is True
 
 
 @pytest.mark.asyncio
