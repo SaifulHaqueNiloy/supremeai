@@ -26,7 +26,7 @@ async def llm_gateway_health(current_user: dict = Depends(get_current_user_token
 
     # Get free tier tracker status
     tracker = get_tracker()
-    tracker_status = tracker.get_all_status()
+    tracker_status = tracker.get_status()
 
     return {
         "status": "healthy",
@@ -48,7 +48,7 @@ async def get_gateway_state(current_user: dict = Depends(get_current_user_token)
 
     # Get free tier tracker status
     tracker = get_tracker()
-    tracker_status = tracker.get_all_status()
+    tracker_status = tracker.get_status()
 
     return {
         "llm_gateway": {

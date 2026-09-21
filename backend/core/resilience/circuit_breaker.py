@@ -415,7 +415,12 @@ class CircuitBreaker:
                 "last_success_time": self.last_success_time,
                 "opened_at": self.opened_at,
                 "is_recovery_in_progress": self._recovery_in_progress,
-                "is_open": self.is_open,
+                # ROOT-CAUSE FIX (issue #1070): do NOT call self.is_open here —
+                # it re-acquires self._lock (non-reentrant threading.Lock) while
+                # get_state_info() already holds it -> guaranteed self-deadlock
+                # for ANY caller iterating breakers (e.g. /llm-gateway/health)
+                # once at least one breaker exists. Read self.state directly.
+                "is_open": self.state == CircuitBreakerState.OPEN,
             }
 
     def get_metrics(self) -> dict[str, Any]:
