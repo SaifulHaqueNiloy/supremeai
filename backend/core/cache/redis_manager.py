@@ -513,6 +513,61 @@ async def release_idempotency_lock(key: str) -> bool:
         return False
 
 
+async def cache_response_and_release_lock(
+    key: str, data: str, ttl: int = 600
+) -> bool:
+    """Cache a successful response payload AND release the idempotency lock atomically.
+
+    বাংলা মন্তব্য: idempotency flow-তে সফল response cache করার পাশাপাশি lock
+    release করার জন্য single source of truth। পূর্বে middleware থেকে এই নামটি
+    import করা হতো কিন্তু ফাংশনটি defined ছিল না — যার কারণে ImportError
+    এর জন্য সম্পূর্ণ idempotency middleware silent no-op হয়ে যেত (Issue #897)।
+
+    Behavior:
+        1. `idempotency:response:{key}` Redis key-এ response JSON string save করে (TTL সহ)।
+        2. `idempotency:{key}` lock key delete করে যাতে পরবর্তী একই Idempotency-Key
+           request গ্রহণ করা যায়।
+        3. Cache write fail হলেও best-effort lock release করা হয় (non-blocking recovery)।
+
+    Args:
+        key: scoped idempotency key (principal:idempotency_key format)।
+        data: JSON-serialized response payload string।
+        ttl: cache TTL in seconds (default 600s = 5×IDEMPOTENCY_TTL_SECONDS)।
+
+    Returns:
+        True যদি cache write সফল হয়, False অন্যথায়।
+    """
+    cache_key = f"idempotency:response:{key}"
+    lock_key = f"idempotency:{key}"
+    try:
+        client = await redis_manager.get_client_async()
+        if not client:
+            logger.warning(
+                "[Idempotency] Redis unavailable — cannot cache response; releasing lock only."
+            )
+            await redis_manager.delete(lock_key)
+            return False
+        await client.set(cache_key, data, ex=ttl)
+        logger.debug(
+            f"[Idempotency] Cached response for key '{key}' (ttl={ttl}s) and releasing lock."
+        )
+        await redis_manager.delete(lock_key)
+        return True
+    except Exception as exc:
+        redis_manager.report_failure(exc)
+        logger.error(
+            f"[Idempotency] cache_response_and_release_lock failed for key '{key}': {exc}"
+        )
+        # Best-effort lock release — যাতে duplicate request আটকে না থাকে।
+        try:
+            await redis_manager.delete(lock_key)
+        except Exception as inner_exc:
+            logger.error(
+                f"[Idempotency] Best-effort lock release failed for key '{key}': {inner_exc}"
+            )
+        return False
+
+
 class _TTLCacheItem:
     """TTL-ভিত্তিক ক্যাশ আইটেম — স্বয়ংক্রিয় মেয়াদোত্তীর্ণ (Bangla: TTL-based cache item with auto-expiry)"""
 

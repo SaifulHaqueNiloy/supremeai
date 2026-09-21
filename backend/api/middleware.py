@@ -314,18 +314,17 @@ class IdempotencyMiddleware(BaseHTTPMiddleware):
                 },
             )
 
-        try:
-            from core.cache.redis_manager import (
-                acquire_idempotency_lock,
-                cache_response_and_release_lock,
-                redis_manager,
-                release_idempotency_lock,
-            )
-        except ImportError:
-            logger.warning(
-                "[Idempotency] Failed to import redis_manager — skipping check (fail-open)"
-            )
-            return await call_next(request)
+        # FIX (#897, P1 security): পূর্বে এই import `try/except ImportError`-এ
+        # fail-open ছিল — যার কারণে cache_response_and_release_lock missing থাকলেও
+        # সম্পূর্ণ idempotency middleware silent no-op হয়ে যেত। Security middleware
+        # silent skip করবে না — import error হলে fail-loud log + explicit metric
+        # (non-blocking raise নয় কারণ এটি request-path মিডলওয়্যার)।
+        from core.cache.redis_manager import (
+            acquire_idempotency_lock,
+            cache_response_and_release_lock,
+            redis_manager,
+            release_idempotency_lock,
+        )
 
         # FIX (P1, review 2026-09-12): compute the scoped key before any Redis
         # usage so the lock path below is user-scoped too.
