@@ -4,6 +4,7 @@ import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
 import { apiClient } from '../services/apiClient';
 import { useToast } from '../contexts/useToast';
 import { useAuthStore } from '../store/authStore';
+import { useTheme } from '../contexts/useTheme';
 
 export const ProfilePage: React.FC = () => {
   const [saved, setSaved] = useState(false);
@@ -12,9 +13,7 @@ export const ProfilePage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [preferredModel, setPreferredModel] = useState('DeepSeek-V3');
   const [jitOtpEnabled, setJitOtpEnabled] = useState(true);
-  const [darkMode, setDarkMode] = useState(() => {
-    try { return localStorage.getItem('supremeai_theme') !== 'light'; } catch { return true; }
-  });
+  const { theme, toggleTheme } = useTheme();
   const { showToast } = useToast();
   const [notifications, setNotifications] = useState({
     email: true,
@@ -33,7 +32,7 @@ export const ProfilePage: React.FC = () => {
       // ERR-H01 FIX: real backend route is POST /api/preferences (no PUT
       // route exists); preferred_model maps to the contract's default_model.
       await apiClient.post('/api/preferences', {
-        theme: darkMode ? 'dark' : 'light',
+        theme: (theme === 'dark') ? 'dark' : 'light',
         default_model: preferredModel,
         profile: { name, email },
         security: { jit_otp_enabled: jitOtpEnabled },
@@ -191,21 +190,21 @@ export const ProfilePage: React.FC = () => {
                     </div>
                     <button
                       onClick={() => {
-                        const next = !darkMode;
-                        setDarkMode(next);
+                        const next = !(theme === 'dark');
+                        (next);
                         try {
-                          localStorage.setItem('supremeai_theme', next ? 'dark' : 'light');
+                          toggleTheme();
                         } catch (storageError) {
                           console.warn('[v0] Theme preference could not be saved', storageError);
                         }
                       }}
                       className={`w-12 h-6 rounded-full transition-colors relative ${
-                        darkMode ? 'bg-cyan-500' : 'bg-slate-800'
+                        (theme === 'dark') ? 'bg-cyan-500' : 'bg-slate-800'
                       }`}
                     >
                       <div
                         className={`w-5 h-5 rounded-full bg-white absolute top-0.5 transition-transform ${
-                          darkMode ? 'right-0.5' : 'left-0.5'
+                          (theme === 'dark') ? 'right-0.5' : 'left-0.5'
                         }`}
                       />
                     </button>
