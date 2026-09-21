@@ -170,6 +170,14 @@ sqlglot = "^27.0.0"
 pytest-md = "^0.2.0"
 typeguard = "^4.2"
 pytest-html = "^4.1.1"
+# Issue #895: /export slash command tests (test_slash_commands_full.py
+# TestExportCommand::test_pdf_export, test_docx_export) require real PDF/DOCX
+# binaries — reportlab generates a proper PDF (starts with %PDF magic), and
+# python-docx generates a real .docx (PK zip container). Both were implicit
+# dev dependencies (used by api/routes/slash_commands.py and chat_export.py)
+# but not declared — CI failed with "PDF export requires reportlab".
+reportlab = "^4.4"
+python-docx = "^1.1"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
