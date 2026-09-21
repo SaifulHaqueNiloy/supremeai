@@ -109,7 +109,6 @@ async def test_gateway_429_handling_simulation(llm_gateway):
         assert mock_sleep.called, "Should sleep for short backoff"
 
 
-@pytest.mark.skip(reason="LLMGateway _MODEL_KEY_MAP refactored in core.llm")
 @pytest.mark.asyncio
 async def test_provider_taxonomy_consistency():
     """Test that provider taxonomies are more consistent between gateways."""
@@ -159,7 +158,6 @@ async def test_circuit_breaker_state_sharing():
     assert cb2.is_open, "Opening circuit breaker in one should affect shared instance"
 
 
-@pytest.mark.skip(reason="LLMGateway health endpoint route module import location variance")
 @pytest.mark.asyncio
 async def test_gateway_health_endpoint_simulation():
     """Test the health endpoint functionality."""
@@ -211,7 +209,6 @@ async def test_enhanced_gateway_features():
     assert cb is shared_cb, "Gateway should use shared circuit breaker"
 
 
-@pytest.mark.skip(reason="LLMGateway _MODEL_KEY_MAP refactored in core.llm")
 def test_provider_mapping_completeness():
     """Test that provider mapping covers all expected providers."""
     gateway = get_llm_gateway()
