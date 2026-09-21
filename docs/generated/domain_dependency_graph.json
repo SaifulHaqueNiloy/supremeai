@@ -2552,16 +2552,6 @@
     {
       "evidence": [
         {
-          "line": 1060,
-          "path": "backend/services/memory_service.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "ai"
-    },
-    {
-      "evidence": [
-        {
           "line": 81,
           "path": "backend/tools/knowledge/pdf_to_sdk.py"
         }
