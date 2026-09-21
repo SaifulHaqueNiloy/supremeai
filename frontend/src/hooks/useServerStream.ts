@@ -33,7 +33,7 @@ export const useServerStream = () => {
           credentials: 'include',
         });
         // বাংলা মন্তব্য: 2xx মানে ব্যাকএন্ড জাগ্রত; SSE নিজেই পরে onopen করে অনলাইন সেট করবে।
-        if (res.ok) {
+        if (res.ok || res.status < 500) {
           setServerStatus(true);
         } else if (res.status >= 500) {
           // বাংলা মন্তব্য: 503/502/504 = সার্ভার ডাউন বা কোল্ড স্টার্ট — স্পষ্ট OFFLINE দেখাও।
