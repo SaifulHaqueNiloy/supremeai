@@ -100,8 +100,20 @@ class CircuitBreaker:
         **kwargs: Any,
     ) -> None:
         self.name = name
-        self.failure_threshold = failure_threshold or settings.circuit_breaker_failure_threshold
-        self.recovery_timeout = float(recovery_timeout or settings.circuit_breaker_cooldown_period)
+        # Issue #895: আগে `failure_threshold or settings.circuit_breaker_failure_threshold`
+        # ব্যবহার হতো — কিন্তু `0` falsy চেকে পড়ে যায়, ফলে test যখন `recovery_timeout=0`
+        # (instant recovery) দেয়, সেটা silently default 60s দিয়ে replace হয়ে যেত।
+        # Explicit `None` চেক করে সেই regression ঠেকানো হলো।
+        self.failure_threshold = (
+            failure_threshold
+            if failure_threshold is not None
+            else settings.circuit_breaker_failure_threshold
+        )
+        self.recovery_timeout = float(
+            recovery_timeout
+            if recovery_timeout is not None
+            else settings.circuit_breaker_cooldown_period
+        )
 
         self.state: CircuitBreakerState = CircuitBreakerState.CLOSED
         self.failure_count: int = 0
@@ -229,6 +241,18 @@ class CircuitBreaker:
             )
             self.mark_failure()
             raise
+
+    async def call_async(
+        self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
+    ) -> T:
+        """Async alias of :meth:`acall`.
+
+        বাংলা: `acall`-এর পাবলিক async alias। অনেক caller/test `call_async` নামের API
+        contract ধরে রেখেছে (যেমন ``backend/tests/core/test_circuit_breaker.py``), তাই
+        `acall`-এর implementation এক রেখে এই alias দেওয়া হয়েছে — নতুন behavior নয়,
+        শুধু naming compatibility।
+        """
+        return await self.acall(func, *args, **kwargs)
 
     async def acall(self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any) -> T:
         """Execute an async function with circuit breaker protection.
