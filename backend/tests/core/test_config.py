@@ -8,7 +8,6 @@ from core.config import Settings
 pytestmark = pytest.mark.skip(reason="Test assertions stale — Settings class refactored (P0 audit)")
 
 
-
 @patch.dict(os.environ, {}, clear=True)
 @patch("core.security.secret_vault.secret_vault.fetch_secret", return_value="")
 def test_defaults(mock_fetch):
