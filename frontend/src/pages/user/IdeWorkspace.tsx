@@ -153,7 +153,7 @@ export const IdeWorkspace: React.FC = () => {
       {/* Header */}
       <div className="h-12 bg-[#252526] border-b border-[#1e1e1e] flex items-center px-4 justify-between">
         <div className="flex items-center space-x-2">
-          <div className="text-blue-400 font-bold">Morphic IDE</div>
+          <div className="text-blue-400 font-bold">SupremeAI Code Editor</div>
           <div className="text-xs px-2 py-0.5 bg-gray-700 rounded text-gray-300">
             {isBooting ? 'Booting Engine...' : 'Engine Ready'}
           </div>
