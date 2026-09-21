@@ -14,12 +14,12 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 800,
+    "backend_routes": 804,
     "frontend_unique_refs": 140,
     "routes_with_frontend_consumer": 257,
     "unmounted_routes": 0,
-    "orphan_routes": 0,
-    "orphan_families": 0,
+    "orphan_routes": 4,
+    "orphan_families": 1,
     "api_only_routes": 286,
     "api_only_families": 157,
     "by_classification": {
@@ -28,10 +28,12 @@
       "internal": 37,
       "deprecated": 0,
       "api-only": 286,
-      "orphaned": 0
+      "orphaned": 4
     }
   },
-  "orphan_families": {},
+  "orphan_families": {
+    "/api/v1/nodes": 4
+  },
   "api_only_families": {
     "/agent/plan": 1,
     "/api/artifacts": 1,
@@ -9331,6 +9333,62 @@
       "operation": "stream_mission_trace",
       "frontend_consumers": [],
       "classification": "api-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/nodes",
+      "declared": "/api/v1/nodes",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh.py",
+      "module": "api.routes.mesh",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_active_nodes",
+      "frontend_consumers": [],
+      "classification": "orphaned"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/nodes/:param",
+      "declared": "/api/v1/nodes/{node_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh.py",
+      "module": "api.routes.mesh",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_node_detail",
+      "frontend_consumers": [],
+      "classification": "orphaned"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/nodes/:param",
+      "declared": "/api/v1/nodes/{node_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh.py",
+      "module": "api.routes.mesh",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "patch_node_role",
+      "frontend_consumers": [],
+      "classification": "orphaned"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/nodes/heartbeat",
+      "declared": "/api/v1/nodes/heartbeat",
+      "deprecated": false,
+      "router_file": "backend/api/routes/mesh.py",
+      "module": "api.routes.mesh",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "post_node_heartbeat",
+      "frontend_consumers": [],
+      "classification": "orphaned"
     },
     {
       "method": "POST",

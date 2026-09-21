@@ -4,12 +4,12 @@
 
 | metric | value |
 |---|---|
-| backend routes | 800 |
+| backend routes | 804 |
 | routes with frontend consumer | 257 |
 | unique frontend `/api/...` refs | 140 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
-| orphan routes (unclassified) | 0 |
-| orphan families | 0 |
+| orphan routes (unclassified) | 4 |
+| orphan families | 1 |
 | api-only routes (allowlisted) | 286 |
 | api-only families | 157 |
 
@@ -22,11 +22,13 @@
 | `internal` | 37 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 286 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
-| `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
+| `orphaned` | 4 | no consumer and no classification — CI fails on NEW orphans |
 
-## Orphan families
+## Orphan families (actionable — wire, classify or deprecate)
 
-None — every route is classified or allowlisted. New orphans fail `tests/test_route_consumer_contract.py`.
+| family | orphan routes |
+|---|---|
+| `/api/v1/nodes` | 4 |
 
 ## Intentionally API-only families (allowlisted — owner to prune as wiring lands)
 
@@ -810,6 +812,10 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/v1/missions/:param/start` | `backend/api/routes/missions.py` | api-only | NONE |
 | GET | `/api/v1/missions/:param/trace` | `backend/api/routes/missions.py` | api-only | NONE |
 | GET | `/api/v1/missions/:param/trace/stream` | `backend/api/routes/missions.py` | api-only | NONE |
+| GET | `/api/v1/nodes` | `backend/api/routes/mesh.py` | orphaned | NONE |
+| GET | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | orphaned | NONE |
+| PATCH | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | orphaned | NONE |
+| POST | `/api/v1/nodes/heartbeat` | `backend/api/routes/mesh.py` | orphaned | NONE |
 | POST | `/api/v1/onboarding/complete` | `backend/api/routes/onboarding.py` | api-only | NONE |
 | POST | `/api/v1/onboarding/plan` | `backend/api/routes/onboarding.py` | api-only | NONE |
 | DELETE | `/api/v1/onboarding/reset/:param` | `backend/api/routes/onboarding.py` | api-only | NONE |
