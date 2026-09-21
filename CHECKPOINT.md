@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-21 00:28 UTC
+- **Date:** 2026-09-21 10:59 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,16 +10,9 @@
   - (see git log for details)
 
 ## Files Changed
-  - `docs/master_docs/ARCH-GAP-01-DECISION-GAP-ANALYSIS.md`
-  - `docs/master_docs/SEC-01-30_CATEGORY_SECURITY_MATRIX.md`
-  - `docs/master_docs/OPS-05-PR-HELPER-LIFECYCLE.md`
-  - `.github/workflows/audit-release.yml`
-  - `docs/master_docs/ARCH-06-MODULES_AND_PROVIDERS_MAP.md`
-  - `docs/master_docs/OPS-07-DEVELOPER-AGENT-LIFECYCLE.md`
+  - `AGENTS.md`
   - `secrets_registry.yaml`
-  - `docs/master_docs/OPS-06-MULTI-AGENT-BRANCHING-LIFECYCLE.md`
-  - `docs/master_docs/OPS-08-SUPREMEAI-RUNTIME-WORK-PROCESS.md`
-  - `docs/master_docs/ARCH-02-SYSTEM_OVERVIEW_AND_FLOWS.md`
+  - `CHECKPOINT.md`
 
 ## Pending (Carry Forward)
 - 103 active skipped test markers triage across 53 files towards <30 (reconciled in docs/SKIPPED_TESTS.md)
