@@ -98,7 +98,13 @@ export function setupGlobalFetchInterceptor() {
         url.includes('/api/health')
       );
       if (!isAbort && win.showGlobalToast && !isBackgroundRequest) {
-        win.showGlobalToast('error', `Network Error: ${error instanceof Error ? error.message : 'Unknown'}`);
+        // বাংলা: র এরর মেসেজ ইউজারের কাছে না দেখিয়ে বন্ধুত্বপূর্ণ বার্তা দেখানো হচ্ছে
+      const friendlyMsg = error instanceof Error && error.message.includes('Failed to fetch')
+        ? 'সার্ভারে সংযোগ করতে ব্যর্থ। অনুগ্রহ করে কিছুক্ষণ পর আবার চেষ্টা করুন।'
+        : error instanceof Error && error.message.includes('aborted')
+        ? 'অনুরোধ বাতিল করা হয়েছে।'
+        : 'একটি সমস্যা হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।';
+      win.showGlobalToast('error', friendlyMsg);
       }
       throw error;
     }
