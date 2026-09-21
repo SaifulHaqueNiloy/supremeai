@@ -23,7 +23,6 @@ from api.routes.auth import (
 _FAKE_PW = "pass" + "word"
 
 
-
 @pytest.fixture
 def client():
     app = FastAPI()
