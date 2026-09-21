@@ -1,4 +1,4 @@
-"""MESH-6 (issue #926) — /api/v1/tasks REST endpoints + heartbeat auto-dispatch tests.
+"""MESH-6 (issue #926) — /api/v1/mesh/tasks REST endpoints + heartbeat auto-dispatch tests.
 
 বাংলা সারসংক্ষেপ:
 ------------------
@@ -52,7 +52,7 @@ def _make_app(registry: PresenceRegistry, router: TaskRouter) -> tuple[FastAPI, 
 
 
 class MeshTasksEndpointTest(unittest.TestCase):
-    """POST/GET /api/v1/tasks endpoints-এর ব্যাপক contract যাচাই।"""
+    """POST/GET /api/v1/mesh/tasks endpoints-এর ব্যাপক contract যাচাই।"""
 
     def setUp(self) -> None:
         self.registry = PresenceRegistry()
@@ -72,7 +72,7 @@ class MeshTasksEndpointTest(unittest.TestCase):
             "required_capabilities": ["pytest"],
         }
         body.update(overrides)
-        res = self.client.post("/api/v1/tasks", json=body)
+        res = self.client.post("/api/v1/mesh/tasks", json=body)
         self.assertEqual(res.status_code, 201, res.text)
         return res.json()
 
@@ -83,38 +83,38 @@ class MeshTasksEndpointTest(unittest.TestCase):
         self.assertEqual(data["status"], "pending")
 
     def test_submit_invalid_type_422(self) -> None:
-        res = self.client.post("/api/v1/tasks", json={"task_type": "fly", "title": "x"})
+        res = self.client.post("/api/v1/mesh/tasks", json={"task_type": "fly", "title": "x"})
         self.assertEqual(res.status_code, 422)
 
     # ── list / detail / stats ────────────────────────────────────────────────
     def test_list_filter_and_stats(self) -> None:
         self._submit(title="a")
-        data = self.client.get("/api/v1/tasks").json()
+        data = self.client.get("/api/v1/mesh/tasks").json()
         self.assertEqual(data["count"], 1)
         self.assertEqual(data["stats"]["pending"], 1)
-        res = self.client.get("/api/v1/tasks", params={"task_status": "pending"})
+        res = self.client.get("/api/v1/mesh/tasks", params={"task_status": "pending"})
         self.assertEqual(res.status_code, 200)
-        res = self.client.get("/api/v1/tasks", params={"task_status": "bogus"})
+        res = self.client.get("/api/v1/mesh/tasks", params={"task_status": "bogus"})
         self.assertEqual(res.status_code, 422)
-        stats = self.client.get("/api/v1/tasks/queue/stats").json()
+        stats = self.client.get("/api/v1/mesh/tasks/queue/stats").json()
         self.assertEqual(stats["pending"], 1)
 
     def test_get_task_404(self) -> None:
-        res = self.client.get("/api/v1/tasks/task-missing")
+        res = self.client.get("/api/v1/mesh/tasks/task-missing")
         self.assertEqual(res.status_code, 404)
 
     # ── claim ────────────────────────────────────────────────────────────────
     def test_claim_any_best_match_then_204(self) -> None:
         self._submit()
         res = self.client.post(
-            "/api/v1/tasks/any/claim",
+            "/api/v1/mesh/tasks/any/claim",
             json={"node_id": "pc-1", "role": "tester", "capabilities": ["pytest"]},
         )
         self.assertEqual(res.status_code, 200, res.text)
         self.assertEqual(res.json()["task_type"], "pytest")
         # আর কোনো pending নেই → 204
         res2 = self.client.post(
-            "/api/v1/tasks/any/claim",
+            "/api/v1/mesh/tasks/any/claim",
             json={"node_id": "pc-2", "role": "tester", "capabilities": ["pytest"]},
         )
         self.assertEqual(res2.status_code, 204)
@@ -123,19 +123,19 @@ class MeshTasksEndpointTest(unittest.TestCase):
         data = self._submit()
         tid = data["task_id"]
         res1 = self.client.post(
-            f"/api/v1/tasks/{tid}/claim",
+            f"/api/v1/mesh/tasks/{tid}/claim",
             json={"node_id": "pc-1", "capabilities": ["pytest"]},
         )
         self.assertEqual(res1.status_code, 200)
         res2 = self.client.post(
-            f"/api/v1/tasks/{tid}/claim",
+            f"/api/v1/mesh/tasks/{tid}/claim",
             json={"node_id": "pc-2", "capabilities": ["pytest"]},
         )
         self.assertEqual(res2.status_code, 409)
 
     def test_claim_unknown_404(self) -> None:
         res = self.client.post(
-            "/api/v1/tasks/task-missing/claim",
+            "/api/v1/mesh/tasks/task-missing/claim",
             json={"node_id": "pc-1", "capabilities": []},
         )
         self.assertEqual(res.status_code, 404)
@@ -145,37 +145,39 @@ class MeshTasksEndpointTest(unittest.TestCase):
         data = self._submit()
         tid = data["task_id"]
         self.client.post(
-            f"/api/v1/tasks/{tid}/claim",
+            f"/api/v1/mesh/tasks/{tid}/claim",
             json={"node_id": "pc-1", "capabilities": ["pytest"]},
         )
         # wrong node → 403
-        res_forbidden = self.client.post(f"/api/v1/tasks/{tid}/lease", json={"node_id": "ghost"})
+        res_forbidden = self.client.post(
+            f"/api/v1/mesh/tasks/{tid}/lease", json={"node_id": "ghost"}
+        )
         self.assertEqual(res_forbidden.status_code, 403)
         # owner renewal → 200
         res_renew = self.client.post(
-            f"/api/v1/tasks/{tid}/lease", json={"node_id": "pc-1", "lease_seconds": 300}
+            f"/api/v1/mesh/tasks/{tid}/lease", json={"node_id": "pc-1", "lease_seconds": 300}
         )
         self.assertEqual(res_renew.status_code, 200)
         # complete with result → 200, result persisted
         res_done = self.client.post(
-            f"/api/v1/tasks/{tid}/complete",
+            f"/api/v1/mesh/tasks/{tid}/complete",
             json={"node_id": "pc-1", "result": {"passed": 10}},
         )
         self.assertEqual(res_done.status_code, 200)
         self.assertEqual(res_done.json()["result"], {"passed": 10})
         # terminal cancel → 422
-        res_cancel = self.client.post(f"/api/v1/tasks/{tid}/cancel")
+        res_cancel = self.client.post(f"/api/v1/mesh/tasks/{tid}/cancel")
         self.assertEqual(res_cancel.status_code, 422)
 
     def test_fail_retry_then_422_on_terminal(self) -> None:
         data = self._submit(max_attempts=1)
         tid = data["task_id"]
         self.client.post(
-            f"/api/v1/tasks/{tid}/claim",
+            f"/api/v1/mesh/tasks/{tid}/claim",
             json={"node_id": "pc-1", "capabilities": ["pytest"]},
         )
         res_fail = self.client.post(
-            f"/api/v1/tasks/{tid}/fail", json={"node_id": "pc-1", "error": "boom"}
+            f"/api/v1/mesh/tasks/{tid}/fail", json={"node_id": "pc-1", "error": "boom"}
         )
         self.assertEqual(res_fail.status_code, 200)
         self.assertEqual(res_fail.json()["status"], "failed")
@@ -184,10 +186,12 @@ class MeshTasksEndpointTest(unittest.TestCase):
         data = self._submit()
         tid = data["task_id"]
         self.client.post(
-            f"/api/v1/tasks/{tid}/claim",
+            f"/api/v1/mesh/tasks/{tid}/claim",
             json={"node_id": "pc-1", "capabilities": ["pytest"]},
         )
-        res = self.client.post(f"/api/v1/tasks/{tid}/fail", json={"node_id": "ghost", "error": "x"})
+        res = self.client.post(
+            f"/api/v1/mesh/tasks/{tid}/fail", json={"node_id": "ghost", "error": "x"}
+        )
         self.assertEqual(res.status_code, 403)
 
     # ── reap ─────────────────────────────────────────────────────────────────
@@ -196,14 +200,14 @@ class MeshTasksEndpointTest(unittest.TestCase):
         tid = data["task_id"]
         # 1-সেকেন্ড lease নিয়ে মেয়াদ শেষ করা হচ্ছে
         self.client.post(
-            f"/api/v1/tasks/{tid}/claim",
+            f"/api/v1/mesh/tasks/{tid}/claim",
             json={"node_id": "pc-dead", "capabilities": ["pytest"], "lease_seconds": 1},
         )
         time.sleep(1.1)
-        res = self.client.post("/api/v1/tasks/reap")
+        res = self.client.post("/api/v1/mesh/tasks/reap")
         self.assertEqual(res.status_code, 200)
         self.assertIn(tid, res.json()["reaped"])
-        after = self.client.get(f"/api/v1/tasks/{tid}").json()
+        after = self.client.get(f"/api/v1/mesh/tasks/{tid}").json()
         self.assertEqual(after["status"], "pending")
 
     # ── heartbeat auto-dispatch (MESH-1 × MESH-6 integration) ───────────────

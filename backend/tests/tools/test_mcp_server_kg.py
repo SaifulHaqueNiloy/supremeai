@@ -213,6 +213,10 @@ class TestListTools:
             "get_render_deploy_preflight",
             "get_render_account_status",
             "refresh_render_account_status",
+            # MESH-6 (#926): Tower task-queue tools (platform-level)
+            "mesh_dispatch_task",
+            "mesh_task_status",
+            "mesh_release_task",
         ]
         for tool in tools:
             assert tool.description
@@ -231,6 +235,11 @@ class TestListTools:
         # graph tools expose empty property sets
         assert tools["get_skill_dependencies"].inputSchema["properties"] == {}
         assert tools["get_render_deploy_preflight"].inputSchema["properties"] == {}
+        # MESH-6 (#926): task-queue tool contracts
+        assert tools["mesh_dispatch_task"].inputSchema["required"] == ["task_type", "title"]
+        assert tools["mesh_release_task"].inputSchema["required"] == ["task_id"]
+        # task_status-এ task_id optional — queue snapshot mode
+        assert "required" not in tools["mesh_task_status"].inputSchema
 
 
 # =============================================================================
