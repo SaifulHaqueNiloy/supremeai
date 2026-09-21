@@ -356,7 +356,7 @@ export function LoginView({
           এই Build Timestamp টি অ্যাডমিন গেটেও দেখানো হচ্ছে। 
         */}
         <div className="absolute bottom-2 right-4 text-[9px] text-slate-600 font-mono">
-          Build: {typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_TIME__ : 'Dev'}
+          SupremeAI v2.0
         </div>
       </div>
     </div>
