@@ -615,7 +615,8 @@ class TestGithubCICDMCPExtended:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+            # Issue-first gate (#925) must pass so the API error path is reached.
+            params = CreatePRInput(title="Test", body="Fixes #12", head="feature", base="main")
             result = await github_create_pull_request(params)
             assert "Permission denied" in result
 
@@ -1501,8 +1502,10 @@ class TestInputValidation:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
+            # MESH-7 (#925): issue-first policy requires an issue-link in the
+            # PR body BEFORE the API call — payloads must satisfy the gate.
             params = CreatePRInput(
-                title="Test PR", body="Test body", head="feature", base="develop"
+                title="Test PR", body="Fixes #42", head="feature", base="develop"
             )
             result = await github_create_pull_request(params)
             data = json.loads(result)
@@ -1526,7 +1529,8 @@ class TestInputValidation:
             mock_instance.post = AsyncMock(return_value=mock_response)
             mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
 
-            params = CreatePRInput(title="Test", body="Test PR", head="feature", base="main")
+            # Issue-first gate (#925) must pass so the API error path is reached.
+            params = CreatePRInput(title="Test", body="Fixes #42", head="feature", base="main")
             result = await github_create_pull_request(params)
             assert "not found" in result.lower()
 
