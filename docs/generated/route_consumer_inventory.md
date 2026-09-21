@@ -8,10 +8,10 @@
 | routes with frontend consumer | 257 |
 | unique frontend `/api/...` refs | 140 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
-| orphan routes (unclassified) | 4 |
-| orphan families | 1 |
-| api-only routes (allowlisted) | 286 |
-| api-only families | 157 |
+| orphan routes (unclassified) | 0 |
+| orphan families | 0 |
+| api-only routes (allowlisted) | 290 |
+| api-only families | 158 |
 
 ## Classification legend
 
@@ -21,14 +21,12 @@
 | `admin-only` | 321 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 37 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 286 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
-| `orphaned` | 4 | no consumer and no classification — CI fails on NEW orphans |
+| `api-only` | 290 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
-## Orphan families (actionable — wire, classify or deprecate)
+## Orphan families
 
-| family | orphan routes |
-|---|---|
-| `/api/v1/nodes` | 4 |
+None — every route is classified or allowlisted. New orphans fail `tests/test_route_consumer_contract.py`.
 
 ## Intentionally API-only families (allowlisted — owner to prune as wiring lands)
 
@@ -143,6 +141,7 @@
 | `/api/v1/markdown` | 7 |
 | `/api/v1/mcp` | 13 |
 | `/api/v1/missions` | 11 |
+| `/api/v1/nodes` | 4 |
 | `/api/v1/onboarding` | 5 |
 | `/api/v1/plugins` | 4 |
 | `/api/v1/pr-review` | 1 |
@@ -812,10 +811,10 @@
 | POST | `/api/v1/missions/:param/start` | `backend/api/routes/missions.py` | api-only | NONE |
 | GET | `/api/v1/missions/:param/trace` | `backend/api/routes/missions.py` | api-only | NONE |
 | GET | `/api/v1/missions/:param/trace/stream` | `backend/api/routes/missions.py` | api-only | NONE |
-| GET | `/api/v1/nodes` | `backend/api/routes/mesh.py` | orphaned | NONE |
-| GET | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | orphaned | NONE |
-| PATCH | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | orphaned | NONE |
-| POST | `/api/v1/nodes/heartbeat` | `backend/api/routes/mesh.py` | orphaned | NONE |
+| GET | `/api/v1/nodes` | `backend/api/routes/mesh.py` | api-only | NONE |
+| GET | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | api-only | NONE |
+| PATCH | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | api-only | NONE |
+| POST | `/api/v1/nodes/heartbeat` | `backend/api/routes/mesh.py` | api-only | NONE |
 | POST | `/api/v1/onboarding/complete` | `backend/api/routes/onboarding.py` | api-only | NONE |
 | POST | `/api/v1/onboarding/plan` | `backend/api/routes/onboarding.py` | api-only | NONE |
 | DELETE | `/api/v1/onboarding/reset/:param` | `backend/api/routes/onboarding.py` | api-only | NONE |

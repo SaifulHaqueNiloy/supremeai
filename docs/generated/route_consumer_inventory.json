@@ -18,22 +18,20 @@
     "frontend_unique_refs": 140,
     "routes_with_frontend_consumer": 257,
     "unmounted_routes": 0,
-    "orphan_routes": 4,
-    "orphan_families": 1,
-    "api_only_routes": 286,
-    "api_only_families": 157,
+    "orphan_routes": 0,
+    "orphan_families": 0,
+    "api_only_routes": 290,
+    "api_only_families": 158,
     "by_classification": {
       "user-facing": 156,
       "admin-only": 321,
       "internal": 37,
       "deprecated": 0,
-      "api-only": 286,
-      "orphaned": 4
+      "api-only": 290,
+      "orphaned": 0
     }
   },
-  "orphan_families": {
-    "/api/v1/nodes": 4
-  },
+  "orphan_families": {},
   "api_only_families": {
     "/agent/plan": 1,
     "/api/artifacts": 1,
@@ -144,6 +142,7 @@
     "/api/v1/markdown": 7,
     "/api/v1/mcp": 13,
     "/api/v1/missions": 11,
+    "/api/v1/nodes": 4,
     "/api/v1/onboarding": 5,
     "/api/v1/plugins": 4,
     "/api/v1/pr-review": 1,
@@ -9346,7 +9345,7 @@
       "is_admin": false,
       "operation": "list_active_nodes",
       "frontend_consumers": [],
-      "classification": "orphaned"
+      "classification": "api-only"
     },
     {
       "method": "GET",
@@ -9360,7 +9359,7 @@
       "is_admin": false,
       "operation": "get_node_detail",
       "frontend_consumers": [],
-      "classification": "orphaned"
+      "classification": "api-only"
     },
     {
       "method": "PATCH",
@@ -9374,7 +9373,7 @@
       "is_admin": false,
       "operation": "patch_node_role",
       "frontend_consumers": [],
-      "classification": "orphaned"
+      "classification": "api-only"
     },
     {
       "method": "POST",
@@ -9388,7 +9387,7 @@
       "is_admin": false,
       "operation": "post_node_heartbeat",
       "frontend_consumers": [],
-      "classification": "orphaned"
+      "classification": "api-only"
     },
     {
       "method": "POST",
