@@ -3,9 +3,13 @@
 বাংলা মন্তব্য: একক API key দিয়ে যেন কেউ পুরো সিস্টেম abuse করতে না পারে, সেজন্য প্রতি কি (Key) ভিত্তিক ডিস্ট্রিবিউটেড রেট লিমিটিং।
 """
 
+import hashlib
 import time
+from typing import Any
 
-from fastapi import HTTPException
+from fastapi import HTTPException, Request
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.logging_config import logger
 
@@ -73,3 +77,68 @@ class APIKeyLimiter:
 
 # Module-level convenience singleton (default 60 req/min ceiling).
 api_key_limiter = APIKeyLimiter()
+
+
+class APIKeyLimiterMiddleware(BaseHTTPMiddleware):
+    """ASGI middleware wrapper for per-API-key rate limiting.
+
+    বাংলা: Issue #898 — `security_pipeline.py` পূর্বে `APIKeyLimiter` class কে
+    middleware হিসেবে `app.add_middleware()` দিয়ে register করতে চেয়েছিল, কিন্তু
+    সেটি ASGI middleware protocol follow করে না → চুপচাপ skip হতো। এই class টি
+    `BaseHTTPMiddleware` subclass করে আসল ASGI middleware হিসেবে behave করে।
+
+    Behavior:
+        - প্রতিটি request থেকে API key extract করে (`x-api-key` header অথবা
+          `Authorization: Bearer <key>`)।
+        - Key কে SHA-256 hash করে (privacy: raw key কখনো log/store করে না)।
+        - `enforce_api_key_rate_limit()` call করে per-key rate limit enforce করে।
+        - Rate limit পার হলে `call_next` এ যায়; অতিক্রম হলে 429 response।
+        - Rate limit check নিজে exception ছাড়ালে fail-open করে (resilience — যাতে
+          Redis down থাকলেও API available থাকে)।
+    """
+
+    def __init__(
+        self,
+        app: Any,
+        max_requests: int = DEFAULT_MAX_REQUESTS_PER_MINUTE,
+    ) -> None:
+        super().__init__(app)
+        self.max_requests = max_requests
+
+    @staticmethod
+    def _extract_api_key(request: Request) -> str | None:
+        """`x-api-key` header অথবা `Authorization: Bearer <key>` থেকে API key নেয়।"""
+        api_key = request.headers.get("x-api-key")
+        if api_key:
+            return api_key
+        auth_header = request.headers.get("authorization") or ""
+        if auth_header.lower().startswith("bearer "):
+            token = auth_header[7:].strip()
+            if token:
+                return token
+        return None
+
+    async def dispatch(self, request: Request, call_next):  # type: ignore[override]
+        api_key = self._extract_api_key(request)
+        if api_key:
+            # Privacy: hash করে পাঠানো হয় — raw key কখনো log/store নয়।
+            api_key_hash = hashlib.sha256(api_key.encode("utf-8")).hexdigest()
+            try:
+                await enforce_api_key_rate_limit(
+                    api_key_hash, max_requests=self.max_requests
+                )
+            except HTTPException as exc:
+                # 429 propagation — rate limit exceeded response।
+                if exc.status_code == 429:
+                    return JSONResponse(
+                        status_code=429,
+                        content={"detail": exc.detail},
+                        headers={"Retry-After": "60"},
+                    )
+                raise
+            except Exception as exc:
+                # Fail-open: rate limiter itself exception ছাড়ালেও request চলবে।
+                logger.warning(
+                    f"[APIKeyLimiterMiddleware] Rate limit check failed (fail-open): {exc}"
+                )
+        return await call_next(request)
