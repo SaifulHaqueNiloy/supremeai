@@ -156,9 +156,7 @@ class ProductionSecretVault:
         # OPEN forever until process restart, so a transient Infisical outage
         # permanently blocked every agent's secret fetch even after recovery.
         self._circuit_opened_at: float | None = None
-        self._half_open_after_seconds: int = int(
-            os.getenv("VAULT_HALF_OPEN_AFTER") or "60"
-        )
+        self._half_open_after_seconds: int = int(os.getenv("VAULT_HALF_OPEN_AFTER") or "60")
 
         # TTL overrides for smart caching (Infisical API quota optimization)
         self._ttl_overrides: dict[str, int] = {
@@ -222,9 +220,7 @@ class ProductionSecretVault:
         বাংলা: সফল probe এর পর সার্কিট CLOSED করে — normal operation resume।
         """
         if self._circuit_breaker_open:
-            logger.info(
-                "Vault circuit breaker CLOSED — Infisical recovered (issue #901)"
-            )
+            logger.info("Vault circuit breaker CLOSED — Infisical recovered (issue #901)")
         self._circuit_breaker_open = False
         self._circuit_opened_at = None
 
@@ -504,6 +500,42 @@ class ProductionSecretVault:
         সিক্রেট আর নীরবে "" হয়ে ডাউনস্ট্রিমে চলে যাবে না (BE-13, issue #545)।
         Local/dev-এ আগের মতোই graceful mock fallback রাখা হয়েছে।
         """
+        # Issue #935 (BE-13 fail-closed contract): in production/staging the
+        # env_override short-circuit in fetch_secret handles the legitimate
+        # env-var-override case (12-factor) BEFORE this fallback is reached.
+        # Therefore reaching _fallback_to_env means Infisical failed AND the
+        # env-override path didn't fire. For HARD_REQUIRED_SECRETS with
+        # default=None the fail-closed contract MUST hold regardless of any
+        # incidental env_value, otherwise a forgotten hard-required secret
+        # silently degrades instead of aborting boot. (Before this guard the
+        # early `if env_value` branch swallowed the failure when the env var
+        # happened to be set — e.g. via conftest app-fixture pollution or a
+        # stale CI env — breaking test_hard_required_missing_in_prod_fail_closed.)
+        if (
+            self.env in ("production", "staging")
+            and default is None
+            and secret_id in HARD_REQUIRED_SECRETS
+        ):
+            logger.critical(
+                f"🚨 CRITICAL: Secret '{secret_id}' missing in {self.env}! Sending alert..."
+            )
+            try:
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="secret_vault",
+                        error_type="CRITICAL_SECRET_MISSING",
+                        message=f"Secret '{secret_id}' not found in Infisical or env!",
+                        severity="CRITICAL",
+                        context={"secret_id": secret_id},
+                    )
+                )
+            except Exception as exc:
+                logger.debug(f"Failed to emit error event: {exc}")
+            # বাংলা মন্তব্য: infra-critical secret অনুপস্থিত হলে Fail-closed।
+            raise RuntimeError(
+                f"CRITICAL: Secret '{secret_id}' not found in {self.env}! Fail-closed."
+            )
+
         env_value = os.getenv(secret_id)
         if env_value:
             env_fallback = env_value
@@ -629,10 +661,7 @@ class ProductionSecretVault:
             if not self._should_attempt_half_open_recovery():
                 logger.debug("fetch_all_secrets: circuit breaker open, skipping bulk fetch.")
                 return {}
-            logger.info(
-                "Vault circuit breaker HALF_OPEN — probe via bulk fetch "
-                "(issue #901)"
-            )
+            logger.info("Vault circuit breaker HALF_OPEN — probe via bulk fetch (issue #901)")
 
         if not self.client or not self.project_id:
             logger.debug("fetch_all_secrets: no Infisical client/project_id, skipping.")
