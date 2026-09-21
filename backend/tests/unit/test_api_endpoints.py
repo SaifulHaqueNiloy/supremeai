@@ -85,7 +85,6 @@ class TestAuthenticationEndpoints:
         assert "password" not in data  # Never return password/hash
 
     @pytest.mark.auth
-    @pytest.mark.skip(reason="Duplicate email handling is delegated to Supabase")
     async def test_user_registration_duplicate_email(
         self,
         client: AsyncClient,
@@ -122,7 +121,6 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.auth
-    @pytest.mark.skip(reason="Password strength validation is delegated to Supabase")
     async def test_user_registration_weak_password(
         self,
         client: AsyncClient,
@@ -166,7 +164,6 @@ class TestAuthenticationEndpoints:
         assert data["token_type"] == "bearer"
 
     @pytest.mark.auth
-    @pytest.mark.skip(reason="Password checking delegated to Supabase")
     async def test_user_login_wrong_password(
         self,
         client: AsyncClient,

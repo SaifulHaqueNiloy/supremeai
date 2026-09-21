@@ -21,7 +21,6 @@ async def test_i18n_ai_translate_wiring():
 
 
 @pytest.mark.asyncio
-@pytest.mark.skip(
     reason=(
         "বাংলা মন্তব্য (ROOT-CAUSE, ফিক্স করা হয়নি): এই টেস্ট "
         "LearningLoop.get_instance() / loop.record_signal() / loop.suggest() "

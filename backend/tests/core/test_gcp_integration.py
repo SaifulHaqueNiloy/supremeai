@@ -293,7 +293,6 @@ def test_gcp_pubsub_publish_pull():
     assert messages[0].data == {"task_id": "t1", "type": "ocr"}
 
 
-@pytest.mark.skipif(not HAS_FIREBASE_DEPS, reason="firebase deps missing")
 def test_gcp_cloud_functions_ocr_trigger(monkeypatch):
     monkeypatch.setattr(httpx, "Client", FakeClient)
     client = GCPCloudFunctionClient(

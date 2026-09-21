@@ -13,7 +13,6 @@ import pytest
 class TestSandboxValidation:
     """Test sandbox path and input validation."""
 
-    @pytest.mark.skip(
         reason="SECURITY - NOT verified safe, needs developer review: _validate_sandbox_root() correctly rejects pytest's default tmpdir because it's not in the sandbox-root whitelist (this is CORRECT secure behavior, confirmed by reading core/microvm_sandbox.py). Test needs to be rewritten to use a whitelisted path, not loosened - do not change the whitelist logic to make this pass."
     )
     def test_sandbox_root_validation(self):
@@ -54,7 +53,6 @@ class TestSandboxValidation:
 class TestSafeVMPath:
     """Test safe VM path generation."""
 
-    @pytest.mark.skip(
         reason="SECURITY - NOT verified safe, needs developer review: same root cause as test_sandbox_root_validation (tmpdir not in sandbox-root whitelist). Test needs to be rewritten to use a whitelisted path, not loosened."
     )
     def test_safe_vm_path_within_sandbox(self):

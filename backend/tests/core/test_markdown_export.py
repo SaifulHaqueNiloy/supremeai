@@ -8,7 +8,6 @@ from core.app import app
 client = TestClient(app)
 
 
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_markdown_export_async_flow(valid_auth_headers):
     # 1. Trigger export job
     response = client.post(
@@ -33,7 +32,6 @@ def test_markdown_export_async_flow(valid_auth_headers):
     assert "progress" in status_data
 
 
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_markdown_history(valid_auth_headers):
     response = client.get("/api/v1/markdown/export/history", headers=valid_auth_headers)
     assert response.status_code == 200
@@ -42,7 +40,6 @@ def test_markdown_history(valid_auth_headers):
     assert "history" in data
 
 
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_markdown_compare(valid_auth_headers):
     response = client.post(
         "/api/v1/markdown/compare",
@@ -59,7 +56,6 @@ def test_markdown_compare(valid_auth_headers):
     assert "compare_report" in data
 
 
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_markdown_share(valid_auth_headers):
     response = client.post(
         "/api/v1/markdown/share",

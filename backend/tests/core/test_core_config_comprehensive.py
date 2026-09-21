@@ -141,7 +141,6 @@ def test_settings_encryption_key_generation():
         assert settings.encryption_key is not None
 
 
-@pytest.mark.skip(
     reason="core/config.py's cors_origins property intentionally bypasses the "
     "localhost-removal check whenever 'pytest' in sys.modules (always true here), so "
     "localhost origins are never actually filtered out under pytest regardless of "
@@ -184,7 +183,6 @@ def test_settings_allowed_hosts_json_format():
         assert "host3.com" in settings.allowed_hosts
 
 
-@pytest.mark.skip(
     reason="Zero-Trust Host Validation intentionally fails fast when ALLOWED_HOSTS is empty in production/staging."
 )
 def test_settings_production_allowed_hosts_auto_population():
@@ -267,7 +265,6 @@ def test_settings_llm_critical_keys_validation():
         assert settings.openrouter_api_key is not None
 
 
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_settings_encryption_key_not_empty():
     """Test that encryption key is not empty."""
     with patch.dict(os.environ, {"ENCRYPTION_KEY": "test-encryption-key"}):
@@ -321,7 +318,6 @@ def test_settings_rbac_role_definitions_invalid_json():
         assert settings.rbac_role_definitions == {}
 
 
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_settings_stripe_configuration():
     """Test Stripe API configuration."""
     with patch.dict(
@@ -336,7 +332,6 @@ def test_settings_stripe_configuration():
         assert settings.stripe_webhook_secret.get_secret_value() == "whsec_test_secret"
 
 
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_settings_ci_webhook_secret():
     """Test CI webhook secret configuration."""
     with patch.dict(os.environ, {"CI_WEBHOOK_SECRET": "ci-webhook-secret"}):
@@ -344,7 +339,6 @@ def test_settings_ci_webhook_secret():
         assert settings.ci_webhook_secret == "ci-webhook-secret"
 
 
-@pytest.mark.skip(
     reason="settings.infisical_token/infisical_client_secret don't exist anywhere in "
     "core/config.py (verified via repo-wide grep) -- this tests config surface that was "
     "never implemented. Not skipping to hide a bug: adding fake fields just to satisfy this "
@@ -365,7 +359,6 @@ def test_settings_infisical_configuration():
         assert settings.infisical_client_secret.get_secret_value() == "test-client-secret"
 
 
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 def test_settings_redis_url():
     """Test Redis URL configuration."""
     with patch.dict(os.environ, {"REDIS_URL": "redis://<your-redis-url>"}):
@@ -373,7 +366,6 @@ def test_settings_redis_url():
         assert settings.redis_url == "redis://<your-redis-url>"
 
 
-@pytest.mark.skip(
     reason="settings.upstash_redis_rest_url/upstash_redis_rest_token don't exist anywhere "
     "in core/config.py (verified via repo-wide grep) -- hallucinated config surface, not a "
     "real bug to fix by adding fake fields."
@@ -392,7 +384,6 @@ def test_settings_upstash_redis_config():
         assert settings.upstash_redis_rest_token.get_secret_value() == "test-upstash-token"
 
 
-@pytest.mark.skip(
     reason="settings.default_model/max_tokens/temperature don't exist anywhere in "
     "core/config.py (verified via repo-wide grep) -- hallucinated config surface. Model "
     "selection in this codebase is handled per-request by brain/model_router.py, not via "
@@ -414,7 +405,6 @@ def test_settings_model_specific_configs():
         assert settings.temperature == 0.7
 
 
-@pytest.mark.skip(
     reason="settings.api_rate_limit_user/api_rate_limit_admin don't exist anywhere in "
     "core/config.py (verified via repo-wide grep) -- hallucinated config surface. Rate "
     "limiting is implemented in core/rate_limiter.py, not via global Settings fields."
@@ -433,7 +423,6 @@ def test_settings_api_rate_limits():
         assert settings.api_rate_limit_admin == "500/hour"
 
 
-@pytest.mark.skip(
     reason="settings.database_url/database_pool_size/database_pool_timeout don't exist "
     "anywhere in core/config.py (verified via repo-wide grep) -- hallucinated config "
     "surface. Real DB connection + pool sizing is SERVICE_ROLE-aware and hardcoded in "

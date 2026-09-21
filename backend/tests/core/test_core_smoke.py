@@ -10,7 +10,6 @@ def test_setup_logging_runs():
     setup_logging()
 
 
-@pytest.mark.skip(reason="CORS origins default values check in test environment")
 def test_config_validators_basic():
     from core.config import Settings
 
@@ -20,7 +19,6 @@ def test_config_validators_basic():
     assert isinstance(s.debug, bool)
 
 
-@pytest.mark.skip(reason="LLMGateway routing models mock patch mismatch")
 @pytest.mark.anyio
 async def test_llm_gateway_acompletion_monkeypatched(monkeypatch, tmp_path):
     class FakeChoiceMessage:
