@@ -60,6 +60,7 @@ import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 
 // বাংলা মন্তব্য: SSE স্ট্রিম হুক মাউন্ট করে ব্যাকএন্ডের রিয়েল অনলাইন স্ট্যাটাস (isServerOnline) সেট করা হচ্ছে
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
+import ServerHealthWatcher from './components/shell/ServerHealthWatcher';
 import { RouteBoundary } from './router/RouteBoundary';
 
 // বাংলা মন্তব্য (Wave 3): বাকি ১০টি eager page import-ও React.lazy করা হলো —
@@ -106,6 +107,10 @@ const AppContent: React.FC = () => {
 
   return (
     <ErrorBoundary>
+      {/* App-root runtime mount: the ONLY writer of isServerOnline /
+          isServerStatusChecking (health probe + SSE lifecycle). Previously
+          never mounted — see ServerHealthWatcher.tsx docblock. */}
+      <ServerHealthWatcher />
       <GlobalConfigInitializer>
           <React.Suspense fallback={
             <div className="flex min-h-screen items-center justify-center bg-[var(--sa-canvas)] text-[var(--sa-ink)]">
