@@ -11214,6 +11214,13 @@
       "path": "backend/tests/byoc/test_resource_manager.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/ci/pr_helper/test_intelligent_decision.py"
+    },
+    {
       "capability_signals": [
         "health",
         "memory"
@@ -25601,5 +25608,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2944
+  "source_file_count": 2945
 }
