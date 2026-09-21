@@ -4,8 +4,9 @@ import pytest
 
 from models.shared_workspace import SharedWorkspace
 
-pytestmark = pytest.mark.skip(reason="Pre-existing failure — code refactored, test not updated (P0 audit)")
-
+pytestmark = pytest.mark.skip(
+    reason="Pre-existing failure — code refactored, test not updated (P0 audit)"
+)
 
 
 @pytest.fixture(autouse=True)

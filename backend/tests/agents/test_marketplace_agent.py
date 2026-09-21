@@ -2,8 +2,9 @@ import pytest
 
 from tools.social.marketplace_agent import MarketplaceAgent
 
-pytestmark = pytest.mark.skip(reason="Pre-existing failure — code refactored, test not updated (P0 audit)")
-
+pytestmark = pytest.mark.skip(
+    reason="Pre-existing failure — code refactored, test not updated (P0 audit)"
+)
 
 
 def test_marketplace_search():
