@@ -2263,7 +2263,9 @@
     },
     {
       "capability_signals": [
+        "dispatch",
         "health",
+        "mcp",
         "register"
       ],
       "classification": "human_review",
@@ -5315,6 +5317,7 @@
     },
     {
       "capability_signals": [
+        "dispatch",
         "execute",
         "health",
         "mcp",
@@ -16256,6 +16259,7 @@
     {
       "capability_signals": [
         "capability",
+        "dispatch",
         "mcp"
       ],
       "classification": "adapter",

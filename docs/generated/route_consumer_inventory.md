@@ -4,8 +4,8 @@
 
 | metric | value |
 |---|---|
-| backend routes | 804 |
-| routes with frontend consumer | 257 |
+| backend routes | 814 |
+| routes with frontend consumer | 267 |
 | unique frontend `/api/...` refs | 140 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
@@ -17,7 +17,7 @@
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 156 | frontend consumer matched |
+| `user-facing` | 166 | frontend consumer matched |
 | `admin-only` | 321 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 37 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
@@ -862,9 +862,19 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/stream/voice` | `backend/api/routes/stream_voice_sse.py` | api-only | NONE |
 | GET | `/api/v1/swarm/stream` | `backend/api/routes/swarm_stream.py` | api-only | NONE |
 | POST | `/api/v1/syncguard/audit` | `backend/api/routes/syncguard.py` | api-only | NONE |
+| GET | `/api/v1/tasks` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| POST | `/api/v1/tasks` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | POST | `/api/v1/tasks` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| GET | `/api/v1/tasks/:param` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | GET | `/api/v1/tasks/:param` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| POST | `/api/v1/tasks/:param/cancel` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | POST | `/api/v1/tasks/:param/cancel` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| POST | `/api/v1/tasks/:param/claim` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| POST | `/api/v1/tasks/:param/complete` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| POST | `/api/v1/tasks/:param/fail` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| POST | `/api/v1/tasks/:param/lease` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| GET | `/api/v1/tasks/queue/stats` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
+| POST | `/api/v1/tasks/reap` | `backend/api/routes/mesh_tasks.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | GET | `/api/v1/telegram/health` | `backend/tools/social/telegram_bot/router.py` | internal | NONE |
 | POST | `/api/v1/telegram/webhook` | `backend/tools/social/telegram_bot/router.py` | internal | NONE |
 | GET | `/api/v1/tools-registry` | `backend/api/routes/tools_registry.py` | api-only | NONE |

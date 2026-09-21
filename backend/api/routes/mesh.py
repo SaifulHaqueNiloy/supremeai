@@ -1,25 +1,42 @@
-"""Mesh presence REST API — MESH-1, issue #939.
+"""Mesh presence + task dispatch REST API — MESH-1 (#939) + MESH-6 (#926).
 
 বাংলা সারসংক্ষেপ:
 ------------------
-এই router চারটি endpoint প্রদান করে যা SupremeAI Distributed Multi-Agent Mesh-এর
-foundation layer হিসেবে কাজ করে:
+SupremeAI Distributed Multi-Agent Mesh-এর control-plane endpoints:
 
+presence (MESH-1):
 - POST   /api/v1/nodes/heartbeat       — একটি agent তার heartbeat পাঠায়
 - GET    /api/v1/nodes                  — সব active node-এর তালিকা (MESH-2 dashboard পড়ে)
 - GET    /api/v1/nodes/{node_id}        — একটি node-এর বিস্তারিত record
 - PATCH  /api/v1/nodes/{node_id}        — node-এর role পরিবর্তন (MESH-2 dropdown)
 
+task queue (MESH-6):
+- POST   /api/v1/tasks                  — নতুন task submit (Telegram /task, MCP tools এটাই কল করে)
+- GET    /api/v1/tasks?status=          — queue snapshot + filter
+- GET    /api/v1/tasks/{task_id}        — task detail
+- POST   /api/v1/tasks/{task_id}/claim   — CAS atomic claim (node capabilities অনুযায়ী)
+- POST   /api/v1/tasks/{task_id}/lease   — lease renewal (heartbeat continuation)
+- POST   /api/v1/tasks/{task_id}/complete — সফল সমাপ্তি (leased-by check সহ)
+- POST   /api/v1/tasks/{task_id}/fail    — ব্যর্থতা → retry/failed (Zero Zombie)
+- POST   /api/v1/tasks/{task_id}/cancel  — operator cancel
+- POST   /api/v1/tasks/reap              — expired lease re-queue (failover trigger)
+- GET    /api/v1/tasks/queue/stats       — per-status count (visibility)
+
+heartbeat-এ auto-dispatch: node heartbeat দিলে Tower স্বয়ংক্রিয়ভাবে তার capabilities
+মেলানো pending task claim করে response-এর assigned_tasks-এ পাঠায় — এটাই
+supreme-node daemon (MESH-3)-এর প্রত্যাশিত contract। Node ১০ মিনিট heartbeat না
+দিলে reap_expired_leases সব lease ছেঁড়ে দেয় — অন্য node/cloud failover করতে পারে।
+
 conventions:
 - FastAPI APIRouter + Pydantic v2 models (match existing routes যেমন health.py)
 - prefix=/api/v1 (routers.py থেকে mount করা হয়, এখানে prefix দেওয়া নেই)
-- সব endpoint process-wide `PresenceRegistry` singleton ব্যবহার করে
-- কোনো fake/mock নেই — সব endpoint আসল registry-তে লেখে/পড়ে
+- process-wide PresenceRegistry + TaskRouter singleton ব্যবহার করে
+- কোনো fake/mock নেই — সব endpoint আসল registry/router-এ লেখে/পড়ে
 
 সম্পর্কিত:
-- Master plan: docs/plans/MULTI_AGENT_MESH_MASTER_PLAN.md (Section 6, MESH-1)
-- Issue: #939 (P1-high, Phase A)
-- Depends on: backend/core/presence_registry.py (নতুন file, এই PR-এ যোগ হয়েছে)
+- Master plan: docs/plans/MULTI_AGENT_MESH_MASTER_PLAN.md (§১, §৪.3, §৬)
+- Issues: #939 (MESH-1), #926 (MESH-6, P0)
+- Depends on: backend/core/presence_registry.py, backend/core/task_router.py
 """
 
 from __future__ import annotations
@@ -40,6 +57,7 @@ from core.presence_registry import (
     PresenceRegistry,
     get_presence_registry,
 )
+from core.task_router import ClaimedTask, TaskRouter, get_task_router
 
 router = APIRouter(
     prefix="/api/v1/nodes",
@@ -108,6 +126,7 @@ class NodeDetailResponse(BaseModel):
 async def post_node_heartbeat(
     payload: HeartbeatRequest,
     registry: PresenceRegistry = Depends(get_presence_registry),
+    task_router: TaskRouter = Depends(get_task_router),
 ) -> HeartbeatResult:
     """একটি agent তার heartbeat পাঠায় — registry-তে presence ও lease refresh হয়।
 
@@ -139,6 +158,39 @@ async def post_node_heartbeat(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="presence registry unavailable",
         ) from exc
+
+    # ── MESH-6 auto-dispatch (Zero Zombie Tasks) ─────────────────────────
+    # বাংলা: প্রতি heartbeat-এ (১) মেয়াদোত্তীর্ণ lease re-queue হয় — node ১০
+    # মিনিট চুপ থাকলে তার task অন্য node/cloud পায়; (২) এই node-এর capabilities
+    # মেলানো pending task claim করে response-এ assigned_tasks হিসেবে যায়।
+    # Dispatch ব্যর্থ হলে heartbeat এখনো 200 ফেরত দেয় (presence আর queue আলাদা
+    # ব্যর্থতা ডোমেইন — Self-Healing directive)।
+    try:
+        await task_router.reap_expired_leases()
+        claimed: list[ClaimedTask] = []
+        while len(claimed) < task_router._max_active_per_node:  # noqa: SLF001 — same package contract
+            got = await task_router.claim_task(
+                node_id=payload.node_id,
+                role=payload.role,
+                capabilities=payload.capabilities,
+            )
+            if got is None:
+                break
+            claimed.append(got)
+        if claimed:
+            existing = list(result.assigned_tasks or [])
+            existing.extend(t.task_id for t in claimed)
+            result.assigned_tasks = existing
+            logger.info(
+                "mesh.heartbeat: auto-dispatched %d task(s) to %s",
+                len(claimed),
+                payload.node_id,
+            )
+    except Exception as exc:  # noqa: BLE001 — dispatch failure never breaks presence
+        logger.warning(
+            "mesh.post_node_heartbeat: task auto-dispatch failed (presence intact): %s",
+            exc,
+        )
     return result
 
 

@@ -451,6 +451,10 @@ ALL_ROUTERS = [
     # করবে; আপাতত pre-auth heartbeat support করা হয়েছে যাতে একটি fresh agent
     # প্রথম কলেই registration করতে পারে। নতুন file: backend/core/presence_registry.py
     {"path": "api.routes.mesh", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── MESH-6 (#926, P0): Tower-native Task Queue — /api/v1/tasks/*
+    # রাউটার নিজস্ব prefix (/api/v1/tasks) সহ আসে, তাই registry prefix ""।
+    # Core: backend/core/task_router.py (CAS claim + lease + Zero Zombie reap)।
+    {"path": "api.routes.mesh_tasks", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
 
