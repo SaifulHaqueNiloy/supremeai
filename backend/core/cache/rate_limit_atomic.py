@@ -77,14 +77,10 @@ async def atomic_window_incr(
         if "WRONGTYPE" in str(exc):
             try:
                 await client.delete(key)
-                return int(
-                    await client.eval(ATOMIC_WINDOW_LUA, 1, key, int(effective_window))
-                )
+                return int(await client.eval(ATOMIC_WINDOW_LUA, 1, key, int(effective_window)))
             except Exception:
                 # WRONGTYPE recovery-ও ব্যর্থ হলে fail-open করা হবে (test contract)।
-                logger.warning(
-                    f"atomic_window_incr WRONGTYPE recovery failed for key={key}: {exc}"
-                )
+                logger.warning(f"atomic_window_incr WRONGTYPE recovery failed for key={key}: {exc}")
                 return 0
         # Issue #895: Redis failure → return 0 (fail-open, per test contract).
         # আগে এখানে `raise` ছিল — callers নিজেদের except branch-এ fallback
