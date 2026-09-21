@@ -158,7 +158,7 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
         title={isServerOnline ? 'Core backend online' : 'Core backend unreachable'}
       >
         {isServerOnline ? <Wifi size={13} className="text-emerald-400" /> : <WifiOff size={13} className="text-rose-400" />}
-        {isServerOnline ? 'SYSTEM OPERATIONAL' : 'SYSTEM UNAVAILABLE'}
+        {isLoading ? 'CHECKING…' : isServerOnline ? 'SYSTEM OPERATIONAL' : 'SYSTEM UNAVAILABLE'}
       </span>
 
       {actions}
