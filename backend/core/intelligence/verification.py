@@ -58,3 +58,9 @@ class VerificationEngine:
             evidence=[{"kind": "registered_check", "name": name, "passed": passed}],
             contradictions=[] if passed else [f"Registered check failed: {name}"],
         )
+
+
+# Issue #895: contract alias — `backend/tests/core/test_security_and_intelligence_contracts.py`
+# `VerifierEngine` নামে import করে, কিন্তু এই মডিউলে class নাম `VerificationEngine`।
+# একই evidence facade — নামটা শুধু contract-এর সাথে match করার জন্য alias দেওয়া হলো।
+VerifierEngine = VerificationEngine
