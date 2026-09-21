@@ -63,10 +63,23 @@ async def test_factual_verifier():
     math_res2 = verifier.verify_math("2 + 2", "5")
     assert math_res2["is_verified"] is False
 
-    # Test symbolic equation verification with Sympy
+    # Test symbolic equation verification with Sympy.
+    # sympy is an OPTIONAL dependency (core/factual_verifier.py module
+    # docstring): when absent, verify_math honestly degrades to the numeric
+    # safe-eval fallback, which cannot validate symbolic identities and must
+    # return is_verified=False. Assert the symbolic contract only when the
+    # capability is installed (issue #1068: CI poetry env does not ship sympy).
+    import importlib.util
+
+    _has_sympy = importlib.util.find_spec("sympy") is not None
     symbolic_res = verifier.verify_math("x + x", "2*x")
-    assert symbolic_res["is_verified"] is True
-    assert symbolic_res.get("expression_sympy") == "2*x"
+    if _has_sympy:
+        assert symbolic_res["is_verified"] is True
+        assert symbolic_res.get("expression_sympy") == "2*x"
+    else:
+        # Honest degradation: fallback must NOT claim verification of a
+        # symbolic identity it could not evaluate.
+        assert symbolic_res["is_verified"] is False
 
 
 def test_code_validator():
