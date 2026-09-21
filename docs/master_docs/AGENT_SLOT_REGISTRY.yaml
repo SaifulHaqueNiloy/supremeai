@@ -20,34 +20,91 @@
 
 version: "1.0"
 
-# Currently active agent slot assignments
-# Empty initially — assignments added when maintainers activate agents
-slots: []  # empty initially — assignments added when maintainers activate agents
-  # Example template (commented out):
-  # - slot: agent-1
-  #   tool: "Antigravity"
-  #   maintainer: "@SaifulHaqueNiloy"
-  #   assigned_on: "2026-09-20"
-  #   expires_on: "2026-09-27"  # max 7 days
-  #   active: true
-  #   notes: "Working on backend auth refactor"
+# Agent slot assignments — per OPS-06 §5 (Polymorphic Agent Assignment)
+# 10 slots defined; maintainer activates/deactivates as needed.
+# Note: OPS-06 Safeguard 5 (Max Concurrent Agent Policy) currently caps active
+# slots at 5 for rate-budget reasons. If >5 slots are activated simultaneously,
+# update Safeguard 5's policy threshold accordingly.
+slots:
+  - slot: agent-1
+    tool: "Antigravity"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: true
+    notes: "Backend feature work + CI fixes"
 
-  # - slot: agent-2
-  #   tool: "Claude Code"
-  #   maintainer: "@SaifulHaqueNiloy"
-  #   assigned_on: "2026-09-20"
-  #   expires_on: "2026-09-27"
-  #   active: true
-  #   notes: "Frontend test coverage"
+  - slot: agent-2
+    tool: "Claude Code"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: true
+    notes: "Frontend + test coverage"
 
-  # Reserved slot for SupremeAI itself (OPS-08)
-  # - slot: agent-10
-  #   tool: "SupremeAI"
-  #   maintainer: "@SaifulHaqueNiloy"
-  #   assigned_on: "2026-09-20"
-  #   expires_on: "2026-09-27"
-  #   active: true
-  #   notes: "Self-development mode"
+  - slot: agent-3
+    tool: "Cursor"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: true
+    notes: "Infrastructure + deployment scripts"
+
+  - slot: agent-4
+    tool: "Cline"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: true
+    notes: "Database + migration work"
+
+  - slot: agent-5
+    tool: "Windsurf"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: false
+    notes: "Standby — documentation + agent governance (activatable on demand)"
+
+  - slot: agent-6
+    tool: "Devin"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: false
+    notes: "Standby — long-running refactoring tasks (activatable on demand)"
+
+  - slot: agent-7
+    tool: "GitHub Copilot Workspace"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: false
+    notes: "Standby — small issue triage + label maintenance"
+
+  - slot: agent-8
+    tool: "Aider"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: false
+    notes: "Standby — security audit + dependency upgrades"
+
+  - slot: agent-9
+    tool: "Continue"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: false
+    notes: "Standby — observability + metrics dashboards"
+
+  - slot: agent-10
+    tool: "SupremeAI"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-20"
+    expires_on: "2026-09-27"
+    active: true
+    notes: "Self-development mode (reserved per OPS-08 §5)"
 
 # Validation rules
 validation_rules:
