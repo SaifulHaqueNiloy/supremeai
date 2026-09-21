@@ -10760,15 +10760,6 @@
       "path": "backend/tests/api/test_api_key_middleware.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/test_api_keys.py"
-    },
-    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -10804,13 +10795,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_app_contract.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/test_auth_routes.py"
     },
     {
       "capability_signals": [],
@@ -25514,5 +25498,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2935
+  "source_file_count": 2933
 }
