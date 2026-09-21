@@ -99,6 +99,15 @@ class RiskEngine:
                 return "R2"
             return "R0"
 
+        if provider == "mesh":
+            # MESH-6 (#926): Tower task-queue — queue-level অপারেশন নন-ডেস্ট্রাক্টিভ
+            # (task record তৈরি/বাতিল, কোনো privileged resource স্পর্শ নয়)।
+            # Task execution-এর আসল বিপদ নির্ভর করে task_type-এর উপর — সেটা
+            # HITL gate (MESH-4) আলাদাভাবে যাচাই করবে। R1 = auto-allow + audit।
+            if action in ("dispatch", "release", "renew"):
+                return "R1"
+            return "R0"
+
         # Default fallback for unknown writes
         return "R3"
 
@@ -167,6 +176,10 @@ TOOL_PROVIDER_ACTION: dict[str, tuple[str, str]] = {
     "get_render_deploy_preflight": ("mcp_tools", "read"),
     "get_render_account_status": ("mcp_tools", "read"),
     "refresh_render_account_status": ("mcp_tools", "refresh"),
+    # ── MESH-6 (#926): Tower task-queue tools (platform-level) ──
+    "mesh_dispatch_task": ("mesh", "dispatch"),
+    "mesh_task_status": ("mesh", "status"),
+    "mesh_release_task": ("mesh", "release"),
 }
 
 
