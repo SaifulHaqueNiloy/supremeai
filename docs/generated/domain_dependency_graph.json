@@ -2232,6 +2232,16 @@
     {
       "evidence": [
         {
+          "line": 98,
+          "path": "backend/tests/middleware/test_docs_auth_contract.py"
+        }
+      ],
+      "source": "identity",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
           "line": 8,
           "path": "backend/api/routes/admin_dashboard/endpoints_users.py"
         }
@@ -2274,6 +2284,16 @@
         {
           "line": 64,
           "path": "backend/api/routes/session_stream.py"
+        }
+      ],
+      "source": "identity",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 70,
+          "path": "backend/tests/middleware/test_docs_auth_contract.py"
         }
       ],
       "source": "identity",
@@ -2484,6 +2504,26 @@
         {
           "line": 128,
           "path": "backend/tests/core/test_auth_middleware.py"
+        }
+      ],
+      "source": "identity",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 52,
+          "path": "backend/tests/middleware/test_docs_auth_contract.py"
+        }
+      ],
+      "source": "identity",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 61,
+          "path": "backend/tests/middleware/test_docs_auth_contract.py"
         }
       ],
       "source": "identity",
@@ -3982,6 +4022,16 @@
     {
       "evidence": [
         {
+          "line": 25,
+          "path": "backend/tests/api/routes/test_browser_routes_full.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
           "line": 15,
           "path": "backend/tests/core/test_browser_credentials.py"
         }
@@ -4904,6 +4954,16 @@
         {
           "line": 20,
           "path": "backend/core/security/ws_auth.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 102,
+          "path": "backend/tests/core/test_security_and_intelligence_contracts.py"
         }
       ],
       "source": "security",
