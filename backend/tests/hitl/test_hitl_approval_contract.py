@@ -346,7 +346,6 @@ def test_expired_approval_refuses_every_decision(engine: HITLEngine) -> None:
         engine.approve("admin-1", record_id)
 
 
-@pytest.mark.skipif(
     not _CANONICAL_STORE_AVAILABLE,
     reason="canonical pending_tasks store not importable in this environment",
 )

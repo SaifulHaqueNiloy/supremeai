@@ -69,7 +69,6 @@ def test_e2e_mobile_and_studio_task_execution(mock_generate, client):
     assert "title" in data or "success" in data or "detail" in data
 
 
-@pytest.mark.skip(
     reason="Depends on live Google Translate TTS network call - network-dependent/flaky in CI sandbox. Tracked in FAILING_TESTS.md."
 )
 def test_e2e_voice_interface_flow():

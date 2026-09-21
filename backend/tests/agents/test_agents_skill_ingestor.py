@@ -9,7 +9,6 @@ import pytest
 class TestSkillIngestorStaticSafety:
     """Test static AST safety checking for skill code."""
 
-    @pytest.mark.skip(
         reason="Needs developer review - static-analysis assertion mismatch, not yet investigated in depth."
     )
     def test_safe_simple_function(self):

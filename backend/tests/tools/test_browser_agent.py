@@ -45,7 +45,6 @@ def agent():
 )
 @patch("socket.gethostbyname", return_value="8.8.8.8")
 @pytest.mark.asyncio
-@pytest.mark.skip(reason="Failing in CI, skipped by auto-remediation")
 async def test_is_safe_url_public(mock_gethostbyname, url, expected):
     """পাবলিক এবং নিরাপদ URL গুলোকে সঠিকভাবে চিহ্নিত করে কিনা তা পরীক্ষা করে।"""
     assert is_safe_url(url) is expected
@@ -114,7 +113,6 @@ async def test_get_global_browser_initialization(mock_async_playwright):
         raise_for_status=MagicMock(),
     ),
 )
-@pytest.mark.skip(reason="Live HTTP example.com response content mismatch")
 @pytest.mark.asyncio
 async def test_navigate_and_interact_fallback_scraper(mock_get, mock_browser, mock_is_safe, agent):
     """প্লেরাইট না থাকলে স্ক্র্যাপার ফলব্যাক পরীক্ষা করে।"""
@@ -132,7 +130,6 @@ async def test_navigate_and_interact_unsafe_url(mock_is_safe, agent):
     assert "SSRF check failed" in result["error"]
 
 
-@pytest.mark.skip(reason="Live HTTP network error mock patch mismatch")
 @patch("core.agents.live.browser_agent.is_safe_url", return_value=True)
 @patch(
     "core.agents.live.browser_agent.get_global_browser", new_callable=AsyncMock, return_value=None
@@ -146,7 +143,6 @@ async def test_navigate_and_interact_network_error(mock_get, mock_browser, mock_
     assert "Network error" in result["error"]
 
 
-@pytest.mark.skip(reason="Playwright recipe execution mock context mismatch")
 @patch("tools.browser_agent.async_playwright")
 @pytest.mark.asyncio
 async def test_execute_recipe_success(mock_async_playwright, agent):
@@ -184,7 +180,6 @@ async def test_execute_recipe_success(mock_async_playwright, agent):
     assert mock_browser.close.called
 
 
-@pytest.mark.skip(reason="Playwright recipe fallback scraper returns success in test environment")
 @patch("tools.browser_agent.async_playwright")
 @pytest.mark.asyncio
 async def test_execute_recipe_failure(mock_async_playwright, agent):
@@ -209,7 +204,6 @@ async def test_execute_recipe_failure(mock_async_playwright, agent):
     assert mock_browser.close.called  # ফেইল করলেও ব্রাউজার ক্লিনআপ হয়
 
 
-@pytest.mark.skip(reason="Playwright recipe fallback scraper returns success in test environment")
 @patch("tools.browser_agent.async_playwright", None)
 @pytest.mark.asyncio
 async def test_playwright_not_installed(agent):
