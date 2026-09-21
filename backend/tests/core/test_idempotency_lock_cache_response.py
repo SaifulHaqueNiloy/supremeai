@@ -59,17 +59,18 @@ class TestCacheResponseAndReleaseLock:
         """সফল path: response cache + lock delete — দুটোই ঘটে।"""
         mock_client = MagicMock()
         mock_client.set = AsyncMock(return_value=True)
-        with patch.object(
-            redis_manager, "get_client_async", new_callable=AsyncMock
-        ) as mock_get_client, patch.object(
-            redis_manager, "delete", new_callable=AsyncMock, return_value=True
-        ) as mock_delete:
+        with (
+            patch.object(
+                redis_manager, "get_client_async", new_callable=AsyncMock
+            ) as mock_get_client,
+            patch.object(
+                redis_manager, "delete", new_callable=AsyncMock, return_value=True
+            ) as mock_delete,
+        ):
             mock_get_client.return_value = mock_client
 
             payload = json.dumps({"status_code": 200, "body": {"ok": True}})
-            result = await cache_response_and_release_lock(
-                "anon:abc-123", payload, ttl=600
-            )
+            result = await cache_response_and_release_lock("anon:abc-123", payload, ttl=600)
 
         assert result is True, "cache write success → True"
         # Response cached at idempotency:response:{key}
@@ -87,11 +88,14 @@ class TestCacheResponseAndReleaseLock:
     @pytest.mark.asyncio
     async def test_redis_unavailable_releases_lock_only(self):
         """Redis client None হলেও lock release best-effort হয় (non-blocking recovery)।"""
-        with patch.object(
-            redis_manager, "get_client_async", new_callable=AsyncMock, return_value=None
-        ), patch.object(
-            redis_manager, "delete", new_callable=AsyncMock, return_value=True
-        ) as mock_delete:
+        with (
+            patch.object(
+                redis_manager, "get_client_async", new_callable=AsyncMock, return_value=None
+            ),
+            patch.object(
+                redis_manager, "delete", new_callable=AsyncMock, return_value=True
+            ) as mock_delete,
+        ):
             result = await cache_response_and_release_lock("user-1:k-1", "{}", ttl=300)
 
         assert result is False, "client None → False (cache miss) but lock still released"
@@ -102,13 +106,15 @@ class TestCacheResponseAndReleaseLock:
         """Cache write raise করলেও lock release করতে হবে (যাতে duplicate আটকে না থাকে)।"""
         mock_client = MagicMock()
         mock_client.set = AsyncMock(side_effect=RuntimeError("redis disconnected"))
-        with patch.object(
-            redis_manager, "get_client_async", new_callable=AsyncMock
-        ) as mock_get_client, patch.object(
-            redis_manager, "delete", new_callable=AsyncMock, return_value=True
-        ) as mock_delete, patch.object(
-            redis_manager, "report_failure"
-        ) as mock_report:
+        with (
+            patch.object(
+                redis_manager, "get_client_async", new_callable=AsyncMock
+            ) as mock_get_client,
+            patch.object(
+                redis_manager, "delete", new_callable=AsyncMock, return_value=True
+            ) as mock_delete,
+            patch.object(redis_manager, "report_failure") as mock_report,
+        ):
             mock_get_client.return_value = mock_client
 
             result = await cache_response_and_release_lock("p:k", "{}", ttl=60)
@@ -131,10 +137,11 @@ class TestCacheResponseAndReleaseLock:
             return True
 
         mock_client.set = fake_set
-        with patch.object(
-            redis_manager, "get_client_async", new_callable=AsyncMock
-        ) as mock_get_client, patch.object(
-            redis_manager, "delete", new_callable=AsyncMock
+        with (
+            patch.object(
+                redis_manager, "get_client_async", new_callable=AsyncMock
+            ) as mock_get_client,
+            patch.object(redis_manager, "delete", new_callable=AsyncMock),
         ):
             mock_get_client.return_value = mock_client
             await cache_response_and_release_lock("user42:uuid-9", "{}")
@@ -154,8 +161,10 @@ class TestMiddlewareImportContract:
         from core.cache.redis_manager import (  # noqa: F401 — verify import contract
             acquire_idempotency_lock,
             cache_response_and_release_lock,
-            redis_manager as rm,
             release_idempotency_lock,
+        )
+        from core.cache.redis_manager import (
+            redis_manager as rm,
         )
 
         # এখানে পৌঁছালেই মানে no ImportError — Issue #897 fix সফল।
