@@ -461,3 +461,10 @@ exit 0
 
 # Singleton instance
 secret_hunter = SecretHunter()
+
+
+# Issue #895: contract alias — `backend/tests/core/test_security_and_intelligence_contracts.py`
+# `SecretScanner` নামে import করে, কিন্তু historicalভাবে এই মডিউলে class নাম `SecretHunter`।
+# দুজনেই একই কাজ করে — codebase scan করে secret detect করা — তাই `SecretScanner` কে
+# `SecretHunter`-এর alias হিসেবে expose করা হলো। No stub, no fake — same real implementation.
+SecretScanner = SecretHunter
