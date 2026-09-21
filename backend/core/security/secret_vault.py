@@ -156,9 +156,7 @@ class ProductionSecretVault:
         # OPEN forever until process restart, so a transient Infisical outage
         # permanently blocked every agent's secret fetch even after recovery.
         self._circuit_opened_at: float | None = None
-        self._half_open_after_seconds: int = int(
-            os.getenv("VAULT_HALF_OPEN_AFTER") or "60"
-        )
+        self._half_open_after_seconds: int = int(os.getenv("VAULT_HALF_OPEN_AFTER") or "60")
 
         # TTL overrides for smart caching (Infisical API quota optimization)
         self._ttl_overrides: dict[str, int] = {
@@ -222,9 +220,7 @@ class ProductionSecretVault:
         বাংলা: সফল probe এর পর সার্কিট CLOSED করে — normal operation resume।
         """
         if self._circuit_breaker_open:
-            logger.info(
-                "Vault circuit breaker CLOSED — Infisical recovered (issue #901)"
-            )
+            logger.info("Vault circuit breaker CLOSED — Infisical recovered (issue #901)")
         self._circuit_breaker_open = False
         self._circuit_opened_at = None
 
@@ -629,10 +625,7 @@ class ProductionSecretVault:
             if not self._should_attempt_half_open_recovery():
                 logger.debug("fetch_all_secrets: circuit breaker open, skipping bulk fetch.")
                 return {}
-            logger.info(
-                "Vault circuit breaker HALF_OPEN — probe via bulk fetch "
-                "(issue #901)"
-            )
+            logger.info("Vault circuit breaker HALF_OPEN — probe via bulk fetch (issue #901)")
 
         if not self.client or not self.project_id:
             logger.debug("fetch_all_secrets: no Infisical client/project_id, skipping.")

@@ -242,9 +242,7 @@ class CircuitBreaker:
             self.mark_failure()
             raise
 
-    async def call_async(
-        self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any
-    ) -> T:
+    async def call_async(self, func: Callable[..., Awaitable[T]], *args: Any, **kwargs: Any) -> T:
         """Async alias of :meth:`acall`.
 
         বাংলা: `acall`-এর পাবলিক async alias। অনেক caller/test `call_async` নামের API
