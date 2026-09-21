@@ -53,7 +53,7 @@ class MinIOClient:
     def __init__(self) -> None:
         self.cache = get_cache()
         self._client = None  # Lazy init
-        self._endpoint = os.environ.get("MINIO_ENDPOINT", "localhost:9000")
+        self._endpoint = os.environ.get("MINIO_ENDPOINT", "localhost:9000")  # is_local()
         self._access_key = os.environ.get("MINIO_ACCESS_KEY", "")
         self._secret_key = os.environ.get("MINIO_SECRET_KEY", "")
         self._secure = os.environ.get("MINIO_SECURE", "false").lower() == "true"
