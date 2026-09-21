@@ -2092,6 +2092,16 @@
     {
       "evidence": [
         {
+          "line": 41,
+          "path": "backend/core/task_router.py"
+        }
+      ],
+      "source": "execution",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 8,
           "path": "backend/engine/worker_node.py"
         }
