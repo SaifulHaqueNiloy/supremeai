@@ -87,7 +87,7 @@ class DevDomainAdapter(BaseDomainAdapter):
         try:
             import json
 
-            from core.llm.llm_gateway_with_learning import get_llm_gateway
+            from core.llm.llm_gateway import get_llm_gateway
 
             gateway = get_llm_gateway()
             if gateway:
@@ -136,7 +136,7 @@ class BusinessDomainAdapter(BaseDomainAdapter):
         try:
             import json
 
-            from core.llm.llm_gateway_with_learning import get_llm_gateway
+            from core.llm.llm_gateway import get_llm_gateway
 
             gateway = get_llm_gateway()
             if gateway:
@@ -185,7 +185,7 @@ class UXDomainAdapter(BaseDomainAdapter):
         try:
             import json
 
-            from core.llm.llm_gateway_with_learning import get_llm_gateway
+            from core.llm.llm_gateway import get_llm_gateway
 
             gateway = get_llm_gateway()
             if gateway:
@@ -307,7 +307,7 @@ class LivingEngineOrchestrator:
                     spec = ToolSpec(name=f"dynamic_{node.id}", description=node.description)
 
                     try:
-                        from core.llm.llm_gateway_with_learning import get_llm_gateway
+                        from core.llm.llm_gateway import get_llm_gateway
 
                         gateway = get_llm_gateway()
 

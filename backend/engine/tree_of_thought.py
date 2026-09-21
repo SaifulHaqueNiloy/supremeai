@@ -71,7 +71,7 @@ class TreeOfThoughtReasoner:
     async def _generate_initial_thoughts(self, problem: str) -> list[ThoughtNode]:
         """Generate 3 distinct reasoning perspectives for a problem using LLM."""
         try:
-            from core.llm.llm_gateway_with_learning import get_llm_gateway
+            from core.llm.llm_gateway import get_llm_gateway
 
             gateway = get_llm_gateway()
 
@@ -134,7 +134,7 @@ class TreeOfThoughtReasoner:
     async def _score_thoughts(self, problem: str, nodes: list[ThoughtNode]) -> list[ThoughtNode]:
         """Evaluate and rank thought nodes using LLM."""
         try:
-            from core.llm.llm_gateway_with_learning import get_llm_gateway
+            from core.llm.llm_gateway import get_llm_gateway
 
             gateway = get_llm_gateway()
 

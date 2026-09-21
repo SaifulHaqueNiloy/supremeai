@@ -1057,7 +1057,7 @@ async def summarize_and_save_session(
 
     summary = session_text  # fallback: raw text
     try:
-        from core.llm.llm_gateway_with_learning import get_llm_gateway
+        from core.llm.llm_gateway import get_llm_gateway
 
         gateway = get_llm_gateway()
         if gateway:
