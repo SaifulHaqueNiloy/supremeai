@@ -60,6 +60,12 @@ class SecurityPipelineManager:
     ) -> None:
         """
         Registers active security middlewares cleanly.
+
+        বাংলা: Issue #898 — পূর্বে দুটি middlewareই `try/except ImportError` silent
+        skip দ্বারা fail-open হতো (ভুল class নাম `OriginValidatorMiddleware` এবং
+        non-existent `APIKeyLimiter`)। Security pipeline-এ silent skip নিষিদ্ধ —
+        সব নাম এখন correctly resolve হয়; import error হলে সেটি propagate হবে
+        (fail-loud) যাতে startup-এই misconfiguration ধরা পড়ে।
         """
         if enable_headers:
             app.add_middleware(SupremeSecurityHeadersMiddleware)
@@ -67,19 +73,20 @@ class SecurityPipelineManager:
 
         # Conditional loaders prevent unnecessary pipeline traversal
         if enable_origin_validation:
-            try:
-                from core.security.origin_validator import OriginValidatorMiddleware
+            # FIX (#898): সঠিক নাম `TrustedOriginMiddleware` — `origin_validator.py:50`
+            # এ class এই নামে defined। পূর্বে `OriginValidatorMiddleware` নামে
+            # import হতো যা defined নয় → ImportError → silent skip।
+            from core.security.origin_validator import TrustedOriginMiddleware
 
-                app.add_middleware(OriginValidatorMiddleware)
-                logger.info("Security Pipeline: OriginValidatorMiddleware enabled.")
-            except ImportError as exc:
-                logger.warning(f"Could not load OriginValidatorMiddleware: {exc}")
+            app.add_middleware(TrustedOriginMiddleware)
+            logger.info("Security Pipeline: TrustedOriginMiddleware enabled.")
 
         if enable_rate_limiter:
-            try:
-                from core.security.api_key_limiter import APIKeyLimiter
+            # FIX (#898): `APIKeyLimiterMiddleware` — `BaseHTTPMiddleware` subclass
+            # যাতে `app.add_middleware()` দিয়ে ASGI middleware হিসেবে register হয়।
+            # পূর্বে `APIKeyLimiter` class import হতো যা ASGI middleware নয়, তাই
+            # `add_middleware` কোনো rate limit enforce করত না।
+            from core.security.api_key_limiter import APIKeyLimiterMiddleware
 
-                app.add_middleware(APIKeyLimiter)
-                logger.info("Security Pipeline: APIKeyLimiter enabled.")
-            except ImportError as exc:
-                logger.warning(f"Could not load APIKeyLimiter: {exc}")
+            app.add_middleware(APIKeyLimiterMiddleware)
+            logger.info("Security Pipeline: APIKeyLimiterMiddleware enabled.")
