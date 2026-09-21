@@ -2,18 +2,18 @@
 
 বাংলা সারসংক্ষেপ:
 ------------------
-Tower-native Task Queue-র REST surface (/api/v1/tasks)। Core logic সব
+Tower-native Task Queue-র REST surface (/api/v1/mesh/tasks)। Core logic সব
 backend/core/task_router.py-তে — এখানে কেবল পাতলা FastAPI আবরণ:
-- POST /api/v1/tasks                    — submit
-- GET  /api/v1/tasks?task_status=       — snapshot + filter
-- GET  /api/v1/tasks/queue/stats        — per-status counts
-- GET  /api/v1/tasks/{task_id}          — detail
-- POST /api/v1/tasks/{task_id}/claim    — CAS atomic claim ('any' = best match)
-- POST /api/v1/tasks/{task_id}/lease    — lease renewal (leased-by check)
-- POST /api/v1/tasks/{task_id}/complete — ফলাফল সহ সমাপ্তি
-- POST /api/v1/tasks/{task_id}/fail     — ব্যর্থতা → retry/failed (Zero Zombie)
-- POST /api/v1/tasks/{task_id}/cancel   — operator cancel
-- POST /api/v1/tasks/reap               — expired lease re-queue (failover)
+- POST /api/v1/mesh/tasks                    — submit
+- GET  /api/v1/mesh/tasks?task_status=       — snapshot + filter
+- GET  /api/v1/mesh/tasks/queue/stats        — per-status counts
+- GET  /api/v1/mesh/tasks/{task_id}          — detail
+- POST /api/v1/mesh/tasks/{task_id}/claim    — CAS atomic claim ('any' = best match)
+- POST /api/v1/mesh/tasks/{task_id}/lease    — lease renewal (leased-by check)
+- POST /api/v1/mesh/tasks/{task_id}/complete — ফলাফল সহ সমাপ্তি
+- POST /api/v1/mesh/tasks/{task_id}/fail     — ব্যর্থতা → retry/failed (Zero Zombie)
+- POST /api/v1/mesh/tasks/{task_id}/cancel   — operator cancel
+- POST /api/v1/mesh/tasks/reap               — expired lease re-queue (failover)
 
 সম্পর্কিত:
 - Master plan: docs/plans/MULTI_AGENT_MESH_MASTER_PLAN.md (§১, §৪.3, §৬ MESH-6)
@@ -37,21 +37,7 @@ from core.task_router import (
 )
 
 router = APIRouter(
-    prefix="/api/v1/tasks",
-    tags=["mesh-tasks"],
-    # বাংলা: presence-এর মতোই pre-auth — task submit/claim প্রথম কল হতে পারে।
-    # Per-task-type বিপজ্জনকতা HITL gate (MESH-4) এ যাচাই হবে; এখানে কেবল
-    # queue state পরিচালিত হয়, privileged resource স্পর্শ করা হয় না।
-)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# MESH-6 — Task Queue endpoints (/api/v1/tasks)
-# বাংলা: TaskRouter singleton-এর উপর পাতলা REST আবরণ — সব business logic
-# backend/core/task_router.py-তে (atomic CAS claim, lease, reap)।
-# ══════════════════════════════════════════════════════════════════════════════
-router = APIRouter(
-    prefix="/api/v1/tasks",
+    prefix="/api/v1/mesh/tasks",
     tags=["mesh-tasks"],
     # বাংলা: presence-এর মতোই pre-auth — task submit/claim প্রথম কল হতে পারে।
     # Per-task-type বিপজ্জনকতা HITL gate (MESH-4) এ যাচাই হবে; এখানে কেবল
@@ -61,7 +47,7 @@ router = APIRouter(
 
 # ── Request Models (tasks) ───────────────────────────────────────────────────
 class TaskSubmitRequest(BaseModel):
-    """POST /api/v1/tasks — নতুন task জমা দেওয়ার body।"""
+    """POST /api/v1/mesh/tasks — নতুন task জমা দেওয়ার body।"""
 
     task_type: str = Field(..., description=f"One of {sorted(VALID_TASK_TYPES)}")
     title: str = Field(..., min_length=1, max_length=200)
@@ -73,7 +59,7 @@ class TaskSubmitRequest(BaseModel):
 
 
 class TaskClaimRequest(BaseModel):
-    """POST /api/v1/tasks/{task_id}/claim — node নিজের জন্য claim করতে পারে,
+    """POST /api/v1/mesh/tasks/{task_id}/claim — node নিজের জন্য claim করতে পারে,
     অথবা general claim endpoint (task_id='any') দিয়ে উপযুক্ত task নিতে পারে।"""
 
     node_id: str = Field(..., min_length=1, max_length=128)
@@ -83,28 +69,28 @@ class TaskClaimRequest(BaseModel):
 
 
 class TaskLeaseRequest(BaseModel):
-    """POST /api/v1/tasks/{task_id}/lease — lease renewal body।"""
+    """POST /api/v1/mesh/tasks/{task_id}/lease — lease renewal body।"""
 
     node_id: str = Field(..., min_length=1, max_length=128)
     lease_seconds: int | None = Field(default=None, ge=1)
 
 
 class TaskCompleteRequest(BaseModel):
-    """POST /api/v1/tasks/{task_id}/complete — ফলাফল সহ সমাপ্তি।"""
+    """POST /api/v1/mesh/tasks/{task_id}/complete — ফলাফল সহ সমাপ্তি।"""
 
     node_id: str = Field(..., min_length=1, max_length=128)
     result: dict[str, Any] = Field(default_factory=dict)
 
 
 class TaskFailRequest(BaseModel):
-    """POST /api/v1/tasks/{task_id}/fail — ত্রুটি সহ ব্যর্থতা (retry সিদ্ধান্ত router নেবে)।"""
+    """POST /api/v1/mesh/tasks/{task_id}/fail — ত্রুটি সহ ব্যর্থতা (retry সিদ্ধান্ত router নেবে)।"""
 
     node_id: str = Field(..., min_length=1, max_length=128)
     error: str = Field(..., min_length=1, max_length=2000)
 
 
 class TaskListResponse(BaseModel):
-    """GET /api/v1/tasks — queue snapshot envelope।"""
+    """GET /api/v1/mesh/tasks — queue snapshot envelope।"""
 
     tasks: list[TaskRecord]
     count: int

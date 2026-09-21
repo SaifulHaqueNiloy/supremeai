@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 559,
+    "backend_routes": 567,
     "frontend_unique_refs": 140,
     "matched": 240,
-    "orphan_routes": 319
+    "orphan_routes": 327
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -19,6 +19,7 @@
     "/api/v1/evolution": 9,
     "/api/v1/missions": 9,
     "/api/v1/meta-ai": 8,
+    "/api/v1/mesh": 8,
     "/api/v1/knowledge": 7,
     "/api/v1/markdown": 7,
     "/api/v1/internet-monitor": 6,
@@ -131,7 +132,7 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 243,
+    "unclassified-orphan": 251,
     "internal": 44,
     "admin-only": 32
   },
@@ -1646,6 +1647,62 @@
       "method": "PATCH",
       "declared": "/api/v1/nodes/{node_id}",
       "resolved": "/api/v1/nodes/:param",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_tasks.py",
+      "method": "GET",
+      "declared": "/api/v1/mesh/tasks/queue/stats",
+      "resolved": "/api/v1/mesh/tasks/queue/stats",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_tasks.py",
+      "method": "GET",
+      "declared": "/api/v1/mesh/tasks/{task_id}",
+      "resolved": "/api/v1/mesh/tasks/:param",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_tasks.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/tasks/{task_id}/claim",
+      "resolved": "/api/v1/mesh/tasks/:param/claim",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_tasks.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/tasks/{task_id}/lease",
+      "resolved": "/api/v1/mesh/tasks/:param/lease",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_tasks.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/tasks/{task_id}/complete",
+      "resolved": "/api/v1/mesh/tasks/:param/complete",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_tasks.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/tasks/{task_id}/fail",
+      "resolved": "/api/v1/mesh/tasks/:param/fail",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_tasks.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/tasks/{task_id}/cancel",
+      "resolved": "/api/v1/mesh/tasks/:param/cancel",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_tasks.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/tasks/reap",
+      "resolved": "/api/v1/mesh/tasks/reap",
       "classification": "unclassified-orphan"
     },
     {
