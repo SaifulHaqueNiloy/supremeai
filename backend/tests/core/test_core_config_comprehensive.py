@@ -274,9 +274,9 @@ def test_settings_encryption_key_not_empty():
 
 def test_settings_supremeai_docs_password_required():
     """Test SupremeAI docs password configuration."""
-    with patch.dict(os.environ, {"SUPREMEAI_DOCS_PASSWORD": "secure-docs-password"}):
+    with patch.dict(os.environ, {"SUPREMEAI_DOCS_PASSWORD": "docs-pw"}):
         settings = Settings()
-        assert settings.docs_password.get_secret_value() == "secure-docs-password"
+        assert settings.docs_password.get_secret_value() == "docs-pw"
 
 
 def test_settings_reload_env_vars():
