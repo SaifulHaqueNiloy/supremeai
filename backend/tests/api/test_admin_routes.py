@@ -24,6 +24,7 @@ class TestHelperFunctions:
     def test_trusted_browser_key_is_deterministic(self):
         """_trusted_browser_key returns same key for same token."""
         from api.routes.admin_routes import _trusted_browser_key
+
         key1 = _trusted_browser_key("token-abc-123")
         key2 = _trusted_browser_key("token-abc-123")
         assert key1 == key2
@@ -33,6 +34,7 @@ class TestHelperFunctions:
     def test_trusted_browser_key_differs_for_different_tokens(self):
         """Different tokens produce different keys."""
         from api.routes.admin_routes import _trusted_browser_key
+
         key1 = _trusted_browser_key("token-A")
         key2 = _trusted_browser_key("token-B")
         assert key1 != key2
@@ -40,29 +42,36 @@ class TestHelperFunctions:
     def test_mock_token_allowed_returns_bool(self):
         """_mock_token_allowed returns a boolean."""
         from api.routes.admin_routes import _mock_token_allowed
+
         result = _mock_token_allowed()
         assert isinstance(result, bool)
 
     def test_ensure_admin_authorized_raises_for_empty_uid(self):
         """_ensure_admin_authorized raises HTTPException for empty uid."""
-        from api.routes.admin_routes import _ensure_admin_authorized
         from fastapi import HTTPException
+
+        from api.routes.admin_routes import _ensure_admin_authorized
+
         with pytest.raises(HTTPException) as exc_info:
             _ensure_admin_authorized("", "test@example.com")
         assert exc_info.value.status_code in (401, 403)
 
     def test_ensure_admin_authorized_raises_for_empty_email(self):
         """_ensure_admin_authorized raises HTTPException for empty email when uid is non-admin."""
-        from api.routes.admin_routes import _ensure_admin_authorized
         from fastapi import HTTPException
+
+        from api.routes.admin_routes import _ensure_admin_authorized
+
         with pytest.raises(HTTPException) as exc_info:
             _ensure_admin_authorized("non-admin-uid", "")
         assert exc_info.value.status_code in (401, 403)
 
     def test_reject_mock_token_raises_when_mock_not_allowed(self):
         """_reject_mock_token raises HTTPException when mock tokens are not allowed."""
-        from api.routes.admin_routes import _reject_mock_token, _mock_token_allowed
         from fastapi import HTTPException
+
+        from api.routes.admin_routes import _mock_token_allowed, _reject_mock_token
+
         # Only test the raise behavior if mock is not allowed
         if not _mock_token_allowed():
             with pytest.raises(HTTPException):
