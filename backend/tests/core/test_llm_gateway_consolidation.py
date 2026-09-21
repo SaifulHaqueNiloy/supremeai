@@ -116,13 +116,14 @@ async def test_gateway_429_handling_simulation(llm_gateway):
 @pytest.mark.asyncio
 async def test_provider_taxonomy_consistency():
     """Test that provider taxonomies are more consistent between gateways."""
-    gateway = get_llm_gateway()
+    get_llm_gateway()
     LLMRouter()
 
-    # Check that both have access to the same provider mappings
-    # LLMGateway uses _MODEL_KEY_MAP, LLMRouter has Provider enum
+    # The provider → settings-key map moved to module level during the
+    # gateway registry refactor; the instance no longer carries it.
+    from core.llm.llm_gateway.registry import _MODEL_KEY_MAP
 
-    # Verify that LLMGateway has expanded provider mapping
+    # Verify that the gateway registry has expanded provider mapping
     expected_providers = [
         "groq",
         "gemini",
@@ -140,7 +141,7 @@ async def test_provider_taxonomy_consistency():
     ]
 
     for provider in expected_providers:
-        assert provider in gateway._MODEL_KEY_MAP, f"Gateway should support {provider} provider"
+        assert provider in _MODEL_KEY_MAP, f"Gateway should support {provider} provider"
 
 
 @pytest.mark.asyncio
@@ -162,9 +163,12 @@ async def test_circuit_breaker_state_sharing():
     assert cb2.is_open, "Opening circuit breaker in one should affect shared instance"
 
 
-@pytest.mark.asyncio
-async def test_gateway_health_endpoint_simulation():
-    """Test the health endpoint functionality."""
+def test_gateway_health_endpoint_simulation():
+    """Test the health endpoint functionality.
+
+    NOTE: must stay a SYNC test — TestClient.get() is a blocking portal call;
+    inside an async test it deadlocks the running event loop.
+    """
     from fastapi.testclient import TestClient
 
     from api.routes.llm_gateway_routes import router
@@ -215,7 +219,9 @@ async def test_enhanced_gateway_features():
 
 def test_provider_mapping_completeness():
     """Test that provider mapping covers all expected providers."""
-    gateway = get_llm_gateway()
+    # The provider → settings-key map moved to module level during the
+    # gateway registry refactor; the instance no longer carries it.
+    from core.llm.llm_gateway.registry import _MODEL_KEY_MAP
 
     # Check that the expanded provider map includes all expected providers
     expected_providers = {
@@ -234,7 +240,7 @@ def test_provider_mapping_completeness():
         "hf_space",
     }
 
-    actual_providers = set(gateway._MODEL_KEY_MAP.keys())
+    actual_providers = set(_MODEL_KEY_MAP.keys())
 
     missing_providers = expected_providers - actual_providers
     assert not missing_providers, f"Missing providers in mapping: {missing_providers}"

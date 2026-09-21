@@ -90,20 +90,28 @@ class TestAuthenticationEndpoints:
         self,
         client: AsyncClient,
         sample_user_registration_data,
+        mock_supabase_db_client,
     ):
-        """Test registration with duplicate email fails."""
+        """Duplicate email is rejected by the Supabase provider contract.
+
+        The autouse mock always returns a fresh user; emulate the real
+        provider's duplicate-email error on the second sign_up call. The
+        handler maps AuthApiError to 400 (not the legacy 409).
+        """
+        from supabase_auth.errors import AuthApiError
+
         # First registration should succeed
         await client.post("/api/v1/auth/register", json=sample_user_registration_data)
+
+        mock_supabase_db_client.auth.sign_up.side_effect = AuthApiError(
+            "User already registered", 422, "user_already_exists"
+        )
 
         # Second should fail
         response = await client.post("/api/v1/auth/register", json=sample_user_registration_data)
 
-        assert response.status_code == 409  # Conflict
-        error = response.json().get("error", {})
-        assert (
-            "email" in error.get("message", "").lower()
-            or "exists" in error.get("message", "").lower()
-        )
+        assert response.status_code == 400  # provider rejection mapped to 400
+        assert "already registered" in response.json()["detail"].lower()
 
     @pytest.mark.auth
     async def test_user_registration_invalid_email(
@@ -127,8 +135,14 @@ class TestAuthenticationEndpoints:
         self,
         client: AsyncClient,
         generate_test_emails,
+        mock_supabase_db_client,
     ):
-        """Test registration with weak password fails."""
+        """Weak password is rejected by the provider password policy (-> 400)."""
+        from supabase_auth.errors import AuthApiError
+
+        mock_supabase_db_client.auth.sign_up.side_effect = AuthApiError(
+            "Password should be at least 6 characters", 422, "weak_password"
+        )
         user_data = {
             "username": generate_test_emails(),
             "password": "weak",  # Too short, no complexity
@@ -138,8 +152,7 @@ class TestAuthenticationEndpoints:
         response = await client.post("/api/v1/auth/register", json=user_data)
 
         assert response.status_code == 400  # Bad request
-        error = response.json().get("error", {})
-        assert "password" in str(error).lower()
+        assert "password" in response.json()["detail"].lower()
 
     @pytest.mark.auth
     async def test_user_login_success(
@@ -171,10 +184,17 @@ class TestAuthenticationEndpoints:
         self,
         client: AsyncClient,
         sample_user_registration_data,
+        mock_supabase_db_client,
     ):
-        """Test login with wrong password fails."""
+        """Login with wrong password fails: provider AuthApiError -> 401."""
+        from supabase_auth.errors import AuthApiError
+
         # Register first
         await client.post("/api/v1/auth/register", json=sample_user_registration_data)
+
+        mock_supabase_db_client.auth.sign_in_with_password.side_effect = AuthApiError(
+            "Invalid login credentials", 400, "invalid_credentials"
+        )
 
         # Login with wrong password
         login_data = {

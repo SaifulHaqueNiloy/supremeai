@@ -104,6 +104,10 @@ async def create_checkout_session(request: Request, payload: CheckoutRequest):
             # তব নরব সযলপ ন কর ডবগ লগ কর হল
             logger.debug(f"PostHog checkout capture failed: {exc}")
         return {"status": "success", "session_id": session.id, "url": session.url}
+    except HTTPException:
+        # বাংলা: নিজের রেইজ করা HTTPException (যেমন 401/403/503 not-configured)
+        # generic 500-এ গুটিয়ে ফেলা ঠিক নয় — ক্লায়েন্ট সঠিক status পাওয়ার কথা।
+        raise
     except Exception as e:
         logger.error(f"Failed to create Stripe checkout session: {e}")
         # বাংলা মন্তব্য: সিকিউরিটি ইনফরমেশন লিক এড়াতে জেনেরিক এরর মেসেজ রিটার্ন করা হচ্ছে।

@@ -17,7 +17,8 @@ def test_defaults(mock_fetch):
     s._set_cached_secret("SUPREMEAI_ADMIN_PASSWORD_HASH", "mock_SUPREMEAI_ADMIN_PASSWORD_HASH")
     assert s.app_name == "SupremeAI 2.0"
     assert s.env == "local"
-    assert s.debug is True
+    # বাংলা: debug ডিফল্ট এখন False (config.py:99) — production-first ডিফল্ট।
+    assert s.debug is False
     assert s.port == 8080
     assert s.host == "0.0.0.0"
     assert s.supremeai_admin_password_hash == "mock_SUPREMEAI_ADMIN_PASSWORD_HASH"
@@ -155,9 +156,22 @@ def test_cors_origins_production_strips_localhost(mock_fetch, monkeypatch):
     monkeypatch.setenv("STRIPE_API_KEY", "TEST_ONLY_STRIPE_API_KEY")
     monkeypatch.setenv("STRIPE_WEBHOOK_SECRET", "TEST_ONLY_STRIPE_WEBHOOK_SECRET")
     monkeypatch.setenv("CI_WEBHOOK_SECRET", "TEST_ONLY_CI_WEBHOOK_SECRET")
+    # বাংলা: প্রোডাকশন CORS ভ্যালিডেশন শুধু https origin গ্রহণ করে, তবে
+    # localhost/127.0.0.1 স্পষ্টভাবে exempt। STRICT_CORS_TEST দিয়ে
+    # pytest-bypass নিষ্ক্রিয় করে আসল প্রোডাকশন শাখা যাচাই করা হয়।
+    monkeypatch.setenv("ENV", "production")
+    monkeypatch.setenv("STRICT_CORS_TEST", "true")
+    monkeypatch.setenv(
+        "CORS_ORIGINS",
+        '["http://127.0.0.1:3000", "https://example.com", "http://insecure.example.com"]',
+    )
     s = Settings()
-    assert "http://127.0.0.1:3000" not in s.cors_origins  # is_local()
+    # localhost/127.0.0.1 is explicitly exempted in production
+    assert "http://127.0.0.1:3000" in s.cors_origins  # is_local()
+    # HTTPS origins always accepted
     assert "https://example.com" in s.cors_origins
+    # plain-HTTP non-localhost origin rejected in production
+    assert "http://insecure.example.com" not in s.cors_origins
 
 
 @patch("core.security.secret_vault.secret_vault.fetch_secret", return_value="")

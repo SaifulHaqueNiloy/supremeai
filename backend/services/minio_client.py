@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from pathlib import Path
 from typing import Any
@@ -57,14 +57,15 @@ class MinIOClient:
         self._access_key = os.environ.get("MINIO_ACCESS_KEY", "")
         self._secret_key = os.environ.get("MINIO_SECRET_KEY", "")
         self._secure = os.environ.get("MINIO_SECURE", "false").lower() == "true"
+        # timedelta is stdlib — always available; initialize eagerly so URL
+        # generation never depends on the lazy Minio import path.
+        self._timedelta = timedelta
         logger.info(f"MinIOClient initialized for {self._endpoint}")
 
     def _get_client(self) -> Any:
         """Get or create MinIO client."""
         if self._client is None:
             try:
-                from datetime import timedelta
-
                 from minio import Minio
 
                 self._client = Minio(
@@ -73,11 +74,9 @@ class MinIOClient:
                     secret_key=self._secret_key,
                     secure=self._secure,
                 )
-                self._timedelta = timedelta
             except ImportError:
                 logger.warning("MinIO client not installed, using mock mode")
                 self._client = None
-                self._timedelta = None
 
         return self._client
 

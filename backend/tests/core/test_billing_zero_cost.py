@@ -17,6 +17,17 @@ from tools.tenant_rate_limiter import TenantRateLimiter
 class TestBillingZeroCost:
     """Tests for zero-cost billing policy."""
 
+    @staticmethod
+    def _limiter_no_redis() -> TenantRateLimiter:
+        """Limiter forced onto the documented no-redis branch.
+
+        redis_client=None falls back to the shared redis_manager whose real
+        client attempts a live Redis connection in CI; patch it to expose
+        queue=None semantics deterministically.
+        """
+        with patch("core.cache.redis_manager.redis_manager", MagicMock(client=None)):
+            return TenantRateLimiter(redis_client=None)
+
     def test_free_tier_exists(self):
         """Test free tier plan exists."""
         assert "free" in SUBSCRIPTION_PLANS
@@ -31,7 +42,7 @@ class TestBillingZeroCost:
         assert "pro" in SUBSCRIPTION_PLANS
 
     @pytest.mark.asyncio
-    async def test_record_usage_free_tier_no_stripe(self):
+    async def test_record_usage_free_tier_no_stripe(self, no_redis):
         """Test free tier usage doesn't call Stripe."""
         limiter = TenantRateLimiter(redis_client=None)
         with patch("tools.tenant_rate_limiter.settings") as mock_settings:
@@ -43,7 +54,7 @@ class TestBillingZeroCost:
     @pytest.mark.asyncio
     async def test_record_usage_calls_stripe_when_configured(self):
         """Test Stripe is called when API key is configured."""
-        limiter = TenantRateLimiter(redis_client=None)
+        limiter = self._limiter_no_redis()
         mock_stripe = MagicMock()
         with patch("tools.tenant_rate_limiter.settings") as mock_settings:
             mock_settings.stripe_api_key = "sk-test"
@@ -55,7 +66,7 @@ class TestBillingZeroCost:
     @pytest.mark.asyncio
     async def test_record_usage_stripe_failure_does_not_crash(self):
         """Test Stripe failure doesn't crash the billing flow."""
-        limiter = TenantRateLimiter(redis_client=None)
+        limiter = self._limiter_no_redis()
         mock_stripe = MagicMock()
         mock_stripe.InvoiceItem.create.side_effect = Exception("stripe error")
         with patch("tools.tenant_rate_limiter.settings") as mock_settings:
@@ -67,13 +78,21 @@ class TestBillingZeroCost:
     @pytest.mark.asyncio
     async def test_quota_check_free_tier_unlimited(self):
         """Test free tier has no hard quota limit."""
-        limiter = TenantRateLimiter(redis_client=None)
+        limiter = self._limiter_no_redis()
         res = await limiter.check_quota("tenant-1", cost=0.0)
         assert res["allowed"] is True
 
     def test_billing_tiers_defined(self):
         """Test all expected billing tiers are defined."""
-        limiter = TenantRateLimiter(redis_client=None)
+        limiter = self._limiter_no_redis()
         assert "free" in limiter.billing_tiers
         assert "pro" in limiter.billing_tiers
         assert "enterprise" in limiter.billing_tiers
+
+
+@pytest.fixture(autouse=True)
+def no_redis(monkeypatch):
+    """Keep tests off the live Redis path inside the limiter's fallback."""
+    monkeypatch.setattr(
+        "core.cache.redis_manager.redis_manager", MagicMock(client=None), raising=False
+    )

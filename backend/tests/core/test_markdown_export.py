@@ -11,6 +11,13 @@ pytestmark = pytest.mark.skip(reason="Pre-existing failure — needs rewrite")
 client = TestClient(app)
 
 
+@pytest.fixture
+def valid_auth_headers():
+    """Authorization headers accepted by the test-environment auth chain
+    (conftest sets ALLOW_TEST_AUTH_BYPASS=true → middleware skips JWT)."""
+    return {"Authorization": "Bearer test-env-bypass-token"}
+
+
 def test_markdown_export_async_flow(valid_auth_headers):
     # 1. Trigger export job
     response = client.post(

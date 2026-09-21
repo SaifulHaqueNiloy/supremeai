@@ -11662,6 +11662,18 @@
     },
     {
       "capability_signals": [
+<<<<<<< HEAD
+=======
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_advanced_wiring.py"
+    },
+    {
+      "capability_signals": [
+>>>>>>> bb50e6a6 (fix(#1031): repair main CI — syntax, real test bugs, honest contracts)
         "dispatch",
         "execute"
       ],
