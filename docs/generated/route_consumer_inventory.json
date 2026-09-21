@@ -14,9 +14,9 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 814,
+    "backend_routes": 815,
     "frontend_unique_refs": 140,
-    "routes_with_frontend_consumer": 257,
+    "routes_with_frontend_consumer": 258,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
@@ -25,7 +25,7 @@
     "by_classification": {
       "user-facing": 156,
       "admin-only": 321,
-      "internal": 37,
+      "internal": 38,
       "deprecated": 0,
       "api-only": 300,
       "orphaned": 0
@@ -8589,6 +8589,22 @@
         "frontend/src/components/dashboard/ConnectedPlatformsVault.tsx"
       ],
       "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/integrations/github/webhook",
+      "declared": "/api/v1/integrations/github/webhook",
+      "deprecated": false,
+      "router_file": "backend/integrations/github_webhook.py",
+      "module": "integrations.github_webhook",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "github_webhook",
+      "frontend_consumers": [
+        "frontend/src/components/dashboard/ConnectedPlatformsVault.tsx"
+      ],
+      "classification": "internal"
     },
     {
       "method": "POST",

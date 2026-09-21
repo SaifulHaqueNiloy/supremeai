@@ -7973,6 +7973,15 @@
     },
     {
       "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/integrations/github_webhook.py"
+    },
+    {
+      "capability_signals": [
         "memory"
       ],
       "classification": "adapter",
@@ -10924,6 +10933,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_files_endpoint.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_github_webhook.py"
     },
     {
       "capability_signals": [],
@@ -15113,6 +15131,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/tools/test_local_code_executor.py"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/tools/test_mcp_github_write_tools.py"
     },
     {
       "capability_signals": [
@@ -25574,5 +25601,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2941
+  "source_file_count": 2944
 }

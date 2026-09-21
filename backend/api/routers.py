@@ -455,6 +455,7 @@ ALL_ROUTERS = [
     # রাউটার নিজস্ব prefix (/api/v1/tasks) সহ আসে, তাই registry prefix ""।
     # Core: backend/core/task_router.py (CAS claim + lease + Zero Zombie reap)।
     {"path": "api.routes.mesh_tasks", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "integrations.github_webhook", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
 
