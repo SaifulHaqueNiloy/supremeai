@@ -275,8 +275,17 @@ class TestHappyPaths:
         assert result["comment_id"] == 999
 
     async def test_merge_pull_request(self, authorized, monkeypatch: pytest.MonkeyPatch):
+        # MESH-7 Phase 2 (#925): merge-এর আগে CI-green check বাধ্যতামূলক —
+        # PR head SHA + combined status মক করা হয়েছে।
+        head_sha = "abc123def456"
         client = FakeAsyncClient(
             {
+                f"GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/pulls/12": _mk_response(
+                    200, {"head": {"sha": head_sha}}
+                ),
+                f"GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/commits/{head_sha}/status": _mk_response(
+                    200, {"state": "success"}
+                ),
                 "PUT https://api.github.com/repos/SaifulHaqueNiloy/supremeai/pulls/12/merge": _mk_response(
                     200,
                     {
@@ -284,7 +293,7 @@ class TestHappyPaths:
                         "sha": "merge-sha",
                         "message": "Pull Request successfully merged",
                     },
-                )
+                ),
             }
         )
         _install(monkeypatch, client)
@@ -293,6 +302,7 @@ class TestHappyPaths:
         )
         assert result["merged"] is True
         assert result["merge_sha"] == "merge-sha"
+        assert result["ci_head_sha"] == head_sha
         assert client.payloads[-1]["merge_method"] == "squash"
 
 
@@ -318,11 +328,20 @@ class TestErrorPaths:
         assert any(a[0] == "github_create_branch" and a[1] == "ERROR" for a in authorized)
 
     async def test_merge_405_not_mergeable(self, authorized, monkeypatch: pytest.MonkeyPatch):
+        # MESH-7 Phase 2 (#925): CI-green check পাস করার পরেই merge endpoint কল হয় —
+        # তাই PR head SHA + combined status=success মক করা হয়েছে।
+        head_sha = "head_405_test"
         client = FakeAsyncClient(
             {
+                f"GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/pulls/3": _mk_response(
+                    200, {"head": {"sha": head_sha}}
+                ),
+                f"GET https://api.github.com/repos/SaifulHaqueNiloy/supremeai/commits/{head_sha}/status": _mk_response(
+                    200, {"state": "success"}
+                ),
                 "PUT https://api.github.com/repos/SaifulHaqueNiloy/supremeai/pulls/3/merge": _mk_response(
                     405, {"message": "Pull Request is not mergeable"}
-                )
+                ),
             }
         )
         _install(monkeypatch, client)

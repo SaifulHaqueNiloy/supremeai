@@ -8,9 +8,8 @@ CI/CD অপারেশন (Issue, PR, Auto-fix) সরাসরে চ্য�
 import asyncio
 import base64
 import json
-
-# বাংলা মন্তব্য: পরিবেশের ভেরিয়েবল চেক করার জন্য os মডিউল ইমপোর্ট করা হলো
 import os
+import re
 import time
 from enum import StrEnum
 
@@ -91,10 +90,14 @@ async def github_create_pull_request(params: CreatePRInput) -> str:
     """
     GitHub-এ নতুন Pull Request তৈরি করে।
 
+    MESH-7 (#925) নীতি: PR body-তে বাধ্যতামূলকভাবে issue-link থাকতে হবে
+    (যেমন `Fixes #N`, `Closes #N`, `Resolves #N`) — issue-first policy
+    (env1.txt directive: 1 Issue → 1 Branch → 1 PR)।
+
     Args:
         params (CreatePRInput): ইনপুট প্যারামিটার সম্বলিত:
             - title (str): PR শিরোনাম
-            - body (str): PR বর্ণনা
+            - body (str): PR বর্ণনা (`Fixes #N` বাধ্যতামূলক)
             - head (str): সূচী ব্রাঞ্চ
             - base (str): লক্ষ্য ব্রাঞ্চ
 
@@ -103,6 +106,18 @@ async def github_create_pull_request(params: CreatePRInput) -> str:
     """
     if not is_admin_authorized():
         return json_error("Admin authorization required for PR creation")
+
+    # MESH-7 (#925): issue-link mandatory — Fixes/Closes/Resolves #N
+    if not _has_issue_link(params.body):
+        _audit_write(
+            "github_create_pull_request",
+            "DENY",
+            error="missing issue-link (Fixes/Closes/Resolves #N)",
+        )
+        return json_error(
+            "PR body must contain an issue-link (e.g. 'Fixes #123', 'Closes #123', "
+            "'Resolves #123') — issue-first policy (#925)"
+        )
 
     github_token = _get_github_token()
     if not github_token:
@@ -543,6 +558,80 @@ def _audit_write(tool_name: str, outcome: str, error: str | None = None) -> None
     )
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# MESH-7 Phase 2 (issue #925): GitHub Write Tools completion
+#   - github_commit_files (multi-file atomic commit, path allowlist)
+#   - github_pr_comment (explicit PR comment tool)
+#   - github_close_issue
+#   - github_add_labels
+#   - github_create_pull_request: now enforces `Fixes #N` issue-link mandatory
+#   - github_merge_pull_request: now enforces CI-green pre-merge check (P0 policy)
+# Acceptance spec: https://github.com/SaifulHaqueNiloy/supremeai/issues/925
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# GitHub auto-close keywords — case-insensitive (close[sd]?|fix(es|ed)?|resolve[sd]?) + #N
+# Ref: https://docs.github.com/en/issues/tracking-your-work-with-issues/linking-a-pull-request-to-an-issue
+_ISSUE_LINK_PATTERN = re.compile(
+    r"\b(?:close[sd]?|fix(?:es|ed)?|resolve[sd]?)\s+#\d+\b",
+    re.IGNORECASE,
+)
+
+# Protected path prefixes — `allow_protected_paths=True` স্পষ্টভাবে সেট না করলে
+# এই পথগুলোতে commit/write ব্লক হবে (P0 policy #925)।
+PROTECTED_PATH_PREFIXES: tuple[str, ...] = ("backend/core/", ".github/")
+
+
+def _has_issue_link(body: str | None) -> bool:
+    """PR body-তে `Fixes #N` / `Closes #N` / `Resolves #N` লিংক আছে কিনা যাচাই করে।
+
+    GitHub-এর auto-close কিওয়ার্ডগুলো সব সম্মান করা হয়।
+    """
+    return bool(_ISSUE_LINK_PATTERN.search(body or ""))
+
+
+def _is_protected_path(path: str) -> bool:
+    """Path-টি protected prefix (`backend/core/`, `.github/`) এর অধীনে আছে কিনা।"""
+    normalized = (path or "").lstrip("/").lower()
+    return any(normalized.startswith(prefix) for prefix in PROTECTED_PATH_PREFIXES)
+
+
+def _find_protected_paths(paths: list[str]) -> list[str]:
+    """তালিকা থেকে সব protected path বের করে (original case সংরক্ষিত)।"""
+    return [p for p in paths if _is_protected_path(p)]
+
+
+async def _check_pr_ci_green(
+    client: httpx.AsyncClient, token: str, pr_number: int
+) -> tuple[bool, str]:
+    """PR-এর head SHA-তে combined CI status চেক করে।
+
+    P0 policy (#925): merge করার আগে CI সবুজ হতে হবে।
+
+    Returns:
+        (success, message) — CI সবুজ হলে (True, head_sha), অন্যথায় (False, reason)।
+    """
+    pr_resp = await client.get(
+        f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/pulls/{pr_number}",
+        headers=_github_headers(token),
+    )
+    pr_resp.raise_for_status()
+    pr_data = pr_resp.json()
+    head_sha = (pr_data.get("head") or {}).get("sha")
+    if not head_sha:
+        return False, "PR head sha not found"
+
+    status_resp = await client.get(
+        f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/commits/{head_sha}/status",
+        headers=_github_headers(token),
+    )
+    status_resp.raise_for_status()
+    state = (status_resp.json() or {}).get("state", "")
+
+    if state == "success":
+        return True, head_sha
+    return False, f"CI state is '{state}' (expected 'success') — P0 policy requires green CI before merge"
+
+
 class CreateBranchInput(BaseModel):
     """নতুন branch তৈরির ইনপুট।"""
 
@@ -898,6 +987,9 @@ async def github_merge_pull_request(params: MergePRInput) -> str:
     """
     Pull Request merge করে — "PR as Universal IPC" লুপের সমাপ্তি (Verification-এর পরে)।
 
+    MESH-7 (#925) P0 নীতি: merge করার আগে বাধ্যতামূলকভাবে CI-green check।
+    PR-এর head SHA-তে combined status `success` না হলে merge হবে না (no bypass)।
+
     Args:
         params (MergePRInput): pr_number, merge_method (merge|squash|rebase), ঐচ্ছিক commit title/message
 
@@ -921,6 +1013,18 @@ async def github_merge_pull_request(params: MergePRInput) -> str:
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
+            # MESH-7 (#925) P0 policy: CI-green বাধ্যতামূলক pre-merge gate
+            ci_ok, ci_msg = await _check_pr_ci_green(client, github_token, params.pr_number)
+            if not ci_ok:
+                _audit_write(
+                    "github_merge_pull_request",
+                    "DENY",
+                    error=f"CI not green: {ci_msg}",
+                )
+                return json_error(
+                    f"Merge blocked by P0 CI-green policy (#925): {ci_msg}"
+                )
+
             response = await client.put(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/pulls/{params.pr_number}/merge",
                 headers=_github_headers(github_token),
@@ -936,6 +1040,7 @@ async def github_merge_pull_request(params: MergePRInput) -> str:
                 "pr_number": params.pr_number,
                 "merged": data.get("merged", True),
                 "merge_sha": data.get("sha"),
+                "ci_head_sha": ci_msg,
                 "message": data.get("message", "Pull Request successfully merged"),
             },
             ensure_ascii=False,
@@ -945,6 +1050,447 @@ async def github_merge_pull_request(params: MergePRInput) -> str:
         return handle_api_error(e, e.response.status_code)
     except Exception as e:  # noqa: BLE001 — MCP tool boundary
         _audit_write("github_merge_pull_request", "ERROR", error=str(e))
+        return handle_api_error(e)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MESH-7 Phase 2 (#925) — নতুন write tools: commit_files, pr_comment,
+# close_issue, add_labels
+# ─────────────────────────────────────────────────────────────────────────────
+
+
+class FileContentItem(BaseModel):
+    """Commit করার ফাইলের একটি আইটেম (multi-file atomic commit-এর জন্য)।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    path: str = Field(..., description="ফাইলের repo-relative পথ", min_length=1, max_length=400)
+    content: str = Field(..., description="ফাইলের কনটেন্ট (encoding অনুযায়ী)")
+    encoding: str = Field(
+        default="utf-8",
+        description="utf-8 (raw text — স্বয়ংক্রিয়ভাবে base64 হবে) অথবা base64 (binary passthrough)",
+        pattern="^(utf-8|base64)$",
+    )
+
+
+class CommitFilesInput(BaseModel):
+    """Multi-file atomic commit — git tree+commit API দিয়ে single commit।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    branch: str = Field(..., description="কোন branch-এ commit হবে", min_length=1)
+    message: str = Field(..., description="commit message", min_length=1, max_length=600)
+    files: list[FileContentItem] = Field(
+        ...,
+        description="commit করার ফাইলের তালিকা (অন্তত ১টি, সর্বোচ্চ ১০০)",
+        min_length=1,
+        max_length=100,
+    )
+    allow_protected_paths: bool = Field(
+        default=False,
+        description=(
+            "backend/core/** অথবা .github/** এর অধীনে লেখার সুস্পষ্ট অনুমতি "
+            "(P0 policy #925 — ডিফল্ট False)"
+        ),
+    )
+
+
+class PRCommentInput(BaseModel):
+    """Pull Request-তে কমেন্ট যোগের ইনপুট (issue comment API এর সাথে একই endpoint শেয়ার করে)।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    pr_number: int = Field(..., description="Pull Request নম্বর", ge=1)
+    body: str = Field(..., description="কমেন্ট কনটেন্ট (markdown)", min_length=1)
+
+
+class CloseIssueInput(BaseModel):
+    """Issue বন্ধ করার ইনপুট — ঐচ্ছিক close-comment ও state reason সহ।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    issue_number: int = Field(..., description="Issue নম্বর", ge=1)
+    comment: str | None = Field(
+        default=None,
+        description="বন্ধ করার আগে পোস্ট করার ঐচ্ছিক close-comment (markdown)",
+        max_length=10000,
+    )
+    state_reason: str | None = Field(
+        default=None,
+        description="বন্ধ করার কারণ: completed | not_planned | duplicate",
+        pattern="^(completed|not_planned|duplicate)$",
+    )
+
+
+class AddLabelsInput(BaseModel):
+    """Issue/PR-তে labels যোগ করার ইনপুট (PR হলেও issue endpoint ব্যবহৃত হয়)।"""
+
+    model_config = ConfigDict(str_strip_whitespace=True, validate_assignment=True)
+
+    issue_number: int = Field(..., description="Issue অথবা PR নম্বর", ge=1)
+    labels: list[str] = Field(
+        ..., description="যোগ করার labels তালিকা (অন্তত ১টি)", min_length=1
+    )
+
+
+@mcp.tool(
+    name="github_commit_files",
+    annotations={
+        "title": "Commit Multiple Files (atomic)",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": True,
+    },
+)
+async def github_commit_files(params: CommitFilesInput) -> str:
+    """
+    Multi-file atomic commit — git tree+commit API দিয়ে single commit।
+
+    Path allowlist (P0 policy #925): `backend/core/**` অথবা `.github/**`
+    এর অধীনে লেখা হলে `allow_protected_paths=True` স্পষ্টভাবে সেট করতে হবে।
+
+    প্রবাহ (Git Data API):
+      1. branch ref → parent commit SHA
+      2. parent commit → base tree SHA
+      3. প্রতিটি ফাইলের জন্য blob তৈরি
+      4. base_tree + tree items → new tree
+      5. message + tree + parent → new commit
+      6. branch ref আপডেট → new commit SHA
+
+    Args:
+        params (CommitFilesInput): branch, message, files[], allow_protected_paths
+
+    Returns:
+        str: commit sha, parent sha, files_committed, paths[]
+    """
+    # Path allowlist — সব গেটের আগে (যাতে protected write কখনো audit-ছাড়া না যায়)
+    requested_paths = [f.path for f in params.files]
+    protected = _find_protected_paths(requested_paths)
+    if protected and not params.allow_protected_paths:
+        _audit_write(
+            "github_commit_files",
+            "DENY",
+            error=f"protected path(s) without override: {protected}",
+        )
+        return json_error(
+            f"Protected path(s) require explicit allow_protected_paths=true "
+            f"(P0 policy #925): {protected}"
+        )
+
+    if not is_admin_authorized():
+        return json_error("Admin authorization required for multi-file commit")
+    rate_limited = await _enforce_write_rate_limit()
+    if rate_limited:
+        return rate_limited
+    github_token = _get_github_token()
+    if not github_token:
+        return json_error("GITHUB_TOKEN not configured")
+
+    try:
+        async with httpx.AsyncClient(timeout=45.0) as client:
+            # Step 1: branch ref → parent commit SHA
+            ref_resp = await client.get(
+                f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/ref/heads/{params.branch}",
+                headers=_github_headers(github_token),
+            )
+            ref_resp.raise_for_status()
+            parent_sha = ref_resp.json()["object"]["sha"]
+
+            # Step 2: parent commit → base tree SHA
+            parent_commit_resp = await client.get(
+                f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/commits/{parent_sha}",
+                headers=_github_headers(github_token),
+            )
+            parent_commit_resp.raise_for_status()
+            base_tree_sha = (parent_commit_resp.json().get("tree") or {}).get("sha")
+
+            # Step 3: create blob per file
+            tree_items: list[dict[str, str]] = []
+            for f in params.files:
+                encoded_content = (
+                    f.content
+                    if f.encoding == "base64"
+                    else base64.b64encode(f.content.encode("utf-8")).decode("ascii")
+                )
+                blob_resp = await client.post(
+                    f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/blobs",
+                    headers=_github_headers(github_token),
+                    json={"content": encoded_content, "encoding": "base64"},
+                )
+                blob_resp.raise_for_status()
+                blob_sha = blob_resp.json()["sha"]
+                tree_items.append(
+                    {
+                        "path": f.path.lstrip("/"),
+                        "mode": "100644",
+                        "type": "blob",
+                        "sha": blob_sha,
+                    }
+                )
+
+            # Step 4: create new tree (base_tree + items)
+            tree_payload: dict[str, object] = {"tree": tree_items}
+            if base_tree_sha:
+                tree_payload["base_tree"] = base_tree_sha
+            tree_resp = await client.post(
+                f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/trees",
+                headers=_github_headers(github_token),
+                json=tree_payload,
+            )
+            tree_resp.raise_for_status()
+            new_tree_sha = tree_resp.json()["sha"]
+
+            # Step 5: create commit pointing to new tree, parent = parent_sha
+            commit_resp = await client.post(
+                f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/commits",
+                headers=_github_headers(github_token),
+                json={
+                    "message": params.message,
+                    "tree": new_tree_sha,
+                    "parents": [parent_sha],
+                },
+            )
+            commit_resp.raise_for_status()
+            new_commit_sha = commit_resp.json()["sha"]
+
+            # Step 6: update branch ref → fast-forward (force=False)
+            ref_update_resp = await client.patch(
+                f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/refs/heads/{params.branch}",
+                headers=_github_headers(github_token),
+                json={"sha": new_commit_sha, "force": False},
+            )
+            ref_update_resp.raise_for_status()
+
+        _audit_write("github_commit_files", "ALLOW")
+        return json.dumps(
+            {
+                "success": True,
+                "branch": params.branch,
+                "commit_sha": new_commit_sha,
+                "parent_sha": parent_sha,
+                "files_committed": len(params.files),
+                "paths": [f.path for f in params.files],
+                "protected_paths_overridden": bool(protected),
+                "message": (
+                    f"Committed {len(params.files)} file(s) to "
+                    f"{params.branch}@{new_commit_sha[:7]} (parent {parent_sha[:7]})"
+                ),
+            },
+            ensure_ascii=False,
+        )
+    except httpx.HTTPStatusError as e:
+        _audit_write("github_commit_files", "ERROR", error=str(e.response.status_code))
+        return handle_api_error(e, e.response.status_code)
+    except Exception as e:  # noqa: BLE001 — MCP tool boundary
+        _audit_write("github_commit_files", "ERROR", error=str(e))
+        return handle_api_error(e)
+
+
+@mcp.tool(
+    name="github_pr_comment",
+    annotations={
+        "title": "Add PR Comment",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": False,
+        "openWorldHint": True,
+    },
+)
+async def github_pr_comment(params: PRCommentInput) -> str:
+    """
+    Pull Request-তে কমেন্ট যোগ করে।
+
+    GitHub-এর issue comment endpoint (POST /repos/{repo}/issues/{pr_number}/comments)
+    ব্যবহৃত হয় — PR-গুলো এই endpoint-এ issue হিসেবে চিহ্নিত।
+
+    Args:
+        params (PRCommentInput): pr_number, body (markdown)
+
+    Returns:
+        str: comment_id, comment_url
+    """
+    if not is_admin_authorized():
+        return json_error("Admin authorization required for PR comment")
+    rate_limited = await _enforce_write_rate_limit()
+    if rate_limited:
+        return rate_limited
+    github_token = _get_github_token()
+    if not github_token:
+        return json_error("GITHUB_TOKEN not configured")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/issues/{params.pr_number}/comments",
+                headers=_github_headers(github_token),
+                json={"body": params.body},
+            )
+            response.raise_for_status()
+            data = response.json()
+
+        _audit_write("github_pr_comment", "ALLOW")
+        return json.dumps(
+            {
+                "success": True,
+                "pr_number": params.pr_number,
+                "comment_id": data.get("id"),
+                "comment_url": data.get("html_url"),
+                "message": f"Comment added to PR #{params.pr_number}",
+            },
+            ensure_ascii=False,
+        )
+    except httpx.HTTPStatusError as e:
+        _audit_write("github_pr_comment", "ERROR", error=str(e.response.status_code))
+        return handle_api_error(e, e.response.status_code)
+    except Exception as e:  # noqa: BLE001 — MCP tool boundary
+        _audit_write("github_pr_comment", "ERROR", error=str(e))
+        return handle_api_error(e)
+
+
+@mcp.tool(
+    name="github_close_issue",
+    annotations={
+        "title": "Close Issue",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def github_close_issue(params: CloseIssueInput) -> str:
+    """
+    Issue (অথবা PR — state transition) বন্ধ করে।
+
+    ঐচ্ছিক `comment` দিলে বন্ধ করার আগে সেই কমেন্ট পোস্ট হয় (close-reason সহ)।
+    `state_reason` দিলে GitHub সেট করে (completed | not_planned | duplicate)।
+
+    Args:
+        params (CloseIssueInput): issue_number, comment?, state_reason?
+
+    Returns:
+        str: issue_number, state, comment_id?
+    """
+    if not is_admin_authorized():
+        return json_error("Admin authorization required for issue close")
+    rate_limited = await _enforce_write_rate_limit()
+    if rate_limited:
+        return rate_limited
+    github_token = _get_github_token()
+    if not github_token:
+        return json_error("GITHUB_TOKEN not configured")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            comment_id: int | None = None
+            comment_url: str | None = None
+            # ঐচ্ছিক close-comment — issue-তে পোস্ট করা হয় আগে
+            if params.comment:
+                comment_resp = await client.post(
+                    f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/issues/{params.issue_number}/comments",
+                    headers=_github_headers(github_token),
+                    json={"body": params.comment},
+                )
+                comment_resp.raise_for_status()
+                comment_data = comment_resp.json()
+                comment_id = comment_data.get("id")
+                comment_url = comment_data.get("html_url")
+
+            # PATCH issue → state=closed
+            patch_payload: dict[str, object] = {"state": "closed"}
+            if params.state_reason:
+                patch_payload["state_reason"] = params.state_reason
+            patch_resp = await client.patch(
+                f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/issues/{params.issue_number}",
+                headers=_github_headers(github_token),
+                json=patch_payload,
+            )
+            patch_resp.raise_for_status()
+            data = patch_resp.json()
+
+        _audit_write("github_close_issue", "ALLOW")
+        result: dict[str, object] = {
+            "success": True,
+            "issue_number": params.issue_number,
+            "state": data.get("state", "closed"),
+            "state_reason": data.get("state_reason"),
+            "issue_url": data.get("html_url"),
+            "message": f"Issue #{params.issue_number} closed",
+        }
+        if comment_id is not None:
+            result["comment_id"] = comment_id
+            result["comment_url"] = comment_url
+        return json.dumps(result, ensure_ascii=False)
+    except httpx.HTTPStatusError as e:
+        _audit_write("github_close_issue", "ERROR", error=str(e.response.status_code))
+        return handle_api_error(e, e.response.status_code)
+    except Exception as e:  # noqa: BLE001 — MCP tool boundary
+        _audit_write("github_close_issue", "ERROR", error=str(e))
+        return handle_api_error(e)
+
+
+@mcp.tool(
+    name="github_add_labels",
+    annotations={
+        "title": "Add Labels to Issue/PR",
+        "readOnlyHint": False,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": True,
+    },
+)
+async def github_add_labels(params: AddLabelsInput) -> str:
+    """
+    Issue অথবা PR-তে labels যোগ করে (PR-গুলো issue endpoint শেয়ার করে)।
+
+    Args:
+        params (AddLabelsInput): issue_number, labels[]
+
+    Returns:
+        str: issue_number, labels[] (সর্বমোট labels যা এখন issue-তে আছে)
+    """
+    if not is_admin_authorized():
+        return json_error("Admin authorization required for adding labels")
+    rate_limited = await _enforce_write_rate_limit()
+    if rate_limited:
+        return rate_limited
+    github_token = _get_github_token()
+    if not github_token:
+        return json_error("GITHUB_TOKEN not configured")
+
+    try:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            response = await client.post(
+                f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/issues/{params.issue_number}/labels",
+                headers=_github_headers(github_token),
+                json={"labels": params.labels},
+            )
+            response.raise_for_status()
+            data = response.json()
+
+        # data: list of label objects — extract names
+        final_labels = [
+            (lbl.get("name") if isinstance(lbl, dict) else lbl) for lbl in (data or [])
+        ]
+        _audit_write("github_add_labels", "ALLOW")
+        return json.dumps(
+            {
+                "success": True,
+                "issue_number": params.issue_number,
+                "labels_added": params.labels,
+                "labels_now": final_labels,
+                "message": (
+                    f"Added {len(params.labels)} label(s) to "
+                    f"issue/PR #{params.issue_number}"
+                ),
+            },
+            ensure_ascii=False,
+        )
+    except httpx.HTTPStatusError as e:
+        _audit_write("github_add_labels", "ERROR", error=str(e.response.status_code))
+        return handle_api_error(e, e.response.status_code)
+    except Exception as e:  # noqa: BLE001 — MCP tool boundary
+        _audit_write("github_add_labels", "ERROR", error=str(e))
         return handle_api_error(e)
 
 
