@@ -14,66 +14,59 @@ from fastapi.testclient import TestClient
 
 
 class TestHelperFunctions:
-    """Tests for admin route helper functions."""
+    """Tests for admin route helper functions — rewritten for Firebase auth (#1010).
 
-    def test_hash_password_requires_bcrypt(self):
-        """bcrypt ছাড়া হ্যাশ fails."""
-        try:
-            # If bcrypt is installed, this should work
-            import bcrypt  # noqa: F401 -- শুধু availability probe, bcrypt ইনস্টল আছে কিনা যাচাই
+    Old tests tested _hash_password/_verify_password/_get_admin_credentials which
+    were removed when migrating to Firebase auth. New tests cover the actual
+    helper functions that exist in admin_routes.py today.
+    """
 
-            from api.routes.admin_routes import _hash_password
+    def test_trusted_browser_key_is_deterministic(self):
+        """_trusted_browser_key returns same key for same token."""
+        from api.routes.admin_routes import _trusted_browser_key
+        key1 = _trusted_browser_key("token-abc-123")
+        key2 = _trusted_browser_key("token-abc-123")
+        assert key1 == key2
+        assert isinstance(key1, str)
+        assert len(key1) > 0
 
-            hashed = _hash_password("password")
-            assert isinstance(hashed, str)
-            assert len(hashed) > 0
-        except ImportError:
-            pytest.skip("bcrypt not installed")
-        except RuntimeError as e:
-            assert "bcrypt is required" in str(e)
+    def test_trusted_browser_key_differs_for_different_tokens(self):
+        """Different tokens produce different keys."""
+        from api.routes.admin_routes import _trusted_browser_key
+        key1 = _trusted_browser_key("token-A")
+        key2 = _trusted_browser_key("token-B")
+        assert key1 != key2
 
-    @pytest.mark.skip(reason="Needs update")
-    @pytest.mark.skip(reason="Needs update")
-    def test_verify_password_no_bcrypt(self):
-        """bcrypt ছাড়া ভেরিফিকেশন False রিটার্ন করে।"""
-        with patch.dict("sys.modules", {"bcrypt": None}):
-            import importlib
+    def test_mock_token_allowed_returns_bool(self):
+        """_mock_token_allowed returns a boolean."""
+        from api.routes.admin_routes import _mock_token_allowed
+        result = _mock_token_allowed()
+        assert isinstance(result, bool)
 
-            from api.routes import admin_routes
+    def test_ensure_admin_authorized_raises_for_empty_uid(self):
+        """_ensure_admin_authorized raises HTTPException for empty uid."""
+        from api.routes.admin_routes import _ensure_admin_authorized
+        from fastapi import HTTPException
+        with pytest.raises(HTTPException) as exc_info:
+            _ensure_admin_authorized("", "test@example.com")
+        assert exc_info.value.status_code in (401, 403)
 
-            importlib.reload(admin_routes)
-            assert admin_routes._verify_password("pass", "hash") is False
+    def test_ensure_admin_authorized_raises_for_empty_email(self):
+        """_ensure_admin_authorized raises HTTPException for empty email when uid is non-admin."""
+        from api.routes.admin_routes import _ensure_admin_authorized
+        from fastapi import HTTPException
+        with pytest.raises(HTTPException) as exc_info:
+            _ensure_admin_authorized("non-admin-uid", "")
+        assert exc_info.value.status_code in (401, 403)
 
-    @pytest.mark.skip(reason="Needs update")
-    @pytest.mark.skip(reason="Needs update")
-    def test_verify_password_empty_hash(self):
-        """খালি হ্যাশে ভেরিফিকেশন False রিটার্ন করে।"""
-        from api.routes.admin_routes import _verify_password
-
-        assert _verify_password("password", "") is False
-        assert _verify_password("password", None) is False
-
-    @pytest.mark.skip(reason="Needs update")
-    @pytest.mark.skip(reason="Needs update")
-    def test_get_admin_credentials_missing_hash(self):
-        """এডমিন পাসওয়ার্ড হ্যাশ নেই থাকলে 500 রিটার্ন করে।"""
-        with patch.dict(os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": ""}, clear=False):
-            from api.routes.admin_routes import _get_admin_credentials
-
-            with pytest.raises(HTTPException) as exc_info:
-                _get_admin_credentials()
-
-            assert exc_info.value.status_code == 500
-
-    @pytest.mark.skip(reason="Needs update")
-    @pytest.mark.skip(reason="Needs update")
-    def test_get_admin_credentials_returns_hash(self):
-        """যোগ্য এডমিন হ্যাশ রিটার্ন করে।"""
-        test_hash = "test-admin-hash-value"
-        with patch.dict(os.environ, {"SUPREMEAI_ADMIN_PASSWORD_HASH": test_hash}, clear=False):
-            from api.routes.admin_routes import _get_admin_credentials
-
-            assert _get_admin_credentials() == test_hash
+    def test_reject_mock_token_raises_when_mock_not_allowed(self):
+        """_reject_mock_token raises HTTPException when mock tokens are not allowed."""
+        from api.routes.admin_routes import _reject_mock_token, _mock_token_allowed
+        from fastapi import HTTPException
+        # Only test the raise behavior if mock is not allowed
+        if not _mock_token_allowed():
+            with pytest.raises(HTTPException):
+                _reject_mock_token()
 
 
 class TestVerifyTotpCode:
