@@ -236,10 +236,10 @@ const ConnectedPlatformsVault: React.FC = () => {
                     <option value="AWS">AWS</option>
                     <option value="Azure">Azure</option>
                     <option value="DigitalOcean">DigitalOcean</option>
-                    <option value="Slack">Slack</option>
+                    <option value="Slack" disabled>Slack (Coming soon)</option>
                     <option value="Discord">Discord</option>
                     <option value="Jira">Jira</option>
-                    <option value="Notion">Notion</option>
+                    <option value="Notion" disabled>Notion (Coming soon)</option>
                   </select>
                 </div>
 
