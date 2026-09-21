@@ -10772,8 +10772,7 @@
     },
     {
       "capability_signals": [
-        "execute",
-        "memory"
+        "execute"
       ],
       "classification": "test",
       "entrypoints": [],
