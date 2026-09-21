@@ -70,11 +70,12 @@ flowchart TD
     ```bash
     gh issue list --search "no:assignee is:open" --limit 10
     ```
-  * helper script দিয়ে claim → verify → race হলে auto-release:
+  * helper script দিয়ে claim → verify → race হলে auto-release (GAP-01 fix — দেখুন নিচে "Atomic Issue Claim (GAP-01 fix)" সেকশন):
     ```bash
-    bash .github/scripts/claim_issue.sh <ISSUE_ID> "agent-1"
+    bash scripts/ci/atomic_claim.sh <ISSUE_ID> "agent-1"
     # Exit 0 = sole owner (কাজ শুরু করা যাবে)
     # Exit 1 = claim lost (অন্য ইস্যু বেছে নেবে)
+    # Exit 2 = invalid args / missing dependencies (gh / GH_TOKEN)
     ```
   * script-এর ভেতরের ধাপ: (১) pre-check — assignee থাকলে বাদ দেবে, (২) `gh issue edit --add-assignee --add-label "in-progress"`, (৩) ৩ সেকেন্ড পর assignees re-read — ১-এর বেশি হলে নিজের claim release + step-back comment।
   * হাতে চালাতে চাইলে:
@@ -329,4 +330,56 @@ sequenceDiagram
   * এর ফলে সিস্টেমের ১০০% ট্রেসেবিলিটি এবং নিরাপত্তা অটুট থাকে।
 
 ---
+---
+
+## 🔒 Atomic Issue Claim (GAP-01 fix — Claim-then-Verify pattern)
+
+> যখন কোনো agent একটি issue ধরবে, সে **শুধু `gh issue edit --add-assignee` ব্যবহার করবে না**
+> (সেটি atomic নয় — race condition possible, দুজন agent একই সময়ে assignee হয়ে যেতে পারে)।
+> বরং অবশ্যই race-safe `scripts/ci/atomic_claim.sh` ব্যবহার করবে।
+
+### Usage
+
+```bash
+scripts/ci/atomic_claim.sh <issue_number> <agent_name>
+# উদাহরণ: scripts/ci/atomic_claim.sh 900 agent-1
+```
+
+### এটি Claim-then-Verify pattern implement করে (৫টি ধাপ)
+
+1. **CLAIM:** `gh issue edit --add-assignee "$AGENT_NAME"`
+2. **VERIFY:** `gh issue view --json assignees` → check যে আমি first assignee
+3. **LOCK:** `status:in-progress` label যোগ করা হয়
+4. **AUDIT:** timestamp সহ audit comment post করা হয় (traceability)
+5. **RACE-LOSS:** হেরে গেলে নিজেকে assignee list থেকে সরিয়ে দেয় (cleanup)
+
+### কেন এটি বাধ্যতামূলক?
+
+GitHub REST API-র `--add-assignee` হলো APPEND অপারেশন, REPLACE নয়। দুজন agent প্রায় একই
+মুহূর্তে claim করলে **দুজনেই** assignee হয়ে যেতে পারে। শুধু `gh issue edit --add-assignee`
+ব্যবহার করলে CAS লজিক থাকে না → race-condition-এ দুজন agent একই issue-তে কাজ শুরু করে
+ফেলতে পারে → wasted work + conflict + merge failure।
+
+`scripts/ci/atomic_claim.sh` এই সমস্যা সমাধান করে Compare-And-Swap (CAS) pattern দিয়ে।
+
+### Environment requirement
+
+```bash
+export GH_TOKEN=<token>          # required by gh CLI
+export GH_REPO=SaifulHaqueNiloy/supremeai
+```
+
+### Exit codes
+
+- `0` = claim successful (এখন এই agent একমাত্র owner — কাজ শুরু করুন)
+- `1` = claim lost (race-এ হেরে গেছে — অন্য `no:assignee` issue বেছে নিন)
+- `2` = invalid args / missing dependencies (`gh` CLI বা `GH_TOKEN` env var)
+
+### বাধ্যতামূলক নিয়ম
+
+সব agent-দের (agent-1 থেকে agent-10 সহ SupremeAI self-development mode) issue claim করার
+সময় এই script ব্যবহার করতে হবে। সরাসরি `gh issue edit --add-assignee` কখনোই ব্যবহার করা
+যাবে না — সেটি এই policy-র লঙ্ঘন এবং GAP-01 এর পুনরাবৃত্তি।
+
+
 *সর্বশেষ সংস্করণ: সেপ্টেম্বর ২০২৬ · সুপ্রিমএআই কোর আর্কিটেকচার টিম*
