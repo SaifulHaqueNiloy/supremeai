@@ -2,9 +2,8 @@
 
 Key Components:
 - `router`: The FastAPI APIRouter instance for admin-specific endpoints.
-- `_hash_password()`: Hashes a given password using bcrypt.
-- `_verify_password()`: Verifies a plain-text password against a bcrypt hash.
-- `_get_admin_credentials()`: Retrieves the admin password hash from environment variables.
+- Admin authentication is now handled via Firebase Auth + TOTP (see auth.py).
+- Legacy password helpers (_hash_password, _verify_password, _get_admin_credentials) were removed.
 - `admin_login()`: Handles the initial step of traditional admin login, requiring a TOTP code.
 - `admin_verify()`: Completes traditional admin login by verifying password and TOTP, issuing a JWT.
 - `admin_firebase_login()`: Authenticates administrators via Firebase ID tokens, checks roles, and initiates TOTP flow if needed.

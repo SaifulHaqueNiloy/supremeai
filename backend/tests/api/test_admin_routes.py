@@ -13,6 +13,7 @@ from fastapi import HTTPException
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.skip(reason="Functions _hash_password/_verify_password/_get_admin_credentials were removed from admin_routes — tests need rewrite for Firebase auth")
 class TestHelperFunctions:
     """Tests for admin route helper functions."""
 
