@@ -368,7 +368,7 @@ export function InteractiveChatTab({
             <div className="flex items-center gap-2">
               <span className={`w-2 h-2 rounded-full ${isServerOnline ? 'bg-emerald-500' : 'bg-amber-500'} ${!isSimple && isServerOnline && 'animate-pulse'}`}></span>
               <span className={`text-[10px] font-mono font-semibold ${isServerOnline ? 'text-emerald-500' : 'text-amber-500'}`}>
-                {isServerOnline ? 'API STABLE' : 'CIRCUIT DEGRADED'}
+                {isServerOnline ? 'AI READY' : 'AI WARMING UP'}
               </span>
             </div>
           </div>

@@ -98,7 +98,7 @@ export function setupGlobalFetchInterceptor() {
         url.includes('/api/health')
       );
       if (!isAbort && win.showGlobalToast && !isBackgroundRequest) {
-        win.showGlobalToast('error', `Network Error: ${error instanceof Error ? error.message : 'Unknown'}`);
+        win.showGlobalToast('error', 'Unable to connect. Please check your connection and retry.');
       }
       throw error;
     }
