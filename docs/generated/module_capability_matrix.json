@@ -11190,6 +11190,13 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/ci/pr_helper/test_ai_fix_generator.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/ci/pr_helper/test_intelligent_decision.py"
     },
     {
@@ -15028,6 +15035,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/tools/test_local_code_executor.py"
+    },
+    {
+      "capability_signals": [
+        "mcp",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/tools/test_mcp_github_write.py"
     },
     {
       "capability_signals": [
@@ -19140,7 +19157,8 @@
     },
     {
       "capability_signals": [
-        "dispatch"
+        "dispatch",
+        "health"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -25498,5 +25516,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2933
+  "source_file_count": 2935
 }
