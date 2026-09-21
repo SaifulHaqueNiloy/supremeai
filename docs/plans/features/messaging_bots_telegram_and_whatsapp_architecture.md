@@ -16,6 +16,6 @@ last_updated: 2026-09-19
 > [!NOTE]
 > **Plan Unification & Zero-Duplication Notice (AGENTS.md & MASTER_KICKOFF_PROMPT):**  
 > This document has been permanently consolidated and merged into the canonical master plan:  
-> 🔗 **[Plan 24: SupremeAI Omnichannel MCP Agent Ecosystem & Remote Control Plane](file:///f:/supremeai/docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md)**
+> 🔗 **[Plan 24: SupremeAI Omnichannel MCP Agent Ecosystem & Remote Control Plane](./docs/plans/features/Plan_24_AI_Agent_Ecosystem_Integration.md)**
 >
 > All architectural specifications for omnichannel interaction faces (Web Dashboard Face 1, Telegram Bot Face 2), mobile command dispatch, and unified gateway topology are now maintained in the master document above.

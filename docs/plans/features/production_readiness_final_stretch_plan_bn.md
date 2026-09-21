@@ -41,7 +41,7 @@ target_scope: supremeai_internal
 ### ১. Scraper Service Access Guard (P1)
 
 #### বর্তমান অবস্থা (সমস্যা)
-[`backend/api/routes/scraper.py`](file:///f:/supremeai/backend/api/routes/scraper.py) ফাইলে `/scrape`, `/browse`, `/recipe` — তিনটি এন্ডপয়েন্টই কোনো Auth ছাড়াই যেকোনো HTTP ক্লায়েন্ট থেকে কল করা যায়। শুধু `is_safe_url()` SSRF চেক আছে। একজন authenticated regular টেন্যান্টও এই পথে Playwright ব্রাউজার ইনস্ট্যান্স চালু করতে পারে — ভারী মেমোরি ও CPU খরচ।
+[`backend/api/routes/scraper.py`](./backend/api/routes/scraper.py) ফাইলে `/scrape`, `/browse`, `/recipe` — তিনটি এন্ডপয়েন্টই কোনো Auth ছাড়াই যেকোনো HTTP ক্লায়েন্ট থেকে কল করা যায়। শুধু `is_safe_url()` SSRF চেক আছে। একজন authenticated regular টেন্যান্টও এই পথে Playwright ব্রাউজার ইনস্ট্যান্স চালু করতে পারে — ভারী মেমোরি ও CPU খরচ।
 
 ```python
 # বর্তমান অবস্থা — কোনো Auth গার্ড নেই!
@@ -51,7 +51,7 @@ async def browse(request: BrowseRequest):  # ← কোনো Depends() নে�
 ```
 
 #### পরিবর্তন
-**[MODIFY]** [`backend/api/routes/scraper.py`](file:///f:/supremeai/backend/api/routes/scraper.py)
+**[MODIFY]** [`backend/api/routes/scraper.py`](./backend/api/routes/scraper.py)
 
 - `api.dependencies` থেকে `get_current_admin` ইম্পোর্ট করা।
 - `/scrape`, `/browse`, `/recipe` — তিনটিতেই `Depends(get_current_admin)` যোগ করা।
@@ -77,7 +77,7 @@ async def browse(request: BrowseRequest, _: dict = Depends(get_current_admin)):
 ### ২. JWT Revocation — Admin-এর জন্য Fail-Closed (P1)
 
 #### বর্তমান অবস্থা (সমস্যা)
-[`backend/core/security/__init__.py`](file:///f:/supremeai/backend/core/security/__init__.py), **লাইন 264–277**:
+[`backend/core/security/__init__.py`](./backend/core/security/__init__.py), **লাইন 264–277**:
 
 ```python
 async def is_token_revoked(jti: str) -> bool:
@@ -91,7 +91,7 @@ async def is_token_revoked(jti: str) -> bool:
 `_IN_MEMORY_BLACKLIST` হলো একটি সাধারণ `set()` (লাইন ২৩৭)। সমস্যা: এটি TTL ছাড়া অসীম বড় হতে পারে, এবং অ্যাডমিন টোকেনের জন্যও Redis ডাউনে fail-open করে।
 
 #### পরিবর্তন
-**[MODIFY]** [`backend/core/security/__init__.py`](file:///f:/supremeai/backend/core/security/__init__.py)
+**[MODIFY]** [`backend/core/security/__init__.py`](./backend/core/security/__init__.py)
 
 - বর্তমান `_IN_MEMORY_BLACKLIST: set[str]` এর পাশে একটি TTL-aware LRU ক্যাশ (`_ADMIN_REVOCATION_CACHE`) যোগ করা যা সর্বোচ্চ ১০০০ সাম্প্রতিক revoked JTI ধরে রাখবে।
 - `is_token_revoked()` ফাংশনে একটি `is_admin: bool = False` প্যারামিটার যোগ করা।
@@ -121,9 +121,9 @@ async def is_token_revoked(jti: str, *, is_admin: bool = False) -> bool:
 
 #### বর্তমান অবস্থা (সমস্যা)
 
-**ব্যাকএন্ড:** [`backend/api/routes/auth.py`](file:///f:/supremeai/backend/api/routes/auth.py) — ভালো খবর হলো `_set_auth_cookies()` ফাংশন (লাইন 48–83) ইতোমধ্যে `httpOnly=True, secure=True, samesite="lax"` সহ কুকি সেট করার লজিক লেখা আছে। কিন্তু এটি `/login` ও `/register` response-এ এখনও **কল করা হয় না**।
+**ব্যাকএন্ড:** [`backend/api/routes/auth.py`](./backend/api/routes/auth.py) — ভালো খবর হলো `_set_auth_cookies()` ফাংশন (লাইন 48–83) ইতোমধ্যে `httpOnly=True, secure=True, samesite="lax"` সহ কুকি সেট করার লজিক লেখা আছে। কিন্তু এটি `/login` ও `/register` response-এ এখনও **কল করা হয় না**।
 
-**ফ্রন্টএন্ড:** [`frontend/src/store/authStore.ts`](file:///f:/supremeai/frontend/src/store/authStore.ts):
+**ফ্রন্টএন্ড:** [`frontend/src/store/authStore.ts`](./frontend/src/store/authStore.ts):
 - **লাইন 126:** `localStorage.setItem(TOKEN_KEY, token)` — লগইনে টোকেন localStorage-এ সংরক্ষণ।
 - **লাইন 161:** register-এও একই।
 - **লাইন 201:** `initialize()` এ `localStorage.getItem(TOKEN_KEY)` দিয়ে সেশন রিস্টোর।
@@ -132,17 +132,17 @@ XSS অ্যাটাকে যে কেউ `localStorage.getItem('supremeai_a
 
 #### পরিবর্তন
 
-**[MODIFY]** [`backend/api/routes/auth.py`](file:///f:/supremeai/backend/api/routes/auth.py)
+**[MODIFY]** [`backend/api/routes/auth.py`](./backend/api/routes/auth.py)
 - `/auth/login` এন্ডপয়েন্টে response সাইন করার পর `_set_auth_cookies(response, access_token, refresh_token)` কল করা (ইতোমধ্যে ফাংশন প্রস্তুত, শুধু ব্যবহার হচ্ছে না)।
 - `/auth/register`-এও একই।
 - `/auth/logout`-এ `_clear_auth_cookies(response)` কল করা (এটিও ইতোমধ্যে লেখা আছে)।
 - Response body-তে টোকেন ডুয়াল-মোড ট্রানজিশনের জন্য রাখা (breaking change নয়)।
 
-**[MODIFY]** [`frontend/src/store/authStore.ts`](file:///f:/supremeai/frontend/src/store/authStore.ts)
+**[MODIFY]** [`frontend/src/store/authStore.ts`](./frontend/src/store/authStore.ts)
 - `login()` ও `register()` এ `localStorage.setItem(TOKEN_KEY, token)` লাইনগুলো রাখা (ট্রানজিশন পিরিয়ড — দুই মোডই কাজ করবে)।
 - `initialize()` ফাংশন আপডেট করা: `localStorage` চেকের পাশাপাশি cookie-based সেশন detect করার ক্ষমতা যোগ করা — `credentials: 'include'` সহ `/api/v1/auth/me` কল থেকে সেশন রিস্টোর।
 
-**[MODIFY]** [`frontend/src/services/apiClient.ts`](file:///f:/supremeai/frontend/src/services/apiClient.ts)
+**[MODIFY]** [`frontend/src/services/apiClient.ts`](./frontend/src/services/apiClient.ts)
 - সমস্ত fetch কলে `credentials: 'include'` নিশ্চিত করা (GLM patch 0016 থেকে ইতোমধ্যে `apiInterceptor.ts`-এ আছে, তবে `apiClient.ts`-এর নেটিভ কলগুলোতেও যাচাই করা)।
 
 **ফাইল সংখ্যা:** ৩টি | **লাইন পরিবর্তন:** ~+30 লাইন
@@ -153,7 +153,7 @@ XSS অ্যাটাকে যে কেউ `localStorage.getItem('supremeai_a
 
 #### বর্তমান অবস্থা (সমস্যা)
 
-[`backend/services/memory_service.py`](file:///f:/supremeai/backend/services/memory_service.py), **লাইন 425–472** (Postgres path):
+[`backend/services/memory_service.py`](./backend/services/memory_service.py), **লাইন 425–472** (Postgres path):
 
 ```python
 # বর্তমান অবস্থা — Python-এ ইন-মেমোরি কসাইন
@@ -171,7 +171,7 @@ for row in rows:
 
 #### পরিবর্তন
 
-**[MODIFY]** [`backend/services/memory_service.py`](file:///f:/supremeai/backend/services/memory_service.py)
+**[MODIFY]** [`backend/services/memory_service.py`](./backend/services/memory_service.py)
 
 **ধাপ ১:** Supabase SQL Migration (নতুন ফাইল):
 ```sql

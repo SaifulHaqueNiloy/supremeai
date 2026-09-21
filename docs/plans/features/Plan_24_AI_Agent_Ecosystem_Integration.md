@@ -150,7 +150,7 @@ MCP স্বাভাবিকভাবে **Client ➔ Server** (লোকা�
 * লোকাল আইডিই-তে একটি হালকা স্ক্রিপ্ট বা ব্যাকগ্রাউন্ড লিসেনার চলবে, যা সুপ্রিমএআই-এর `GET /runs?assigned_to=cursor_local&status=pending` লং-পোল করবে।
 * টেলিগ্রামে কমান্ড দিলে তা কিউতে জমা হবে ➔ লোকাল আইডিই টাস্কটি তুলে নিয়ে লোকাল ফাইলে কাজ করবে ➔ ফলাফল সার্ভারে পুশ করবে।
 
-### সমাধান খ: হেডলেস লোকাল ট্রায়ো রানার ([`backend/agents/ide/trio_adapters.py`](file:///f:/supremeai/backend/agents/ide/trio_adapters.py))
+### সমাধান খ: হেডলেস লোকাল ট্রায়ো রানার ([`backend/agents/ide/trio_adapters.py`](./backend/agents/ide/trio_adapters.py))
 * লোকাল মেশিনে যখন সুপ্রিমএআই ব্যাকএন্ড সক্রিয় থাকে, তখন টেলিগ্রাম কমান্ড সরাসরি লোকাল CLI ট্রিগার করতে পারে:
   1. `GeminiWriter`: কোড জেনারেট করে।
   2. `KiloReviewer`: লোকাল `kilocode` CLI দিয়ে রিভিউ করে।

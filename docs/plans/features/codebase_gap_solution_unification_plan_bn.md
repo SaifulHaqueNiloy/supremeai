@@ -51,10 +51,10 @@ status: historical
 
 **লক্ষ্য:** চার প্যাকেজ ম্যানেজারকে দুটিতে নামিয়ে আনা (Python=Poetry, Node=PNPM)।
 
-#### [DELETE] [`backend/uv.lock`](file:///F:/supremeai/backend/uv.lock)
+#### [DELETE] [`backend/uv.lock`](./backend/uv.lock)
 - কারণ: সিআই workflow `poetry.lock` ব্যবহার করে, `uv.lock` conflict তৈরি করে।
 
-#### [DELETE] [`infrastructure/mcp-control-plane/package-lock.json`](file:///F:/supremeai/infrastructure/mcp-control-plane/package-lock.json)
+#### [DELETE] [`infrastructure/mcp-control-plane/package-lock.json`](./infrastructure/mcp-control-plane/package-lock.json)
 - কারণ: রুট `pnpm-lock.yaml` প্রজেক্টের একক নোড লকফাইল, npm-এর lockfile পাশে থাকলে ড্রিফট হয়।
 
 ---
@@ -63,7 +63,7 @@ status: historical
 
 #### ২ক. নিরাপদ রুট — সরাসরি রেজিস্ট্রেশন (১৩টি)
 
-এই ১৩টি রুটে APIRouter ও অথেন্টিকেশন গার্ড উভয়ই বিদ্যমান। **এগুলো সরাসরি [`routers.py`](file:///F:/supremeai/backend/api/routers.py)-এ যোগ করা যাবে:**
+এই ১৩টি রুটে APIRouter ও অথেন্টিকেশন গার্ড উভয়ই বিদ্যমান। **এগুলো সরাসরি [`routers.py`](./backend/api/routers.py)-এ যোগ করা যাবে:**
 
 | রুট মডিউল | বিবরণ | লাইন |
 |---|---|---|
@@ -148,8 +148,8 @@ status: historical
 
 ### ফেজ ৫: টপোলজি পুনর্নির্মাণ ও কনস্টিটিউশনাল ভেরিফিকেশন
 
-#### [MODIFY] [`route_inventory.json`](file:///F:/supremeai/docs/generated/route_inventory.json)
-#### [MODIFY] [`route_knowledge_graph.json`](file:///F:/supremeai/docs/generated/route_knowledge_graph.json)
+#### [MODIFY] [`route_inventory.json`](./docs/generated/route_inventory.json)
+#### [MODIFY] [`route_knowledge_graph.json`](./docs/generated/route_knowledge_graph.json)
 - সব পরিবর্তনের পর অটো-স্ক্রিপ্ট চালিয়ে আপডেটেড টপোলজি ম্যাপ পুনরায় জেনারেট করা।
 
 ---

@@ -20,12 +20,12 @@ status: historical
 
 | Feature Area | Existing Code | Status |
 |---|---|---|
-| Vector Memory | [`backend/core/ai_memory/vector_store.py`](file:///f:/supremeai/backend/core/ai_memory/vector_store.py) | `FreeTierOptimizedVectorStore` w/ Supabase pgvector — কিন্তু agent prompt-এ auto-inject নেই |
-| Unified Memory | [`backend/core/unified_memory.py`](file:///f:/supremeai/backend/core/unified_memory.py) | Interface আছে কিন্তু RAG-before-prompt hook নেই |
-| Circuit Breaker | [`backend/core/circuit_breaker.py`](file:///f:/supremeai/backend/core/circuit_breaker.py) | Full CLOSED/OPEN/HALF_OPEN state machine — কিন্তু Cloudflare Worker-এ টাই-আপ নেই |
-| Stealth Mouse | [`backend/core/human_behavior.py`](file:///f:/supremeai/backend/core/human_behavior.py) | `_generate_bezier_points()` আছে, কিন্তু Canvas fingerprint spoofing নেই |
-| Dashboard UI | [`frontend/src/components/dashboard/`](file:///f:/supremeai/frontend/src/components/dashboard/) | 36 টি কম্পোনেন্ট — কিন্তু 1-Line MCP connect UX ও glass effects missing |
-| Design Tokens | [`frontend/src/index.css`](file:///f:/supremeai/frontend/src/index.css) | Dark theme + neon colors আছে — glassmorphism layer নেই |
+| Vector Memory | [`backend/core/ai_memory/vector_store.py`](./backend/core/ai_memory/vector_store.py) | `FreeTierOptimizedVectorStore` w/ Supabase pgvector — কিন্তু agent prompt-এ auto-inject নেই |
+| Unified Memory | [`backend/core/unified_memory.py`](./backend/core/unified_memory.py) | Interface আছে কিন্তু RAG-before-prompt hook নেই |
+| Circuit Breaker | [`backend/core/circuit_breaker.py`](./backend/core/circuit_breaker.py) | Full CLOSED/OPEN/HALF_OPEN state machine — কিন্তু Cloudflare Worker-এ টাই-আপ নেই |
+| Stealth Mouse | [`backend/core/human_behavior.py`](./backend/core/human_behavior.py) | `_generate_bezier_points()` আছে, কিন্তু Canvas fingerprint spoofing নেই |
+| Dashboard UI | [`frontend/src/components/dashboard/`](./frontend/src/components/dashboard/) | 36 টি কম্পোনেন্ট — কিন্তু 1-Line MCP connect UX ও glass effects missing |
+| Design Tokens | [`frontend/src/index.css`](./frontend/src/index.css) | Dark theme + neon colors আছে — glassmorphism layer নেই |
 
 ---
 
@@ -39,7 +39,7 @@ status: historical
 
 ---
 
-#### [MODIFY] [`frontend/src/index.css`](file:///f:/supremeai/frontend/src/index.css)
+#### [MODIFY] [`frontend/src/index.css`](./frontend/src/index.css)
 
 নিচের CSS utilities যোগ করতে হবে (`:root` block-এর পরে):
 
@@ -302,7 +302,7 @@ class AutoRAGInjector:
             return False
 ```
 
-#### [MODIFY] [`backend/core/agent_factory.py`](file:///f:/supremeai/backend/core/agent_factory.py)
+#### [MODIFY] [`backend/core/agent_factory.py`](./backend/core/agent_factory.py)
 
 `build_agent()` ফাংশনে system prompt তৈরির আগে `AutoRAGInjector.enrich_system_prompt()` call যোগ করতে হবে:
 
@@ -325,12 +325,12 @@ system_prompt = await injector.enrich_system_prompt(
 ## 🕵️ Feature 3: Biometric Stealth Scraper — Canvas & TLS Fingerprint Layer
 
 ### কী আছে এখন
-- [`backend/core/human_behavior.py`](file:///f:/supremeai/backend/core/human_behavior.py): `_generate_bezier_points()` আছে ✅
+- [`backend/core/human_behavior.py`](./backend/core/human_behavior.py): `_generate_bezier_points()` আছে ✅
 - কিন্তু **Canvas fingerprint spoofing**, **WebGL noise**, **timezone/locale consistency** নেই
 
 ### সমাধান
 
-#### [MODIFY] [`backend/core/human_behavior.py`](file:///f:/supremeai/backend/core/human_behavior.py)
+#### [MODIFY] [`backend/core/human_behavior.py`](./backend/core/human_behavior.py)
 
 `HumanBehaviorSimulators` class-এ নতুন `apply_stealth_fingerprint()` method যোগ করতে হবে:
 
@@ -387,13 +387,13 @@ async def apply_stealth_fingerprint(cls, page: Page) -> None:
 ## ⚡ Feature 4: Cloudflare Worker → Backend Auto-Failover Circuit Breaker
 
 ### কী আছে এখন
-- [`backend/core/circuit_breaker.py`](file:///f:/supremeai/backend/core/circuit_breaker.py): Full CLOSED/OPEN/HALF_OPEN state machine ✅
-- [`infrastructure/cloudflare/enhanced-worker.js`](file:///f:/supremeai/infrastructure/cloudflare/enhanced-worker.js): Rate limit + caching আছে
+- [`backend/core/circuit_breaker.py`](./backend/core/circuit_breaker.py): Full CLOSED/OPEN/HALF_OPEN state machine ✅
+- [`infrastructure/cloudflare/enhanced-worker.js`](./infrastructure/cloudflare/enhanced-worker.js): Rate limit + caching আছে
 - কিন্তু **backend primary node down হলে Cloudflare-level secondary failover নেই**
 
 ### সমাধান
 
-#### [MODIFY] [`infrastructure/cloudflare/enhanced-worker.js`](file:///f:/supremeai/infrastructure/cloudflare/enhanced-worker.js)
+#### [MODIFY] [`infrastructure/cloudflare/enhanced-worker.js`](./infrastructure/cloudflare/enhanced-worker.js)
 
 `handleApiRequest` function-এ multi-node failover logic যোগ করতে হবে:
 
