@@ -51,14 +51,14 @@ afterEach(() => {
 
 describe('secureWebSocket', () => {
   it('should be importable', async () => {
-    const mod = await import('../../utils/secureWebSocket');
+    const mod = await import('./secureWebSocket');
     expect(mod).toBeDefined();
   });
 
   it('should NOT put token in URL query', async () => {
     // The whole point of secureWebSocket is that the token is NOT in the URL
     // (URL is logged in browser history, server logs, proxy logs)
-    const mod = await import('../../utils/secureWebSocket');
+    const mod = await import('./secureWebSocket');
     // Check that the module exports a function
     const fnNames = Object.keys(mod);
     expect(fnNames.length).toBeGreaterThan(0);
@@ -67,7 +67,7 @@ describe('secureWebSocket', () => {
   it('should send auth frame as first message after open', async () => {
     // The first message after WebSocket opens should be {"type":"auth","token":"<bearer>"}
     // This is the "first-message auth" pattern (vs token-in-URL)
-    const mod = await import('../../utils/secureWebSocket');
+    const mod = await import('./secureWebSocket');
 
     // If the module exports a createSecureWebSocket function, test it
     const createFn = mod.createSecureWebSocket || mod.default || mod.connect;
@@ -97,7 +97,7 @@ describe('secureWebSocket', () => {
   it('should construct WS URL without query parameters', async () => {
     // Even if the function is not directly callable, verify the module
     // doesn't construct URLs with ?token= patterns
-    const mod = await import('../../utils/secureWebSocket');
+    const mod = await import('./secureWebSocket');
     const source = mod.toString();
     // The module should NOT contain URL query token patterns
     expect(source).toBeDefined();

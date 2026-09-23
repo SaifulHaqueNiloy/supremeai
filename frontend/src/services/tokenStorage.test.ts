@@ -35,12 +35,12 @@ beforeEach(() => {
 
 describe('tokenStorage', () => {
   it('should be importable', async () => {
-    const mod = await import('../../services/tokenStorage');
+    const mod = await import('./tokenStorage');
     expect(mod).toBeDefined();
   });
 
   it('should save and load user token from sessionStorage', async () => {
-    const { saveToken, getToken } = await import('../../services/tokenStorage');
+    const { saveToken, getToken } = await import('./tokenStorage');
     const testToken = 'test-jwt-token-12345';
 
     saveToken(testToken);
@@ -51,7 +51,7 @@ describe('tokenStorage', () => {
   });
 
   it('should clear token on clearToken()', async () => {
-    const { saveToken, getToken, clearToken } = await import('../../services/tokenStorage');
+    const { saveToken, getToken, clearToken } = await import('./tokenStorage');
     saveToken('test-token');
     expect(getToken()).toBeTruthy();
 
@@ -65,7 +65,7 @@ describe('tokenStorage', () => {
     localStorage.setItem('supremeai_auth_token', 'legacy-token');
     sessionStorage.removeItem('supremeai_auth_token');
 
-    const { getToken } = await import('../../services/tokenStorage');
+    const { getToken } = await import('./tokenStorage');
     // First read should sweep from localStorage → sessionStorage
     const token = getToken();
     // After sweep, localStorage should be cleaned (implementation detail — may vary)
@@ -76,7 +76,7 @@ describe('tokenStorage', () => {
   });
 
   it('should handle admin token separately', async () => {
-    const mod = await import('../../services/tokenStorage');
+    const mod = await import('./tokenStorage');
     // Check if admin token functions exist
     const hasAdmin = Object.keys(mod).some(k => k.toLowerCase().includes('admin'));
     // Admin token storage may use a different key or session storage
