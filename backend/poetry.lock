@@ -4097,14 +4097,14 @@ sqlframe = ["sqlframe (>=3.22.0,!=3.39.3)"]
 
 [[package]]
 name = "neo4j"
-version = "6.2.0"
+version = "6.3.1"
 description = "Neo4j Bolt driver for Python"
 optional = false
 python-versions = ">=3.10"
 groups = ["main"]
 files = [
-    {file = "neo4j-6.2.0-py3-none-any.whl", hash = "sha256:b87abdd13a5cc2e3bd51026926c2f20ac38fa3febe98c340520dce19e97388d0"},
-    {file = "neo4j-6.2.0.tar.gz", hash = "sha256:e1e246b65b572bd8ea97f9e0e721b7d40a5ce53e53d0007c29aef63e4f9124d9"},
+    {file = "neo4j-6.3.1-py3-none-any.whl", hash = "sha256:a1b702d356f88885c27bdcf7dcd56af76423dbff4e26064e5bf5dbf47af53044"},
+    {file = "neo4j-6.3.1.tar.gz", hash = "sha256:e75530ca0691d69916c56acdb7401df4ee9e1d5084cfcfb3ede796db38667dcd"},
 ]
 
 [package.dependencies]
@@ -4113,7 +4113,7 @@ pytz = "*"
 [package.extras]
 numpy = ["numpy (>=1.21.2,<3.0.0)"]
 pandas = ["numpy (>=1.21.2,<3.0.0)", "pandas[timezone] (>=1.1.0,<4.0.0)"]
-pyarrow = ["pyarrow (>=6.0.0,<25.0.0)"]
+pyarrow = ["pyarrow (>=6.0.0,<26.0.0)"]
 
 [[package]]
 name = "networkx"
