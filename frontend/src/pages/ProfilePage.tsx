@@ -190,8 +190,6 @@ export const ProfilePage: React.FC = () => {
                     </div>
                     <button
                       onClick={() => {
-                        const next = !(theme === 'dark');
-                        (next);
                         try {
                           toggleTheme();
                         } catch (storageError) {
