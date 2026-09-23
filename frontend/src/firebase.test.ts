@@ -26,17 +26,17 @@ beforeEach(() => {
 
 describe('firebase.ts', () => {
   it('should be importable', async () => {
-    const mod = await import('../../firebase');
+    const mod = await import('./firebase');
     expect(mod).toBeDefined();
   });
 
   it('initFirebase should be a function', async () => {
-    const mod = await import('../../firebase');
+    const mod = await import('./firebase');
     expect(typeof mod.initFirebase).toBe('function');
   });
 
   it('getFirebaseAuth should be a function', async () => {
-    const mod = await import('../../firebase');
+    const mod = await import('./firebase');
     expect(typeof mod.getFirebaseAuth).toBe('function');
   });
 
@@ -57,7 +57,7 @@ describe('firebase.ts', () => {
     });
     vi.stubGlobal('fetch', fetchSpy);
 
-    const { initFirebase } = await import('../../firebase');
+    const { initFirebase } = await import('./firebase');
     try {
       await initFirebase();
       // Verify fetch was called with the init.json URL
@@ -84,7 +84,7 @@ describe('firebase.ts', () => {
     vi.stubEnv('DEV', false);
     vi.stubEnv('PROD', false);
 
-    const { initFirebase } = await import('../../firebase');
+    const { initFirebase } = await import('./firebase');
     try {
       await initFirebase();
       // Should succeed with env vars as fallback
@@ -107,7 +107,7 @@ describe('firebase.ts', () => {
     const fetchSpy = vi.fn().mockResolvedValue({ ok: false });
     vi.stubGlobal('fetch', fetchSpy);
 
-    const { initFirebase, getFirebaseAuth } = await import('../../firebase');
+    const { initFirebase, getFirebaseAuth } = await import('./firebase');
     try {
       await initFirebase();
       const auth = await getFirebaseAuth();
