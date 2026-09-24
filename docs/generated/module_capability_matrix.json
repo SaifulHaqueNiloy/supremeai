@@ -4476,6 +4476,34 @@
       "path": "backend/core/errors/error_remediation.py"
     },
     {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/evolution/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/evolution/evolution_orchestrator.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/evolution/learning_pipeline.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -11411,6 +11439,22 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/contracts/test_sqlite_store.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/evolution/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/evolution/test_learning_pipeline.py"
     },
     {
       "capability_signals": [
@@ -25629,5 +25673,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2947
+  "source_file_count": 2952
 }
