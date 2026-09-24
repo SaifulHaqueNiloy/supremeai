@@ -33,11 +33,28 @@ jobs:
   canary-check:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      QA_BASE_URL: ${{ secrets.FRONTEND_PRODUCTION_URL || secrets.PRODUCTION_URL }}
-      BACKEND_HEALTH_URL: ${{ vars.PRODUCTION_URL || secrets.PRODUCTION_URL }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Import RENDER_CORE_URL from Infisical
+        if: ${{ secrets.INFISICAL_CLIENT_ID != '' }}
+        uses: Infisical/secrets-action@6cd3f7c0e4cc0d2395ee4ef414eb6eeb5d3e73db # v1.0.17
+        with:
+          client-id: ${{ secrets.INFISICAL_CLIENT_ID }}
+          client-secret: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          project-slug: ${{ secrets.INFISICAL_PROJECT_SLUG }}
+          env-slug: "prod"
+          secret-path: "/"
+          export-type: "env"
+
+      - name: Resolve production targets (canonical contract, with provenance)
+        id: resolve-targets
+        env:
+          EXPLICIT_PRODUCTION_URL: ${{ vars.PRODUCTION_URL || secrets.PRODUCTION_URL }}
+          FRONTEND_PRODUCTION_URL: ${{ secrets.FRONTEND_PRODUCTION_URL }}
+          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          RENDER_CORE_URL: ${{ env.RENDER_CORE_URL }}
+        run: python3 scripts/ci/resolve_production_targets.py --write-github-env --write-summary
       - name: Setup Node & PNPM
         uses: ./.github/actions/setup-frontend
         with:
@@ -85,7 +102,7 @@ jobs:
           name: secondary-service-evidence
           path: ci-reports/secondary_service_evidence.json
           retention-days: 14
-          if-no-files-found: warn
+          if-no-files-found: ignore
 
 
       - name: Setup Playwright (Chromium)
@@ -116,3 +133,4 @@ jobs:
           name: qa-postdeploy-results
           path: qa/results/results.json
           retention-days: 7
+          if-no-files-found: ignore
