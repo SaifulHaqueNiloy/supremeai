@@ -20861,9 +20861,7 @@
       "path": "frontend/src/services/test_budget_check.test.ts"
     },
     {
-      "capability_signals": [
-        "memory"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
@@ -21306,9 +21304,7 @@
       "path": "frontend/src/utils/deviceFingerprint.ts"
     },
     {
-      "capability_signals": [
-        "browser"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
