@@ -2542,6 +2542,36 @@
     {
       "evidence": [
         {
+          "line": 89,
+          "path": "backend/core/ai_memory/retention.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 189,
+          "path": "backend/core/ai_memory/retention.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
+          "line": 213,
+          "path": "backend/core/ai_memory/retention.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/memory/long_term_memory.py"
         }
@@ -2564,6 +2594,16 @@
         {
           "line": 18,
           "path": "backend/api/routes/global_memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 167,
+          "path": "backend/core/ai_memory/retention.py"
         }
       ],
       "source": "knowledge",
@@ -2624,6 +2664,16 @@
         {
           "line": 321,
           "path": "backend/api/routes/memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 30,
+          "path": "backend/core/ai_memory/retention.py"
         }
       ],
       "source": "knowledge",

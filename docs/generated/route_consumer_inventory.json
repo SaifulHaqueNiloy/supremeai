@@ -14,20 +14,20 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 815,
-    "frontend_unique_refs": 140,
-    "routes_with_frontend_consumer": 258,
+    "backend_routes": 816,
+    "frontend_unique_refs": 142,
+    "routes_with_frontend_consumer": 263,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
-    "api_only_routes": 300,
-    "api_only_families": 159,
+    "api_only_routes": 296,
+    "api_only_families": 158,
     "by_classification": {
-      "user-facing": 156,
+      "user-facing": 161,
       "admin-only": 321,
       "internal": 38,
       "deprecated": 0,
-      "api-only": 300,
+      "api-only": 296,
       "orphaned": 0
     }
   },
@@ -143,7 +143,6 @@
     "/api/v1/mcp": 13,
     "/api/v1/mesh": 10,
     "/api/v1/missions": 11,
-    "/api/v1/nodes": 4,
     "/api/v1/onboarding": 5,
     "/api/v1/plugins": 4,
     "/api/v1/pr-review": 1,
@@ -5556,6 +5555,22 @@
       "classification": "user-facing"
     },
     {
+      "method": "DELETE",
+      "path": "/api/preferences/memory/user-data",
+      "declared": "/api/preferences/memory/user-data",
+      "deprecated": false,
+      "router_file": "backend/api/routes/global_memory.py",
+      "module": "api.routes.global_memory",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "delete_all_user_memories",
+      "frontend_consumers": [
+        "frontend/src/components/memory/MemoryPanel.tsx"
+      ],
+      "classification": "user-facing"
+    },
+    {
       "method": "GET",
       "path": "/api/prompt-templates",
       "declared": "/api/prompt-templates/",
@@ -9501,8 +9516,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "list_active_nodes",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "GET",
@@ -9515,8 +9532,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "get_node_detail",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "PATCH",
@@ -9529,8 +9548,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "patch_node_role",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",
@@ -9543,8 +9564,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "post_node_heartbeat",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",

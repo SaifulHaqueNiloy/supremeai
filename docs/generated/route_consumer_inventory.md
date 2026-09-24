@@ -4,24 +4,24 @@
 
 | metric | value |
 |---|---|
-| backend routes | 815 |
-| routes with frontend consumer | 258 |
-| unique frontend `/api/...` refs | 140 |
+| backend routes | 816 |
+| routes with frontend consumer | 263 |
+| unique frontend `/api/...` refs | 142 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
-| api-only routes (allowlisted) | 300 |
-| api-only families | 159 |
+| api-only routes (allowlisted) | 296 |
+| api-only families | 158 |
 
 ## Classification legend
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 156 | frontend consumer matched |
+| `user-facing` | 161 | frontend consumer matched |
 | `admin-only` | 321 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 300 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `api-only` | 296 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families
@@ -142,7 +142,6 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | `/api/v1/mcp` | 13 |
 | `/api/v1/mesh` | 10 |
 | `/api/v1/missions` | 11 |
-| `/api/v1/nodes` | 4 |
 | `/api/v1/onboarding` | 5 |
 | `/api/v1/plugins` | 4 |
 | `/api/v1/pr-review` | 1 |
@@ -556,6 +555,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/preferences/memory/search` | `backend/api/routes/global_memory.py` | user-facing | `frontend/src/components/memory/MemoryPanel.tsx` |
 | GET | `/api/preferences/memory/stats` | `backend/api/routes/global_memory.py` | user-facing | `frontend/src/components/memory/MemoryPanel.tsx` |
 | POST | `/api/preferences/memory/sync` | `backend/api/routes/global_memory.py` | user-facing | `frontend/src/components/memory/MemoryPanel.tsx` |
+| DELETE | `/api/preferences/memory/user-data` | `backend/api/routes/global_memory.py` | user-facing | `frontend/src/components/memory/MemoryPanel.tsx` |
 | GET | `/api/prompt-templates` | `backend/api/routes/prompt_templates.py` | user-facing | `frontend/src/components/templates/PromptTemplateLibrary.tsx` |
 | POST | `/api/prompt-templates` | `backend/api/routes/prompt_templates.py` | user-facing | `frontend/src/components/templates/PromptTemplateLibrary.tsx` |
 | DELETE | `/api/prompt-templates/:param` | `backend/api/routes/prompt_templates.py` | user-facing | `frontend/src/components/templates/PromptTemplateLibrary.tsx` |
@@ -823,10 +823,10 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/v1/missions/:param/start` | `backend/api/routes/missions.py` | api-only | NONE |
 | GET | `/api/v1/missions/:param/trace` | `backend/api/routes/missions.py` | api-only | NONE |
 | GET | `/api/v1/missions/:param/trace/stream` | `backend/api/routes/missions.py` | api-only | NONE |
-| GET | `/api/v1/nodes` | `backend/api/routes/mesh.py` | api-only | NONE |
-| GET | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | api-only | NONE |
-| PATCH | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | api-only | NONE |
-| POST | `/api/v1/nodes/heartbeat` | `backend/api/routes/mesh.py` | api-only | NONE |
+| GET | `/api/v1/nodes` | `backend/api/routes/mesh.py` | user-facing | `frontend/src/components/admin/MeshAgentsPanel.test.tsx` |
+| GET | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | user-facing | `frontend/src/components/admin/MeshAgentsPanel.test.tsx` |
+| PATCH | `/api/v1/nodes/:param` | `backend/api/routes/mesh.py` | user-facing | `frontend/src/components/admin/MeshAgentsPanel.test.tsx` |
+| POST | `/api/v1/nodes/heartbeat` | `backend/api/routes/mesh.py` | user-facing | `frontend/src/components/admin/MeshAgentsPanel.test.tsx` |
 | POST | `/api/v1/onboarding/complete` | `backend/api/routes/onboarding.py` | api-only | NONE |
 | POST | `/api/v1/onboarding/plan` | `backend/api/routes/onboarding.py` | api-only | NONE |
 | DELETE | `/api/v1/onboarding/reset/:param` | `backend/api/routes/onboarding.py` | api-only | NONE |

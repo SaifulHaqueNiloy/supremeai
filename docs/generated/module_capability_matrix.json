@@ -3410,6 +3410,16 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/ai_memory/retention.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/ai_memory/vector_store.py"
     },
     {
@@ -10416,7 +10426,9 @@
       "path": "backend/tests/agents/test_headless_terminal_agent.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "execute"
+      ],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
@@ -11761,6 +11773,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_agent_supervisor_shutdown.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_ai_memory_retention.py"
     },
     {
       "capability_signals": [
@@ -14421,7 +14443,8 @@
     },
     {
       "capability_signals": [
-        "health"
+        "health",
+        "register"
       ],
       "classification": "test",
       "entrypoints": [],
@@ -17974,6 +17997,23 @@
       "path": "frontend/src/components/admin/MemoryBrowser.tsx"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/MeshAgentsPanel.test.tsx"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "tsx",
+      "path": "frontend/src/components/admin/MeshAgentsPanel.tsx"
+    },
+    {
       "capability_signals": [
         "health"
       ],
@@ -20861,9 +20901,7 @@
       "path": "frontend/src/services/test_budget_check.test.ts"
     },
     {
-      "capability_signals": [
-        "memory"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
@@ -21306,9 +21344,7 @@
       "path": "frontend/src/utils/deviceFingerprint.ts"
     },
     {
-      "capability_signals": [
-        "browser"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
@@ -23845,6 +23881,17 @@
       "path": "scripts/ci/rate_limit_endpoint_checker.py"
     },
     {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "canonical",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/reconcile_secrets_registry.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -23928,6 +23975,19 @@
       ],
       "kind": "py",
       "path": "scripts/ci/schedule_render_rechecks.py"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "mcp",
+        "memory"
+      ],
+      "classification": "canonical",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/secondary_service_probes.py"
     },
     {
       "capability_signals": [],
@@ -25673,5 +25733,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2952
+  "source_file_count": 2958
 }
