@@ -1,3 +1,5 @@
+# STATUS NOTE (audit F-9): currently ORPHANED — no compose file, workflow or doc
+# references this Dockerfile. Verify intent before use; see production audit F-9.
 # Issue #514 (BE-08): pin 3.11 to match backend/pyproject.toml (`python = "^3.11"`)
 # and the backend/scraper Dockerfiles — avoids behavioral drift across Python
 # minor versions between worker and API images.

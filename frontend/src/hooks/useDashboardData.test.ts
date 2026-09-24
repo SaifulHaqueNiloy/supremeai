@@ -11,7 +11,7 @@ describe('useDashboardData', () => {
 
   it('should export a hook function', async () => {
     const mod = await import('./useDashboardData');
-    const fn = mod.useDashboardData || mod.default;
+    const fn = mod.useDashboardData;
     expect(typeof fn).toBe('function');
   });
 });

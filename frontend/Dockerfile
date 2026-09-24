@@ -9,12 +9,20 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@10.15.0 --activate
 
 # Copy root and package files for monorepo / workspace dependencies
+# FIX(F-2): pnpm-lock.yaml declares importers for apps/mission-control and
+# tools/vscode-extension too — if their package.json files are absent the
+# frozen-lockfile check can never pass. All four importer package.json files
+# must exist before `pnpm install --frozen-lockfile`.
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY frontend/package.json ./frontend/
 COPY packages/ ./packages/
+COPY apps/mission-control/package.json ./apps/mission-control/
+COPY tools/vscode-extension/package.json ./tools/vscode-extension/
 
 # Install dependencies
-RUN pnpm install --frozen-lockfile || pnpm install
+# FIX(F-2): no silent fallback — `|| pnpm install` re-resolved the whole tree
+# on lockfile drift, defeating reproducibility. Fail loudly instead.
+RUN pnpm install --frozen-lockfile
 
 # Copy frontend source code
 COPY frontend/ ./frontend/

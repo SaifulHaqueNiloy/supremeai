@@ -35,6 +35,11 @@ redis = {extras = ["hiredis"], version = "^5.2.0"}
 python-multipart = "^0.0.32"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 python-dotenv = "^1.2.2"  # CVE fix floor (AUDIT-014)
+# FIX(F-prod-yaml): agents/syncguard/syncguard_agent.py does `import yaml` but
+# pyyaml was never declared — it only resolved transitively via litellm/mcp
+# extras. If that chain drops PyYAML, api.routes.syncguard silently unmounts
+# at startup (optional router) and the syncguard API surface 404s in prod.
+pyyaml = "^6.0"
 uuid6 = "^2025.0.1"
 boto3 = "^1.41.5"
 defusedxml = "^0.7.1"

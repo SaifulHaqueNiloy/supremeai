@@ -4,10 +4,16 @@
  * Tests cover:
  * - URL construction (no token in URL query)
  * - First-message auth frame ({"type":"auth","token":"..."})
- * - Connection lifecycle (open → auth → ready)
- * - Error handling (auth timeout, invalid token)
+ * - Strip-guard for accidental ?token= in caller-supplied URLs
+ * - Callback wiring (onMessage / onClose / onError)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+
+// The token comes from apiClient.getRawToken() at open time — mock it so the
+// auth frame is deterministic (createSecureWebSocket has no token parameter).
+vi.mock('../services/apiClient', () => ({
+  getRawToken: () => 'test-token-123',
+}));
 
 // Mock WebSocket
 class MockWebSocket {
@@ -47,59 +53,68 @@ beforeEach(() => {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.clearAllMocks();
 });
 
 describe('secureWebSocket', () => {
-  it('should be importable', async () => {
+  it('should be importable and export the documented API', async () => {
     const mod = await import('./secureWebSocket');
-    expect(mod).toBeDefined();
-  });
-
-  it('should NOT put token in URL query', async () => {
-    // The whole point of secureWebSocket is that the token is NOT in the URL
-    // (URL is logged in browser history, server logs, proxy logs)
-    const mod = await import('./secureWebSocket');
-    // Check that the module exports a function
-    const fnNames = Object.keys(mod);
-    expect(fnNames.length).toBeGreaterThan(0);
+    expect(typeof mod.createSecureWebSocket).toBe('function');
+    expect(typeof mod.getAuthToken).toBe('function');
   });
 
   it('should send auth frame as first message after open', async () => {
     // The first message after WebSocket opens should be {"type":"auth","token":"<bearer>"}
     // This is the "first-message auth" pattern (vs token-in-URL)
-    const mod = await import('./secureWebSocket');
+    const { createSecureWebSocket } = await import('./secureWebSocket');
 
-    // If the module exports a createSecureWebSocket function, test it
-    const createFn = mod.createSecureWebSocket || mod.default || mod.connect;
-    if (createFn) {
-      try {
-        const _ws = await createFn('wss://test.example.com/ws', 'test-token-123');
-        // Wait for the async open
-        await new Promise(r => setTimeout(r, 10));
+    createSecureWebSocket('wss://test.example.com/ws', {});
+    // Wait for the async open
+    await new Promise(r => setTimeout(r, 10));
 
-        // First sent message should be the auth frame
-        const mockWs = MockWebSocket.instances[MockWebSocket.instances.length - 1];
-        if (mockWs && mockWs.sentMessages.length > 0) {
-          const firstMsg = JSON.parse(mockWs.sentMessages[0]);
-          expect(firstMsg.type).toBe('auth');
-          expect(firstMsg.token).toBeTruthy();
-          // Token should NOT be in the URL
-          expect(mockWs.url).not.toContain('token=');
-          expect(mockWs.url).not.toContain('?');
-        }
-      } catch {
-        // Module may need additional setup — contract test passes if import works
-        expect(true).toBe(true);
-      }
-    }
+    const mockWs = MockWebSocket.instances[MockWebSocket.instances.length - 1];
+    expect(mockWs).toBeDefined();
+    expect(mockWs.sentMessages.length).toBeGreaterThan(0);
+    const firstMsg = JSON.parse(mockWs.sentMessages[0]);
+    expect(firstMsg.type).toBe('auth');
+    expect(firstMsg.token).toBe('test-token-123');
+    // Token should NOT be in the URL
+    expect(mockWs.url).not.toContain('token=');
+    expect(mockWs.url).not.toContain('?');
   });
 
-  it('should construct WS URL without query parameters', async () => {
-    // Even if the function is not directly callable, verify the module
-    // doesn't construct URLs with ?token= patterns
-    const mod = await import('./secureWebSocket');
-    const source = JSON.stringify(mod);
-    // The module should NOT contain URL query token patterns
-    expect(source).toBeDefined();
+  it('should strip an accidental ?token= from the caller-supplied URL', async () => {
+    // Strip-guard: even a buggy caller must never leak the token via the URL
+    const { createSecureWebSocket } = await import('./secureWebSocket');
+
+    createSecureWebSocket('wss://test.example.com/ws?token=leaked-secret', {});
+    await new Promise(r => setTimeout(r, 10));
+
+    const mockWs = MockWebSocket.instances[MockWebSocket.instances.length - 1];
+    expect(mockWs.url).toBe('wss://test.example.com/ws');
+    expect(mockWs.url).not.toContain('leaked-secret');
+  });
+
+  it('should wire message/close/error callbacks through', async () => {
+    const { createSecureWebSocket } = await import('./secureWebSocket');
+    const onMessage = vi.fn();
+    const onClose = vi.fn();
+    const onError = vi.fn();
+
+    const ws = createSecureWebSocket('wss://test.example.com/ws', {
+      onMessage,
+      onClose,
+      onError,
+    });
+    await new Promise(r => setTimeout(r, 10));
+
+    ws.onmessage?.(new MessageEvent('message', { data: 'hello' }));
+    expect(onMessage).toHaveBeenCalledTimes(1);
+
+    ws.onerror?.(new Event('error'));
+    expect(onError).toHaveBeenCalledTimes(1);
+
+    ws.onclose?.(new CloseEvent('close', { code: 1000 }));
+    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

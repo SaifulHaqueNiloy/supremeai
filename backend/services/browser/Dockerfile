@@ -1,3 +1,5 @@
+# STATUS NOTE (audit F-9): currently ORPHANED — no compose file, workflow or doc
+# references this Dockerfile. Verify intent before use; see production audit F-9.
 FROM python:3.12-slim
 WORKDIR /app
 
