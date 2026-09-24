@@ -9,8 +9,17 @@ import pytest
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core.evolution.learning_pipeline import LearningPipeline, FailurePattern, LearningResult, get_learning_pipeline
-from core.evolution.evolution_orchestrator import EvolutionOrchestrator, EvolutionResult, get_evolution_orchestrator
+from core.evolution.evolution_orchestrator import (
+    EvolutionOrchestrator,
+    EvolutionResult,
+    get_evolution_orchestrator,
+)
+from core.evolution.learning_pipeline import (
+    FailurePattern,
+    LearningPipeline,
+    LearningResult,
+    get_learning_pipeline,
+)
 
 
 class TestLearningPipeline:
@@ -112,17 +121,19 @@ class TestEvolutionOrchestrator:
     async def test_process_task_with_failure(self):
         """Task with failure_data → learning result."""
         orch = EvolutionOrchestrator()
-        result = await orch.process_task({
-            "type": "fix_ci_failure",
-            "description": "fix import error",
-            "failure_data": {
-                "test_id": "test_x",
-                "failure_type": "import_error",
-                "message": "ImportError: cannot import name 'Y'",
-                "snippet": "",
-                "file_path": "test_x.py",
+        result = await orch.process_task(
+            {
+                "type": "fix_ci_failure",
+                "description": "fix import error",
+                "failure_data": {
+                    "test_id": "test_x",
+                    "failure_type": "import_error",
+                    "message": "ImportError: cannot import name 'Y'",
+                    "snippet": "",
+                    "file_path": "test_x.py",
+                },
             }
-        })
+        )
         assert result.success is True
         assert result.learning is not None
 

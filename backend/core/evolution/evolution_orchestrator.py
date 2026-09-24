@@ -15,19 +15,20 @@ from __future__ import annotations
 import asyncio
 import sys
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from core.logging_config import logger
 from core.evolution.learning_pipeline import LearningPipeline, LearningResult, get_learning_pipeline
+from core.logging_config import logger
 
 
 @dataclass
 class EvolutionResult:
     """Result of running a task through the evolution orchestrator."""
+
     success: bool
     reasoning: dict[str, Any] = field(default_factory=dict)
     pre_check: dict[str, Any] = field(default_factory=dict)
@@ -64,6 +65,7 @@ class EvolutionOrchestrator:
         # Try Living Engine
         try:
             from services.living_engine import LivingEngine
+
             self._living_engine = LivingEngine()
             logger.info("EvolutionOrchestrator: LivingEngine initialized")
         except Exception as e:
@@ -72,6 +74,7 @@ class EvolutionOrchestrator:
         # Try Self-Correction
         try:
             from services.self_correction import SelfCorrectionService
+
             self._self_correction = SelfCorrectionService()
             logger.info("EvolutionOrchestrator: SelfCorrectionService initialized")
         except Exception as e:
@@ -80,6 +83,7 @@ class EvolutionOrchestrator:
         # Try Auto-Healer
         try:
             from services.auto_healer import AutoHealer
+
             self._auto_healer = AutoHealer()
             logger.info("EvolutionOrchestrator: AutoHealer initialized")
         except Exception as e:
@@ -99,7 +103,7 @@ class EvolutionOrchestrator:
             }
         """
         await self._initialize()
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
         result = EvolutionResult(success=False, timestamp=timestamp)
 
         # Step 1: Living Engine reasoning (if available)
@@ -130,7 +134,10 @@ class EvolutionOrchestrator:
             except Exception as e:
                 result.pre_check = {"error": str(e)}
         else:
-            result.pre_check = {"status": "skipped", "reason": "SelfCorrectionService not available"}
+            result.pre_check = {
+                "status": "skipped",
+                "reason": "SelfCorrectionService not available",
+            }
 
         # Step 3: Execute (the actual task — caller handles this)
         result.execution = {"status": "delegated_to_caller", "task_type": task.get("type")}
