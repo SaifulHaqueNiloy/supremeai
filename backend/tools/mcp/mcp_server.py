@@ -160,6 +160,94 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["task_id"],
             },
         ),
+        # ── MCP Tower gap-3 (#927): Agent mailbox tools (platform-level) ──
+        types.Tool(
+            name="agent_send",
+            description="MCP gap-3: Send an agent-to-agent mailbox message (direct to_agent, role broadcast, or topic publish) with reply_to threading and TTL.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "from_agent": {"type": "string", "description": "Sender agent id"},
+                    "to_agent": {
+                        "type": "string",
+                        "description": "Recipient agent id, or '*' to broadcast",
+                    },
+                    "to_role": {
+                        "type": "string",
+                        "description": "Optional role broadcast gate: planner|coder|tester|gate|observer",
+                    },
+                    "topic": {
+                        "type": "string",
+                        "description": "Optional pub/sub topic (recipients must topic_subscribe)",
+                    },
+                    "body": {"type": "object", "description": "Message payload (max 256KB)"},
+                    "reply_to": {
+                        "type": "string",
+                        "description": "Parent message id for delegation-thread replies",
+                    },
+                    "ttl_seconds": {
+                        "type": "integer",
+                        "description": "Time-to-live (default 86400, max 604800)",
+                    },
+                    "tenant_id": {"type": "string", "description": "Tenant scope — explicit non-default tenant id (required at call time)"},
+                },
+                "required": ["from_agent", "to_agent"],
+            },
+        ),
+        types.Tool(
+            name="agent_inbox",
+            description="MCP gap-3: Poll an agent mailbox — visible direct + subscribed/role/topic broadcasts (pull-based pub/sub).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "agent_id": {"type": "string", "description": "Mailbox owner agent id"},
+                    "role": {
+                        "type": "string",
+                        "description": "Role gate for broadcast visibility",
+                    },
+                    "unread_only": {
+                        "type": "boolean",
+                        "description": "Exclude already-acked messages",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max messages to return (default 50, max 200)",
+                    },
+                    "tenant_id": {"type": "string", "description": "Tenant scope — explicit non-default tenant id (required at call time)"},
+                },
+                "required": ["agent_id"],
+            },
+        ),
+        types.Tool(
+            name="agent_ack",
+            description="MCP gap-3: Acknowledge receipt of a mailbox message (idempotent; cross-tenant or wrong recipient denied).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "message_id": {"type": "string", "description": "Message id to ack"},
+                    "agent_id": {"type": "string", "description": "Acking agent id"},
+                    "tenant_id": {"type": "string", "description": "Tenant scope — explicit non-default tenant id (required at call time)"},
+                },
+                "required": ["message_id", "agent_id"],
+            },
+        ),
+        types.Tool(
+            name="topic_subscribe",
+            description="MCP gap-3: Subscribe an agent to pub/sub topics so topic broadcasts appear in agent_inbox.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "agent_id": {"type": "string", "description": "Subscribing agent id"},
+                    "topics": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Topics to subscribe (idempotent union)",
+                    },
+                    "tenant_id": {"type": "string", "description": "Tenant scope — explicit non-default tenant id (required at call time)"},
+                },
+                "required": ["agent_id", "topics"],
+            },
+        ),
     ]
 
 
@@ -173,6 +261,9 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
     # MESH-6 (#926): Tower task-queue tools are platform-level — mesh task-এ
     # কোনো tenant context নেই, তাই এই ৩টি tool tenant check বাইপাস করে
     # (বাকি সব tool-এর জন্য আগের মতোই বাধ্যতামূলক)।
+    # MCP Tower gap-3 (#927): agent mailbox tools বাইপাসে নেই — MCPAuditEntry
+    # প্রতিটি কলে explicit (non-default) tenant_id চায়, তাই এগুলোও সাধারণ
+    # tenant contract মানে (tenant isolation issue #927-এর acceptance criteria)।
     _MESH_PLATFORM_TOOLS = ("mesh_dispatch_task", "mesh_task_status", "mesh_release_task")
     if name not in _MESH_PLATFORM_TOOLS and (not tenant_id or tenant_id == "default"):
         return [types.TextContent(type="text", text=json.dumps({"error": "tenant_id is required"}))]
@@ -300,6 +391,80 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                 types.TextContent(
                     type="text",
                     text=json.dumps({"released": rec.task_id, "status": rec.status}, indent=2),
+                )
+            ]
+
+        elif name == "agent_send":
+            # MCP Tower gap-3 (#927): একটি mailbox বার্তা পাঠাও (direct/role/topic)।
+            from core.agent_mailbox import get_agent_mailbox
+
+            _mailbox = await get_agent_mailbox()
+            msg = await _mailbox.send(
+                from_agent=str(arguments.get("from_agent") or ""),
+                to_agent=str(arguments.get("to_agent") or ""),
+                tenant_id=tenant_id or "default",
+                to_role=arguments.get("to_role"),
+                topic=arguments.get("topic"),
+                body=arguments.get("body") or {},
+                reply_to=arguments.get("reply_to"),
+                ttl_seconds=arguments.get("ttl_seconds"),
+            )
+            return [types.TextContent(type="text", text=json.dumps(msg.model_dump(), indent=2))]
+
+        elif name == "agent_inbox":
+            # MCP Tower gap-3 (#927): pull-based inbox poll (direct + broadcast)।
+            from core.agent_mailbox import get_agent_mailbox
+
+            _mailbox = await get_agent_mailbox()
+            messages = await _mailbox.inbox(
+                agent_id=str(arguments.get("agent_id") or ""),
+                tenant_id=tenant_id or "default",
+                role=arguments.get("role"),
+                unread_only=bool(arguments.get("unread_only", False)),
+                limit=int(arguments.get("limit") or 50),
+            )
+            payload_out = {
+                "agent_id": arguments.get("agent_id"),
+                "tenant_id": tenant_id or "default",
+                "count": len(messages),
+                "messages": [m.model_dump() for m in messages],
+            }
+            return [types.TextContent(type="text", text=json.dumps(payload_out, indent=2))]
+
+        elif name == "agent_ack":
+            # MCP Tower gap-3 (#927): বার্তা ack (idempotent; cross-tenant → error)।
+            from core.agent_mailbox import get_agent_mailbox
+
+            _mailbox = await get_agent_mailbox()
+            msg = await _mailbox.ack(
+                message_id=str(arguments.get("message_id") or ""),
+                agent_id=str(arguments.get("agent_id") or ""),
+                tenant_id=tenant_id or "default",
+            )
+            return [types.TextContent(type="text", text=json.dumps(msg.model_dump(), indent=2))]
+
+        elif name == "topic_subscribe":
+            # MCP Tower gap-3 (#927): topic pub/sub subscription (idempotent union)।
+            from core.agent_mailbox import get_agent_mailbox
+
+            _mailbox = await get_agent_mailbox()
+            topics = await _mailbox.subscribe(
+                agent_id=str(arguments.get("agent_id") or ""),
+                topics=list(arguments.get("topics") or []),
+                tenant_id=tenant_id or "default",
+            )
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {
+                            "status": "ok",
+                            "agent_id": arguments.get("agent_id"),
+                            "tenant_id": tenant_id or "default",
+                            "topics": topics,
+                        },
+                        indent=2,
+                    ),
                 )
             ]
 

@@ -6,20 +6,20 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 568,
+    "backend_routes": 575,
     "frontend_unique_refs": 142,
     "matched": 244,
-    "orphan_routes": 324
+    "orphan_routes": 331
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
     "/api/v1/admin-api": 25,
+    "/api/v1/mesh": 15,
     "/api/v1/mcp": 14,
     "/api/v1/auth": 10,
     "/api/v1/evolution": 9,
     "/api/v1/missions": 9,
     "/api/v1/meta-ai": 8,
-    "/api/v1/mesh": 8,
     "/api/v1/knowledge": 7,
     "/api/v1/markdown": 7,
     "/api/v1/internet-monitor": 6,
@@ -131,7 +131,7 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 248,
+    "unclassified-orphan": 255,
     "internal": 44,
     "admin-only": 32
   },
@@ -1625,6 +1625,55 @@
       "method": "POST",
       "declared": "/api/memory/session",
       "resolved": "/api/memory/session",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_mailbox.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/messages",
+      "resolved": "/api/v1/mesh/messages",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_mailbox.py",
+      "method": "GET",
+      "declared": "/api/v1/mesh/messages/inbox",
+      "resolved": "/api/v1/mesh/messages/inbox",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_mailbox.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/messages/{message_id}/ack",
+      "resolved": "/api/v1/mesh/messages/:param/ack",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_mailbox.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/subscriptions",
+      "resolved": "/api/v1/mesh/subscriptions",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_mailbox.py",
+      "method": "GET",
+      "declared": "/api/v1/mesh/subscriptions",
+      "resolved": "/api/v1/mesh/subscriptions",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_mailbox.py",
+      "method": "GET",
+      "declared": "/api/v1/mesh/messages/stats",
+      "resolved": "/api/v1/mesh/messages/stats",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/mesh_mailbox.py",
+      "method": "POST",
+      "declared": "/api/v1/mesh/messages/purge",
+      "resolved": "/api/v1/mesh/messages/purge",
       "classification": "unclassified-orphan"
     },
     {
