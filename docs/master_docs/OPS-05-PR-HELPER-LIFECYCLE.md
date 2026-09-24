@@ -1,5 +1,13 @@
 # OPS-05 — PR Helper Lifecycle (State-based Locking)
 
+> ⚠️ **SUPERSEDED (2026-09-24) — OWNER DECISION: AUTOMATIC MERGING REMOVED.**
+> The auto-merge / AI-auto-fix / hunk-isolation machinery (former Steps 4, 5, 5.5)
+> has been deleted from `.github/workflows/pr-helper.yml`. The helper is now
+> **diagnostic-only** (Steps 1–3 below still run and post evidence).
+> **Merging is a human decision**: once `Branch Naming Guard` and
+> `🚦 Unified PR Gate` are green, the maintainer merges the PR manually.
+> The lifecycle description below is retained for historical reference only.
+
 > **Workflow:** `.github/workflows/pr-helper.yml` (Orchestrated by `.github/workflows/pr-pipeline.yml`) · **Scripts:** `.github/scripts/pr_helper/`
 > **ফিলসফি:** PR একটি **state machine** — প্রতিটি PR-এর state শুধুমাত্র প্রমাণ (test delta, conflict, quality) দিয়ে নির্ধারিত হয়। GitHub/AWS/Google-এর মতো industry-standard state-based locking lifecycle।
 
