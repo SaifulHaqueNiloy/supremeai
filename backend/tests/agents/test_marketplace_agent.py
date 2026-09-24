@@ -42,9 +42,7 @@ def test_marketplace_install_sandboxed(monkeypatch):
         def execute_command(self, cmd):
             return {"success": True, "stdout": f"mocked install: {cmd}"}
 
-    monkeypatch.setattr(
-        "tools.devops.docker_sandbox.DockerSandbox", FakeSandbox, raising=False
-    )
+    monkeypatch.setattr("tools.devops.docker_sandbox.DockerSandbox", FakeSandbox, raising=False)
     res = agent.install_tool("npm:pdf-parse", "supremeai-worker-01", sandbox=True)
     assert res["success"] is True
     assert res["sandboxed"] is True
