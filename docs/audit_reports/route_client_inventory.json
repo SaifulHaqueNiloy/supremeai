@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 567,
-    "frontend_unique_refs": 140,
-    "matched": 240,
-    "orphan_routes": 327
+    "backend_routes": 568,
+    "frontend_unique_refs": 142,
+    "matched": 244,
+    "orphan_routes": 324
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -38,7 +38,6 @@
     "/api/v1/circles": 3,
     "/api/v1/localization": 3,
     "/api/memory/recall": 3,
-    "/api/v1/nodes": 3,
     "/api/v1/webhooks": 3,
     "/api/v1/payments": 3,
     "/api/v1/plugins": 3,
@@ -132,7 +131,7 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 251,
+    "unclassified-orphan": 248,
     "internal": 44,
     "admin-only": 32
   },
@@ -1626,27 +1625,6 @@
       "method": "POST",
       "declared": "/api/memory/session",
       "resolved": "/api/memory/session",
-      "classification": "unclassified-orphan"
-    },
-    {
-      "file": "backend/api/routes/mesh.py",
-      "method": "POST",
-      "declared": "/api/v1/nodes/heartbeat",
-      "resolved": "/api/v1/nodes/heartbeat",
-      "classification": "unclassified-orphan"
-    },
-    {
-      "file": "backend/api/routes/mesh.py",
-      "method": "GET",
-      "declared": "/api/v1/nodes/{node_id}",
-      "resolved": "/api/v1/nodes/:param",
-      "classification": "unclassified-orphan"
-    },
-    {
-      "file": "backend/api/routes/mesh.py",
-      "method": "PATCH",
-      "declared": "/api/v1/nodes/{node_id}",
-      "resolved": "/api/v1/nodes/:param",
       "classification": "unclassified-orphan"
     },
     {
@@ -4055,6 +4033,17 @@
     },
     {
       "file": "backend/api/routes/global_memory.py",
+      "method": "DELETE",
+      "declared": "/api/preferences/memory/user-data",
+      "resolved": "/api/preferences/memory/user-data",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/components/memory/MemoryPanel.tsx",
+        "frontend/src/components/memory/MemoryPanel.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/global_memory.py",
       "method": "PUT",
       "declared": "/api/preferences/memory/{memory_id}",
       "resolved": "/api/preferences/memory/:param",
@@ -4248,6 +4237,45 @@
       "classification": "unclassified-orphan",
       "frontend": [
         "frontend/src/components/admin/MemoryBrowser.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/mesh.py",
+      "method": "POST",
+      "declared": "/api/v1/nodes/heartbeat",
+      "resolved": "/api/v1/nodes/heartbeat",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/mesh.py",
+      "method": "GET",
+      "declared": "/api/v1/nodes/{node_id}",
+      "resolved": "/api/v1/nodes/:param",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/mesh.py",
+      "method": "PATCH",
+      "declared": "/api/v1/nodes/{node_id}",
+      "resolved": "/api/v1/nodes/:param",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx",
+        "frontend/src/components/admin/MeshAgentsPanel.test.tsx"
       ]
     },
     {

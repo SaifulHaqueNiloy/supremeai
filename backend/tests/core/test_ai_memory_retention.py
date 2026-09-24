@@ -16,7 +16,6 @@ from core.ai_memory.retention import (
     get_retention_days,
 )
 
-
 # ── get_retention_days ────────────────────────────────────────────────────────
 
 
@@ -90,9 +89,7 @@ def test_cleanup_falls_back_to_direct_when_rpc_raises(monkeypatch):
 
     import asyncio
 
-    result = asyncio.run(
-        cleanup_expired(retention_days=45, supabase_client=BrokenClient())
-    )
+    result = asyncio.run(cleanup_expired(retention_days=45, supabase_client=BrokenClient()))
     assert result.mode == "direct"
     assert result.deleted == 3
     assert calls == [45]  # TTL passed through to the fallback
@@ -173,8 +170,6 @@ def test_gdpr_erasure_falls_back_to_direct(monkeypatch):
 
     import asyncio
 
-    result = asyncio.run(
-        retention.delete_user_memories("user-7", supabase_client=BrokenClient())
-    )
+    result = asyncio.run(retention.delete_user_memories("user-7", supabase_client=BrokenClient()))
     assert result.mode == "direct"
     assert result.deleted == 5

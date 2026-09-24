@@ -8,7 +8,6 @@ from fastapi.testclient import TestClient
 from core.app import app
 
 
-
 @pytest.fixture
 def client():
     return TestClient(app)
@@ -47,7 +46,8 @@ def test_health_endpoint_degraded_status(client, monkeypatch):
     from core.health_routes import HealthCheck
 
     monkeypatch.setattr(
-        hr, "_checks",
+        hr,
+        "_checks",
         [HealthCheck(name="always-failing-noncritical", check_fn=lambda: False, critical=False)],
         raising=True,
     )
@@ -58,5 +58,6 @@ def test_health_endpoint_degraded_status(client, monkeypatch):
     assert data["status"] == "degraded"
     # Contract: non-critical failure degrades but is honestly reported as 503.
     assert resp.status_code == 503
-    assert any(c["name"] == "always-failing-noncritical" and c["critical"] is False
-               for c in data["checks"])
+    assert any(
+        c["name"] == "always-failing-noncritical" and c["critical"] is False for c in data["checks"]
+    )

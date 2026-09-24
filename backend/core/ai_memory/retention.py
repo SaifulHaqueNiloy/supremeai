@@ -66,9 +66,7 @@ def get_retention_days() -> int:
     try:
         days = int(raw)
     except ValueError as exc:
-        raise ValueError(
-            f"AI_MEMORY_RETENTION_DAYS must be an integer (got {raw!r})"
-        ) from exc
+        raise ValueError(f"AI_MEMORY_RETENTION_DAYS must be an integer (got {raw!r})") from exc
     if days < 1:
         raise ValueError(f"AI_MEMORY_RETENTION_DAYS must be >= 1 (got {days})")
     return days
@@ -128,9 +126,7 @@ async def cleanup_expired(
 
             result = await _asyncio.to_thread(_rpc)
             deleted = int(result.data) if result.data is not None else 0
-            logger.info(
-                f"🧹 ai_memory retention (rpc): deleted={deleted} ttl_days={days}"
-            )
+            logger.info(f"🧹 ai_memory retention (rpc): deleted={deleted} ttl_days={days}")
             return CleanupResult(deleted=deleted, mode="rpc", retention_days=days)
     except Exception as exc:  # noqa: BLE001 — fall through to direct mode
         logger.warning(
@@ -169,10 +165,7 @@ async def delete_user_memories(user_id: str, supabase_client: Any = None) -> Cle
             supabase_client = supabase_db.client
         if supabase_client is not None:
             resp = await _asyncio_to_thread(
-                lambda: supabase_client.table("ai_memory")
-                .delete()
-                .eq("user_id", user_id)
-                .execute()
+                lambda: supabase_client.table("ai_memory").delete().eq("user_id", user_id).execute()
             )
             deleted = len(resp.data) if resp.data is not None else 0
             logger.info(f"🧹 ai_memory GDPR erasure: user={user_id} deleted={deleted}")
