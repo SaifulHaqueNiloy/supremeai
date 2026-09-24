@@ -11,7 +11,7 @@ describe('useBudgetCheck', () => {
 
   it('should export a hook function', async () => {
     const mod = await import('./useBudgetCheck');
-    const fn = mod.useBudgetCheck || mod.default;
+    const fn = mod.useBudgetCheck;
     expect(typeof fn).toBe('function');
   });
 });
