@@ -17,7 +17,8 @@ def _skip_if_no_qdrant():
 class TestErrorRemediation:
     """Tests for ErrorRemediation class."""
 
-    @pytest.mark.skip(reason="ErrorRemediation refactored — qdrant attribute removed")
+    # FIX(#1097): un-skipped — core/errors/error_remediation.py:137-138 still
+    # defines _qdrant/_qdrant_initialized; the "attribute removed" reason was stale.
     def test_init_no_qdrant(self):
         """Qdrant ইনস্টল না থাকলেও initialization করা হয় (lazy client)।"""
         # The class lives in core.errors.error_remediation (shim re-exports);
@@ -27,7 +28,7 @@ class TestErrorRemediation:
             assert remediation._qdrant is None
             assert remediation._qdrant_initialized is False
 
-    @pytest.mark.skip(reason="ErrorRemediation refactored — qdrant attribute removed")
+    # FIX(#1097): un-skipped — same stale-reason audit; lazy-init contract asserted.
     def test_init_with_qdrant(self):
         """Qdrant client এখন lazy — প্রথম lookup-এ তৈরি হয়, __init__-এ নয়।"""
         _skip_if_no_qdrant()

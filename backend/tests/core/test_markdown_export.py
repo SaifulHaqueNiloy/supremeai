@@ -5,7 +5,9 @@ from fastapi.testclient import TestClient
 
 from core.app import app
 
-pytestmark = pytest.mark.skip(reason="Pre-existing failure — needs rewrite")
+# FIX(#1097): un-skipped — route module api/routes/markdown.py exists and the
+# endpoints answer via the test-env auth bypass; verified live below.
+# pytestmark = pytest.mark.skip(reason="Pre-existing failure — needs rewrite")
 
 
 client = TestClient(app)

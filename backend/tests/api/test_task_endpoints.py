@@ -5,7 +5,6 @@ from fastapi.testclient import TestClient
 
 from core.app import app
 
-pytestmark = pytest.mark.skip(reason="Pre-existing failure — needs rewrite")
 
 
 client = TestClient(app)

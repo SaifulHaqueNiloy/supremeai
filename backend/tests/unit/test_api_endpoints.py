@@ -85,7 +85,8 @@ class TestAuthenticationEndpoints:
         assert "password" not in data  # Never return password/hash
 
     @pytest.mark.auth
-    @pytest.mark.skip(reason="Firebase auth migration")
+    # FIX(#1097): un-skipped — Supabase-provider registration is the shipped
+    # behavior (api/routes/auth uses supabase auth, not Firebase); tested live.
     async def test_user_registration_duplicate_email(
         self,
         client: AsyncClient,
@@ -130,7 +131,8 @@ class TestAuthenticationEndpoints:
         assert response.status_code == 422  # Validation error
 
     @pytest.mark.auth
-    @pytest.mark.skip(reason="Firebase auth migration")
+    # FIX(#1097): un-skipped — Supabase-provider registration is the shipped
+    # behavior (api/routes/auth uses supabase auth, not Firebase); tested live.
     async def test_user_registration_weak_password(
         self,
         client: AsyncClient,
@@ -179,7 +181,8 @@ class TestAuthenticationEndpoints:
         assert data["token_type"] == "bearer"
 
     @pytest.mark.auth
-    @pytest.mark.skip(reason="Firebase auth migration")
+    # FIX(#1097): un-skipped — Supabase-provider registration is the shipped
+    # behavior (api/routes/auth uses supabase auth, not Firebase); tested live.
     async def test_user_login_wrong_password(
         self,
         client: AsyncClient,

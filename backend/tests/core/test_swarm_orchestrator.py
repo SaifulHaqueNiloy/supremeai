@@ -4,9 +4,7 @@ import pytest
 
 from models.shared_workspace import SharedWorkspace
 
-pytestmark = pytest.mark.skip(
-    reason="Pre-existing failure — code refactored, test not updated (P0 audit)"
-)
+# FIX(#1097): module skip removed for evidence-based re-triage (see PR notes)
 
 
 @pytest.fixture(autouse=True)
