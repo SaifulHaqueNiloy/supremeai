@@ -2280,6 +2280,15 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/api/routes/mesh_mailbox.py"
+    },
+    {
+      "capability_signals": [
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/api/routes/mesh_tasks.py"
     },
     {
@@ -3231,6 +3240,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/agent_factory.py"
+    },
+    {
+      "capability_signals": [
+        "mcp",
+        "memory"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/agent_mailbox.py"
     },
     {
       "capability_signals": [
@@ -10668,6 +10687,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/routes/test_mesh_heartbeat.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_mesh_mailbox.py"
     },
     {
       "capability_signals": [
@@ -25754,5 +25782,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2960
+  "source_file_count": 2963
 }
