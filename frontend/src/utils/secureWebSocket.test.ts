@@ -73,7 +73,7 @@ describe('secureWebSocket', () => {
     const createFn = mod.createSecureWebSocket || mod.default || mod.connect;
     if (createFn) {
       try {
-        const ws = await createFn('wss://test.example.com/ws', 'test-token-123');
+        const _ws = await createFn('wss://test.example.com/ws', 'test-token-123');
         // Wait for the async open
         await new Promise(r => setTimeout(r, 10));
 
@@ -87,7 +87,7 @@ describe('secureWebSocket', () => {
           expect(mockWs.url).not.toContain('token=');
           expect(mockWs.url).not.toContain('?');
         }
-      } catch (e) {
+      } catch {
         // Module may need additional setup — contract test passes if import works
         expect(true).toBe(true);
       }

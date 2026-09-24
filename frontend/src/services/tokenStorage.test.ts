@@ -40,7 +40,7 @@ describe('tokenStorage', () => {
   });
 
   it('should save and load user token from sessionStorage', async () => {
-    const { setUserToken, getToken } = await import('./tokenStorage');
+    const { setUserToken } = await import('./tokenStorage');
     const testToken = 'test-jwt-token-12345';
 
     setUserToken(testToken);
@@ -51,7 +51,7 @@ describe('tokenStorage', () => {
   });
 
   it('should clear token on clearUserToken()', async () => {
-    const { setUserToken, getToken, clearToken } = await import('./tokenStorage');
+    const { setUserToken } = await import('./tokenStorage');
     setUserToken('test-token');
     expect(getUserToken()).toBeTruthy();
 
@@ -65,7 +65,7 @@ describe('tokenStorage', () => {
     localStorage.setItem('supremeai_auth_token', 'legacy-token');
     sessionStorage.removeItem('supremeai_auth_token');
 
-    const { getToken } = await import('./tokenStorage');
+    await import('./tokenStorage');
     // First read should sweep from localStorage → sessionStorage
     const token = getUserToken();
     // After sweep, localStorage should be cleaned (implementation detail — may vary)
