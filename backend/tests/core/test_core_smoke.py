@@ -23,40 +23,46 @@ def test_config_validators_basic():
 
 @pytest.mark.anyio
 async def test_llm_gateway_acompletion_monkeypatched(monkeypatch, tmp_path):
-    class FakeChoiceMessage:
-        def __init__(self, content):
-            self.content = content
-            self.role = "assistant"  # cloud_adapter reads message.role
+    """Smoke test: LLMGateway.acompletion returns success when cloud_adapter.generate
+    is mocked. Patches cloud_adapter.generate directly (the internal API the gateway
+    uses) instead of litellm.acompletion, which is only called inside CloudProviderAdapter
+    and not directly reachable from this layer.
 
-    class FakeChoice:
-        def __init__(self, msg):
-            self.message = FakeChoiceMessage(msg)
+    Also stubs sys.modules['litellm'] so the test runs in environments where
+    litellm is not installed (e.g. minimal CI matrix or local dev without ml deps).
+    """
+    import sys
+    import types
 
-    class FakeUsage:
-        prompt_tokens = 1
-        completion_tokens = 1
-        total_tokens = 2
+    # Minimal litellm stub — just enough to satisfy the lazy `import litellm`
+    # inside acompletion(). The actual call goes through cloud_adapter.generate
+    # which we replace on the instance below.
+    _litellm_stub = types.ModuleType("litellm")
+    _litellm_stub.acompletion = AsyncMock()  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "litellm", _litellm_stub)
 
-    class FakeResponse:
-        def __init__(self, text):
-            self.choices = [FakeChoice(text)]
-            self.usage = FakeUsage()
-            self.model = "test-model"
-            self._response_metadata = {"api_cost": 0.001}
-
-    async def fake_acompletion(*args, **kwargs):
-        return FakeResponse("mocked-response")
+    # Minimal response dict matching what cloud_adapter.generate returns to the
+    # gateway's completion loop (see completion.py ~line 420 onward).
+    async def fake_generate(*args, **kwargs):
+        return {
+            "choices": [{"message": {"content": "mocked-response", "role": "assistant"}}],
+            "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+            "model": "test-model",
+            "cost": 0.001,
+        }
 
     from core.llm.llm_gateway import LLMGateway
 
-    with (
-        patch("litellm.acompletion", new=fake_acompletion),
-        patch(
-            "core.cache.semantic_cache.SemanticCache.query_similar",
-            new=AsyncMock(return_value=None),
-        ),
+    with patch(
+        "core.cache.semantic_cache.SemanticCache.query_similar",
+        new=AsyncMock(return_value=None),
     ):
         gateway = LLMGateway()
+        # Patch cloud_adapter.generate directly on the instance so we bypass
+        # API-key lookup, routing-chain exhaustion, and litellm import overhead.
+        gateway.cloud_adapter.generate = fake_generate  # type: ignore[method-assign]
+        # Mark litellm as already set up to skip _ensure_litellm_ready() overhead.
+        gateway._litellm_ready = True
         res = await gateway.acompletion(prompt="hi")
         assert res["success"] is True
         assert res["text"] == "mocked-response"

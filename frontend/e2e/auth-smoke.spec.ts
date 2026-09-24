@@ -76,12 +76,19 @@ async function mockBackend(page: Page, opts: { meStatus?: number } = {}) {
 }
 
 async function signOutViaAccountMenu(page: Page) {
-  await page.getByRole('button', { name: 'Account menu' }).click();
-  // dispatchEvent instead of click: the workspace's backend-health polling
-  // re-renders the header while the dropdown is open, and transparent shell
-  // overlays can swallow hit-tested clicks. Dispatching the DOM click event
-  // directly guarantees the button's onClick (logout handler) fires.
-  await page.getByRole('button', { name: 'Log out' }).dispatchEvent('click');
+  // Issue #1108: wait for the Account Menu button to be attached and visible
+  // before clicking. The workspace shell health-polling can re-render the
+  // header, and the button may not be interactable immediately after navigation.
+  const accountMenuBtn = page.getByRole('button', { name: 'Account menu' });
+  await accountMenuBtn.waitFor({ state: 'visible', timeout: 15_000 });
+  await accountMenuBtn.click();
+
+  // Wait for the dropdown to appear before dispatching the click event.
+  const logoutBtn = page.getByRole('button', { name: 'Log out' });
+  await logoutBtn.waitFor({ state: 'visible', timeout: 10_000 });
+  // dispatchEvent instead of click: transparent shell overlays can swallow
+  // hit-tested clicks while backend-health polling re-renders the dropdown.
+  await logoutBtn.dispatchEvent('click');
 }
 
 test.describe('Auth session lifecycle smoke', () => {
