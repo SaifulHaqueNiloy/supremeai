@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-24 10:04 UTC
+- **Date:** 2026-09-24 10:50 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,9 +10,14 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/tests/core/evolution/test_learning_pipeline.py`
-  - `backend/core/evolution/learning_pipeline.py`
-  - `backend/core/evolution/evolution_orchestrator.py`
+  - `backend/tests/core/test_core_smoke.py`
+  - `frontend/src/firebase.test.ts`
+  - `CHECKPOINT.md`
+  - `frontend/e2e/auth-smoke.spec.ts`
+  - `.github/scripts/detect-previous-failures.py`
+  - `backend/tests/core/security/test_secret_vault_full.py`
+  - `frontend/src/services/tokenStorage.test.ts`
+  - `frontend/src/utils/secureWebSocket.test.ts`
 
 ## Pending (Carry Forward)
 - 103 active skipped test markers triage across 53 files towards <30 (reconciled in docs/SKIPPED_TESTS.md)

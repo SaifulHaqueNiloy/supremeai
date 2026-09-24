@@ -1,4 +1,4 @@
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -63,6 +63,13 @@ async def test_llm_gateway_acompletion_monkeypatched(monkeypatch, tmp_path):
         gateway.cloud_adapter.generate = fake_generate  # type: ignore[method-assign]
         # Mark litellm as already set up to skip _ensure_litellm_ready() overhead.
         gateway._litellm_ready = True
+        # Isolate circuit breaker from earlier test runs that might have tripped global breaker
+        fake_cb = MagicMock()
+        fake_cb.allow_request.return_value = True
+        gateway._get_or_create_circuit_breaker = lambda *args, **kwargs: fake_cb  # type: ignore[method-assign]
+        monkeypatch.setattr(
+            gateway, "_build_call_chain", lambda *a, **kw: ["test-provider/test-model"]
+        )
         res = await gateway.acompletion(prompt="hi")
         assert res["success"] is True
         assert res["text"] == "mocked-response"
