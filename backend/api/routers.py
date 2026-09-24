@@ -455,6 +455,10 @@ ALL_ROUTERS = [
     # রাউটার নিজস্ব prefix (/api/v1/tasks) সহ আসে, তাই registry prefix ""।
     # Core: backend/core/task_router.py (CAS claim + lease + Zero Zombie reap)।
     {"path": "api.routes.mesh_tasks", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── MESH-3 (#927, P1-high): Agent Mailbox — agent↔agent direct + pub/sub
+    # messaging (/api/v1/mesh/messages/*, /subscriptions)। Core নিজস্ব prefix
+    # সহ আসে, তাই registry prefix ""। Core: backend/core/agent_mailbox.py।
+    {"path": "api.routes.mesh_mailbox", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "integrations.github_webhook", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
