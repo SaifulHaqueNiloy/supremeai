@@ -5,6 +5,7 @@ import { useMetrics, useHealthMap, useCIReports, useDashboardEvents } from '../.
 import { HealthReportWidget } from './HealthReportWidget';
 import { GitHubCIWidget } from './GitHubCIWidget';
 import { SystemUptimeWidget } from './SystemUptimeWidget';
+import { MeshAgentsPanel } from './MeshAgentsPanel';
 
 // বাংলা মন্তব্য: এডমিন ড্যাশবোর্ডের মূল ৬টি প্যানেল গ্রিড লেআউট (Admin Dashboard Home)
 // এটি রেফারেন্স ইমেজ অনুযায়ী রিচ ভিজ্যুয়াল ও ডাটা ইন্ডিকেটর দিয়ে সাজানো হয়েছে।
@@ -376,6 +377,11 @@ export const AdminDashboardHome: React.FC = () => {
 
         {/* Card G: GitHub CI Pipeline */}
         <GitHubCIWidget reports={ciReports || []} isLoading={!ciReports} />
+
+        {/* Card H: Connected mesh agents + role assignment (MESH-2, issue #940) */}
+        <div className="lg:col-span-2 xl:col-span-3">
+          <MeshAgentsPanel />
+        </div>
 
       </div>
 

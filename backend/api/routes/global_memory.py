@@ -222,6 +222,39 @@ async def delete_memory(
         raise HTTPException(status_code=500, detail="Failed to delete memory.") from exc
 
 
+@router.delete(
+    "/user-data",
+    summary="Erase ALL memories owned by the current user (GDPR right-to-erasure)",
+)
+async def delete_all_user_memories(
+    user: dict = Depends(get_current_user_token),
+) -> dict[str, Any]:
+    """Self-service data erasure (issue #1109): delete every ``ai_memory`` row
+    whose ``user_id`` equals the authenticated caller's ``sub``.
+
+    Scope: the caller can only erase their own data — the user_id comes from
+    the verified JWT, never from the request. Embeddings, content and metadata
+    for that user are removed in the same operation (no soft-delete)."""
+    user_id = user.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token.")
+
+    _ensure_supabase()
+
+    from core.ai_memory.retention import delete_user_memories
+
+    try:
+        result = await delete_user_memories(user_id)
+        return {
+            "status": "erased",
+            "deleted": result.deleted,
+            "mode": result.mode,
+        }
+    except Exception as exc:
+        logger.error(f"delete_all_user_memories failed for {user_id}: {exc}")
+        raise HTTPException(status_code=500, detail="Failed to erase user memories.") from exc
+
+
 @router.put(
     "/{memory_id}",
     response_model=dict[str, Any],
