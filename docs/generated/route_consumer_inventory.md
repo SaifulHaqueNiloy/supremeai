@@ -4,13 +4,13 @@
 
 | metric | value |
 |---|---|
-| backend routes | 816 |
+| backend routes | 823 |
 | routes with frontend consumer | 263 |
 | unique frontend `/api/...` refs | 142 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
-| api-only routes (allowlisted) | 296 |
+| api-only routes (allowlisted) | 303 |
 | api-only families | 158 |
 
 ## Classification legend
@@ -21,7 +21,7 @@
 | `admin-only` | 321 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 296 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families
@@ -140,7 +140,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | `/api/v1/maintenance` | 1 |
 | `/api/v1/markdown` | 7 |
 | `/api/v1/mcp` | 13 |
-| `/api/v1/mesh` | 10 |
+| `/api/v1/mesh` | 17 |
 | `/api/v1/missions` | 11 |
 | `/api/v1/onboarding` | 5 |
 | `/api/v1/plugins` | 4 |
@@ -794,6 +794,13 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/mcp/gateway` | `backend/api/routes/mcp_hub.py` | api-only | NONE |
 | POST | `/api/v1/mcp/slug/claim` | `backend/api/routes/mcp_hub.py` | api-only | NONE |
 | POST | `/api/v1/media/generate-upload-url` | `backend/api/routes/media.py` | user-facing | `frontend/src/services/storageApi.test.ts` |
+| POST | `/api/v1/mesh/messages` | `backend/api/routes/mesh_mailbox.py` | api-only | NONE |
+| POST | `/api/v1/mesh/messages/:param/ack` | `backend/api/routes/mesh_mailbox.py` | api-only | NONE |
+| GET | `/api/v1/mesh/messages/inbox` | `backend/api/routes/mesh_mailbox.py` | api-only | NONE |
+| POST | `/api/v1/mesh/messages/purge` | `backend/api/routes/mesh_mailbox.py` | api-only | NONE |
+| GET | `/api/v1/mesh/messages/stats` | `backend/api/routes/mesh_mailbox.py` | api-only | NONE |
+| GET | `/api/v1/mesh/subscriptions` | `backend/api/routes/mesh_mailbox.py` | api-only | NONE |
+| POST | `/api/v1/mesh/subscriptions` | `backend/api/routes/mesh_mailbox.py` | api-only | NONE |
 | GET | `/api/v1/mesh/tasks` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
 | POST | `/api/v1/mesh/tasks` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |
 | GET | `/api/v1/mesh/tasks/:param` | `backend/api/routes/mesh_tasks.py` | api-only | NONE |

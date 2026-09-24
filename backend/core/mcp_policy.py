@@ -106,6 +106,12 @@ class RiskEngine:
             # HITL gate (MESH-4) আলাদাভাবে যাচাই করবে। R1 = auto-allow + audit।
             if action in ("dispatch", "release", "renew"):
                 return "R1"
+            # MCP Tower gap-3 (#927): agent-to-agent messaging — messaging-level
+            # operation (inbox read / message create / ack flip / topic union),
+            # কোনো privileged resource স্পর্শ করে না। Spam/abuse traceability-এর
+            # জন্য R1 = auto-allow + audit (gap-4 audit event)।
+            if action in ("send", "inbox", "ack", "subscribe"):
+                return "R1"
             return "R0"
 
         # Default fallback for unknown writes
@@ -180,6 +186,11 @@ TOOL_PROVIDER_ACTION: dict[str, tuple[str, str]] = {
     "mesh_dispatch_task": ("mesh", "dispatch"),
     "mesh_task_status": ("mesh", "status"),
     "mesh_release_task": ("mesh", "release"),
+    # ── MCP Tower gap-3 (#927): Agent mailbox tools (platform-level) ──
+    "agent_send": ("mesh", "send"),
+    "agent_inbox": ("mesh", "inbox"),
+    "agent_ack": ("mesh", "ack"),
+    "topic_subscribe": ("mesh", "subscribe"),
 }
 
 

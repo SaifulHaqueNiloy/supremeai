@@ -312,6 +312,16 @@
     {
       "evidence": [
         {
+          "line": 47,
+          "path": "backend/core/agent_mailbox.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 5,
           "path": "backend/core/agents/framework/crewai_agents.py"
         }

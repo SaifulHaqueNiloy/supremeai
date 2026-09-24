@@ -492,3 +492,67 @@ Never log secrets, full private payloads or provider tokens. Redact sensitive va
 ## 11. Non-goals
 
 This specification does not promise that every provider can be connected without provider consent, credentials or licensing. It does not define a frontend wizard, expose secrets, or replace backend authentication and authorization.
+
+
+
+<!-- ============================================================ -->
+<!-- Merged Source: docs/integration/AGENT_DELEGATION_PROTOCOL.md -->
+<!-- ============================================================ -->
+
+# Agent-to-Agent Delegation Protocol (MCP Tower gap-3)
+
+**Status:** Implemented and tested (issue #927, P1-high)
+**Core:** `backend/core/agent_mailbox.py` · **REST:** `backend/api/routes/mesh_mailbox.py` (`/api/v1/mesh/*`) · **MCP tools:** `backend/tools/mcp/mcp_server.py`
+
+Gap-2's Tower task queue answers **"কী কাজ" (which job)**. This protocol answers **"কী কথা" (what message)**: a direct mailbox plus pull-based pub/sub so orchestrators and subagents can hand off context instead of shouting into the shared memory blackboard.
+
+## MCP tools
+
+| Tool | Purpose | Required args |
+|---|---|---|
+| `agent_send` | Direct message (`to_agent`), role broadcast (`to_agent="*"`, `to_role`), or topic publish (`topic`), with `reply_to` threading and `ttl_seconds` | `from_agent`, `to_agent`, `tenant_id` |
+| `agent_inbox` | Pull-based inbox poll — direct + subscribed/role/topic broadcasts; `unread_only` filters acked messages | `agent_id`, `tenant_id` |
+| `agent_ack` | Idempotent delivery acknowledgement; cross-tenant or wrong-recipient ack is denied | `message_id`, `agent_id`, `tenant_id` |
+| `topic_subscribe` | Subscribe an agent to pub/sub topics (idempotent union) | `agent_id`, `topics`, `tenant_id` |
+
+Policy: every mailbox action evaluates to `R1` (auto-allow + audit) in `core/mcp_policy.py`, so gap-4 audit sees every send/ack (spam/abuse traceable). `tenant_id` is mandatory — `MCPAuditEntry` rejects empty/`default` tenants, and the core enforces tenant isolation underneath.
+
+## Message semantics
+
+- **Storage:** in-memory primary store (always available, `asyncio.Lock`-guarded) + optional Redis backing for multi-instance deployments (`MESH_MAILBOX_REDIS_BACKING=true`, best-effort, fail-soft).
+- **Schema:** `{message_id, tenant_id, from_agent, to_agent, to_role, topic, body, reply_to, created_at, created_at_epoch, expires_at, expires_at_epoch, acked, acked_at, acked_by}`.
+- **TTL:** default 86400s (24h), max 604800s (7d); expired messages are dropped on every poll/ack/stats and by `POST /api/v1/mesh/messages/purge`.
+- **Broadcast:** `to_agent="*"` is visible when the reader's `role` matches `to_role` (roles: `planner`, `coder`, `tester`, `gate`, `observer`) **and** the topic is subscribed. Direct messages need no subscription.
+- **Delivery guarantee:** unacked messages persist until TTL; `ack` is idempotent (`acked_at` stable on re-ack).
+- **Tenant isolation:** all operations are tenant-scoped; header/payload tenant mismatch → 403 on REST, cross-tenant ack → 403/error everywhere.
+- **Limits:** body ≤ 256KB, inbox page ≤ 200 messages (default 50).
+- **Audit:** every send/ack/subscribe emits a structured `mesh_mailbox_audit` log entry plus the MCP audit event.
+
+## Delegation sequence (gap-2 × gap-3)
+
+```text
+1. Orchestrator  → mesh_dispatch_task / POST /api/v1/mesh/tasks     (gap-2: "which job")
+2. Orchestrator  → agent_send(to_agent=<subagent>, reply_to?, body={spec_ref, constraints})
+                                                                    (gap-3: context handoff)
+3. Subagent      → agent_inbox(agent_id=<self>) + agent_ack(id)     (pull + delivery proof)
+4. Subagent      → agent_send(reply_to=<context msg>, body={result}) (result message)
+5. Node/worker   → POST /api/v1/mesh/tasks/{task_id}/complete       (gap-2 loop closes)
+```
+
+The task record carries the work; the mailbox message carries the spec reference, constraint list and result. `reply_to` keeps the whole conversation in one thread so the orchestrator can correlate a subagent's answer to the exact context it delegated.
+
+## REST surface
+
+| Endpoint | Method | Purpose |
+|---|---|---|
+| `/api/v1/mesh/messages` | POST | Send (direct / role / topic) — 201 |
+| `/api/v1/mesh/messages/inbox` | GET | Poll inbox (`agent_id`, `role`, `unread_only`, `limit`, `tenant_id`) |
+| `/api/v1/mesh/messages/{id}/ack` | POST | Ack — 200 idempotent, 403 cross-tenant/wrong recipient, 404 unknown |
+| `/api/v1/mesh/subscriptions` | POST / GET | Topic subscribe / list |
+| `/api/v1/mesh/messages/stats` | GET | Per-tenant visibility counts |
+| `/api/v1/mesh/messages/purge` | POST | TTL-expired message purge |
+
+## Verification
+
+- `backend/tests/api/routes/test_mesh_mailbox.py` — 20 REST tests: E2E send/inbox/ack, reply_to, TTL expiry, tenant isolation + header conflict, role/topic broadcast, validation (256KB/TTL/role), stats.
+- `backend/tests/tools/test_mcp_server_kg.py` (`TestAgentMailboxTools`) — MCP E2E: send→inbox→ack with audit trail, reply_to threading, cross-tenant denial, topic subscribe gating, missing-tenant rejection.
