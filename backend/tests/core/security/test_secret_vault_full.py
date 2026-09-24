@@ -376,15 +376,17 @@ class TestFallbackToEnv:
         v = make_vault()
         assert v._fallback_to_env("WHATEVER_KEY", None) == "mock_WHATEVER_KEY"
 
-    def test_optional_secret_missing_in_prod(self):
+    def test_optional_secret_missing_in_prod(self, monkeypatch):
         v = make_vault(env="production")
         optional = next(iter(sv.OPTIONAL_SECRETS))
+        monkeypatch.delenv(optional, raising=False)
         out = v._fallback_to_env(optional, "opt-default")
         assert out == "opt-default"
 
-    def test_optional_secret_missing_in_prod_no_default(self):
+    def test_optional_secret_missing_in_prod_no_default(self, monkeypatch):
         v = make_vault(env="production")
         optional = next(iter(sv.OPTIONAL_SECRETS))
+        monkeypatch.delenv(optional, raising=False)
         out = v._fallback_to_env(optional, None)
         assert out == ""
 

@@ -23,9 +23,9 @@ import os
 import sys
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any
+from datetime import UTC, datetime, timezone
 from pathlib import Path
+from typing import Any
 
 # Add backend to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
@@ -36,6 +36,7 @@ from core.logging_config import logger
 @dataclass
 class FailurePattern:
     """A recognized pattern in CI failures."""
+
     pattern_id: str
     failure_type: str  # import_error, assertion_mismatch, etc.
     description: str
@@ -48,6 +49,7 @@ class FailurePattern:
 @dataclass
 class LearningResult:
     """Result of processing a failure through the learning pipeline."""
+
     pattern_found: bool
     pattern: FailurePattern | None = None
     suggested_fix: str | None = None
@@ -80,6 +82,7 @@ class LearningPipeline:
         # Try to import PatternRecognizer
         try:
             from learning.pattern_recognizer import PatternRecognizer
+
             self._pattern_recognizer = PatternRecognizer(self.config.get("pattern_config"))
             logger.info("LearningPipeline: PatternRecognizer initialized")
         except Exception as e:
@@ -88,6 +91,7 @@ class LearningPipeline:
         # Try to import MemoryConsolidator
         try:
             from evolution.memory_consolidator import MemoryConsolidator
+
             self._memory_consolidator = MemoryConsolidator(self.config.get("memory_config"))
             logger.info("LearningPipeline: MemoryConsolidator initialized")
         except Exception as e:
@@ -118,20 +122,23 @@ class LearningPipeline:
 
         # Create a pattern key from failure type + message hash
         import hashlib
+
         pattern_key = f"{failure_type}:{hashlib.md5(message.encode()).hexdigest()[:8]}"
 
         # Check if we've seen this pattern before
         if pattern_key in self._patterns:
             pattern = self._patterns[pattern_key]
             pattern.occurrences += 1
-            pattern.last_seen = datetime.now(timezone.utc).isoformat()
-            logger.info(f"LearningPipeline: pattern found! {pattern.pattern_id} (occurrences: {pattern.occurrences})")
+            pattern.last_seen = datetime.now(UTC).isoformat()
+            logger.info(
+                f"LearningPipeline: pattern found! {pattern.pattern_id} (occurrences: {pattern.occurrences})"
+            )
             return LearningResult(
                 pattern_found=True,
                 pattern=pattern,
                 suggested_fix=pattern.suggested_fix,
                 confidence=pattern.confidence,
-                message=f"Pattern recognized: {pattern.description}"
+                message=f"Pattern recognized: {pattern.description}",
             )
 
         # Try pattern_recognizer if available
@@ -139,7 +146,7 @@ class LearningPipeline:
             try:
                 matches = await self._pattern_recognizer.recognize(
                     sequence=[failure_type, test_id, message],
-                    context={"file": failure.get("file_path", "")}
+                    context={"file": failure.get("file_path", "")},
                 )
                 if matches:
                     # Use the best match
@@ -148,16 +155,16 @@ class LearningPipeline:
                         pattern_id=pattern_key,
                         failure_type=failure_type,
                         description=f"Recognized pattern: {getattr(best, 'pattern_type', 'unknown')}",
-                        confidence=getattr(best, 'confidence', 0.5),
+                        confidence=getattr(best, "confidence", 0.5),
                         occurrences=1,
-                        last_seen=datetime.now(timezone.utc).isoformat()
+                        last_seen=datetime.now(UTC).isoformat(),
                     )
                     self._patterns[pattern_key] = pattern
                     return LearningResult(
                         pattern_found=True,
                         pattern=pattern,
                         confidence=pattern.confidence,
-                        message=f"Pattern recognized by PatternRecognizer"
+                        message="Pattern recognized by PatternRecognizer",
                     )
             except Exception as e:
                 logger.warning(f"LearningPipeline: pattern_recognizer error: {e}")
@@ -169,7 +176,7 @@ class LearningPipeline:
             description=f"New pattern: {failure_type} in {test_id[:50]}",
             confidence=0.3,  # low confidence for new patterns
             occurrences=1,
-            last_seen=datetime.now(timezone.utc).isoformat()
+            last_seen=datetime.now(UTC).isoformat(),
         )
         self._patterns[pattern_key] = new_pattern
 
@@ -185,10 +192,12 @@ class LearningPipeline:
                         "message": message[:500],
                         "file_path": failure.get("file_path", ""),
                         "timestamp": new_pattern.last_seen,
-                    }
+                    },
                 )
                 stored = True
-                logger.info(f"LearningPipeline: pattern stored in MemoryConsolidator: {pattern_key}")
+                logger.info(
+                    f"LearningPipeline: pattern stored in MemoryConsolidator: {pattern_key}"
+                )
             except Exception as e:
                 logger.warning(f"LearningPipeline: memory_consolidator error: {e}")
 
@@ -197,7 +206,7 @@ class LearningPipeline:
             pattern=new_pattern,
             stored=stored,
             confidence=0.3,
-            message=f"New pattern recorded: {failure_type} in {test_id[:50]}"
+            message=f"New pattern recorded: {failure_type} in {test_id[:50]}",
         )
 
     async def get_stats(self) -> dict[str, Any]:
@@ -222,8 +231,7 @@ class LearningPipeline:
     def suggest_fix_for_type(self, failure_type: str) -> str | None:
         """Quick lookup: given a failure type, suggest the most common fix."""
         type_patterns = [
-            p for p in self._patterns.values()
-            if p.failure_type == failure_type and p.suggested_fix
+            p for p in self._patterns.values() if p.failure_type == failure_type and p.suggested_fix
         ]
         if not type_patterns:
             return None

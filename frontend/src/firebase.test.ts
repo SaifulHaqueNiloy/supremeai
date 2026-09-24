@@ -62,7 +62,7 @@ describe('firebase.ts', () => {
       await initFirebase();
       // Verify fetch was called with the init.json URL
       expect(fetchSpy).toHaveBeenCalledWith('/__/firebase/init.json');
-    } catch (e) {
+    } catch {
       // In dev mode, missing env vars may throw — that's expected behavior
       // The test passes if the function was called
     }
@@ -88,7 +88,7 @@ describe('firebase.ts', () => {
     try {
       await initFirebase();
       // Should succeed with env vars as fallback
-    } catch (e) {
+    } catch {
       // If it throws, it means env vars weren't picked up — contract test
     }
 
@@ -112,7 +112,7 @@ describe('firebase.ts', () => {
       await initFirebase();
       const auth = await getFirebaseAuth();
       expect(auth).toBeDefined();
-    } catch (e) {
+    } catch {
       // Contract test — import is the key verification
     }
 
