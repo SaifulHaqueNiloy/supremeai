@@ -98,7 +98,7 @@ describe('secureWebSocket', () => {
     // Even if the function is not directly callable, verify the module
     // doesn't construct URLs with ?token= patterns
     const mod = await import('./secureWebSocket');
-    const source = mod.toString();
+    const source = JSON.stringify(mod);
     // The module should NOT contain URL query token patterns
     expect(source).toBeDefined();
   });

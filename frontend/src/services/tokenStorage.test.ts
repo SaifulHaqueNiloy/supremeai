@@ -40,23 +40,23 @@ describe('tokenStorage', () => {
   });
 
   it('should save and load user token from sessionStorage', async () => {
-    const { saveToken, getToken } = await import('./tokenStorage');
+    const { setUserToken, getToken } = await import('./tokenStorage');
     const testToken = 'test-jwt-token-12345';
 
-    saveToken(testToken);
-    expect(getToken()).toBe(testToken);
+    setUserToken(testToken);
+    expect(getUserToken()).toBe(testToken);
     // Should be in sessionStorage, NOT localStorage
     expect(sessionStorage.getItem('supremeai_auth_token')).toBe(testToken);
     expect(localStorage.getItem('supremeai_auth_token')).toBeNull();
   });
 
-  it('should clear token on clearToken()', async () => {
-    const { saveToken, getToken, clearToken } = await import('./tokenStorage');
-    saveToken('test-token');
-    expect(getToken()).toBeTruthy();
+  it('should clear token on clearUserToken()', async () => {
+    const { setUserToken, getToken, clearToken } = await import('./tokenStorage');
+    setUserToken('test-token');
+    expect(getUserToken()).toBeTruthy();
 
-    clearToken();
-    expect(getToken()).toBeNull();
+    clearUserToken();
+    expect(getUserToken()).toBeNull();
     expect(sessionStorage.getItem('supremeai_auth_token')).toBeNull();
   });
 
@@ -67,7 +67,7 @@ describe('tokenStorage', () => {
 
     const { getToken } = await import('./tokenStorage');
     // First read should sweep from localStorage → sessionStorage
-    const token = getToken();
+    const token = getUserToken();
     // After sweep, localStorage should be cleaned (implementation detail — may vary)
     // The key contract: token should be accessible
     if (token) {

@@ -66,7 +66,7 @@ describe('firebase.ts', () => {
       // In dev mode, missing env vars may throw — that's expected behavior
       // The test passes if the function was called
     }
-    vi.unstubGlobal('fetch');
+    vi.unstubAllGlobals();
   });
 
   it('should fall back to VITE_FIREBASE_* env vars when init.json unavailable', async () => {
@@ -92,7 +92,7 @@ describe('firebase.ts', () => {
       // If it throws, it means env vars weren't picked up — contract test
     }
 
-    vi.unstubGlobal('fetch');
+    vi.unstubAllGlobals();
   });
 
   it('getFirebaseAuth should return an Auth instance after init', async () => {
@@ -116,6 +116,6 @@ describe('firebase.ts', () => {
       // Contract test — import is the key verification
     }
 
-    vi.unstubGlobal('fetch');
+    vi.unstubAllGlobals();
   });
 });
