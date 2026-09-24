@@ -15,6 +15,7 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 
 ## STATUS.md referenced repo paths
 
+- [x] `docs/SKIPPED_TESTS.md` — exists
 - [x] `docs/generated/STATUS_PROOF.md` — exists
 
 ## Deployment verification chain (static inventory)
@@ -22,6 +23,10 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 - ✅ `.github/workflows/ci-deploy-production.yml` — reusable deploy (workflow_call); fail-closed gate markers present
 - ✅ `.github/workflows/09-post-deploy-smoke.yml` — post-deploy Playwright canary (workflow_run); fail-closed gate markers present
 - ✅ `.github/workflows/qa-live-smoke.yml` — scheduled live probe (schedule + workflow_dispatch); fail-closed gate markers present
+
+## Cross-document consistency (skip-registry ↔ tree ↔ checkpoint)
+
+- ✅ `active_skip_markers=26` → tree reality: **26**
 
 Live/runtime evidence: CI Pipeline summaries, `QA — Live Production Smoke` run summaries
 (fail-closed যতক্ষণ না `vars.PRODUCTION_URL` কনফিগার করা হয়)।
