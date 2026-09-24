@@ -12,8 +12,10 @@ from google.oauth2 import service_account
 from core.logging_config import logger
 
 # Global encryption key management
-# বাংলা মন্তব্য: Fernet এনক্রিপশনের জন্য ৩২ বাইটের কী জেনারেট বা লোড করা হচ্ছে। ENCRYPTION_KEY অথবা ENCRYPTION_KEY উভয়টি চেক করা হচ্ছে (Zero Breakage নীতি)।
-_KEY = os.getenv("ENCRYPTION_KEY") or os.getenv("ENCRYPTION_KEY")
+# বাংলা মন্তব্য: Fernet এনক্রিপশনের জন্য ৩২ বাইটের কী জেনারেট বা লোড করা হচ্ছে।
+# Zero Breakage নীতি: প্রাথমিকভাবে ENCRYPTION_KEY, না থাকলে legacy alias SUPREMEAI_CREDENTIAL_ENC_KEY
+# (backend/api/routes/keys.py এর সাথে সামঞ্জস্যপূর্ণ)।
+_KEY = os.getenv("ENCRYPTION_KEY") or os.getenv("SUPREMEAI_CREDENTIAL_ENC_KEY")
 if not _KEY:
     logger.warning(
         "⚠️ ENCRYPTION_KEY not set in environment. Deriving temporary test/dev key for module initialization."
