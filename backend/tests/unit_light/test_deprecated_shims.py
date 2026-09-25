@@ -31,7 +31,6 @@ _SHIMS = [
     ("core.email_service", "SomeExport"),
     ("core.db_repository", "SomeExport"),
     ("core.pgbouncer_pool", "SomeExport"),
-    ("core.rate_limiter", "SomeExport"),
 ]
 
 

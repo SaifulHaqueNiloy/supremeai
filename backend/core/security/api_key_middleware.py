@@ -16,9 +16,9 @@ from core.cache.redis_manager import redis_manager
 from core.config import settings
 from core.logging_config import logger
 from core.pgbouncer_pool import get_db_pool
-from core.rate_limiter import AsyncRateLimiter
 from core.resilience.circuit_breaker import CircuitBreaker
 from core.security import API_KEY_PREFIX, hash_api_key, mask_api_key
+from middleware.rate_limiter import AsyncRateLimiter
 from models.api_key import record_api_key_usage
 from utils.environment import is_test_environment
 

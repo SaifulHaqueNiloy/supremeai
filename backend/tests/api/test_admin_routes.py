@@ -206,7 +206,7 @@ class TestAdminRoutes:
         with (
             patch("core.config.settings.env", "production"),
             patch.object(settings, "_get_cached_secret", side_effect=mock_secret),
-            patch("core.rate_limiter.AsyncRateLimiter.acquire", return_value=True),
+            patch("middleware.rate_limiter.AsyncRateLimiter.acquire", return_value=True),
         ):
             response = client.post(
                 "/api/admin/firebase-login", json={"id_token": "mock-test-token"}
