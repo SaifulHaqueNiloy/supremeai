@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3391,
+  "edge_count": 3395,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -134,6 +134,46 @@
     {
       "from": "_archive.batch-3.source_governance",
       "to": "adaptive_engine.source_governance"
+    },
+    {
+      "from": "_archive.batch-4._store",
+      "to": "adaptive_engine._store"
+    },
+    {
+      "from": "_archive.batch-4.approval_workflow",
+      "to": "adaptive_engine.approval_workflow"
+    },
+    {
+      "from": "_archive.batch-4.correlation",
+      "to": "adaptive_engine.correlation"
+    },
+    {
+      "from": "_archive.batch-4.deployment_tracker",
+      "to": "adaptive_engine.deployment_tracker"
+    },
+    {
+      "from": "_archive.batch-4.governance",
+      "to": "adaptive_engine.governance"
+    },
+    {
+      "from": "_archive.batch-4.health_model",
+      "to": "adaptive_engine.health_model"
+    },
+    {
+      "from": "_archive.batch-4.learning_loop",
+      "to": "adaptive_engine.learning_loop"
+    },
+    {
+      "from": "_archive.batch-4.mcp_skeleton",
+      "to": "adaptive_engine.mcp_skeleton"
+    },
+    {
+      "from": "_archive.batch-4.resource_registry",
+      "to": "adaptive_engine.resource_registry"
+    },
+    {
+      "from": "_archive.batch-4.task_engine",
+      "to": "adaptive_engine.task_engine"
     },
     {
       "from": "adapters",
@@ -1468,6 +1508,14 @@
       "to": "core.security.authentication.rbac"
     },
     {
+      "from": "api.routes.ai_assignment",
+      "to": "api.dependencies"
+    },
+    {
+      "from": "api.routes.ai_assignment",
+      "to": "core.logging_config"
+    },
+    {
       "from": "api.routes.analytics",
       "to": "api.dependencies"
     },
@@ -2269,11 +2317,23 @@
     },
     {
       "from": "api.routes.ecosystem",
-      "to": "ecosystem"
+      "to": "adaptive_engine.correlation"
     },
     {
       "from": "api.routes.ecosystem",
-      "to": "ecosystem.correlation"
+      "to": "ecosystem"
+    },
+    {
+      "from": "api.routes.ecosystem_admin",
+      "to": "adaptive_engine.approval_workflow"
+    },
+    {
+      "from": "api.routes.ecosystem_admin",
+      "to": "adaptive_engine.learning_loop"
+    },
+    {
+      "from": "api.routes.ecosystem_admin",
+      "to": "adaptive_engine.task_engine"
     },
     {
       "from": "api.routes.ecosystem_admin",
@@ -2282,18 +2342,6 @@
     {
       "from": "api.routes.ecosystem_admin",
       "to": "ecosystem"
-    },
-    {
-      "from": "api.routes.ecosystem_admin",
-      "to": "ecosystem.approval_workflow"
-    },
-    {
-      "from": "api.routes.ecosystem_admin",
-      "to": "ecosystem.learning_loop"
-    },
-    {
-      "from": "api.routes.ecosystem_admin",
-      "to": "ecosystem.task_engine"
     },
     {
       "from": "api.routes.email",
@@ -7149,7 +7197,43 @@
     },
     {
       "from": "ecosystem",
+      "to": "adaptive_engine._store"
+    },
+    {
+      "from": "ecosystem",
+      "to": "adaptive_engine.approval_workflow"
+    },
+    {
+      "from": "ecosystem",
       "to": "adaptive_engine.capability_registry"
+    },
+    {
+      "from": "ecosystem",
+      "to": "adaptive_engine.correlation"
+    },
+    {
+      "from": "ecosystem",
+      "to": "adaptive_engine.deployment_tracker"
+    },
+    {
+      "from": "ecosystem",
+      "to": "adaptive_engine.governance"
+    },
+    {
+      "from": "ecosystem",
+      "to": "adaptive_engine.health_model"
+    },
+    {
+      "from": "ecosystem",
+      "to": "adaptive_engine.learning_loop"
+    },
+    {
+      "from": "ecosystem",
+      "to": "adaptive_engine.mcp_skeleton"
+    },
+    {
+      "from": "ecosystem",
+      "to": "adaptive_engine.resource_registry"
     },
     {
       "from": "ecosystem",
@@ -7157,59 +7241,7 @@
     },
     {
       "from": "ecosystem",
-      "to": "ecosystem._store"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.approval_workflow"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.correlation"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.deployment_tracker"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.governance"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.health_model"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.learning_loop"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.mcp_skeleton"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.resource_registry"
-    },
-    {
-      "from": "ecosystem",
-      "to": "ecosystem.task_engine"
-    },
-    {
-      "from": "ecosystem._store",
-      "to": "adaptive_engine._store"
-    },
-    {
-      "from": "ecosystem.approval_workflow",
-      "to": "adaptive_engine.approval_workflow"
-    },
-    {
-      "from": "ecosystem.correlation",
-      "to": "adaptive_engine.correlation"
-    },
-    {
-      "from": "ecosystem.deployment_tracker",
-      "to": "adaptive_engine.deployment_tracker"
+      "to": "adaptive_engine.task_engine"
     },
     {
       "from": "ecosystem.federation_bridge",
@@ -7224,26 +7256,6 @@
       "to": "runs.service"
     },
     {
-      "from": "ecosystem.governance",
-      "to": "adaptive_engine.governance"
-    },
-    {
-      "from": "ecosystem.health_model",
-      "to": "adaptive_engine.health_model"
-    },
-    {
-      "from": "ecosystem.learning_loop",
-      "to": "adaptive_engine.learning_loop"
-    },
-    {
-      "from": "ecosystem.mcp_skeleton",
-      "to": "adaptive_engine.mcp_skeleton"
-    },
-    {
-      "from": "ecosystem.resource_registry",
-      "to": "adaptive_engine.resource_registry"
-    },
-    {
       "from": "ecosystem.runtime_selector",
       "to": "adaptive_engine.capability_registry"
     },
@@ -7253,43 +7265,39 @@
     },
     {
       "from": "ecosystem.seed_ecosystem",
-      "to": "ecosystem"
+      "to": "adaptive_engine.approval_workflow"
     },
     {
       "from": "ecosystem.seed_ecosystem",
-      "to": "ecosystem.approval_workflow"
+      "to": "adaptive_engine.learning_loop"
     },
     {
       "from": "ecosystem.seed_ecosystem",
-      "to": "ecosystem.learning_loop"
-    },
-    {
-      "from": "ecosystem.standalone_app",
       "to": "ecosystem"
     },
     {
       "from": "ecosystem.standalone_app",
-      "to": "ecosystem._store"
+      "to": "adaptive_engine._store"
     },
     {
       "from": "ecosystem.standalone_app",
-      "to": "ecosystem.approval_workflow"
+      "to": "adaptive_engine.approval_workflow"
     },
     {
       "from": "ecosystem.standalone_app",
-      "to": "ecosystem.governance"
+      "to": "adaptive_engine.governance"
+    },
+    {
+      "from": "ecosystem.standalone_app",
+      "to": "ecosystem"
     },
     {
       "from": "ecosystem.standalone_app",
       "to": "ecosystem.users"
     },
     {
-      "from": "ecosystem.task_engine",
-      "to": "adaptive_engine.task_engine"
-    },
-    {
       "from": "ecosystem.users",
-      "to": "ecosystem._store"
+      "to": "adaptive_engine._store"
     },
     {
       "from": "engine.compression.test_token_juice",
@@ -13384,6 +13392,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "tools.social.telegram_bot.ai_assignment_handler",
+      "to": "core.logging_config"
+    },
+    {
       "from": "tools.social.telegram_bot.ai_engine",
       "to": "core.logging_config"
     },
@@ -13406,6 +13418,10 @@
     {
       "from": "tools.social.telegram_bot.handler",
       "to": "tools.social.telegram_bot.admin_handlers"
+    },
+    {
+      "from": "tools.social.telegram_bot.handler",
+      "to": "tools.social.telegram_bot.ai_assignment_handler"
     },
     {
       "from": "tools.social.telegram_bot.handler",
@@ -13568,7 +13584,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1956,
+  "module_count": 1958,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13598,6 +13614,16 @@
     "_archive.batch-3.intelligent_cache",
     "_archive.batch-3.orchestrator",
     "_archive.batch-3.source_governance",
+    "_archive.batch-4._store",
+    "_archive.batch-4.approval_workflow",
+    "_archive.batch-4.correlation",
+    "_archive.batch-4.deployment_tracker",
+    "_archive.batch-4.governance",
+    "_archive.batch-4.health_model",
+    "_archive.batch-4.learning_loop",
+    "_archive.batch-4.mcp_skeleton",
+    "_archive.batch-4.resource_registry",
+    "_archive.batch-4.task_engine",
     "adapters",
     "adapters.base_adapter",
     "adapters.business_adapter",
@@ -13756,6 +13782,7 @@
     "api.routes.agent_tasks",
     "api.routes.agent_workspace",
     "api.routes.agents",
+    "api.routes.ai_assignment",
     "api.routes.analytics",
     "api.routes.api_keys",
     "api.routes.approval_manager",
@@ -14432,22 +14459,12 @@
     "database.tenant_db",
     "docs.examples.retry_integration_example",
     "ecosystem",
-    "ecosystem._store",
-    "ecosystem.approval_workflow",
     "ecosystem.citizen",
-    "ecosystem.correlation",
-    "ecosystem.deployment_tracker",
     "ecosystem.evolution_gate",
     "ecosystem.federation_bridge",
-    "ecosystem.governance",
-    "ecosystem.health_model",
-    "ecosystem.learning_loop",
-    "ecosystem.mcp_skeleton",
-    "ecosystem.resource_registry",
     "ecosystem.runtime_selector",
     "ecosystem.seed_ecosystem",
     "ecosystem.standalone_app",
-    "ecosystem.task_engine",
     "ecosystem.users",
     "engine",
     "engine.compression",
@@ -15493,6 +15510,7 @@
     "tools.social.telegram_bot",
     "tools.social.telegram_bot.__main__",
     "tools.social.telegram_bot.admin_handlers",
+    "tools.social.telegram_bot.ai_assignment_handler",
     "tools.social.telegram_bot.ai_engine",
     "tools.social.telegram_bot.conversations",
     "tools.social.telegram_bot.handler",

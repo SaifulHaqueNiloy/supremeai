@@ -14,9 +14,9 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 826,
-    "frontend_unique_refs": 142,
-    "routes_with_frontend_consumer": 263,
+    "backend_routes": 832,
+    "frontend_unique_refs": 145,
+    "routes_with_frontend_consumer": 269,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
@@ -24,7 +24,7 @@
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 161,
-      "admin-only": 324,
+      "admin-only": 330,
       "internal": 38,
       "deprecated": 0,
       "api-only": 303,
@@ -1746,6 +1746,102 @@
       "operation": "trigger_quick_action",
       "frontend_consumers": [
         "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/ai/assign",
+      "declared": "/api/admin/ai/assign",
+      "deprecated": false,
+      "router_file": "backend/api/routes/ai_assignment.py",
+      "module": "api.routes.ai_assignment",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "assign_ai",
+      "frontend_consumers": [
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ai/assignment",
+      "declared": "/api/admin/ai/assignment",
+      "deprecated": false,
+      "router_file": "backend/api/routes/ai_assignment.py",
+      "module": "api.routes.ai_assignment",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_assignment",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ai/overview",
+      "declared": "/api/admin/ai/overview",
+      "deprecated": false,
+      "router_file": "backend/api/routes/ai_assignment.py",
+      "module": "api.routes.ai_assignment",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_overview",
+      "frontend_consumers": [
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ai/providers",
+      "declared": "/api/admin/ai/providers",
+      "deprecated": false,
+      "router_file": "backend/api/routes/ai_assignment.py",
+      "module": "api.routes.ai_assignment",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "list_providers",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ai/surfaces",
+      "declared": "/api/admin/ai/surfaces",
+      "deprecated": false,
+      "router_file": "backend/api/routes/ai_assignment.py",
+      "module": "api.routes.ai_assignment",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "list_surfaces",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/ai/test/:param",
+      "declared": "/api/admin/ai/test/{provider_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/ai_assignment.py",
+      "module": "api.routes.ai_assignment",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "test_provider",
+      "frontend_consumers": [
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
       ],
       "classification": "admin-only"
     },
