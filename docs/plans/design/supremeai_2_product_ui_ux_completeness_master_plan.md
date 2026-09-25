@@ -1,5 +1,35 @@
 ---
 target_scope: customer_facing
+
+---
+
+## 🌑 DARK-MODE DOCTRINE — RESOLVED (canonical, Wave 2.7 / issue #1244)
+
+> **রায় (2026-09-25): DARK-FIRST হলো canonical।** SupremeAI-এর প্রাথমিক
+> ভিজ্যুয়াল পরিচয় ডার্ক থিম ("Deep Space") — লাইট/সানসেট/ম্যাট্রিক্স থিম
+> ব্যবহারকারীর ইচ্ছাধীন অপশন, ডিফল্ট নয়।
+
+### Conflict history
+| দাবি | উৎস | বর্তমান অবস্থা |
+|---|---|---|
+| "dark mode default" | এই মাস্টার প্ল্যান | ✅ **জিতেছে — canonical** |
+| "dark mode default নয়, option থাকুক" | `docs/archive/plans/design/ux_ui_best_practices_and_interaction_guide.md` (archived) | ❌ বাতিল — archive-এই থাকবে, আর কোনো ক্যানোনিকাল মর্যাদা নেই |
+
+### Code evidence (doctrine আগে থেকেই প্রয়োগ হয়ে আসছে)
+1. `frontend/src/contexts/ThemeProvider.tsx` — `useState<Theme>('dark')` — ডিফল্ট Deep Space (dark)
+2. `frontend/src/contexts/ThemeProvider.test.tsx` lines 37-41 — ডিফল্ট `'dark'` + `documentElement.classList` + `data-theme="dark"` পিন করা regression টেস্ট
+3. `frontend/src/index.css` — `:root, .dark` selector + `body.dark` + `[data-theme="dark"]` blocks সব dark-first token সেট
+
+### নিয়ম (এখান থেকে)
+- নতুন UI component dark-first ডিজাইন হবে; লাইট/অন্য থিম ফলো-আপ অ্যাডাপ্টেশন
+- থিম টোকেন পরিবর্তন `index.css`-এর `:root, .dark` block-এ হবে (এক সত্যের উৎস)
+- `data-theme` attribute + ক্লাস দুটোই সেট থাকবে (আধুনিক CSS + লিগ্যাসি সিলেক্টর কভার)
+- এই doctrine বদলাতে হলে আলাদা issue + CP06 owner-এর অনুমোদন লাগবে
+
+**Wave 2.7 gate contribution:** doctrine conflict = ০ (canonical ঘোষিত + প্রমাণ লিঙ্কযুক্ত)
+
+---
+
 # [V5 audit 2026-09-17] Legacy doc migrated to canonical governance schema; defaults are conservative (historical/derived role) — refine on next lifecycle review.
 id: auto:supremeai_2_product_ui_ux_completeness_master_plan
 subject: SUPREMEAI 2.0 — PRODUCT UI/UX + DASHBOARD COMPLETENESS MASTER PLAN
