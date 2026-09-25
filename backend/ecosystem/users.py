@@ -30,7 +30,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from ecosystem._store import ensure_columns, get_conn, get_db_path
+from adaptive_engine._store import ensure_columns, get_conn, get_db_path
 
 logger = logging.getLogger(__name__)
 

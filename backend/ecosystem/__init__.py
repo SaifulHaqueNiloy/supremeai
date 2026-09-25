@@ -1,35 +1,17 @@
 """Ecosystem — SupremeAI orchestration modules.
 
 Phases 2-14 (ROADMAP §1-§57). Each module is self-contained and idempotent.
-All persistence uses the shared SQLite store from ecosystem._store.
+All persistence uses the shared SQLite store from adaptive_engine._store.
 """
 
-from adaptive_engine.capability_registry import (
-    Capability,
-    CapabilityExistsError,
-    CapabilityLifecycleState,
-    CapabilityRegistry,
-    CapabilityRuntimeTier,
-    CapabilityStateError,
-    get_capability_registry,
-)
-from adaptive_engine.source_governance import (
-    LearnedItem,
-    SourceCategory,
-    SourceGovernance,
-    SourcePolicy,
-    SourceState,
-    SourceStateError,
-    get_source_governance,
-)
-from ecosystem._store import (
+from adaptive_engine._store import (
     ensure_columns,
     get_conn,
     get_db_path,
     jdump,
     jload,
 )
-from ecosystem.approval_workflow import (
+from adaptive_engine.approval_workflow import (
     ApprovalDecision,
     ApprovalProposal,
     ApprovalWorkflow,
@@ -40,12 +22,21 @@ from ecosystem.approval_workflow import (
     ProposalStateError,
     get_approval_workflow,
 )
-from ecosystem.correlation import (
+from adaptive_engine.capability_registry import (
+    Capability,
+    CapabilityExistsError,
+    CapabilityLifecycleState,
+    CapabilityRegistry,
+    CapabilityRuntimeTier,
+    CapabilityStateError,
+    get_capability_registry,
+)
+from adaptive_engine.correlation import (
     CorrelationContext,
     current_correlation,
     new_correlation_context,
 )
-from ecosystem.deployment_tracker import (
+from adaptive_engine.deployment_tracker import (
     DeploymentNotFoundError,
     DeploymentRecord,
     DeploymentStateError,
@@ -53,7 +44,7 @@ from ecosystem.deployment_tracker import (
     DeploymentTracker,
     get_deployment_tracker,
 )
-from ecosystem.governance import (
+from adaptive_engine.governance import (
     ActionRisk,
     BudgetKind,
     Budgets,
@@ -61,14 +52,14 @@ from ecosystem.governance import (
     RiskDecision,
     get_governance_engine,
 )
-from ecosystem.health_model import (
+from adaptive_engine.health_model import (
     HealthAggregator,
     HealthStatus,
     MemoryInfo,
     UnifiedHealth,
     get_health_aggregator,
 )
-from ecosystem.learning_loop import (
+from adaptive_engine.learning_loop import (
     EvolutionSignal,
     LearningLoop,
     LearningOpportunity,
@@ -76,7 +67,7 @@ from ecosystem.learning_loop import (
     LearningStageError,
     get_learning_loop,
 )
-from ecosystem.mcp_skeleton import (
+from adaptive_engine.mcp_skeleton import (
     MCPActionDenied,
     MCPOperationCategory,
     MCPOperationError,
@@ -84,7 +75,7 @@ from ecosystem.mcp_skeleton import (
     MCPSkeleton,
     get_mcp_skeleton,
 )
-from ecosystem.resource_registry import (
+from adaptive_engine.resource_registry import (
     AdapterNotRegisteredError,
     BaseProviderAdapter,
     ProviderKind,
@@ -95,7 +86,16 @@ from ecosystem.resource_registry import (
     ResourceState,
     get_resource_registry,
 )
-from ecosystem.task_engine import (
+from adaptive_engine.source_governance import (
+    LearnedItem,
+    SourceCategory,
+    SourceGovernance,
+    SourcePolicy,
+    SourceState,
+    SourceStateError,
+    get_source_governance,
+)
+from adaptive_engine.task_engine import (
     TaskEngine,
     TaskNotFoundError,
     TaskOwner,

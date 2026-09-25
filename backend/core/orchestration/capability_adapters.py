@@ -27,7 +27,7 @@ async def _status(command: ConversationCommand, spoke: str, message: str) -> dic
 
 async def task_handler(command: ConversationCommand) -> dict[str, Any]:
     """Submit a durable, tenant-scoped task through the canonical task engine."""
-    from ecosystem.task_engine import TaskEngine, TaskOwner, TaskRecord
+    from adaptive_engine.task_engine import TaskEngine, TaskOwner, TaskRecord
 
     record = TaskRecord(
         goal=command.prompt,
