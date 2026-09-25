@@ -8,6 +8,7 @@ Commands:
 from __future__ import annotations
 
 import os
+
 from core.logging_config import logger
 
 
@@ -51,8 +52,8 @@ class AIAssignmentHandlerMixin:
             lines.append(f"   Key: <code>{env_key}</code> — {'✅ set' if has_key else '❌ missing'}")
 
         lines.append(f"\n📊 <b>Summary:</b> {working} working, {missing} missing")
-        lines.append(f"\n💡 <i>/ai_surfaces — দেখো কোন AI কোথায় ব্যস্ত</i>")
-        lines.append(f"💡 <i>/ai_assign [surface] [provider] — assign করো (admin)</i>")
+        lines.append("\n💡 <i>/ai_surfaces — দেখো কোন AI কোথায় ব্যস্ত</i>")
+        lines.append("💡 <i>/ai_assign [surface] [provider] — assign করো (admin)</i>")
 
         await self.bot.send_message(chat_id, "\n".join(lines), parse_mode="HTML")
 
@@ -88,10 +89,12 @@ class AIAssignmentHandlerMixin:
 
         await self.bot.send_message(chat_id, "\n".join(lines), parse_mode="HTML")
 
-    async def _handle_ai_assign(self, chat_id: int | str, args: list[str]) -> None:
+    async def _handle_ai_assign(
+        self, chat_id: int | str, args: list[str], user_id: int | str | None = None
+    ) -> None:
         """Assign AI to a surface. Admin only."""
         # Check admin
-        if not await self._is_admin(chat_id):
+        if not self.is_admin(chat_id, user_id):
             await self.bot.send_message(chat_id, "❌ শুধু admin এটা করতে পারবেন।")
             return
 
@@ -161,10 +164,3 @@ class AIAssignmentHandlerMixin:
                 f"❌ Error: {str(e)[:60]}",
             )
 
-    async def _is_admin(self, chat_id: int | str) -> bool:
-        """Check if user is admin."""
-        admin_ids_str = os.environ.get("ADMIN_TELEGRAM_CHAT_ID", "")
-        if not admin_ids_str:
-            return False
-        admin_ids = [int(x.strip()) for x in admin_ids_str.split(",") if x.strip().isdigit()]
-        return int(chat_id) in admin_ids

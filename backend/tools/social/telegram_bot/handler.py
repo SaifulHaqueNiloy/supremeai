@@ -22,6 +22,7 @@ from core.config import settings
 from core.logging_config import logger
 
 from .admin_handlers import AdminHandlersMixin
+from .ai_assignment_handler import AIAssignmentHandlerMixin
 from .ai_engine import AIEngineMixin
 from .conversations import ConversationsMixin
 from .keyboards import KeyboardsMixin
@@ -361,7 +362,8 @@ class TelegramBotCore:
         )
 
 
-class TelegramBotHandler(, AIAssignmentHandlerMixin):
+class TelegramBotHandler(
+    AIAssignmentHandlerMixin,
     TelegramBotCore,
     KeyboardsMixin,
     UpdatesMixin,
