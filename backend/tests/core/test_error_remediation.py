@@ -55,7 +55,7 @@ class TestErrorRemediation:
         mock_qdrant.search.return_value = [mock_result]
 
         with patch("core.errors.error_remediation.HAS_QDRANT", True):
-            with patch("core.error_remediation.QdrantClient", return_value=mock_qdrant):
+            with patch("core.errors.error_remediation.QdrantClient", return_value=mock_qdrant):
                 remediation = ErrorRemediation()
                 result = await remediation.lookup_fix("error-signature-123")
                 assert result == "Retry with exponential backoff"
@@ -67,7 +67,7 @@ class TestErrorRemediation:
         mock_qdrant.search.return_value = []
 
         with patch("core.errors.error_remediation.HAS_QDRANT", True):
-            with patch("core.error_remediation.QdrantClient", return_value=mock_qdrant):
+            with patch("core.errors.error_remediation.QdrantClient", return_value=mock_qdrant):
                 remediation = ErrorRemediation()
                 result = await remediation.lookup_fix("error-signature-123")
                 assert result is not None and "Retry" in result
@@ -79,7 +79,7 @@ class TestErrorRemediation:
         mock_qdrant.search.side_effect = Exception("Qdrant connection error")
 
         with patch("core.errors.error_remediation.HAS_QDRANT", True):
-            with patch("core.error_remediation.QdrantClient", return_value=mock_qdrant):
+            with patch("core.errors.error_remediation.QdrantClient", return_value=mock_qdrant):
                 remediation = ErrorRemediation()
                 result = await remediation.lookup_fix("error-signature-123")
                 assert result is not None and "Retry" in result
