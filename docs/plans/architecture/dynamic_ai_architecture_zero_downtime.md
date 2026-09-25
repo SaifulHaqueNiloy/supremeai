@@ -1248,7 +1248,7 @@ class LearningEngine:
 """
 Local Fallback using Ollama
 Ensures system ALWAYS works even with ZERO external APIs
-Runs locally, no API keys needed, 100% uptime
+Design goal: runs locally, no API keys needed — uptime target (measured separately)
 """
 
 import asyncio

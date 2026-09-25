@@ -1,3 +1,15 @@
+---
+id: software-engineering-excellence-plan
+subject: "Software Engineering Excellence Plan — SupremeAI engineering practices"
+document_role: architecture
+planning_authority: Architecture Governance / Planning Circle
+status: active
+canonical: false
+evidence_state: partial
+last_verified: 2026-09-25
+target_scope: supremeai_internal
+---
+
 # SupremeAI — Software Engineering Excellence Master Plan
 
 **Version:** 1.0.0  

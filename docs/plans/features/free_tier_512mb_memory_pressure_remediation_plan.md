@@ -10,7 +10,7 @@ disposition: retain
 last_verified: 2026-09-17
 supersedes: []
 superseded_by: []
-related: docs/plans/infrastructure/free_tier_federation_master_plan_v4.md
+related: docs/plans/infrastructure/free_tier_federation_master_plan.md
 target_scope: supremeai_internal
 ---
 
