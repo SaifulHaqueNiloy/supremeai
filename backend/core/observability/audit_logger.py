@@ -89,8 +89,8 @@ class AuditLogger:
         logger.critical(
             "[P0] AuditLogger degraded IN-PROCESS ONLY: SQLite fallback refused in production "
             "and Postgres unavailable — audit events are buffered in memory (5000 entries) "
-            "and are LOST on restart. Set SUPABASE_ALLOW_DB_DEGRADATION=true to accept the "
-            "ephemeral SQLite fallback."
+            "and are LOST on restart. The degradation flag no longer permits SQLite "
+            "fallback; provision a durable backend (Postgres)."
         )
 
     @contextmanager

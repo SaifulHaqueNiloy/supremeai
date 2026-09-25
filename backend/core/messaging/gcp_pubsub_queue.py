@@ -72,9 +72,8 @@ class GCPPubSubQueue:
                 logger.warning(
                     "[P0] GCPPubSubQueue degraded to a bounded IN-PROCESS queue "
                     f"(max {DEFAULT_IN_MEMORY_MAXLEN} messages) — messages are LOST on "
-                    "restart and dropped FIFO beyond the cap. Set "
-                    "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite "
-                    "fallback, or provision GCP Pub/Sub."
+                    "restart and dropped FIFO beyond the cap. The degradation flag no "
+                    "longer permits SQLite fallback — provision GCP Pub/Sub."
                 )
                 return
             if not self.db_path:
@@ -96,7 +95,7 @@ class GCPPubSubQueue:
             logger.warning(
                 "[P0] GCPPubSubQueue in-memory buffer FULL — oldest messages are being "
                 "DROPPED (FIFO). Messages will be lost until a durable queue backend "
-                "(GCP Pub/Sub) or SUPABASE_ALLOW_DB_DEGRADATION=true is configured."
+                "(GCP Pub/Sub) is configured."
             )
 
     def _init_db(self) -> None:

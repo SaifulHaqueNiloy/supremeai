@@ -53,8 +53,9 @@ _PG_SCHEMA = (
 class ErrorPatternDB:
     """Manages storage/retrieval of historical AI error and mistake data.
 
-    P0 (Task 9-c2): in production without ``SUPABASE_ALLOW_DB_DEGRADATION=true``
-    the local SQLite fallback is refused (centralised gate in core.degraded_mode).
+    P0 (Task 9-c2 + Wave 0.1): in production the local SQLite fallback is
+    refused unconditionally (centralised gate in core.degraded_mode — the
+    degradation flag no longer permits SQLite fallback).
     The DB then degrades to a bounded IN-PROCESS buffer: ``log_error``/``log_ai_mistake``
     keep working in-process (so the feedback loop stays functional), reads return
     in-process-only matches, and NOTHING is written to an ephemeral file.
@@ -101,9 +102,8 @@ class ErrorPatternDB:
                 self._memory_mistakes = InMemoryRing()
                 logger.warning(
                     "[P0] ErrorPatternDB degraded to a bounded IN-PROCESS buffer — error "
-                    "patterns are NOT durable and are LOST on restart. Set "
-                    "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite "
-                    "fallback, or provision Postgres."
+                    "patterns are NOT durable and are LOST on restart. The degradation "
+                    "flag no longer permits SQLite fallback — provision Postgres."
                 )
                 return
             if self._is_memory:

@@ -29,9 +29,10 @@ DB_PATH = os.environ.get("SUPREMEAI_MARKETPLACE_DB", "data/marketplace.db")
 
 
 def _get_conn() -> sqlite3.Connection:
-    # P0 (Task 9-c2): SQLite-only-by-design legacy catalog. In production without
-    # SUPABASE_ALLOW_DB_DEGRADATION=true the ephemeral marketplace.db file is
-    # REFUSED (CRITICAL logged once by core.degraded_mode). To keep the API alive
+    # P0 (Task 9-c2 + Wave 0.1): SQLite-only-by-design legacy catalog. In
+    # production the ephemeral marketplace.db file is REFUSED unconditionally
+    # (the degradation flag no longer permits SQLite fallback; CRITICAL logged
+    # once by core.degraded_mode). To keep the API alive
     # (no 500s) each call gets a fresh IN-MEMORY connection: schema auto-creates,
     # searches return the remote results only, and local writes are per-request
     # only — the ephemeral file is never created or read.

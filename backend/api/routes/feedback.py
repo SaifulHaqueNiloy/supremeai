@@ -73,8 +73,8 @@ def _persist_feedback(event_type: str, payload: dict[str, Any]) -> None:
     if not sqlite_fallback_allowed("feedback_events"):
         logger.warning(
             "[P0] feedback event NOT persisted: SQLite fallback refused in "
-            "production (in-memory handling only). Set SUPABASE_ALLOW_DB_DEGRADATION=true "
-            "to accept the ephemeral fallback."
+            "production (in-memory handling only) — the degradation flag no longer "
+            "permits SQLite fallback; provision a durable backend."
         )
         return
     try:

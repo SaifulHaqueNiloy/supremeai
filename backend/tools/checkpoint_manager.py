@@ -102,8 +102,8 @@ class CheckpointManager:
             logger.critical(
                 "[P0] CheckpointManager DISABLED: SQLite fallback refused in production "
                 "(no durable backend available) — checkpoints will NOT be persisted "
-                "(save()→False, load()→None). Set SUPABASE_ALLOW_DB_DEGRADATION=true to "
-                "accept ephemeral fallback."
+                "(save()→False, load()→None). The degradation flag no longer permits "
+                "SQLite fallback; provision a durable backend."
             )
 
     def _init_fallback(self) -> None:

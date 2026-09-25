@@ -57,8 +57,9 @@ def _get_inmemory_fallback() -> InMemoryDocumentStore:
 def _get_sqlite_fallback() -> sqlite3.Connection:
     """Get or create SQLite fallback connection.
 
-    P0 (Task 9-c): in production without ``SUPABASE_ALLOW_DB_DEGRADATION=true``
-    the SQLite fallback is refused — raises :class:`SQLiteFallbackDisabledError`
+    P0 (Task 9-c + Wave 0.1): in production the SQLite fallback is refused
+    unconditionally (the degradation flag no longer permits it) — raises
+    :class:`SQLiteFallbackDisabledError`
     (callers degrade to the in-process document store instead of silently
     writing to an ephemeral file).
     """

@@ -38,9 +38,10 @@ def get_db_path() -> Path:
 def get_conn() -> sqlite3.Connection:
     """Open a short-lived, WAL-mode SQLite connection (audited pattern).
 
-    P0 (Task 9-c2): SQLite-only-by-design store. In production without
-    ``SUPABASE_ALLOW_DB_DEGRADATION=true`` the ephemeral ecosystem.db file is
-    REFUSED (CRITICAL logged once by core.degraded_mode) and every call gets a
+    P0 (Task 9-c2 + Wave 0.1): SQLite-only-by-design store. In production the
+    ephemeral ecosystem.db file is REFUSED unconditionally (the degradation
+    flag no longer permits SQLite fallback; CRITICAL logged once by
+    core.degraded_mode) and every call gets a
     fresh IN-MEMORY connection: schema auto-creates via the usual
     ``CREATE TABLE IF NOT EXISTS`` calls, reads return empty results and writes
     are per-connection only — the feature is loudly disabled, never falsely

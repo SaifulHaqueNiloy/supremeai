@@ -39,9 +39,9 @@ def _warn_degraded_once() -> None:
         logger.warning(
             "[P0] ExperienceDatabase DISABLED (pass-through): SQLite experience store "
             "refused in production and no vector backend available — writes are DROPPED "
-            "and queries return no matches (semantic cache = cache-miss only). Set "
-            "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral fallback, or "
-            "provision Supabase pgvector."
+            "and queries return no matches (semantic cache = cache-miss only). The "
+            "degradation flag no longer permits SQLite fallback — provision "
+            "Supabase pgvector."
         )
 
 

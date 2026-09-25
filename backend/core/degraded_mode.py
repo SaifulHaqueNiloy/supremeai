@@ -22,8 +22,11 @@ Design contract (Sprint 1 "P0 Safety"):
 4. Boot must never crash because of the gate: gates are evaluated lazily at
    first USE of the persistence layer, not at import time.
 
-Escape hatch: set ``SUPABASE_ALLOW_DB_DEGRADATION=true`` to explicitly accept
-ephemeral/persistence-less operation in production (free-tier deployments).
+Wave 0.1 hard-fail (issue #1224): the ``SUPABASE_ALLOW_DB_DEGRADATION=true``
+escape hatch NO LONGER permits SQLite fallback in production — SQLite fallbacks
+there are refused unconditionally (silent ephemeral-writer data loss is dead).
+The flag still governs the degraded REST-only boot (``database/session.py``)
+and dev/staging behaviour.
 """
 
 from __future__ import annotations
@@ -99,8 +102,10 @@ def allow_db_degradation() -> bool:
     """Whether the operator explicitly opted into persistence-less degradation.
 
     Canonical flag: ``SUPABASE_ALLOW_DB_DEGRADATION=true`` (the same flag the
-    main engine in database/session.py honours). Legacy alias
-    ``ALLOW_DB_DEGRADATION`` is also accepted.
+    main engine in database/session.py honours for the degraded REST-only
+    boot). Legacy alias ``ALLOW_DB_DEGRADATION`` is also accepted.
+    Wave 0.1 (issue #1224): this flag no longer permits SQLite fallback in
+    production — :func:`sqlite_fallback_allowed` hard-fails there unconditionally.
     """
     for flag in _DEGRADATION_FLAGS:
         if (os.getenv(flag, "") or "").strip().lower() == "true":
@@ -150,21 +155,24 @@ def _warn_once(feature: str) -> None:
     if not already:
         logger.critical(
             f"P0: SQLite fallback refused for feature={feature} — persistence unavailable "
-            f"in production; set SUPABASE_ALLOW_DB_DEGRADATION=true to accept ephemeral fallback"
+            f"in production — SUPABASE_ALLOW_DB_DEGRADATION no longer permits SQLite "
+            f"fallback; provision a durable backend"
         )
 
 
 def sqlite_fallback_allowed(feature: str) -> bool:
     """May *feature* fall back to a local SQLite file?
 
-    True  — dev/test, or the operator set the degradation opt-in flag.
-    False — production without the flag: SQLite must NOT be opened. The first
-            refusal per feature logs a CRITICAL "P0:" message.
+    True  — dev/test/staging.
+    False — production (unconditionally, even with the degradation flag set):
+            SQLite must NOT be opened. The first refusal per feature logs a
+            CRITICAL "P0:" message.
     """
     if not is_production():
         return True
-    if allow_db_degradation():
-        return True
+    # Wave 0.1 (issue #1224): production hard-fail — the degradation flag no
+    # longer opens the SQLite-fallback escape hatch. The flag-as-escape only
+    # ever produced a silent data-loss window (ephemeral writers) in prod.
     if is_test_context():
         return True
     _warn_once(feature)
@@ -182,8 +190,8 @@ def require_sqlite_allowed(feature: str) -> None:
     if not sqlite_fallback_allowed(feature):
         raise SQLiteFallbackDisabledError(
             f"[P0] SQLite fallback refused for feature={feature!r} in production — "
-            f"persistence unavailable. Set SUPABASE_ALLOW_DB_DEGRADATION=true to accept "
-            f"ephemeral fallback, or provision a durable backend."
+            f"persistence unavailable. SUPABASE_ALLOW_DB_DEGRADATION no longer permits "
+            f"SQLite fallback; provision a durable backend."
         )
 
 
