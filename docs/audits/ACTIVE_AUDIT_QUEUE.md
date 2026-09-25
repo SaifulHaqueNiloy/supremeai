@@ -21,4 +21,17 @@
 
 ---
 
+## 🗂️ Round-Comment Archive Index (roadmap 1.7, issue #1186)
+
+Per-issue audit comment snapshots previously scattered across `docs/audit_reports/round{14,16,17,19}_comments/` now live in `docs/archive/audit_reports/` (git mv — full history preserved; the canonical content of every snapshot is the GitHub issue thread itself). All issue-IDs covered, in one place:
+
+| Round | Archive path | Issue IDs |
+|---|---|---|
+| 14 | `docs/archive/audit_reports/round14_comments/` | #430, #431, #432, #434, #437, #438, #442, #444, #445, #446, #448, #454 |
+| 16 | `docs/archive/audit_reports/round16_comments/` | #434, #439, #440, #441, #442, #443, #446, #447, #450, #452, #456 |
+| 17 | `docs/archive/audit_reports/round17_comments/` | #434, #459, #460 |
+| 19 | `docs/archive/audit_reports/round19_comments/` | #434, #441, #449, #453, #457, #458, #465, #468, #472, #474, #475, #476, #478, #479, #480, #481, #482 |
+
+---
+
 *Rule: Finished items are pruned upon PR merge. Total active items capped at 50. Never spawn duplicate audit files.*
