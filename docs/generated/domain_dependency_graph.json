@@ -1252,16 +1252,6 @@
     {
       "evidence": [
         {
-          "line": 5,
-          "path": "backend/core/rate_limit_quota.py"
-        }
-      ],
-      "source": "billing",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
           "line": 9,
           "path": "backend/tools/billing/monthly_cost_reporter.py"
         }
@@ -4954,16 +4944,6 @@
         {
           "line": 38,
           "path": "backend/core/security/protection/ssrf_protection.py"
-        }
-      ],
-      "source": "security",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 20,
-          "path": "backend/core/security/rate_limiter.py"
         }
       ],
       "source": "security",

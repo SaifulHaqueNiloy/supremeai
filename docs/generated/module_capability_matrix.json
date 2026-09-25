@@ -6333,20 +6333,6 @@
       "path": "backend/core/rate_limit.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/rate_limit_quota.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/rate_limiter.py"
-    },
-    {
       "capability_signals": [
         "execute",
         "health",
@@ -6716,15 +6702,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/security/protection/ssrf_protection.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/security/rate_limiter.py"
     },
     {
       "capability_signals": [],
@@ -15618,13 +15595,6 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/tests/unit_light/test_rate_limit_quota.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/tests/unit_light/test_router.py"
     },
     {
@@ -15647,13 +15617,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/unit_light/test_security_api_key_limiter.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/unit_light/test_security_rate_limiter.py"
     },
     {
       "capability_signals": [],
@@ -23763,15 +23726,6 @@
       "path": "scripts/ci/generate_domain_dependency_graph.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/ci/generate_env_example.py"
-    },
-    {
       "capability_signals": [
         "browser",
         "capability",
@@ -25835,5 +25789,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2965
+  "source_file_count": 2959
 }

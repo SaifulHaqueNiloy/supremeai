@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3398,
+  "edge_count": 3388,
   "edges": [
     {
       "from": "adapters",
@@ -1349,11 +1349,11 @@
     },
     {
       "from": "api.routes.api_keys",
-      "to": "core.rate_limiter"
+      "to": "core.security"
     },
     {
       "from": "api.routes.api_keys",
-      "to": "core.security"
+      "to": "middleware.rate_limiter"
     },
     {
       "from": "api.routes.api_keys",
@@ -4497,10 +4497,6 @@
     },
     {
       "from": "core.config_validator",
-      "to": "core.config_classification"
-    },
-    {
-      "from": "core.config_validator",
       "to": "core.logging_config"
     },
     {
@@ -4658,10 +4654,6 @@
     {
       "from": "core.enum_guard",
       "to": "core.logging_config"
-    },
-    {
-      "from": "core.env_validator",
-      "to": "core.config_classification"
     },
     {
       "from": "core.env_validator",
@@ -5992,10 +5984,6 @@
       "to": "services.config_service"
     },
     {
-      "from": "core.rate_limit_quota",
-      "to": "core.logging_config"
-    },
-    {
       "from": "core.reliability_controller",
       "to": "core.errors.error_bus"
     },
@@ -6133,15 +6121,15 @@
     },
     {
       "from": "core.security.api_key_middleware",
-      "to": "core.rate_limiter"
-    },
-    {
-      "from": "core.security.api_key_middleware",
       "to": "core.resilience.circuit_breaker"
     },
     {
       "from": "core.security.api_key_middleware",
       "to": "core.security"
+    },
+    {
+      "from": "core.security.api_key_middleware",
+      "to": "middleware.rate_limiter"
     },
     {
       "from": "core.security.api_key_middleware",
@@ -6265,22 +6253,6 @@
     },
     {
       "from": "core.security.protection.ssrf_protection",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.security.rate_limiter",
-      "to": "core.cache.redis_manager"
-    },
-    {
-      "from": "core.security.rate_limiter",
-      "to": "core.config"
-    },
-    {
-      "from": "core.security.rate_limiter",
-      "to": "core.errors.error_bus"
-    },
-    {
-      "from": "core.security.rate_limiter",
       "to": "core.logging_config"
     },
     {
@@ -9485,11 +9457,11 @@
     },
     {
       "from": "tests.api.test_api_keys",
-      "to": "core.rate_limiter"
+      "to": "core.security"
     },
     {
       "from": "tests.api.test_api_keys",
-      "to": "core.security"
+      "to": "middleware.rate_limiter"
     },
     {
       "from": "tests.api.test_api_new_endpoints",
@@ -12472,10 +12444,6 @@
       "to": "core.messaging.models"
     },
     {
-      "from": "tests.unit_light.test_rate_limit_quota",
-      "to": "core.rate_limit_quota"
-    },
-    {
       "from": "tests.unit_light.test_router",
       "to": "core.router"
     },
@@ -12494,14 +12462,6 @@
     {
       "from": "tests.unit_light.test_security_api_key_limiter",
       "to": "core.security.api_key_limiter"
-    },
-    {
-      "from": "tests.unit_light.test_security_rate_limiter",
-      "to": "core.security.rate_limiter"
-    },
-    {
-      "from": "tests.unit_light.test_security_rate_limiter",
-      "to": "core.security.rate_limiter"
     },
     {
       "from": "tests.unit_light.test_upload_validator",
@@ -12633,11 +12593,11 @@
     },
     {
       "from": "tools.api_gateway",
-      "to": "core.rate_limiter"
+      "to": "core.security.authentication.auth_middleware"
     },
     {
       "from": "tools.api_gateway",
-      "to": "core.security.authentication.auth_middleware"
+      "to": "middleware.rate_limiter"
     },
     {
       "from": "tools.bandwidth_optimizer",
@@ -13596,7 +13556,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1960,
+  "module_count": 1955,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -14306,8 +14266,6 @@
     "core.rag.hybrid_retriever",
     "core.rag.sparse_bm25",
     "core.rate_limit",
-    "core.rate_limit_quota",
-    "core.rate_limiter",
     "core.reliability_controller",
     "core.repo_manager",
     "core.request_context",
@@ -14351,7 +14309,6 @@
     "core.security.protection.honeypot",
     "core.security.protection.prompt_firewall",
     "core.security.protection.ssrf_protection",
-    "core.security.rate_limiter",
     "core.security.resource_guard",
     "core.security.scanning.ast_scanner",
     "core.security.scanning.secret_scanner",
@@ -15377,12 +15334,10 @@
     "tests.unit_light.test_language_router",
     "tests.unit_light.test_ld_client",
     "tests.unit_light.test_messaging_models",
-    "tests.unit_light.test_rate_limit_quota",
     "tests.unit_light.test_router",
     "tests.unit_light.test_rules_mutator",
     "tests.unit_light.test_search",
     "tests.unit_light.test_security_api_key_limiter",
-    "tests.unit_light.test_security_rate_limiter",
     "tests.unit_light.test_upload_validator",
     "tests.unit_light.test_user_profiler",
     "tests.unit_light.test_utils",

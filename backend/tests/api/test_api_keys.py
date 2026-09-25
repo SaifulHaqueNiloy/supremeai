@@ -55,7 +55,6 @@ for _mod in [m for m in list(sys.modules) if m == "core.app" or m.startswith("co
 
 from api.routes.api_keys import router
 from core.app import app
-from core.rate_limiter import AsyncRateLimiter
 from core.security import (
     API_KEY_PREFIX,
     generate_api_key,
@@ -63,6 +62,7 @@ from core.security import (
     mask_api_key,
     verify_api_key,
 )
+from middleware.rate_limiter import AsyncRateLimiter
 
 
 @pytest.fixture
@@ -148,7 +148,7 @@ class TestRateLimiter:
     @pytest.fixture(autouse=True)
     def patch_redis(self):
         fake_redis = FakeRedisClient()
-        with patch("core.rate_limiter.AsyncRateLimiter._get_redis", return_value=fake_redis):
+        with patch("middleware.rate_limiter.AsyncRateLimiter._get_redis", return_value=fake_redis):
             yield
 
     @pytest.mark.asyncio
