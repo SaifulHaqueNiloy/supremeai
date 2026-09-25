@@ -4445,13 +4445,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/error_handler.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/error_pattern_db.py"
     },
     {
@@ -6761,13 +6754,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/security/security_vault.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/security/ssrf_protection.py"
     },
     {
       "capability_signals": [
@@ -21062,62 +21048,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
-      "path": "frontend/src/store/slices/apiSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/chatSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/migration_map.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/migration_map.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/slices.test.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/uiSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/userSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/store/slices/workspaceSlice.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
       "path": "frontend/src/store/stateOwnership.ts"
     },
     {
@@ -25782,5 +25712,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2963
+  "source_file_count": 2953
 }
