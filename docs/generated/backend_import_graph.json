@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3380,
+  "edge_count": 3388,
   "edges": [
     {
       "from": "adapters",
@@ -1674,6 +1674,10 @@
     {
       "from": "api.routes.browser._render_proxy",
       "to": "api.routes.browser"
+    },
+    {
+      "from": "api.routes.browser._render_proxy",
+      "to": "core.config_parsers"
     },
     {
       "from": "api.routes.browser._render_proxy",
@@ -3389,6 +3393,10 @@
     },
     {
       "from": "api.server",
+      "to": "core.config_parsers"
+    },
+    {
+      "from": "api.server",
       "to": "core.factory"
     },
     {
@@ -4456,12 +4464,20 @@
       "to": "core.config_classification"
     },
     {
+      "from": "core.config_fields",
+      "to": "core.config_parsers"
+    },
+    {
       "from": "core.config_proxy",
       "to": "core.logging_config"
     },
     {
       "from": "core.config_proxy",
       "to": "core.utils.time_utils"
+    },
+    {
+      "from": "core.config_secrets",
+      "to": "core.config_parsers"
     },
     {
       "from": "core.config_secrets",
@@ -4474,6 +4490,10 @@
     {
       "from": "core.config_secrets",
       "to": "core.security.secret_vault"
+    },
+    {
+      "from": "core.config_validation",
+      "to": "core.config_parsers"
     },
     {
       "from": "core.config_validation",
@@ -6201,6 +6221,10 @@
     },
     {
       "from": "core.security.origin_validator",
+      "to": "core.config_parsers"
+    },
+    {
+      "from": "core.security.origin_validator",
       "to": "core.logging_config"
     },
     {
@@ -7546,6 +7570,10 @@
     {
       "from": "middleware.chaos_injector",
       "to": "core.logging_config"
+    },
+    {
+      "from": "middleware.cors_policy",
+      "to": "core.config_parsers"
     },
     {
       "from": "middleware.idempotency",
@@ -12356,6 +12384,10 @@
       "to": "middleware.rate_limiter"
     },
     {
+      "from": "tests.unit_light.test_config_parsers",
+      "to": "core.config_parsers"
+    },
+    {
       "from": "tests.unit_light.test_core_skills",
       "to": "core.skills"
     },
@@ -13524,7 +13556,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1951,
+  "module_count": 1954,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -13639,6 +13671,7 @@
     "alembic_migrations.versions.j9k0l1m2n3o4_add_missing_live_model_tables",
     "alembic_migrations.versions.k1l2m3n4o5p6_fix_downgrade_upgrade_table_swap",
     "alembic_migrations.versions.k5l6m7n8o9p0_drop_dead_performance_metrics",
+    "alembic_migrations.versions.t7u8v9w0x1y2_recreate_performance_metrics",
     "alembic_migrations.versions.tier_s_features",
     "analyze_coverage",
     "api",
@@ -13980,6 +14013,7 @@
     "core.config_classification",
     "core.config_control_plane",
     "core.config_fields",
+    "core.config_parsers",
     "core.config_proxy",
     "core.config_secrets",
     "core.config_validation",
@@ -15288,6 +15322,7 @@
     "tests.unit_light.services.scraper.test_web_scraper",
     "tests.unit_light.services.test_intelligent_cache_shim",
     "tests.unit_light.test_async_rate_limiter_lua",
+    "tests.unit_light.test_config_parsers",
     "tests.unit_light.test_core_skills",
     "tests.unit_light.test_deprecated_shims",
     "tests.unit_light.test_feature_flags",
