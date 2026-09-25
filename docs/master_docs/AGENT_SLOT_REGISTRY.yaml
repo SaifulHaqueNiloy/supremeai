@@ -1,112 +1,80 @@
-# Agent Slot Registry (GAP-08 fix)
-# ================================
-# পলিমরফিক এজেন্ট স্লট রেজিস্ট্রি — কে কোন স্লট, কতদিনের জন্য, কোন maintainer
-# অ্যাসাইন করেছেন তার living record।
-#
-# Problem (ARCH-GAP-01 GAP-08):
-#   OPS-06 বলছে agent-1=Antigravity, agent-2=Claude, agent-10=SupremeAI —
-#   কিন্তু এই ম্যাপিং কোথাও formally রেকর্ড করা হয়নি। একই সময়ে দুজন ভিন্ন
-#   maintainer দুটি ভিন্ন টুলকে agent-1 হিসেবে অ্যাসাইন করতে পারেন — কোনো
-#   conflict prevention নেই।
-#
-# Solution:
-#   এই YAML ফাইলটি single source of truth। প্রতিটি স্লট অ্যাসাইনমেন্টের জন্য:
-#     - slot: agent-N
-#     - tool: <tool name>
-#     - maintainer: <github username>
-#     - assigned_on: <date>
-#     - expires_on: <date>  (max 7 days, then auto-release)
-#     - active: true/false
-
-version: "1.0"
-
-# Real-time liveness: assigned slots show 🟢 online on the /api/agents
-# dashboard when their tool pings the shared heartbeat store. Integration
-# guide per tool: docs/agents/heartbeat-integration.md (issue #1402).
-
-# Agent slot assignments — per OPS-06 §5 (Polymorphic Agent Assignment)
-# 8 slots defined; maintainer activates/deactivates as needed.
-# Note: OPS-06 Safeguard 5 (Max Concurrent Agent Policy) currently caps active
-# slots at 8 for rate-budget reasons. If >8 slots are activated simultaneously,
-# update Safeguard 5's policy threshold accordingly.
+version: '1.0'
 slots:
-  - slot: agent-1
-    tool: "Antigravity"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: true
-    notes: "Backend feature work + CI fixes"
-
-  - slot: agent-5
-    tool: "z.ai issue solver"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Solves GitHub issues — reads, debugs, fixes, opens PR"
-
-  - slot: agent-6
-    tool: "z.ai platform watchdog"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Monitors 3rd party platforms (Kaggle/Colab/Modal/Render), fixes issues, creates issues"
-
-  - slot: agent-7
-    tool: "z.ai git pr merge and regration"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "PR review, merge orchestration, and regression prevention"
-
-  - slot: agent-8
-    tool: "z.ai 5.4 flash. full stack+longrun"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Full-stack development and long-running autonomous execution"
-
-  - slot: agent-9
-    tool: "Continue"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: false
-    notes: "Standby — observability + metrics dashboards (activatable on demand)"
-
-  - slot: agent-10
-    tool: "SupremeAI"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Self-development mode (reserved per OPS-08 §5)"
-
-  - slot: agent-11
-    tool: "Z.ai 5.2 Full Stack"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Full-stack Next.js 16 / TypeScript / Prisma agent — hosts the real-time heartbeat dashboard"
-
-# Validation rules
+- slot: agent-1
+  tool: Antigravity
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-20'
+  expires_on: '2026-09-27'
+  active: true
+  notes: Backend feature work + CI fixes
+- slot: agent-5
+  tool: z.ai issue solver
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Solves GitHub issues — reads, debugs, fixes, opens PR
+- slot: agent-6
+  tool: z.ai platform watchdog
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Monitors 3rd party platforms (Kaggle/Colab/Modal/Render), fixes issues, creates
+    issues
+- slot: agent-7
+  tool: z.ai git pr merge and regration
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: PR review, merge orchestration, and regression prevention
+- slot: agent-8
+  tool: z.ai 5.4 flash. full stack+longrun
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Full-stack development and long-running autonomous execution
+- slot: agent-9
+  tool: Continue
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: false
+  notes: Standby — observability + metrics dashboards (activatable on demand)
+- slot: agent-10
+  tool: SupremeAI
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Self-development mode (reserved per OPS-08 §5)
+- slot: agent-11
+  tool: Z.ai 5.2 Full Stack
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Full-stack Next.js 16 / TypeScript / Prisma agent — hosts the real-time heartbeat
+    dashboard
+- slot: agent-12
+  tool: z.ai action log watcher
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Watches GitHub Actions logs, detects failures, reports + creates issues
 validation_rules:
-  - "slot MUST match pattern: agent-[0-9]+"
-  - "tool MUST be a non-empty string"
-  - "maintainer MUST be a GitHub username (starts with @)"
-  - "expires_on MUST be <= 7 days from assigned_on"
-  - "Only one active assignment per slot at a time"
-  - "Active slots MUST be <= 8 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)"
-  - "Auto-expiry: assignments past expires_on are auto-deactivated"
-
-# How to claim/update a slot
+- 'slot MUST match pattern: agent-[0-9]+'
+- tool MUST be a non-empty string
+- maintainer MUST be a GitHub username (starts with @)
+- expires_on MUST be <= 7 days from assigned_on
+- Only one active assignment per slot at a time
+- Active slots MUST be <= 11 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)
+- 'Auto-expiry: assignments past expires_on are auto-deactivated'
 usage:
-  - "Maintainer edits this file directly via PR (protected scope per SECURITY_GUARDIAN.md)"
-  - "PR title: 'chore(agents): assign agent-N to <tool>'"
-  - "Previous slot holder MUST be notified via @mention in PR description"
-  - "If slot is being transferred, old assignment's expires_on MUST be set to today"
+- Maintainer edits this file directly via PR (protected scope per SECURITY_GUARDIAN.md)
+- 'PR title: ''chore(agents): assign agent-N to <tool>'''
+- Previous slot holder MUST be notified via @mention in PR description
+- If slot is being transferred, old assignment's expires_on MUST be set to today
