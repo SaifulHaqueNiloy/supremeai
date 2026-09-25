@@ -1,41 +1,41 @@
 version: '1.0'
 slots:
 - slot: agent-1
-  tool: Antigravity
+  tool: Z.ai Code (sleep)
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-20'
   expires_on: '2026-09-27'
-  active: true
-  notes: Backend feature work + CI fixes
+  active: false
+  notes: Limit reached — inactive/sleep mode
 - slot: agent-5
-  tool: z.ai issue solver
+  tool: planner-and-issues
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Solves GitHub issues — reads, debugs, fixes, opens PR
+  notes: Plan + issue create. Founder discusses → planner formalizes → assigns to
+    solver
 - slot: agent-6
-  tool: z.ai platform watchdog
+  tool: solver-a
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Monitors 3rd party platforms (Kaggle/Colab/Modal/Render), fixes issues, creates
-    issues
+  notes: Claims issue from queue, solves, opens PR. Parallel with solver-b
 - slot: agent-7
-  tool: z.ai git pr merge and regration
+  tool: solver-b
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: PR review, merge orchestration, and regression prevention
+  notes: Claims issue from queue, solves, opens PR. Parallel with solver-a
 - slot: agent-8
-  tool: z.ai 5.4 flash. full stack+longrun
+  tool: pr-verifier
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Full-stack development and long-running autonomous execution
+  notes: PR helper bot decision check + code quality. Fixes wrong merges
 - slot: agent-9
   tool: Continue
   maintainer: '@SaifulHaqueNiloy'
@@ -44,34 +44,35 @@ slots:
   active: false
   notes: Standby — observability + metrics dashboards (activatable on demand)
 - slot: agent-10
-  tool: SupremeAI
+  tool: SupremeAI (super agent)
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Self-development mode (reserved per OPS-08 §5)
+  notes: Orchestrator + fallback. Assigns alternatives if agent inactive. Does any
+    role if needed
 - slot: agent-11
-  tool: Z.ai 5.2 Full Stack
+  tool: platform-agent
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Full-stack Next.js 16 / TypeScript / Prisma agent — hosts the real-time heartbeat
-    dashboard
+  notes: Periodic check of Kaggle/Colab/Modal/Render/HF via API key. Fixes + creates
+    issues
 - slot: agent-12
-  tool: z.ai action log watcher
+  tool: browser-tester + log watcher
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Watches GitHub Actions logs, detects failures, reports + creates issues
+  notes: Browser test after merge + CI/Actions log watch. Creates issues on failure
 validation_rules:
 - 'slot MUST match pattern: agent-[0-9]+'
 - tool MUST be a non-empty string
 - maintainer MUST be a GitHub username (starts with @)
 - expires_on MUST be <= 7 days from assigned_on
 - Only one active assignment per slot at a time
-- Active slots MUST be <= 11 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)
+- Active slots MUST be <= 10 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)
 - 'Auto-expiry: assignments past expires_on are auto-deactivated'
 usage:
 - Maintainer edits this file directly via PR (protected scope per SECURITY_GUARDIAN.md)
