@@ -1,13 +1,14 @@
 import { Database, Activity, Cloud, GitBranch, FileText, Monitor } from 'lucide-react';
 
 import type { Bookmark } from './types';
+import { getApiBaseUrl } from '../../../utils/api';  // roadmap 1.5 (#1180)
 
 // ════════════════════════════════════════════════════════════════════
 // DEFAULT BOOKMARKS (SupremeAI Services)
 // ════════════════════════════════════════════════════════════════════
 
 export const DEFAULT_BOOKMARKS: Bookmark[] = [
-  { id: 'b2', url: import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND || '', title: 'Main Backend', category: 'service', icon: <Database size={12} /> },
+  { id: 'b2', url: getApiBaseUrl(), title: 'Main Backend', category: 'service', icon: <Database size={12} /> },  // roadmap 1.5 (#1180)
   { id: 'b4', url: 'https://dash.cloudflare.com', title: 'Cloudflare Dashboard', category: 'tool', icon: <Cloud size={12} /> },
   { id: 'b5', url: 'https://dashboard.render.com', title: 'Render Dashboard', category: 'tool', icon: <Monitor size={12} /> },
   { id: 'b6', url: 'https://github.com/SaifulHaqueNiloy/supremeai', title: 'GitHub Repository', category: 'tool', icon: <GitBranch size={12} /> },

@@ -46,6 +46,8 @@ import { convertToCSV } from './csv';
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+
+import { getApiBaseUrl } from '../../../utils/api';  // roadmap 1.5 (#1180)
 import {
   RefreshCw,
   GitBranch,
@@ -113,7 +115,7 @@ export function CIDashboard({
     try {
       const base = apiUrl
         ? apiUrl.replace(/\/api\/ci\/latest-summary$/, '')
-        : import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || '';
+        : getApiBaseUrl();  // roadmap 1.5 (#1180): canonical resolver
       const response = await fetch(`${base}/api/ci/history?limit=12`);
       if (!response.ok) return; // history is optional — never block the dashboard
       const payload = await response.json();
@@ -144,7 +146,7 @@ export function CIDashboard({
   // Fetch data
   const fetchData = useCallback(async () => {
     try {
-      const url = apiUrl || `${import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || ''}/api/ci/latest-summary`;
+      const url = apiUrl || `${getApiBaseUrl()}/api/ci/latest-summary`;  // roadmap 1.5 (#1180)
       const response = await fetch(url);
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
