@@ -627,6 +627,30 @@ The final integration agent is a **decision gate**, not a merge button.
 
 **PASS is evidence. PASS is not the merge decision.**
 
+### Final Outcome First
+
+Before deciding whether a PR should be merged, the integration agent must first identify the **intended final outcome**.
+
+Use this decision loop:
+
+1. **What are we ultimately trying to achieve?**
+2. **What state should the project be in after this work?**
+3. **Does this PR move the project toward that state?**
+4. **Does it move any required behavior, dependency, or protection away from that state?**
+5. **Does another active/merged PR change that conclusion?**
+6. **What should the final combined state contain?**
+7. **Can that final state be verified?**
+
+Use this priority when evidence conflicts:
+
+**Final Outcome → Required Behavior → Dependencies/Impact → Implementation → Tests**
+
+Tests, lint, build, and review results are **evidence about the final outcome**; they do not define the desired outcome by themselves.
+
+A PR must not be merged merely because it passes its checks. A technically green PR can still move the project away from the intended final state.
+
+For example, if the intended outcome is **"keep the existing fallback while introducing a new implementation"**, a PR that removes the fallback may be green but still move away from the required outcome. The integration decision must follow the intended final state, not the green status alone.
+
 Before merging a PR, the integration agent must understand:
 
 * what the Issue was trying to achieve;
