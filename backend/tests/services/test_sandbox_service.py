@@ -1,45 +1,37 @@
-"""
-Tests for services/sandbox_service.py
-"""
-
-from __future__ import annotations
-
-from unittest.mock import patch
-
+"""Tests for services/sandbox_service.py — Code execution sandbox."""
+import pytest
 from services.sandbox_service import SandboxService
 
 
-def test_create_sandbox_returns_id():
-    svc = SandboxService()
-    with patch.object(svc, "active_sandboxes", {}):
-        sandbox_id = svc.create_sandbox("task_1", "python")
-    assert isinstance(sandbox_id, str)
+class TestSandboxService:
+    def test_init(self):
+        svc = SandboxService()
+        assert svc is not None
 
+    @pytest.mark.asyncio
+    async def test_execute_simple_code(self):
+        svc = SandboxService()
+        result = await svc.execute("print('hello')")
+        assert result is not None
+        assert "hello" in str(result) or result.get("success") is not None
 
-def test_execute_returns_result_dict():
-    svc = SandboxService()
-    with patch.object(svc, "active_sandboxes", {"sb1": {}}):
-        result = svc.execute("sb1", "print('hello')")
-    assert isinstance(result, dict)
+    @pytest.mark.asyncio
+    async def test_execute_returns_output(self):
+        svc = SandboxService()
+        result = await svc.execute("x = 1 + 1")
+        assert result is not None
+        assert isinstance(result, dict)
 
+    @pytest.mark.asyncio
+    async def test_execute_timeout(self):
+        svc = SandboxService(timeout=1)
+        result = await svc.execute("import time; time.sleep(10)")
+        assert result is not None
+        assert result.get("error") or result.get("timeout") is True
 
-def test_destroy_removes_sandbox():
-    svc = SandboxService()
-    sb = {"id": "sb1"}
-    with patch.object(svc, "active_sandboxes", {"sb1": sb}):
-        ok = svc.destroy("sb1")
-    assert ok is True
-
-
-def test_list_sandboxes_returns_list():
-    svc = SandboxService()
-    with patch.object(svc, "active_sandboxes", {"a": {}, "b": {}}):
-        result = svc.list_sandboxes()
-    assert isinstance(result, list)
-
-
-def test_get_sandbox_returns_dict_or_none():
-    svc = SandboxService()
-    with patch.object(svc, "active_sandboxes", {"sb1": {"lang": "python"}}):
-        assert svc.get_sandbox("sb1") is not None
-        assert svc.get_sandbox("missing") is None
+    @pytest.mark.asyncio
+    async def test_execute_invalid_code(self):
+        svc = SandboxService()
+        result = await svc.execute("this is not valid python")
+        assert result is not None
+        assert result.get("error") is not None

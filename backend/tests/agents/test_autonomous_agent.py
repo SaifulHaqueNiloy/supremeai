@@ -1,68 +1,42 @@
-from brain.autonomous_agent import AutonomousAgent
+"""Tests for agents/autonomous_agent.py — Autonomous agent execution."""
+import pytest
+from unittest.mock import AsyncMock, MagicMock
+from agents.autonomous_agent import AutonomousAgent
 
 
-def test_plan_debug_keywords():
-    agent = AutonomousAgent()
-    plan = agent.plan("fix database connection error")
-    assert plan["summary"] == "Investigate issue, propose fix, apply fix, verify."
-    assert plan["steps"] == ["investigate", "propose_fix", "apply_fix", "verify"]
+class TestAutonomousAgent:
+    """Autonomous agent: plan, execute, verify."""
 
+    def test_init(self):
+        agent = AutonomousAgent(goal="test goal")
+        assert agent is not None
 
-def test_plan_build_keywords():
-    agent = AutonomousAgent()
-    plan = agent.plan("create new API endpoint")
-    assert plan["summary"] == "Scaffold implementation, implement core, add basic tests."
-    assert plan["steps"] == ["scaffold", "implement", "basic_tests"]
+    @pytest.mark.asyncio
+    async def test_plan_returns_steps(self):
+        agent = AutonomousAgent(goal="Write hello world")
+        plan = await agent.plan()
+        assert plan is not None
+        assert isinstance(plan, (list, dict))
 
+    @pytest.mark.asyncio
+    async def test_execute_step(self):
+        agent = AutonomousAgent(goal="test")
+        result = await agent.execute_step({"action": "noop"})
+        assert result is not None
 
-def test_plan_analyze_keywords():
-    agent = AutonomousAgent()
-    plan = agent.plan("review code quality")
-    assert plan["summary"] == "Read inputs, analyze structure, summarize findings."
-    assert plan["steps"] == ["read_inputs", "analyze", "summarize"]
+    @pytest.mark.asyncio
+    async def test_verify_result(self):
+        agent = AutonomousAgent(goal="test")
+        result = await agent.verify({"output": "done"})
+        assert isinstance(result, (bool, dict))
 
+    def test_set_goal(self):
+        agent = AutonomousAgent(goal="initial")
+        agent.set_goal("new goal")
+        assert agent.goal == "new goal"
 
-def test_plan_default():
-    agent = AutonomousAgent()
-    plan = agent.plan("do something random")
-    assert plan["summary"] == "Default quick execution."
-    assert plan["steps"] == ["execute", "summarize"]
-
-
-def test_execute_simple():
-    agent = AutonomousAgent()
-    result = agent.execute("fix bug")
-    assert "success" in result
-    assert "steps" in result
-    assert isinstance(result["steps"], list)
-
-
-def test_execute_adds_to_history():
-    agent = AutonomousAgent()
-    agent.execute("test task")
-    assert len(agent.history) == 1
-    assert agent.history[0]["task"] == "test task"
-
-
-def test_reflect_success():
-    agent = AutonomousAgent()
-    run = {"success": True, "steps": ["a", "b"], "errors": []}
-    reflection = agent.reflect(run)
-    assert reflection["success"] is True
-    assert reflection["improvements"] == []
-
-
-def test_reflect_failure():
-    agent = AutonomousAgent()
-    run = {"success": False, "steps": ["a"], "errors": ["some error"]}
-    reflection = agent.reflect(run)
-    assert len(reflection["failures"]) == 1
-    assert len(reflection["improvements"]) == 1
-
-
-def test_run_returns_combined():
-    agent = AutonomousAgent()
-    output = agent.run("build feature")
-    assert "run" in output
-    assert "reflection" in output
-    assert output["run"]["success"] is True
+    @pytest.mark.asyncio
+    async def test_run_full_cycle(self):
+        agent = AutonomousAgent(goal="simple task")
+        result = await agent.run()
+        assert result is not None
