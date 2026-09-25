@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3391,
+  "edge_count": 3383,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -1466,6 +1466,14 @@
     {
       "from": "api.routes.agents",
       "to": "core.security.authentication.rbac"
+    },
+    {
+      "from": "api.routes.ai_assignment",
+      "to": "api.dependencies"
+    },
+    {
+      "from": "api.routes.ai_assignment",
+      "to": "core.logging_config"
     },
     {
       "from": "api.routes.analytics",
@@ -13384,6 +13392,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "tools.social.telegram_bot.ai_assignment_handler",
+      "to": "core.logging_config"
+    },
+    {
       "from": "tools.social.telegram_bot.ai_engine",
       "to": "core.logging_config"
     },
@@ -13394,42 +13406,6 @@
     {
       "from": "tools.social.telegram_bot.conversations",
       "to": "core.logging_config"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "core.config"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "tools.social.telegram_bot.admin_handlers"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "tools.social.telegram_bot.ai_engine"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "tools.social.telegram_bot.conversations"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "tools.social.telegram_bot.keyboards"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "tools.social.telegram_bot.runtime"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "tools.social.telegram_bot.updates"
-    },
-    {
-      "from": "tools.social.telegram_bot.handler",
-      "to": "tools.social.telegram_bot.user_handlers"
     },
     {
       "from": "tools.social.telegram_bot.keyboards",
@@ -13449,14 +13425,6 @@
     },
     {
       "from": "tools.social.telegram_bot.runtime",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "tools.social.telegram_bot.updates",
-      "to": "core.config"
-    },
-    {
-      "from": "tools.social.telegram_bot.updates",
       "to": "core.logging_config"
     },
     {
@@ -13568,7 +13536,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1956,
+  "module_count": 1958,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13756,6 +13724,7 @@
     "api.routes.agent_tasks",
     "api.routes.agent_workspace",
     "api.routes.agents",
+    "api.routes.ai_assignment",
     "api.routes.analytics",
     "api.routes.api_keys",
     "api.routes.approval_manager",
@@ -15493,6 +15462,7 @@
     "tools.social.telegram_bot",
     "tools.social.telegram_bot.__main__",
     "tools.social.telegram_bot.admin_handlers",
+    "tools.social.telegram_bot.ai_assignment_handler",
     "tools.social.telegram_bot.ai_engine",
     "tools.social.telegram_bot.conversations",
     "tools.social.telegram_bot.handler",
