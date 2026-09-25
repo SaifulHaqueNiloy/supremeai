@@ -3,6 +3,7 @@ from .crawler import CrawlHistoryModel, CrawlPolicyModel, DomainRuleModel
 from .dynamic_agent import DynamicAgent
 from .execution_log import ExecutionLog
 from .integration import Integration
+from .mcp_audit_event import MCPAuditEvent
 from .morphic import AgentReflection, DynamicCapability, ExecutionChain
 from .plugin_manifest import PluginManifest
 from .project import Project
@@ -25,6 +26,7 @@ __all__ = [
     "DynamicCapability",
     "ExecutionChain",
     "ExecutionLog",
+    "MCPAuditEvent",
     "PluginManifest",
     "Project",
     "RenderAccountState",

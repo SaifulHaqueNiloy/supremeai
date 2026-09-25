@@ -62,6 +62,15 @@ class AuditRecorder:
         latency_ms: float = 0.0,
         error: str | None = None,
         tenant_id: str | None = None,
+        # ── MCP Tower gap-4 (#928): extended per-agent audit contract ──
+        agent_id: str = "unknown",
+        client_role: str = "agent",
+        provider: str = "unknown",
+        args_hash: str = "",
+        result_status: str = "ok",
+        result_ref: str | None = None,
+        hitl_required: bool = False,
+        hitl_approver: str | None = None,
     ) -> None:
         self.calls.append(
             {
@@ -71,6 +80,13 @@ class AuditRecorder:
                 "latency": latency_ms,
                 "error": error,
                 "tenant": tenant_id,
+                "agent_id": agent_id,
+                "client_role": client_role,
+                "provider": provider,
+                "args_hash": args_hash,
+                "result_status": result_status,
+                "result_ref": result_ref,
+                "hitl": {"required": hitl_required, "approver": hitl_approver},
             }
         )
 
@@ -222,6 +238,9 @@ class TestListTools:
             "agent_inbox",
             "agent_ack",
             "topic_subscribe",
+            # MCP Tower gap-4 (#928): per-agent verified audit tools
+            "audit_query",
+            "audit_verify",
         ]
         for tool in tools:
             assert tool.description

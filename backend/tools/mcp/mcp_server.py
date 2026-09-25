@@ -9,6 +9,7 @@ from mcp.server import Server
 
 from core.logging_config import logger
 from core.mcp_audit import audit_tool_call
+from core.mcp_audit_chain import args_fingerprint, get_audit_chain_store
 from core.mcp_policy import evaluate_tool
 from tools.graph_service import GraphService
 
@@ -260,7 +261,84 @@ async def handle_list_tools() -> list[types.Tool]:
                 "required": ["agent_id", "topics"],
             },
         ),
+        # ── MCP Tower gap-4 (issue #928): per-agent verified audit tools ──
+        types.Tool(
+            name="audit_query",
+            description="MCP Tower gap-4 (#928): query the tamper-evident per-agent audit chain — filter by agent/tool/time-window.",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant scope (required, non-default)",
+                    },
+                    "agent_id": {"type": "string", "description": "Filter by agent id"},
+                    "tool": {"type": "string", "description": "Filter by tool name"},
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max events (default 100, cap 1000)",
+                    },
+                },
+                "required": ["tenant_id"],
+            },
+        ),
+        types.Tool(
+            name="audit_verify",
+            description="MCP Tower gap-4 (#928): verify hash-chain integrity of the audit trail + anomaly flags (failure-rate → needs-human-review).",
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant scope (required, non-default)",
+                    },
+                    "limit": {
+                        "type": "integer",
+                        "description": "Max events to verify (default 1000, cap 5000)",
+                    },
+                },
+                "required": ["tenant_id"],
+            },
+        ),
     ]
+
+
+async def _audit_chain_append(
+    *,
+    tenant_id: str,
+    tool: str,
+    decision: str,
+    risk_level: str,
+    latency_ms: float,
+    agent_id: str,
+    client_role: str,
+    provider: str,
+    args_hash: str,
+    result_status: str,
+    error: str | None = None,
+) -> None:
+    """issue #928: প্রতিটি tool call → tamper-evident chain event।
+
+    বাংলা: chain store-এ লেখা ব্যর্থ হলেও tool call নিজে ব্যর্থ হবে না — শুধু
+    জোরালো warning (audit path degraded); file log (audit_tool_call) সবসময়
+    থাকে, তাই observability হারায় না।
+    """
+    try:
+        await get_audit_chain_store().append(
+            tenant_id=tenant_id,
+            tool=tool,
+            agent_id=agent_id,
+            client_role=client_role,
+            provider=provider,
+            args_hash=args_hash,
+            result_status=result_status,
+            error=error,
+        )
+    except Exception as exc:  # noqa: BLE001 — audit failure must not break tool calls
+        logger.warning(
+            f"MCP audit-chain append failed for tool '{tool}': {exc}",
+            extra={"mcp_audit_chain_degraded": True},
+        )
 
 
 @app.call_tool()
@@ -280,6 +358,13 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
     if name not in _MESH_PLATFORM_TOOLS and (not tenant_id or tenant_id == "default"):
         return [types.TextContent(type="text", text=json.dumps({"error": "tenant_id is required"}))]
 
+    # ── MCP Tower gap-4 (#928): per-agent audit context + args fingerprint ──
+    _agent_id = str(arguments.get("agent_id") or "unknown")
+    _client_role = str(arguments.get("client_role") or arguments.get("role") or "agent")
+    _provider = str(arguments.get("provider") or "unknown")
+    _args_hash = args_fingerprint(arguments)
+    _result_status = "ok"
+
     # ── Policy evaluation (Constitution Law #11: Think Before You Act) ──
     decision, risk_level = evaluate_tool(name)
     start_time = time.monotonic()
@@ -287,6 +372,7 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
     policy_block = _check_policy(name)
     if policy_block is not None:
         latency = (time.monotonic() - start_time) * 1000
+        _result_status = "policy_blocked"
         audit_tool_call(
             name,
             decision,
@@ -294,6 +380,24 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
             latency_ms=latency,
             error="policy_blocked",
             tenant_id=tenant_id,
+            agent_id=_agent_id,
+            client_role=_client_role,
+            provider=_provider,
+            args_hash=_args_hash,
+            result_status=_result_status,
+        )
+        await _audit_chain_append(
+            tenant_id=tenant_id,
+            tool=name,
+            decision=decision,
+            risk_level=risk_level,
+            latency_ms=latency,
+            agent_id=_agent_id,
+            client_role=_client_role,
+            provider=_provider,
+            args_hash=_args_hash,
+            result_status=_result_status,
+            error="policy_blocked",
         )
         logger.warning(f"MCP tool '{name}' blocked by policy: {risk_level}")
         return [types.TextContent(type="text", text=json.dumps(policy_block, indent=2))]
@@ -480,16 +584,72 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
                 )
             ]
 
+        elif name == "audit_query":
+            # ── MCP Tower gap-4 (#928): per-agent verified audit query ──
+            from datetime import UTC, datetime
+
+            since_raw = str(arguments.get("since") or "").strip()
+            since = datetime.fromisoformat(since_raw) if since_raw else None
+            events = await get_audit_chain_store().query(
+                tenant_id,
+                agent_id=str(arguments.get("agent_id") or "") or None,
+                tool=str(arguments.get("tool") or "") or None,
+                since=since,
+                limit=int(arguments.get("limit") or 100),
+            )
+            return [
+                types.TextContent(
+                    type="text",
+                    text=json.dumps(
+                        {"status": "ok", "count": len(events), "events": events}, indent=2
+                    ),
+                )
+            ]
+
+        elif name == "audit_verify":
+            # ── MCP Tower gap-4 (#928): hash-chain integrity + anomaly flags ──
+            report = await get_audit_chain_store().verify(
+                tenant_id,
+                limit=int(arguments.get("limit") or 1000),
+            )
+            report["status"] = "ok" if report["chain_intact"] else "TAMPERED"
+            return [types.TextContent(type="text", text=json.dumps(report, indent=2))]
+
         else:
             raise ValueError(f"Unknown MCP tool: {name}")
 
     except Exception as e:
+        _result_status = "error"
         logger.error(f"MCP Server execution error: {e}")
         return [types.TextContent(type="text", text=f"Error gathering graph context: {e!s}")]
     finally:
         # ── Audit logging (Constitution Law #19: Observable) ──
         latency = (time.monotonic() - start_time) * 1000
-        audit_tool_call(name, decision, risk_level, latency_ms=latency, tenant_id=tenant_id)
+        audit_tool_call(
+            name,
+            decision,
+            risk_level,
+            latency_ms=latency,
+            tenant_id=tenant_id,
+            agent_id=_agent_id,
+            client_role=_client_role,
+            provider=_provider,
+            args_hash=_args_hash,
+            result_status=_result_status,
+        )
+        # ── MCP Tower gap-4 (#928): tamper-evident chain event (awaited) ──
+        await _audit_chain_append(
+            tenant_id=tenant_id,
+            tool=name,
+            decision=decision,
+            risk_level=risk_level,
+            latency_ms=latency,
+            agent_id=_agent_id,
+            client_role=_client_role,
+            provider=_provider,
+            args_hash=_args_hash,
+            result_status=_result_status,
+        )
 
 
 async def main():

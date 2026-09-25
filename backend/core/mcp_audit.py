@@ -34,6 +34,14 @@ class MCPAuditEntry:
         latency_ms: float = 0.0,
         error: str | None = None,
         tenant_id: str | None = None,
+        agent_id: str = "unknown",
+        client_role: str = "agent",
+        provider: str = "unknown",
+        args_hash: str = "",
+        result_status: str = "ok",
+        result_ref: str | None = None,
+        hitl_required: bool = False,
+        hitl_approver: str | None = None,
     ) -> None:
         self.id = str(uuid.uuid4())
         self.timestamp = datetime.now(UTC).isoformat()
@@ -42,6 +50,15 @@ class MCPAuditEntry:
         self.risk_level = risk_level
         self.latency_ms = round(latency_ms, 2)
         self.error = error
+        # ── MCP Tower gap-4 (issue #928): per-agent verified-audit fields ──
+        self.agent_id = agent_id or "unknown"
+        self.client_role = client_role or "agent"
+        self.provider = provider or "unknown"
+        self.args_hash = args_hash
+        self.result_status = result_status or ("error" if error else "ok")
+        self.result_ref = result_ref
+        self.hitl_required = hitl_required
+        self.hitl_approver = hitl_approver
         normalized_tenant_id = str(tenant_id or "").strip()
         if not normalized_tenant_id or normalized_tenant_id == "default":
             raise ValueError("MCP audit requires an explicit tenant_id")
@@ -59,6 +76,13 @@ class MCPAuditEntry:
             "error": self.error,
             "tenant_id": self.tenant_id,
             "server": self.server,
+            "agent_id": self.agent_id,
+            "client_role": self.client_role,
+            "provider": self.provider,
+            "args_hash": self.args_hash,
+            "result_status": self.result_status,
+            "result_ref": self.result_ref,
+            "hitl": {"required": self.hitl_required, "approver": self.hitl_approver},
         }
 
 
@@ -123,6 +147,14 @@ def audit_tool_call(
     latency_ms: float = 0.0,
     error: str | None = None,
     tenant_id: str | None = None,
+    agent_id: str = "unknown",
+    client_role: str = "agent",
+    provider: str = "unknown",
+    args_hash: str = "",
+    result_status: str = "ok",
+    result_ref: str | None = None,
+    hitl_required: bool = False,
+    hitl_approver: str | None = None,
 ) -> None:
     """Convenience: create entry + log in one call."""
     logger_instance = get_audit_logger()
@@ -135,5 +167,13 @@ def audit_tool_call(
         latency_ms=latency_ms,
         error=error,
         tenant_id=tenant_id,
+        agent_id=agent_id,
+        client_role=client_role,
+        provider=provider,
+        args_hash=args_hash,
+        result_status=result_status,
+        result_ref=result_ref,
+        hitl_required=hitl_required,
+        hitl_approver=hitl_approver,
     )
     logger_instance.log(entry)
