@@ -7,6 +7,7 @@ from __future__ import annotations
 from unittest.mock import MagicMock
 
 import pytest
+from fastapi import HTTPException
 
 from services.knowledge_qa import Citation, KnowledgeQAService
 
@@ -181,3 +182,20 @@ class TestGovernanceResurrectionM23PA:
         )
         assert payload["grounded"] is False
         assert payload["citations"] == []
+
+    async def test_answer_vector_store_failure_is_honest_503(self):
+        # Wave 4.7 (issue #1282): vector-store/infrastructure ব্যর্থ হলে raw 500
+        # নয় — সৎ 503 হবে (HTTPException হিসেবে), কখনোই unhandled traceback নয়।
+        service = self._service([])
+        service.vector_store.query = MagicMock(side_effect=RuntimeError("pgvector RPC unreachable"))
+        with pytest.raises(HTTPException) as exc:
+            await service.answer("q", {"tenant_id": "t1", "sub": "u1", "role": "standard_user"}, 3)
+        assert exc.value.status_code == 503
+        assert "temporarily unavailable" in exc.value.detail
+
+    async def test_answer_authorization_errors_pass_through(self):
+        # HTTPException (401/403) must NOT be swallowed by the 503 guard.
+        service = self._service([])
+        with pytest.raises(HTTPException) as exc:
+            await service.answer("q", {"tenant_id": "", "sub": "", "role": "x"}, 3)
+        assert exc.value.status_code == 401

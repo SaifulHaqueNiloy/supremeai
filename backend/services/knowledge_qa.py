@@ -11,6 +11,7 @@ from typing import Any
 from fastapi import HTTPException, status
 
 from core.llm.llm_gateway import GatewayManager
+from core.logging_config import logger
 from core.observability.audit_logger import AuditLogger
 from memory.chromadb_store import ChromaDBStore
 
@@ -147,7 +148,18 @@ class KnowledgeQAService:
 
     async def answer(self, query: str, user: dict[str, Any], limit: int = 3) -> dict[str, Any]:
         tenant_id, role = self._authorize(user)
-        matches = self.retrieve(query, tenant_id, role, limit)
+        try:
+            matches = self.retrieve(query, tenant_id, role, limit)
+        except HTTPException:
+            raise
+        except Exception as exc:
+            # Wave 4.7 (issue #1282): vector-store/infrastructure failure must
+            # surface as an honest 503 — never an unhandled 500.
+            logger.error(f"Knowledge retrieval infrastructure failure: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                detail="Knowledge retrieval is temporarily unavailable.",
+            ) from exc
         query_hash = hashlib.sha256(query.encode("utf-8")).hexdigest()
 
         if not matches:
