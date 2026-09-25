@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-25 07:17 UTC
+- **Date:** 2026-09-25 07:21 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,29 +10,10 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/tests/unit_light/test_security_rate_limiter.py`
-  - `docs/generated/module_capability_matrix.json`
-  - `docs/operations/REDIS_POOL_REGISTRY.md`
-  - `backend/tests/core/test_rate_limiter_lua_invariants.py`
-  - `backend/api/routes/api_keys.py`
-  - `backend/core/rate_limiter.py`
-  - `backend/tests/api/test_api_keys.py`
-  - `scripts/testing/test_runners.py`
-  - `docs/generated/backend_import_graph.json`
-  - `scripts/observability_baseline.json`
-  - `backend/tests/api/test_admin_routes.py`
-  - `backend/tests/core/test_core_rate_limiter.py`
-  - `backend/tests/unit_light/test_deprecated_shims.py`
-  - `docs/SKIPPED_TESTS.md`
-  - `scripts/ci/check_critical_invariants.py`
-  - `backend/core/security/api_key_middleware.py`
-  - `backend/tests/unit_light/test_rate_limit_quota.py`
-  - `backend/core/rate_limit_quota.py`
-  - `backend/tools/api_gateway.py`
+  - `backend/tests/api/routes/test_admin_security_telemetry.py`
+  - `CHECKPOINT.md`
   - `backend/core/security/rate_limiter.py`
-  - `backend/core/health/health_probes.py`
-  - `docs/generated/domain_dependency_graph.json`
-  - `docs/generated/domain_dependency_graph.mmd`
+  - `backend/tests/unit_light/test_deprecated_shims.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
