@@ -19,7 +19,7 @@ const StepFirstChat = ({ data, updateData, prevStep }: StepFirstChatProps) => {
 
   return (
     <div className="flex flex-col space-y-4 animate-fadeIn">
-      <h3 className="text-xl font-semibold">Step 3: Ready for launch 🚀</h3>
+      <h3 className="text-xl font-semibold">Step 2: Ready for launch 🚀</h3>
       <p className="text-gray-400 text-sm">What would you like SupremeAI to build or help you with today?</p>
 
       <div className="space-y-2 mt-4">
