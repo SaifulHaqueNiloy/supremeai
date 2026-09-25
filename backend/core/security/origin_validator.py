@@ -1,5 +1,6 @@
 # বাংলা কমেন্ট: সুপ্রিম-এআই এর ট্রাস্টেড অরিজিন ভ্যালিডেশন মিডলওয়্যার।
 # এটি ওয়াইল্ডকার্ড CORS বাইপাস রোধ করে এবং শুধুমাত্র অনুমোদিত ডোমেইন থেকে এপিআই অ্যাক্সেস নিশ্চিত করে।
+import json
 import os
 
 from fastapi import Request, status
@@ -7,8 +8,8 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
-from core.logging_config import logger
 from core.config_parsers import parse_origin_list
+from core.logging_config import logger
 from middleware.cors_policy import (
     ADMIN_ORIGIN_DENYLIST,
     USER_ORIGIN_DENYLIST,
@@ -21,9 +22,21 @@ def _load_origins(env_var: str, default: frozenset[str]) -> frozenset[str]:
     # Roadmap 1.4 (issue #1173): canonical single parser — আগের হাতে-লেখা
     # JSON/comma কপির strip/cast drift দূর হলো (JSON array-র ভুয়া স্পেস/খালি
     # এন্ট্রিও এখন canonical ভাবে পরিষ্কার হয়)।
+    # নিরাপত্তা চুক্তি (pre-#1174 contract; #1174 এ ভেঙেছিল, এখন পুনরুদ্ধার):
+    # JSON যদি পার্স হয় কিন্তু লিস্ট না হয় (dict/num/bool) → নীরবে default —
+    # garbage মান কখনো trusted origin হতে পারবে না
+    # (test_env_json_non_list_falls_back_to_default এই চুক্তি রক্ষা করে)।
     val = os.getenv(env_var)
-    if val:
+    if not val:
+        return default
+    try:
+        parsed = json.loads(val)
+    except (json.JSONDecodeError, ValueError):
+        # JSON নয় → কমা-লিস্ট পথ (canonical parser strip/empty-entry করে)
         return frozenset(parse_origin_list(val))
+    if isinstance(parsed, list):
+        return frozenset(parse_origin_list(val))
+    # পার্স হয়েছে কিন্তু লিস্ট নয় → default (fail-closed, security)
     return default
 
 

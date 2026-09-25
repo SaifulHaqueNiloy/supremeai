@@ -189,7 +189,10 @@ async def handle_list_tools() -> list[types.Tool]:
                         "type": "integer",
                         "description": "Time-to-live (default 86400, max 604800)",
                     },
-                    "tenant_id": {"type": "string", "description": "Tenant scope — explicit non-default tenant id (required at call time)"},
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant scope — explicit non-default tenant id (required at call time)",
+                    },
                 },
                 "required": ["from_agent", "to_agent"],
             },
@@ -213,7 +216,10 @@ async def handle_list_tools() -> list[types.Tool]:
                         "type": "integer",
                         "description": "Max messages to return (default 50, max 200)",
                     },
-                    "tenant_id": {"type": "string", "description": "Tenant scope — explicit non-default tenant id (required at call time)"},
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant scope — explicit non-default tenant id (required at call time)",
+                    },
                 },
                 "required": ["agent_id"],
             },
@@ -226,7 +232,10 @@ async def handle_list_tools() -> list[types.Tool]:
                 "properties": {
                     "message_id": {"type": "string", "description": "Message id to ack"},
                     "agent_id": {"type": "string", "description": "Acking agent id"},
-                    "tenant_id": {"type": "string", "description": "Tenant scope — explicit non-default tenant id (required at call time)"},
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant scope — explicit non-default tenant id (required at call time)",
+                    },
                 },
                 "required": ["message_id", "agent_id"],
             },
@@ -243,7 +252,10 @@ async def handle_list_tools() -> list[types.Tool]:
                         "items": {"type": "string"},
                         "description": "Topics to subscribe (idempotent union)",
                     },
-                    "tenant_id": {"type": "string", "description": "Tenant scope — explicit non-default tenant id (required at call time)"},
+                    "tenant_id": {
+                        "type": "string",
+                        "description": "Tenant scope — explicit non-default tenant id (required at call time)",
+                    },
                 },
                 "required": ["agent_id", "topics"],
             },

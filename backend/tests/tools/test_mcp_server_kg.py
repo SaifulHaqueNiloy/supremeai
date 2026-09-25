@@ -573,9 +573,7 @@ def fresh_mailbox():
 class TestAgentMailboxTools:
     """A→B send → B inbox → ack E2E + reply_to + tenant isolation (issue #927)."""
 
-    async def test_send_inbox_ack_e2e(
-        self, fresh_mailbox: Any, audit_spy: AuditRecorder
-    ) -> None:
+    async def test_send_inbox_ack_e2e(self, fresh_mailbox: Any, audit_spy: AuditRecorder) -> None:
         sent = _json(
             await mcp_server.handle_call_tool(
                 "agent_send",
@@ -631,9 +629,7 @@ class TestAgentMailboxTools:
     ) -> None:
         """MCP audit contract: explicit tenant required — clean error, no crash."""
         payload = _json(
-            await mcp_server.handle_call_tool(
-                "agent_send", {"from_agent": "a", "to_agent": "b"}
-            )
+            await mcp_server.handle_call_tool("agent_send", {"from_agent": "a", "to_agent": "b"})
         )
         assert payload == {"error": "tenant_id is required"}
         assert audit_spy.calls == []
@@ -661,9 +657,7 @@ class TestAgentMailboxTools:
         assert reply["reply_to"] == parent["message_id"]
 
         inbox = _json(
-            await mcp_server.handle_call_tool(
-                "agent_inbox", {**tenant, "agent_id": "planner-1"}
-            )
+            await mcp_server.handle_call_tool("agent_inbox", {**tenant, "agent_id": "planner-1"})
         )
         assert inbox["count"] == 1
         assert inbox["messages"][0]["message_id"] == reply["message_id"]
@@ -689,7 +683,11 @@ class TestAgentMailboxTools:
         text = _text(
             await mcp_server.handle_call_tool(
                 "agent_ack",
-                {"tenant_id": "tenant-acme", "message_id": sent["message_id"], "agent_id": "coder-1"},
+                {
+                    "tenant_id": "tenant-acme",
+                    "message_id": sent["message_id"],
+                    "agent_id": "coder-1",
+                },
             )
         )
         assert "cross-tenant" in text

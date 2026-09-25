@@ -119,7 +119,9 @@ class MeshMailboxEndpointTest(unittest.TestCase):
     # ── 3. reply threading ───────────────────────────────────────────────────
     def test_reply_to_threading(self) -> None:
         parent = self._send(to_agent="coder-1")
-        reply = self._send(from_agent="coder-1", to_agent="planner-1", reply_to=parent["message_id"])
+        reply = self._send(
+            from_agent="coder-1", to_agent="planner-1", reply_to=parent["message_id"]
+        )
         self.assertEqual(reply["reply_to"], parent["message_id"])
         inbox = self._inbox("planner-1")
         self.assertEqual(inbox["count"], 1)
@@ -237,5 +239,3 @@ class MeshMailboxEndpointTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
