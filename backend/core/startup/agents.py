@@ -102,6 +102,40 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ BugProphet Anomaly Detector failed to start: {exc}")
 
+    # Agent 5: Self-Heartbeat (agent-10 slot, issue #1402) — SupremeAI pings
+    # the shared agent-heartbeat Redis key so the /api/agents dashboard shows
+    # agent-10 as 🟢 online while the backend is running (previously only
+    # agent-11's dashboard pinged, every other slot showed "no heartbeat").
+    # Zero-LLM-cost, ~1.9k Redis commands/day (0.4% Upstash budget) — default
+    # ON with a kill switch, per LEARNING_LOOP/SYNAPTIC_DREAM precedent.
+    try:
+        import os
+
+        if os.getenv("ENABLE_AGENT_HEARTBEAT", "true").lower() == "true":
+            from core.agent_heartbeat import (
+                redis_configured_for_heartbeat,
+                run_agent_heartbeat_loop,
+            )
+
+            if redis_configured_for_heartbeat():
+                await agent_supervisor.start_agent(
+                    "agent-10-heartbeat",
+                    run_agent_heartbeat_loop,
+                    health_check_interval=300,
+                    max_restarts=5,
+                    restart_delay=10.0,
+                )
+                logger.info("✅ Agent-10 self-heartbeat loop started (45s cadence, TTL 300s).")
+            else:
+                logger.info(
+                    "ℹ️ Agent-10 self-heartbeat disabled — no real REDIS_URL configured "
+                    "(dashboard will show agent-10 as 'assigned · no heartbeat')."
+                )
+        else:
+            logger.info("ℹ️ Agent-10 self-heartbeat disabled via ENABLE_AGENT_HEARTBEAT.")
+    except Exception as exc:
+        logger.warning(f"⚠️ Agent-10 self-heartbeat failed to start: {exc}")
+
     import os
 
     # Start Tier-8 Meta-Self Agents
