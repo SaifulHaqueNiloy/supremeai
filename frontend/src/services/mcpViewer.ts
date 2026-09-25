@@ -64,7 +64,12 @@ export async function loadMcpViewerData(value: string, token = ''): Promise<McpV
     manifest = await getJson(`${baseUrl}/manifest`, token)
   } catch (error) {
     if (!(error instanceof Error) || !error.message.includes('404')) {
-      try { manifest = await getJson(`${baseUrl}/mcp/manifest`, token) } catch { /* health data is still useful */ }
+      try {
+        manifest = await getJson(`${baseUrl}/mcp/manifest`, token)
+      } catch (err) {
+        // health/dashboard data is still useful — log and continue without a manifest.
+        console.warn('[mcp-viewer] /mcp/manifest fetch failed, continuing without manifest:', err)
+      }
     }
   }
 

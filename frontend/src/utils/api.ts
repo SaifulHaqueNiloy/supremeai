@@ -99,7 +99,9 @@ export function normalizeBackendUrl(value: unknown): string {
     const parsed = new URL(normalized);
     if (!['http:', 'https:'].includes(parsed.protocol)) return '';
     return parsed.toString().replace(/\/$/, '');
-  } catch {
+  } catch (err) {
+    // অবৈধ URL → খালি স্ট্রিং fallback, তবে কারণটা লগে থাকবে।
+    console.warn('[api] backend URL normalization failed, using empty fallback:', err);
     return '';
   }
 }

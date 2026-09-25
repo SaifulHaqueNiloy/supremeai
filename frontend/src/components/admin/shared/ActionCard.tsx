@@ -31,8 +31,9 @@ export function ActionCard({ rawContent, onSaveToProject, onPreview }: ActionCar
     if (rawContent.trim().startsWith('{')) {
       parsed = JSON.parse(rawContent);
     }
-  } catch {
-    // Not a JSON response, fallback to text rendering
+  } catch (err) {
+    // Not a JSON response — log it, then fall back to text rendering.
+    console.warn('[action-card] response JSON parse failed, rendering as text:', err);
   }
 
   const handleAction = async (action: Action, content: string) => {

@@ -42,8 +42,9 @@ function parseActionCard(raw: string): { type: string; content: string; metadata
     if (raw.trim().startsWith('{')) {
       return JSON.parse(raw);
     }
-  } catch {
-    // fallback
+  } catch (err) {
+    // JSON না হলে টেক্সট হিসেবে রেন্ডার — কিন্তু কারণটা লগে থাকবে।
+    console.warn('[chat] action card JSON parse failed, using text fallback:', err);
   }
   return null;
 }

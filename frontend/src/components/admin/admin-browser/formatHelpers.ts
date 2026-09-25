@@ -32,8 +32,9 @@ function extractFromDocument(doc: Document): ExtractedPageInfo {
         body.textContent ||
         '';
     }
-  } catch {
-    // ignore extraction problems — title may still be available
+  } catch (err) {
+    // Surface extraction problems — title may still be available.
+    console.warn('[admin-browser] body text extraction failed:', err);
   }
 
   text = text.replace(/\s+/g, ' ').trim();
@@ -60,9 +61,10 @@ export async function getPageContent(
     if (doc) {
       info = extractFromDocument(doc);
     }
-  } catch {
+  } catch (err) {
     // Cross-origin iframe: contentDocument access throws (or returns null
     // depending on the browser). Fall through to the limited context below.
+    console.warn('[admin-browser] iframe document access failed (cross-origin?):', err);
   }
 
   if (!info.readable) {

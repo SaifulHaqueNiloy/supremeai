@@ -73,7 +73,8 @@ export function VisualRulesBuilder() {
             const safeInput = testingInput.slice(0, 10000);
             const safePattern = r.value.slice(0, 500);
             return new RegExp(safePattern).test(safeInput);
-          } catch {
+          } catch (err) {
+            console.warn('[rules-builder] invalid regex pattern, treating as non-match:', err);
             return false;
           }
         }
