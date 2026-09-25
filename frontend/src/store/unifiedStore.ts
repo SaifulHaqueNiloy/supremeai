@@ -154,6 +154,21 @@ export interface UnifiedState {
   userPreferences: Record<string, unknown>;
   setUserPreference: (key: string, value: unknown) => void;
   
+  // ── DASHBOARD UI (migrated from dashboardStore — Wave 3.7, issue #1263) ──
+  isDeploymentModalOpen: boolean;
+  setDeploymentModal: (isOpen: boolean) => void;
+  systemStatus: 'healthy' | 'degraded' | 'critical';
+  updateSystemStatus: (status: 'healthy' | 'degraded' | 'critical') => void;
+  activePanel: string | null;
+  setActivePanel: (panel: string | null) => void;
+  dashboardMode: 'simple' | 'advanced';
+  chatTabTerminalOpen: boolean;
+  chatTabBrowserOpen: boolean;
+  toggleDashboardMode: () => void;
+  toggleTerminal: () => void;
+  toggleBrowser: () => void;
+
+  
   // ── UTILITIES ──
   resetState: () => void;
   getStateSnapshot: () => unknown;
@@ -182,6 +197,13 @@ const initialState = {
   globalLoading: false,
   sidebarCollapsed: false,
   activeModule: null as string | null,
+  // ── DASHBOARD UI (dashboardStore migration) ──
+  isDeploymentModalOpen: false,
+  systemStatus: 'healthy' as 'healthy' | 'degraded' | 'critical',
+  activePanel: null as string | null,
+  dashboardMode: 'simple' as 'simple' | 'advanced',
+  chatTabTerminalOpen: true,
+  chatTabBrowserOpen: true,
   currentUserId: null as string | null,
   userPreferences: {} as Record<string, unknown>,
 };
@@ -394,6 +416,18 @@ export const useUnifiedStore = create<UnifiedState>()(
     // UTILITY METHODS
     // ════════════════════════════════════════════════════════════════════
     
+    // ════════════════════════════════════════════════════════════════════
+    // DASHBOARD UI METHODS (migrated from dashboardStore — issue #1263)
+    // ════════════════════════════════════════════════════════════════════
+
+    setDeploymentModal: (isOpen) => set({ isDeploymentModalOpen: isOpen }),
+    updateSystemStatus: (status) => set({ systemStatus: status }),
+    setActivePanel: (panel) => set({ activePanel: panel }),
+    toggleDashboardMode: () =>
+      set((state) => ({ dashboardMode: state.dashboardMode === 'simple' ? 'advanced' : 'simple' })),
+    toggleTerminal: () => set((state) => ({ chatTabTerminalOpen: !state.chatTabTerminalOpen })),
+    toggleBrowser: () => set((state) => ({ chatTabBrowserOpen: !state.chatTabBrowserOpen })),
+
     resetState: () => set(initialState),
     
     getStateSnapshot: () => {

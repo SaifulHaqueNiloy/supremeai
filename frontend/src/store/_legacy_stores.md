@@ -1,16 +1,19 @@
 # R13 — Legacy Zustand Stores Migration Map
 
+> Status refresh 2026-09-25 (Wave 3.7, issue #1263): 3 rows referenced files already
+> deleted from main (stale); dashboardStore migration completed. 8 stores remain.
+
 These 12 stores are targeted for consolidation into `unifiedStore.ts`.
 
 | Legacy store file            | unifiedStore slice  | Status  |
 |------------------------------|---------------------|---------|
 | `adminStore.ts`              | `admin`             | pending |
 | `authStore.ts`               | `auth`              | pending |
-| `chatStore.ts`               | `chat`              | pending |
+| `chatStore.ts`               | `chat`              | ✅ deleted on main (file removed) — no shim needed |
 | `customerStore.ts`           | `customer`          | pending |
-| `dashboardStore.ts`          | `dashboard`         | pending |
+| `dashboardStore.ts`          | `dashboard`         | ✅ migrated (Wave 3.7, issue #1263) — 1-line shim re-exporting useUnifiedStore |
 | `sessionCockpitStore.ts`     | `session`           | pending |
-| `themeStore.ts`              | `theme`             | pending |
+| `themeStore.ts`              | `theme`             | ✅ deleted on main — theme lives in ThemeProvider context (not a store concern) |
 | `useIdeStore.ts`             | `ide`               | pending |
 | `useStore.ts`                | `root` (passthrough) | pending |
 | `useSupremeStore.ts`         | `supreme`           | pending |
