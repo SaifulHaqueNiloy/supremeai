@@ -14,7 +14,7 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 823,
+    "backend_routes": 826,
     "frontend_unique_refs": 142,
     "routes_with_frontend_consumer": 263,
     "unmounted_routes": 0,
@@ -24,7 +24,7 @@
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 161,
-      "admin-only": 321,
+      "admin-only": 324,
       "internal": 38,
       "deprecated": 0,
       "api-only": 303,
@@ -1058,6 +1058,34 @@
       "mounted": true,
       "is_admin": true,
       "operation": "get_security_findings",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/security/memory",
+      "declared": "/admin-api/security/memory",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_dashboard/endpoints_security_memory.py",
+      "module": "api.routes.admin_dashboard.endpoints_security_memory",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_security_memory",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/security/tasks",
+      "declared": "/admin-api/security/tasks",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_dashboard/endpoints_security_memory.py",
+      "module": "api.routes.admin_dashboard.endpoints_security_memory",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_security_tasks",
       "frontend_consumers": [],
       "classification": "admin-only"
     },
@@ -8554,6 +8582,20 @@
       "frontend_consumers": [
         "frontend/src/data/hooks.ts"
       ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/hitl/resume/:param",
+      "declared": "/api/v1/hitl/resume/{record_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/hitl_admin.py",
+      "module": "api.routes.hitl_admin",
+      "registry_prefix": "/api/v1/hitl",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "resume_decision_via_token",
+      "frontend_consumers": [],
       "classification": "admin-only"
     },
     {
