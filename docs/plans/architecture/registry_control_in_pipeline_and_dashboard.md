@@ -323,7 +323,7 @@ config/
 
 আপনার বর্তমান:
 
-`SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md`
+`SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY.md`
 
 এটা থাকবে generated/documentation layer হিসেবে।
 

@@ -5,7 +5,7 @@ document_role: policy
 planning_authority: Infrastructure Circle
 status: active
 last_verified: 2026-09-15
-canonical: true  # free-tier POLICY canonical (architecture lives in free_tier_federation_master_plan_v4.md)
+canonical: true  # free-tier POLICY canonical (architecture lives in free_tier_federation_master_plan.md)
 source_file: docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md
 supersedes: []  # referenced target free_tier_multi_service_scale_master_plan.md no longer exists in repository (historical)
 superseded_by: []

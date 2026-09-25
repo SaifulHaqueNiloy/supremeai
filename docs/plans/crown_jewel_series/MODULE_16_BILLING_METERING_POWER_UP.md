@@ -78,7 +78,7 @@ acceptance_criteria:
 | লেগেসি-ডক | স্ট্যাটাস | সিদ্ধান্ত |
 |---|---|---|
 | docs/plans/features/Plan_10_API_Limit_Discovery.md | historical | সীমা-আবিষ্কার-দাবি ইতোমধ্যে বাস্তবায়ন-বহি; বিরোধ নেই |
-| docs/plans/features/free_tier_federation_master_plan_v4.1... | active | ফ্রি-টিয়ার-ফেডারেশন এই মডিউলের ফ্রি-রেল-অটুট-শর্তের সহিত; পরিপূরক |
+| docs/plans/features/free_tier_federation_master_plan.1... | active | ফ্রি-টিয়ার-ফেডারেশন এই মডিউলের ফ্রি-রেল-অটুট-শর্তের সহিত; পরিপূরক |
 | docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md | active | সংবিধান-স্তরের নথি; P-A…P-H এর চেয়ে কঠোর কিছু প্রস্তাব করে না — সংগত |
 | billing-gateway-সমর্পিত-প্ল্যান | অনুপস্থিত | **greenfield** — docs/plans-এ কোনো billing-গেটওয়ে প্ল্যান নেই; এই নীলনকশাই প্রথম |
 | Module 14 (p2p/credit_system) | published | boundary: p2p স্টাব-রায় দাঁড়ায় — পুনঃ-অডিট নয় |

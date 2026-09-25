@@ -4,6 +4,7 @@
 // বাংলা মন্তব্য: এটি অ্যাপ্লিকেশনের সেন্ট্রাল এপিআই ক্লায়েন্ট যা হেডার, টোকেন এবং সিকিউর রেট লিমিট (429) / ভ্যালিডেশন এরর ইন্টারসেপ্ট করে।
 
 import { getApiBaseUrl } from '../utils/api';
+import { buildUrl } from '@supremeai/shared-services';
 import { getDeviceFingerprint } from '../utils/deviceFingerprint';
 import { clearAdminToken, clearUserToken, getAdminToken, getUserToken } from './tokenStorage';
 import PQueue from 'p-queue';
@@ -357,7 +358,7 @@ export const apiClient = {
     // FIX (P1, review 2026-09-12): `options` was spread LAST, so a caller passing
     // `options.headers` silently REPLACED the merged auth headers. Spread options
     // first, then re-assert the computed method/headers/body.
-    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
+    const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
       ...options,
       method: 'GET',
       headers: {
@@ -370,7 +371,7 @@ export const apiClient = {
 
   post: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
     const authHeaders = await getAuthHeaders();
-    const finalUrl = `${getApiBaseUrl(path)}${path}`;
+    const finalUrl = buildUrl(getApiBaseUrl(path), path);
     if (
       !authHeaders['Idempotency-Key'] &&
       !(options?.headers as Record<string, string>)?.['Idempotency-Key'] &&
@@ -393,7 +394,7 @@ export const apiClient = {
 
   put: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
     const authHeaders = await getAuthHeaders();
-    const finalUrl = `${getApiBaseUrl(path)}${path}`;
+    const finalUrl = buildUrl(getApiBaseUrl(path), path);
     if (
       !authHeaders['Idempotency-Key'] &&
       !(options?.headers as Record<string, string>)?.['Idempotency-Key'] &&
@@ -420,7 +421,7 @@ export const apiClient = {
   postForm: async <T>(path: string, body: FormData, options?: RequestInit): Promise<T> => {
     const authHeaders = await getAuthHeaders();
     delete authHeaders['Content-Type'];
-    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
+    const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
       ...options,
       method: 'POST',
       headers: {
@@ -434,7 +435,7 @@ export const apiClient = {
 
   patch: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
     const authHeaders = await getAuthHeaders();
-    const finalUrl = `${getApiBaseUrl(path)}${path}`;
+    const finalUrl = buildUrl(getApiBaseUrl(path), path);
     if (
       !authHeaders['Idempotency-Key'] &&
       !(options?.headers as Record<string, string>)?.['Idempotency-Key'] &&
@@ -457,7 +458,7 @@ export const apiClient = {
 
   delete: async <T>(path: string, options?: RequestInit): Promise<T> => {
     // FIX (P1, review 2026-09-12): options first — see get() above.
-    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
+    const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
       ...options,
       method: 'DELETE',
       headers: {
@@ -473,7 +474,7 @@ export const apiClient = {
     if (otpCode) {
       headers['X-JIT-OTP'] = otpCode;
     }
-    const res = await throttledFetch(`${getApiBaseUrl(path)}${path}`, {
+    const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
       method: 'POST',
       headers,
       body: body ? JSON.stringify(body) : undefined,
@@ -488,7 +489,7 @@ export const apiClient = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
 
-      const res = await fetch(`${getApiBaseUrl(path)}${path}`, {
+      const res = await fetch(buildUrl(getApiBaseUrl(path), path), {
         method,
         headers: await getAuthHeaders(),
         body: body && method === 'POST' ? JSON.stringify(body) : undefined,

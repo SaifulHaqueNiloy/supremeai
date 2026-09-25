@@ -28,10 +28,6 @@ def _load_lua_scripts() -> list[tuple[str, str]]:
     middleware = importlib.import_module("middleware.rate_limiter")
     scripts.append(("middleware.rate_limiter", middleware._SLIDING_WINDOW_LUA))
 
-    security = importlib.import_module("core.security.rate_limiter")
-    limiter = security.SlidingWindowRateLimiter()
-    scripts.append(("core.security.rate_limiter", limiter.lua_script))
-
     return scripts
 
 

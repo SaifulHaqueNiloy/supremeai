@@ -41,7 +41,7 @@ Per-plan status lives in the **generated** `plan_registry.json` (source of truth
 | `crown_jewel_series/` | 18-module "power-up" series — per-module plans with live cross-references | [`crown_jewel_series/README.md`](./crown_jewel_series/README.md) (load-bearing index — kept per #1184) |
 | `design/` | Dashboard/chat UI design plans (customer-facing) | `dashboard_design_mockups.md`, `admin_dashboard_plan.md` |
 | `features/` | Feature plans Plan_00–Plan_24 series + naming convention | `Plan_24_AI_Agent_Ecosystem_Integration.md`, `PLAN_006_MEM0_STYLE_MEMORY_CONSOLIDATION.md` |
-| `infrastructure/` | Config registry, DB schema, Render runtime, free-tier federation | `SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md` |
+| `infrastructure/` | Config registry, DB schema, Render runtime, free-tier federation | `SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY.md` |
 | `phases/` | Execution phases, milestone trackers, plan inventory report | `implementation_and_milestone_trackers.md` |
 
 ---
@@ -99,7 +99,7 @@ To prevent mixing internal platform policies with customer workflows, all plans 
 ├── SUPREMEAI_MASTER_PLAN_CANONICAL.md ← Master plan (supersedes UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md)
 ├── browser_automation.md               ← Canonical browser plan ⭐
 ├── distributed_infrastructure_central_control_plane_plan.md
-├── dynamic_ai_architecture_v5_zero_downtime.md
+├── dynamic_ai_architecture_zero_downtime.md
 ├── federated_capability_circles_topology.md
 └── (13+ other components)
 ```
@@ -119,8 +119,8 @@ To prevent mixing internal platform policies with customer workflows, all plans 
 ### Infrastructure (`infrastructure/`) — Operational foundations
 
 ```
-├── SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md
-├── free_tier_federation_master_plan_v4.md
+├── SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY.md
+├── free_tier_federation_master_plan.md
 ├── supabase_database_schema_and_connection_management_plan.md
 └── (10+ operational plans)
 ```
@@ -206,7 +206,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | Subfolder | Count | Representative Plans |
 |-----------|-------|----------------------|
 | `features/` | 40 | `cloudflare_7node_global_edge_mesh_plan.md`, `kaggle_6node_cluster_compute_plan.md`, `production_hardening_and_p1_p2_roadmap_2026_09_11.md` |
-| `infrastructure/` | 13 | `free_tier_federation_master_plan_v4.md`, `render_3services_ghcr_deployment_roadmap_bn.md`, `infisical_enterprise_secret_management_guide.md` |
+| `infrastructure/` | 13 | `free_tier_federation_master_plan.md`, `render_3services_ghcr_deployment_roadmap_bn.md`, `infisical_enterprise_secret_management_guide.md` |
 | `phases/` | 15 | `phase1_foundation.md` → `phase4_optimization.md`, `PRODUCTION_ROADMAP_2026-09-11.md`, `yearly_strategic_roadmap_2026.md` |
 | `design/` | 7 | `admin_dashboard_plan.md`, `dashboard_design_mockups.md`, `ai_providers_tab_plan.md` |
 | `architecture/` | 2 | `browser_automation.md` (admin pool), `autonomous_product_verification_engine.md` |
@@ -230,7 +230,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | `architecture/` | 15 | `SUPREMEAI_MASTER_PLAN_CANONICAL.md`, `unified_fastmcp_control_tower_multitenant_master_plan_bn.md`, `distributed_infrastructure_central_control_plane_plan.md` |
 | `features/` | 15 | `antihacking_security_defense_framework.md`, `Plan_02_API_Key_Rotation_System.md`, `Plan_09_Smart_Data_Storage.md`, `Plan_10_API_Limit_Discovery.md` |
 | `design/` | 5 | `single_frontend_role_based_auth_migration_roadmap.md`, `mission_orchestration_plan.md` |
-| `infrastructure/` | 2 | `SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md`, `supabase_database_schema_and_connection_management_plan.md` |
+| `infrastructure/` | 2 | `SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY.md`, `supabase_database_schema_and_connection_management_plan.md` |
 | `phases/` | 7 | `plan_reconciliation_register.md`, `contingency_and_disaster_recovery_plan.md`, `systemic_risk_assessment_and_mitigation.md` |
 | **Root** | 5 | `UNIFIED_ECOSYSTEM_ARCHITECTURE_PLAN.md`, `CANONICAL_PLANNING_RECONCILIATION_AND_GUARDRAILS_PLAN.md` |
 
@@ -262,7 +262,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | [`dynamic_configuration_zero_hardcode_roadmap`](./architecture/dynamic_configuration_zero_hardcode_roadmap.md) | architecture | Architecture Circle | supremeai_internal | dynamic-configuration |
 | [`vendor_independent_integration_architecture_plan`](./architecture/vendor_independent_integration_architecture_plan.md) | architecture | Architecture Circle | supremeai_internal | execution-phases |
 | [`free_tier_512mb_memory_pressure_remediation_plan`](./features/free_tier_512mb_memory_pressure_remediation_plan.md) | implementation | Infrastructure Circle | supremeai_internal | free-tier-federation |
-| [`free_tier_federation_master_plan_v4.1_missing_services_analysis`](./features/free_tier_federation_master_plan_v4.1_missing_services_analysis.md) | audit | Infrastructure Circle | supremeai_internal | free-tier-federation |
+| [`free_tier_federation_missing_services_analysis`](./features/free_tier_federation_missing_services_analysis.md) | audit | Infrastructure Circle | supremeai_internal | free-tier-federation |
 | [`free_tier_production_upgrade_plan_v2`](./features/free_tier_production_upgrade_plan_v2.md) | implementation | Infrastructure Circle | supremeai_internal | free-tier-federation |
 | [`free_tier_scaling_constitution_and_compliance_policy`](./features/free_tier_scaling_constitution_and_compliance_policy.md) | policy | Infrastructure Circle | supremeai_internal | execution-phases |
 | [`production_hardening_and_p1_p2_roadmap_2026_09_11`](./features/production_hardening_and_p1_p2_roadmap_2026_09_11.md) | roadmap | Architecture Circle | supremeai_internal | control-tower-mcp |
@@ -270,7 +270,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | [`risk_remediation_and_hardening_execution_plan_bn`](./features/risk_remediation_and_hardening_execution_plan_bn.md) | implementation | Architecture Circle | supremeai_internal | control-tower-mcp |
 | [`runtime_dynamic_configuration_zero_hardcode_plan`](./features/runtime_dynamic_configuration_zero_hardcode_plan.md) | implementation | Architecture Circle | combined_ecosystem | dynamic-configuration |
 | [`implementation_plan`](./implementation_plan.md) | implementation | Architecture Governance / Planning Circle | supremeai_internal | free-tier-federation |
-| [`free_tier_federation_master_plan_v4`](./infrastructure/free_tier_federation_master_plan_v4.md) | architecture | Infrastructure Circle | supremeai_internal | free-tier-federation |
+| [`free_tier_federation_master_plan`](./infrastructure/free_tier_federation_master_plan.md) | architecture | Infrastructure Circle | supremeai_internal | free-tier-federation |
 | [`vision_strategic_positioning`](./vision_strategic_positioning.md) | roadmap | Planning Circle | supremeai_internal | free-tier-federation |
 
 ### 🟡 PROPOSED (queued candidates — not executable) (3)
@@ -305,7 +305,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | [`codebase_aligned_master_roadmap`](./architecture/codebase_aligned_master_roadmap.md) | — | — | supremeai_internal | production-readiness |
 | [`crown_jewel_complete_system_integration_blueprint`](./architecture/crown_jewel_complete_system_integration_blueprint.md) | — | — | supremeai_internal | unified-architecture |
 | [`distributed_infrastructure_central_control_plane_plan`](./architecture/distributed_infrastructure_central_control_plane_plan.md) | — | — | supremeai_internal | control-tower-mcp |
-| [`dynamic_ai_architecture_v5_zero_downtime`](./architecture/dynamic_ai_architecture_v5_zero_downtime.md) | — | — | supremeai_internal | execution-phases |
+| [`dynamic_ai_architecture_v5_zero_downtime`](./architecture/dynamic_ai_architecture_zero_downtime.md) | — | — | supremeai_internal | execution-phases |
 | [`living_autonomous_intelligence_synthesis`](./architecture/living_autonomous_intelligence_synthesis.md) | — | — | supremeai_internal | intelligence-evolution |
 | [`self_learning_ecosystem_transformation_roadmap`](./architecture/self_learning_ecosystem_transformation_roadmap.md) | — | — | supremeai_internal | control-tower-mcp |
 | [`unified_fastmcp_control_tower_multitenant_master_plan_bn`](./architecture/unified_fastmcp_control_tower_multitenant_master_plan_bn.md) | — | — | supremeai_internal | control-tower-mcp |
@@ -356,7 +356,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | [`constitution_ci_audit_system_implementation_plan_bn`](./features/constitution_ci_audit_system_implementation_plan_bn.md) | — | — | supremeai_internal | ci-cd-pipeline |
 | [`curated_open_source_components_integration_plan`](./features/curated_open_source_components_integration_plan.md) | — | — | combined_ecosystem | execution-phases |
 | [`dual_channel_zero_cost_browser_and_distributed_worker`](./features/dual_channel_zero_cost_browser_and_distributed_worker.md) | — | — | combined_ecosystem | browser-automation |
-| [`evolution_patch_v3_implementation_plan`](./features/evolution_patch_v3_implementation_plan.md) | — | — | supremeai_internal | unclassified |
+| [`evolution_patch_v3_implementation_plan`](./features/evolution_patch_implementation_plan.md) | — | — | supremeai_internal | unclassified |
 | [`file_organization_and_cleanup_action_plan`](./features/file_organization_and_cleanup_action_plan.md) | — | — | supremeai_internal | frontend-product-ux |
 | [`full_integration_master_blueprint_bn`](./features/full_integration_master_blueprint_bn.md) | — | — | supremeai_internal | execution-phases |
 | [`github_spec_kit_governance_layer_plan`](./features/github_spec_kit_governance_layer_plan.md) | — | — | combined_ecosystem | execution-phases |
@@ -383,7 +383,7 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | [`vscode_lm_multi_model_ide_support_plan`](./features/vscode_lm_multi_model_ide_support_plan.md) | — | — | supremeai_internal | unclassified |
 | [`zero_cost_autonomous_self_evolution_plan`](./features/zero_cost_autonomous_self_evolution_plan.md) | — | — | combined_ecosystem | free-tier-federation |
 | [`README`](./infrastructure/README.md) | — | — | supremeai_internal | free-tier-federation |
-| [`SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2`](./infrastructure/SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md) | — | — | combined_ecosystem | unclassified |
+| [`SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY`](./infrastructure/SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY.md) | — | — | combined_ecosystem | unclassified |
 | [`ci_cd_render_build_runtime_optimization_plan_bn`](./infrastructure/ci_cd_render_build_runtime_optimization_plan_bn.md) | — | — | supremeai_internal | ci-cd-pipeline |
 | [`cloud_ai_multi_provider_deployment_plan`](./infrastructure/cloud_ai_multi_provider_deployment_plan.md) | — | — | supremeai_internal | free-tier-federation |
 | [`free_tier_survival_and_resource_optimization_guide`](./infrastructure/free_tier_survival_and_resource_optimization_guide.md) | — | — | supremeai_internal | free-tier-federation |

@@ -13,10 +13,13 @@ interface TaskReference {
 }
 
 interface MemoryMetrics {
-  heapUsed: string;
-  heapTotal: string;
+  heapUsed: string | null;
+  heapTotal: string | null;
+  heapSource: string;
   zombieTasksDetected: number;
   failuresBlocked: number;
+  trackedTasks: number;
+  untrackedTasks: number;
 }
 
 export function SecurityDashboard() {
@@ -83,8 +86,12 @@ export function SecurityDashboard() {
           Memory & background security
         </h2>
         <div className="flex gap-2">
-          <Badge variant="success">All Tasks Tracked</Badge>
-          <Badge variant="info">0 Zombie Tasks</Badge>
+          <Badge variant={memoryMetrics && memoryMetrics.untrackedTasks === 0 ? 'success' : 'warning'}>
+            {memoryMetrics ? `${memoryMetrics.trackedTasks} Tracked / ${memoryMetrics.untrackedTasks} Untracked` : 'Task telemetry unavailable'}
+          </Badge>
+          <Badge variant={memoryMetrics && memoryMetrics.zombieTasksDetected > 0 ? 'danger' : 'info'}>
+            {memoryMetrics ? `${memoryMetrics.zombieTasksDetected} Zombie Tasks` : 'Zombie telemetry unavailable'}
+          </Badge>
         </div>
       </div>
 
@@ -135,9 +142,9 @@ export function SecurityDashboard() {
           <div className="flex items-center gap-3">
             <ShieldAlert size={20} className={memoryMetrics && memoryMetrics.zombieTasksDetected > 0 ? 'text-red-400' : 'text-emerald-400'} />
             <div>
-              <div className="text-xs text-slate-400">Untracked Tasks Blocked</div>
-              <div className="text-xl font-bold text-emerald-400 font-mono">
-                {memoryMetrics ? memoryMetrics.failuresBlocked : 0} Blocked
+              <div className="text-xs text-slate-400">Untracked Tasks / Blocked Failures</div>
+              <div className={`text-xl font-bold font-mono ${memoryMetrics && memoryMetrics.zombieTasksDetected > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                {memoryMetrics ? `${memoryMetrics.zombieTasksDetected} Untracked / ${memoryMetrics.failuresBlocked} Blocked` : '—'}
               </div>
             </div>
           </div>
@@ -157,12 +164,13 @@ export function SecurityDashboard() {
 
         <Card title="Database OCC Engine">
           <div className="flex items-center gap-3">
-            <Server size={20} className="text-emerald-400" />
+            <Server size={20} className="text-slate-500" />
             <div>
               <div className="text-xs text-slate-400">Optimistic Locks Active</div>
-              <div className="text-xl font-bold text-emerald-400 font-mono">
-                0 Contended
+              <div className="text-xl font-bold text-slate-400 font-mono">
+                No telemetry source
               </div>
+              <div className="text-[10px] text-slate-500">Real OCC contention metrics require a DB probe — not fabricated as "0".</div>
             </div>
           </div>
         </Card>
@@ -208,24 +216,11 @@ export function SecurityDashboard() {
                 </div>
               ))
             ) : (
-              <>
-                <div className="flex items-start gap-2">
-                  <span className="text-emerald-400">[OK]</span>
-                  <span>All active coroutines are bound to class strong-reference sets (preventing GC leakage).</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-emerald-400">[OK]</span>
-                  <span>Database poolclass is NullPool (avoiding PgBouncer transaction-mode deadlocks).</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-emerald-400">[OK]</span>
-                  <span>Fail-Closed auth guard rules compiled: OS Environment is "production". Easy Login disabled.</span>
-                </div>
-                <div className="flex items-start gap-2">
-                  <span className="text-emerald-400">[OK]</span>
-                  <span>AST security visitor module successfully verified code proposal compile outputs.</span>
-                </div>
-              </>
+              <div className="text-xs text-slate-500 font-mono text-center py-4">
+                No security scan data yet — signals appear here after the first scan
+                (POST /admin-api/security-scan). Static "OK" placeholders removed
+                (issue #1242): absence of a scan is not evidence of safety.
+              </div>
             )}
             {lastSecurityScan?.score !== undefined && (
               <div className="mt-2 pt-2 border-t border-slate-800">
@@ -243,31 +238,22 @@ export function SecurityDashboard() {
           Free-Tier Monitor
         </h2>
         <div className="flex gap-2">
-          <Badge variant="warning">Survival Score: 64.2/100</Badge>
+          <Badge variant="info">Live quota telemetry not connected</Badge>
         </div>
       </div>
 
+      {/* Wave 2.5 (issue #1242): the fabricated quota numbers below ("~200-400 MB",
+          "513.6/750.0", "64.2/100") were removed — provider quota APIs are not
+          wired yet, and inventing numbers is worse than showing nothing. */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <Card title="Supabase">
-          <div className="text-xs text-slate-400 mb-2">Storage: ~200-400 MB / 500 MB</div>
-          <div className="h-2 bg-slate-800 rounded overflow-hidden">
-            <div className="h-full bg-emerald-400 w-[60%]"></div>
-          </div>
-        </Card>
-        
-        <Card title="Upstash Redis">
-          <div className="text-xs text-slate-400 mb-2">Commands: ~1,200 / 10,000 daily</div>
-          <div className="h-2 bg-slate-800 rounded overflow-hidden">
-            <div className="h-full bg-emerald-400 w-[12%]"></div>
-          </div>
-        </Card>
-
-        <Card title="Render">
-          <div className="text-xs text-slate-400 mb-2">Web Service Hours: 513.6 / 750.0</div>
-          <div className="h-2 bg-slate-800 rounded overflow-hidden">
-            <div className="h-full bg-amber-400 w-[68%]"></div>
-          </div>
-        </Card>
+        {['Supabase', 'Upstash Redis', 'Render'].map((provider) => (
+          <Card key={provider} title={provider}>
+            <div className="text-xs text-slate-400 mb-2">Quota usage: no live source</div>
+            <div className="h-2 bg-slate-800 rounded overflow-hidden">
+              <div className="h-full bg-slate-700 w-[0%]"></div>
+            </div>
+          </Card>
+        ))}
       </div>
 
     </div>

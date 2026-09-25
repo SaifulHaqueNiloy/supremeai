@@ -23,7 +23,6 @@ _SHIMS = [
     ("core.log_batcher", "SomeExport"),
     ("core.logging_config", "SomeExport"),
     ("core.logging", "SomeExport"),
-    ("core.llm_router", "SomeExport"),
     ("core.error_remediation", "SomeExport"),
     ("core.error_pattern_db", "SomeExport"),
     ("core.metrics_collector", "SomeExport"),
@@ -31,7 +30,6 @@ _SHIMS = [
     ("core.email_service", "SomeExport"),
     ("core.db_repository", "SomeExport"),
     ("core.pgbouncer_pool", "SomeExport"),
-    ("core.rate_limiter", "SomeExport"),
 ]
 
 

@@ -9,7 +9,7 @@ class TestInMemoryFallbackLimiter:
 
     def test_limiter_initialization(self):
         """Test rate limiter initializes with correct defaults."""
-        from backend.core.rate_limiter import InMemoryFallbackLimiter
+        from backend.middleware.rate_limiter import InMemoryFallbackLimiter
 
         limiter = InMemoryFallbackLimiter()
         assert limiter.burst == 20
@@ -17,7 +17,7 @@ class TestInMemoryFallbackLimiter:
 
     def test_limiter_custom_parameters(self):
         """Test rate limiter with custom parameters."""
-        from backend.core.rate_limiter import InMemoryFallbackLimiter
+        from backend.middleware.rate_limiter import InMemoryFallbackLimiter
 
         limiter = InMemoryFallbackLimiter(burst=100, window=120.0)
         assert limiter.burst == 100
@@ -25,7 +25,7 @@ class TestInMemoryFallbackLimiter:
 
     def test_is_allowed_within_limit(self):
         """Test that requests within limit are allowed."""
-        from backend.core.rate_limiter import InMemoryFallbackLimiter
+        from backend.middleware.rate_limiter import InMemoryFallbackLimiter
 
         limiter = InMemoryFallbackLimiter(burst=10, window=60.0)
 
@@ -34,7 +34,7 @@ class TestInMemoryFallbackLimiter:
 
     def test_is_blocked_over_limit(self):
         """Test that requests over limit are blocked."""
-        from backend.core.rate_limiter import InMemoryFallbackLimiter
+        from backend.middleware.rate_limiter import InMemoryFallbackLimiter
 
         limiter = InMemoryFallbackLimiter(burst=10, window=60.0)
 
@@ -47,7 +47,7 @@ class TestInMemoryFallbackLimiter:
 
     def test_different_users_separate_limits(self):
         """Test that different users have separate rate limits."""
-        from backend.core.rate_limiter import InMemoryFallbackLimiter
+        from backend.middleware.rate_limiter import InMemoryFallbackLimiter
 
         limiter = InMemoryFallbackLimiter(burst=10, window=60.0)
 
@@ -65,7 +65,7 @@ class TestAsyncRateLimiter:
     @pytest.mark.asyncio
     async def test_async_rate_limiter_initialization(self):
         """Test async rate limiter initializes."""
-        from backend.core.rate_limiter import AsyncRateLimiter
+        from backend.middleware.rate_limiter import AsyncRateLimiter
 
         limiter = AsyncRateLimiter()
         assert limiter is not None
@@ -73,7 +73,7 @@ class TestAsyncRateLimiter:
     @pytest.mark.asyncio
     async def test_async_rate_limiter_close(self):
         """Test async rate limiter close method."""
-        from backend.core.rate_limiter import AsyncRateLimiter
+        from backend.middleware.rate_limiter import AsyncRateLimiter
 
         limiter = AsyncRateLimiter()
         # close should be callable (may fail due to Redis not configured, but method exists)
@@ -85,7 +85,7 @@ class TestRateLimitMiddleware:
 
     def test_rate_limit_decorator_exists(self):
         """Test that rate limit decorator can be imported."""
-        from backend.core.rate_limiter import InMemoryFallbackLimiter
+        from backend.middleware.rate_limiter import InMemoryFallbackLimiter
 
         # Just verify the class exists and is importable
         assert InMemoryFallbackLimiter is not None
