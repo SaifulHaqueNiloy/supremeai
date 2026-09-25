@@ -54,13 +54,9 @@ KEY_PREFIX = "supremeai:agent-heartbeat:"
 # template URL burns quota with zero useful work.
 _PLACEHOLDER_TOKENS = ("<your-redis-url>", "<your", "example.com")
 
-_REST_CHAIN: list[tuple[str, str, str]] = [
-    ("primary", "UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"),
-    ("secondary", "UPSTASH_REDIS_SECONDARY_REST_URL", "UPSTASH_REDIS_SECONDARY_REST_TOKEN"),
-    ("tertiary", "UPSTASH_REDIS_TERTIARY_REST_URL", "UPSTASH_REDIS_TERTIARY_REST_TOKEN"),
-    ("quaternary", "UPSTASH_REDIS_QUATERNARY_REST_URL", "UPSTASH_REDIS_QUATERNARY_REST_TOKEN"),
-    ("quinary", "UPSTASH_REDIS_QUINARY_REST_URL", "UPSTASH_REDIS_QUINARY_REST_TOKEN"),
-]
+# Canonical account order — mirrors settings.upstash_redis_rest_pool and the
+# tower/dashboard chain labels.
+_ACCOUNT_LABELS = ("primary", "secondary", "tertiary", "quaternary", "quinary")
 
 
 def _redis_url() -> str:
@@ -83,14 +79,32 @@ def _tcp_configured() -> bool:
     return not any(token in url for token in _PLACEHOLDER_TOKENS)
 
 
+def _rest_pool() -> list[tuple[str, str, str]]:
+    """(label, url, token) for every configured Upstash REST account.
+
+    Delegates to settings.upstash_redis_rest_pool, which resolves each key
+    12-factor style: process env FIRST, then the Infisical vault — so the
+    chain works even when the deploy env only carries a subset of the vars.
+    """
+    try:
+        from core.config import settings
+
+        pool = settings.upstash_redis_rest_pool
+    except Exception as exc:  # pragma: no cover — settings must never break heartbeat
+        logger.warning(f"⚠️ agent-10 heartbeat could not read the Upstash pool: {exc}")
+        return []
+    labeled: list[tuple[str, str, str]] = []
+    for index, (url, token) in enumerate(pool):
+        label = _ACCOUNT_LABELS[index] if index < len(_ACCOUNT_LABELS) else f"pool[{index}]"
+        labeled.append((label, url, token))
+    return labeled
+
+
 def redis_configured_for_heartbeat() -> bool:
     """True when at least ONE account in the chain is configured."""
     if _tcp_configured():
         return True
-    return any(
-        os.environ.get(url_key) and os.environ.get(token_key)
-        for _, url_key, token_key in _REST_CHAIN
-    )
+    return bool(_rest_pool())
 
 
 def _build_payload() -> str:
@@ -161,10 +175,7 @@ async def run_agent_heartbeat_loop() -> None:
                     logger.warning(f"⚠️ agent-10 heartbeat TCP write failed: {exc}")
 
             if wrote_via is None:
-                for label, url_key, token_key in _REST_CHAIN:
-                    url, token = os.environ.get(url_key, ""), os.environ.get(token_key, "")
-                    if not (url and token):
-                        continue
+                for label, url, token in _rest_pool():
                     try:
                         wrote_via = await _ping_rest(label, url, token, payload)
                         break
