@@ -9,6 +9,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { apiClient } from '../../../services/apiClient';
 import { controlPlane } from '../../../services/controlPlane';
+import { getApiBaseUrl } from '../../../utils/api';  // roadmap 1.5 (#1180)
 
 // ══════════════════════════════════════════════════════════════════════════════
 // TYPES
@@ -60,7 +61,7 @@ const SERVICE_REGISTRY: ServiceConfig[] = [
   {
     name: 'render_backend',
     displayName: 'Render Backend',
-    url: import.meta.env.VITE_API_URL || import.meta.env.VITE_BACKEND_URL || import.meta.env.VITE_USER_BACKEND || '',
+    url: getApiBaseUrl(),  // roadmap 1.5 (#1180): canonical runtime-context-aware resolver
     description: 'Python/FastAPI Core API',
     critical: true,
     icon: <Server size={16} />,
