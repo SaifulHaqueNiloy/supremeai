@@ -31,6 +31,21 @@ target_scope: combined_ecosystem
 
 ---
 
+## 📁 Subdirectory Index
+
+Per-plan status lives in the **generated** `plan_registry.json` (source of truth: per-document YAML frontmatter, refreshed by `scripts/governance/lint_plans.py`) — the per-directory status dashboards that used to duplicate it here were consolidated into this section (roadmap 1.8, issue #1184).
+
+| Directory | Purpose | Canonical entry point |
+|---|---|---|
+| `architecture/` | Canonical architecture master plans + supporting components + superseded archive trail | `architecture/browser_automation.md`, `SUPREMEAI_MASTER_PLAN_CANONICAL.md` |
+| `crown_jewel_series/` | 18-module "power-up" series — per-module plans with live cross-references | [`crown_jewel_series/README.md`](./crown_jewel_series/README.md) (load-bearing index — kept per #1184) |
+| `design/` | Dashboard/chat UI design plans (customer-facing) | `dashboard_design_mockups.md`, `admin_dashboard_plan.md` |
+| `features/` | Feature plans Plan_00–Plan_24 series + naming convention | `Plan_24_AI_Agent_Ecosystem_Integration.md`, `PLAN_006_MEM0_STYLE_MEMORY_CONSOLIDATION.md` |
+| `infrastructure/` | Config registry, DB schema, Render runtime, free-tier federation | `SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md` |
+| `phases/` | Execution phases, milestone trackers, plan inventory report | `implementation_and_milestone_trackers.md` |
+
+---
+
 ## 🏛️ 3-TIER PLANNING SCOPE TAXONOMY (Rule #1 & Rule #7)
 
 To prevent mixing internal platform policies with customer workflows, all plans are categorized into 3 distinct operational layers:
@@ -400,4 +415,4 @@ This view is derived from each plan's `target_scope` frontmatter. Physical folde
 | [`team_and_cloud_resource_allocation_plan`](./phases/team_and_cloud_resource_allocation_plan.md) | — | — | supremeai_internal | frontend-product-ux |
 | [`yearly_strategic_roadmap_2026`](./phases/yearly_strategic_roadmap_2026.md) | — | — | supremeai_internal | execution-phases |
 
-<!-- END GENERATED PLAN CATALOG -->                      
+<!-- END GENERATED PLAN CATALOG -->

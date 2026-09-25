@@ -1,21 +1,21 @@
 {
-  "generated_at": "2026-09-19",
+  "generated_at": "2026-09-25",
   "generator": "scripts/governance/lint_plans.py",
   "source_of_truth": "per-document YAML frontmatter",
   "totals": {
-    "documents": 186,
-    "with_frontmatter": 185,
+    "documents": 183,
+    "with_frontmatter": 181,
     "families": {
-      "control-tower-mcp": 44,
-      "unclassified": 30,
+      "control-tower-mcp": 45,
+      "unclassified": 28,
       "execution-phases": 28,
-      "free-tier-federation": 25,
+      "free-tier-federation": 23,
       "frontend-product-ux": 16,
-      "unified-architecture": 11,
+      "unified-architecture": 12,
       "browser-automation": 9,
       "ci-cd-pipeline": 7,
       "intelligence-evolution": 6,
-      "dynamic-configuration": 5,
+      "dynamic-configuration": 4,
       "production-readiness": 3,
       "security-defense": 1,
       "deployment-render": 1
@@ -95,6 +95,24 @@
       "lines": 75
     },
     {
+      "id": "multi-agent-mesh-master-plan",
+      "subject": "SupremeAI Distributed Multi-Agent Mesh — Master Plan",
+      "document_role": "architecture",
+      "planning_authority": "Architecture Governance / Planning Circle",
+      "canonical": true,
+      "status": "active",
+      "source_file": "docs/plans/MULTI_AGENT_MESH_MASTER_PLAN.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": "partial",
+      "last_verified": "2026-09-21",
+      "disposition": "retain",
+      "target_scope": "supremeai_internal",
+      "family": "control-tower-mcp",
+      "frontmatter_present": true,
+      "lines": 269
+    },
+    {
       "id": "pending-approvals-register",
       "subject": "SupremeAI Pending Approvals Log",
       "document_role": "audit",
@@ -110,7 +128,7 @@
       "target_scope": "supremeai_internal",
       "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 51
+      "lines": 67
     },
     {
       "id": "plan-lifecycle-policy",
@@ -198,9 +216,9 @@
       "last_verified": "2026-09-17",
       "disposition": "retain",
       "target_scope": "combined_ecosystem",
-      "family": "free-tier-federation",
+      "family": "unified-architecture",
       "frontmatter_present": true,
-      "lines": 403
+      "lines": 418
     },
     {
       "id": "roadmap-ecosystem-architecture-bn",
@@ -221,6 +239,24 @@
       "family": "execution-phases",
       "frontmatter_present": true,
       "lines": 164
+    },
+    {
+      "id": "auto:SOFTWARE_ENGINEERING_EXCELLENCE_PLAN",
+      "subject": "SupremeAI — Software Engineering Excellence Master Plan",
+      "document_role": null,
+      "planning_authority": null,
+      "canonical": null,
+      "status": null,
+      "source_file": "docs/plans/SOFTWARE_ENGINEERING_EXCELLENCE_PLAN.md",
+      "supersedes": [],
+      "superseded_by": [],
+      "evidence_state": null,
+      "last_verified": null,
+      "disposition": null,
+      "target_scope": null,
+      "family": "frontend-product-ux",
+      "frontmatter_present": false,
+      "lines": 1227
     },
     {
       "id": "unified-ecosystem-architecture",
@@ -275,24 +311,6 @@
       "family": "control-tower-mcp",
       "frontmatter_present": true,
       "lines": 463
-    },
-    {
-      "id": "architecture-plans-index-2026-09-17",
-      "subject": "Architecture Plans Index — status dashboard and canonical plan catalog for docs/plans/architecture/",
-      "document_role": "architecture",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": null,
-      "status": "active",
-      "source_file": "docs/plans/architecture/README.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": "combined_ecosystem",
-      "family": "dynamic-configuration",
-      "frontmatter_present": true,
-      "lines": 70
     },
     {
       "id": "supremeai-master-plan-canonical",
@@ -1033,24 +1051,6 @@
       "lines": 148
     },
     {
-      "id": "auto:README",
-      "subject": "Design Plans Index",
-      "document_role": "policy",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": null,
-      "status": "active",
-      "source_file": "docs/plans/design/README.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": "customer_facing",
-      "family": "frontend-product-ux",
-      "frontmatter_present": true,
-      "lines": 54
-    },
-    {
       "id": "auto-admin_dashboard_plan",
       "subject": "SupremeAI Admin Dashboard: Mission Command Plan",
       "document_role": "architecture",
@@ -1385,7 +1385,7 @@
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 17a8ef41 code-read: PLAN-002 implementation commits 2fbe7fcd + 65a1f1f6 এবং completion commit fb2ce032 পরবর্তী state; _compact_history L449–497 sed-verified, WS loop receive L559 / content_to_send L570+575 / auto-guard L580 / user append L582 / assistant guard L611 / [DONE] L615; prompt_handler COMPACTION_* L80–115 sed-verified; frontend [DONE] contract useChat.ts L92, chatService.ts L72 grep-verified; grep-verified: websocket_agent.py-তে কোনো slash-command handling নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 68cf886c — websocket_agent.py ও prompt_handler.py 2fbe7fcd-এর পর থেকে 0-diff (সব core citation অপরিবর্তিত: _compact_history L449–497, receive L559, payload parse L562–575, auto-guard L580, user append L582, assistant guard L611, [DONE] L615, COMPACTION_* L80–115); founder commit 1dea1fe2 (CI unblock) test_websocket_compaction.py-এ শুধু formatting change করেছে (StubGateway __init__ reformat + ১টি assert line-join — semantically identical, ১১টি টেস্ট অক্ষত, grep-verified); frontend [DONE] contract (useChat.ts L92, chatService.ts L72) 0-diff; সংশোধন (honesty fix): depends_on-এ deque(maxlen=50)-এর citation L554 ভুল ছিল — সঠিক লাইন L548, এবং WS chat loop রেঞ্জ L555–616 → L557–616 (while True L557) — উভয়ই এই commit-এই সংশোধিত); final-state re-verification 2026-09-17 on main 5bdda2e2 (rebase target — evidence 0-diff, transitivity note তখন শুধু commit message-এ ছিল) এবং main 71b55f8a (docs-only commit — evidence files 0-diff): deque(maxlen=50) L548, _compact_history L449, COMPACTION_SUMMARY_CHAR_CAP=1400 L91, ১১টি টেস্ট পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে (plan_registry নয়, commit message নয়)",
+      "last_verified": "2026-09-17 (fresh main 17a8ef41 code-read: PLAN-002 implementation commits 2fbe7fcd + 65a1f1f6 এবং completion commit fb2ce032 পরবর্তী state; _compact_history L449–497 sed-verified, WS loop receive L559 / content_to_send L570+575 / auto-guard L580 / user append L582 / assistant guard L611 / [DONE] L615; prompt_handler COMPACTION_* L80–115 sed-verified; frontend [DONE] contract useChat.ts L92, chatService.ts L72 grep-verified; grep-verified: websocket_agent.py-তে কোনো slash-command handling নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 68cf886c — websocket_agent.py ও prompt_handler.py 2fbe7fcd-এর পর থেকে 0-diff (সব core citation অপরিবর্তিত: _compact_history L449–497, receive L559, payload parse L562–575, auto-guard L580, user append L582, assistant guard L611, [DONE] L615, COMPACTION_* L80–115); founder commit 1dea1fe2 (CI unblock) test_websocket_compaction.py-এ শুধু formatting change করেছে (StubGateway __init__ reformat + ১টি assert line-join — semantically identical, ১১টি টেস্ট অক্ষত, grep-verified); frontend [DONE] contract (useChat.ts L92, chatService.ts L72) 0-diff; সংশোধন (honesty fix): depends_on-এ deque(maxlen=50)-এর citation L554 ভুল ছিল — সঠিক লাইন L548, এবং WS chat loop রেঞ্জ L555–616 → L557–616 (while True L557) — উভয়ই এই commit-এই সংশোধিত); final-state re-verification 2026-09-17 on main 5bdda2e2 (rebase target — evidence 0-diff, transitivity note তখন শুধু commit message-এ ছিল) এবং main 71b55f8a (docs-only commit — evidence files 0-diff): deque(maxlen=50) L548, _compact_history L449, COMPACTION_SUMMARY_CHAR_CAP=1400 L91, ১১টি টেস্ট পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে (plan_registry নয়, commit message নয়); line-shift re-verification 2026-09-19 on fresh main f53464ed — founder commit d0f314c4 (M03 P0-পূর্ণাংশ: ১৩ serving route-এ বাধ্যতামূলক InferenceContext) websocket_agent.py-তে ১টি import + ২টি context-block যোগ করেছে (+১৫ লাইন, 647→662; _compact_history-র semantics অপরিবর্তিত); সমস্ত anchor পুনঃsed-verified: def _compact_history L457 (ফাংশন region L457–517, পরবর্তী def websocket_chat_endpoint L518), deque(maxlen=50) L556, WS loop while True L565 (loop L565–631), receive_text L567, payload parse/content_to_send L570–583 (content_to_send L578+583), auto-guard if L588/call L589, user append L590, assistant guard if L626/call L627, assistant append L628, [DONE] L630; honesty correction: মূল ভেরিফিকেশনের '_compact_history L449–497' region citation প্রকৃতে happy-path block-ই ছিল — আসল ফাংশন region 17a8ef41-এও ছিল L449–509 (graceful-degradation except ব্লকসহ, পরবর্তী def L510) — ফাইল 17a8ef41 থেকে 0fcd0f4f পর্যন্ত 0-diff (git log-এ শূন্য কমিট) তাই এটি drift নয়, মূল ট্রান্সক্রিপশন-ত্রুটি — এই commit-এই সংশোধিত; prompt_handler.py / test_websocket_compaction.py / useChat.ts / chatService.ts এই range-এ 0-diff (তাদের citation অপরিবর্তিত)",
       "disposition": null,
       "target_scope": "supremeai_internal",
       "family": "control-tower-mcp",
@@ -1403,12 +1403,12 @@
       "supersedes": [],
       "superseded_by": [],
       "evidence_state": null,
-      "last_verified": "2026-09-17 (fresh main 4575104f code-read: PLAN-001/002/004 implementation commits 65a1f1f6, 2fbe7fcd, 4575104f পরবর্তী state; store_memory L287–339 sed-verified — pg path blind INSERT, কলাম তালিকা (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — content/importance_score/updated_at কোনোটিই লেখা হয় না, কোনো similarity probe বা UPDATE branch নেই; _embed L208, _cosine_similarity L477, query_context L485, _MEMORY_ROW_CAP=2000 L52 sed-verified; vector_store.py _coerce_uuid L29 + upsert_batch L60 grep-verified; auto_rag_injector.py TOP_K/MIN_RELEVANCE/MAX_CHARS L38–44 sed-verified; syncguard_agent.py L86, unified_memory_api.py L47/L56 grep-verified; grep-verified: CascadeMemoryService-এ dedup/UPDATE-on-similarity কোনো path নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 6a2e0464 — founder-এর PLAN-003 implementation commit (backend/core/code_indexer.py + backend/services/dynamic_planner.py) এই প্ল্যানের কোনো evidence file-ই স্পর্শ করেনি (memory_service.py, unified_memory.py, core/ai_memory/vector_store.py, core/memory/auto_rag_injector.py সব 0-diff — evidence transitively holds); re-verified 2026-09-17 on main 68cf886c — founder commit 1dea1fe2 (CI unblock) memory_service.py-তে কেবল ১টি blank-line removal করেছে (def _embed L208-এর পরে) — ফলে L209-এর পরের সব citation ঠিক ১ লাইন উপরে shift করেছে (store_memory L288→L287, pg INSERT path L310–321→L309–320, _cosine_similarity L478→L477, query_context L486→L485); এই প্লানের সব line-ref সেই অনুযায়ী reconciled (উপরের সংখ্যাগুলোই এখন current-main সত্য); বাকি সব evidence file (unified_memory.py, vector_store.py, auto_rag_injector.py, syncguard_agent.py, unified_memory_api.py, AI_MEMORY_SCHEMA_AUDIT.md, defect register) 0-diff; store_memory body-তে আজও কোনো similarity probe/UPDATE branch নেই (grep-verified 68cf886c) — subject still unclaimed); final-state re-verification 2026-09-17 on main 5bdda2e2 + 71b55f8a (rebase + docs-only — evidence files 0-diff): store_memory L287, _cosine_similarity L477, query_context L485 পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে",
+      "last_verified": "2026-09-17 (fresh main 4575104f code-read: PLAN-001/002/004 implementation commits 65a1f1f6, 2fbe7fcd, 4575104f পরবর্তী state; store_memory L287–339 sed-verified — pg path blind INSERT, কলাম তালিকা (user_id, session_id, agent_type, task_type, summary, embedding, metadata) — content/importance_score/updated_at কোনোটিই লেখা হয় না, কোনো similarity probe বা UPDATE branch নেই; _embed L208, _cosine_similarity L477, query_context L485, _MEMORY_ROW_CAP=2000 L52 sed-verified; vector_store.py _coerce_uuid L29 + upsert_batch L60 grep-verified; auto_rag_injector.py TOP_K/MIN_RELEVANCE/MAX_CHARS L38–44 sed-verified; syncguard_agent.py L86, unified_memory_api.py L47/L56 grep-verified; grep-verified: CascadeMemoryService-এ dedup/UPDATE-on-similarity কোনো path নেই — এই প্ল্যানের subject সম্পূর্ণ unclaimed); re-verified 2026-09-17 on main 6a2e0464 — founder-এর PLAN-003 implementation commit (backend/core/code_indexer.py + backend/services/dynamic_planner.py) এই প্ল্যানের কোনো evidence file-ই স্পর্শ করেনি (memory_service.py, unified_memory.py, core/ai_memory/vector_store.py, core/memory/auto_rag_injector.py সব 0-diff — evidence transitively holds); re-verified 2026-09-17 on main 68cf886c — founder commit 1dea1fe2 (CI unblock) memory_service.py-তে কেবল ১টি blank-line removal করেছে (def _embed L208-এর পরে) — ফলে L209-এর পরের সব citation ঠিক ১ লাইন উপরে shift করেছে (store_memory L288→L287, pg INSERT path L310–321→L309–320, _cosine_similarity L478→L477, query_context L486→L485); এই প্লানের সব line-ref সেই অনুযায়ী reconciled (উপরের সংখ্যাগুলোই এখন current-main সত্য); বাকি সব evidence file (unified_memory.py, vector_store.py, auto_rag_injector.py, syncguard_agent.py, unified_memory_api.py, AI_MEMORY_SCHEMA_AUDIT.md, defect register) 0-diff; store_memory body-তে আজও কোনো similarity probe/UPDATE branch নেই (grep-verified 68cf886c) — subject still unclaimed); final-state re-verification 2026-09-17 on main 5bdda2e2 + 71b55f8a (rebase + docs-only — evidence files 0-diff): store_memory L287, _cosine_similarity L477, query_context L485 পুনঃgrep-verified — এই প্লান ফাইল নিজেই এখন তার পূর্ণ verification state বহন করছে; re-verified 2026-09-19 on fresh main 0acb7436 — founder commit 2a39b5e9 (feat(wave4)) এই প্লানের P-A প্রেসক্রিপশন M01 P-A হিসেবে বাস্তবায়ন করেছেন: commit message ও কোড কমেন্টে সরাসরি 'PLAN_006 P-A (M01)' উল্লেখ; store_memory-তে similarity-gated consolidation + UPDATE + metadata-importance-bump + SUPREMEAI_MEMORY_DEDUP kill-switch (memory_dedup_enabled L57 — ডিফল্ট true, zero-cost default-ON, অজানা মানে loud warning) + SUPREMEAI_MEMORY_DEDUP_THRESHOLD (ডিফল্ট 0.92, env-tunable — প্লানের success_threshold-এর সাথে হুবহু মিল); প্রেসক্রাইবড টেস্ট-ফাইল backend/tests/memory/test_memory_consolidation.py এখন বিদ্যমান (১২ টেস্ট); ফলে সব line-anchor পুনঃsed-verified ও reconciled: store_memory L351–443, pg INSERT L389–401, dedup gate L378, _consolidate_into_existing L444–518, probe LIMIT L468, _embed L272, _cosine_similarity L633, query_context L641, _query_via_pgvector_rpc L213–254, _MEMORY_ROW_CAP L54; vector_store.py _coerce_uuid L29→L16 (upsert_batch L60 অপরিবর্তিত); auto_rag_injector.py L38–44, unified_memory.py L189–237, syncguard_agent.py L86, unified_memory_api.py L47/L56, AI_MEMORY_SCHEMA_AUDIT.md L232 — সব 0-diff, অপরিবর্তিত; status proposed অপরিবর্তিত — Gate-2 সিদ্ধান্ত founder-এর; FORENSIC LESSON (এই সাইকেল): নাম-ভিত্তিক 0-diff drift-check অস্তিত্বহীন path-এ vacuously true — সেশন-summary-র ভুল path backend/memory/memory_service.py কখনোই অস্তিত্বহীন (git log শূন্য), অথচ একাধিক সাইকেল '0-diff' রিপোর্ট করেছে; ডকুমেন্টের নিজের সাইটেশন সবসময় path-সঠিক ছিল — ভবিষ্যতে সব drift-check existence-first (ফাইল-অস্তিত্ব → তারপর diff); PUSH-RACE REBASE CORRECTION (একই সাইকেল): race-window founder commits 797e003f + 01125a43 (multi-model decoupling #473, M17 P-B) — syncguard_agent.py +19 লাইন → store_long_term_memory_distilled call L86→L104 (grep-verified rebased main-এ), unified_memory_api.py L47/L56 অপরিবর্তিত; উপরের 'syncguard 0-diff' কথাটি 0acb7436-base-এ সত্য ছিল, rebased main-এ reconciled — চূড়ান্ত সব anchor rebased main-এ পুনঃযাচাইকৃত",
       "disposition": null,
       "target_scope": "supremeai_internal",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 263
+      "lines": 265
     },
     {
       "id": "auto-Plan_01_Dynamic_AI_Agent_System",
@@ -1679,24 +1679,6 @@
       "family": "control-tower-mcp",
       "frontmatter_present": true,
       "lines": 182
-    },
-    {
-      "id": "auto:README",
-      "subject": "Feature Plans Index",
-      "document_role": "policy",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": null,
-      "status": "active",
-      "source_file": "docs/plans/features/README.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "unclassified",
-      "frontmatter_present": true,
-      "lines": 89
     },
     {
       "id": "auto-SUPREMEAI_REAL_INTELLIGENCE_EVOLUTION_PLAN",
@@ -2732,25 +2714,7 @@
       "target_scope": "supremeai_internal",
       "family": "ci-cd-pipeline",
       "frontmatter_present": true,
-      "lines": 106
-    },
-    {
-      "id": "auto:README",
-      "subject": "Infrastructure Plans Index",
-      "document_role": "policy",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": null,
-      "status": "active",
-      "source_file": "docs/plans/infrastructure/README.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "free-tier-federation",
-      "frontmatter_present": true,
-      "lines": 65
+      "lines": 109
     },
     {
       "id": "auto:SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2",
@@ -2768,7 +2732,7 @@
       "target_scope": "combined_ecosystem",
       "family": "unclassified",
       "frontmatter_present": true,
-      "lines": 1156
+      "lines": 1155
     },
     {
       "id": "auto:ci_cd_render_build_runtime_optimization_plan_bn",
@@ -3002,25 +2966,7 @@
       "target_scope": "supremeai_internal",
       "family": "ci-cd-pipeline",
       "frontmatter_present": true,
-      "lines": 728
-    },
-    {
-      "id": "auto:README",
-      "subject": "Execution Phases & Milestones Index",
-      "document_role": "policy",
-      "planning_authority": "Architecture Governance / Planning Circle",
-      "canonical": null,
-      "status": "active",
-      "source_file": "docs/plans/phases/README.md",
-      "supersedes": [],
-      "superseded_by": [],
-      "evidence_state": null,
-      "last_verified": null,
-      "disposition": null,
-      "target_scope": "supremeai_internal",
-      "family": "unclassified",
-      "frontmatter_present": true,
-      "lines": 77
+      "lines": 727
     },
     {
       "id": "auto:agent_and_engineer_skill_requirements",
