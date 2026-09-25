@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3392,
+  "edge_count": 3393,
   "edges": [
     {
       "from": "adapters",
@@ -12952,6 +12952,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "tools.ensemble_router",
+      "to": "core.logging_config"
+    },
+    {
       "from": "tools.ephemeral_synthesizer",
       "to": "core.logging_config"
     },
@@ -13572,7 +13576,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1956,
+  "module_count": 1957,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -15430,6 +15434,7 @@
     "tools.devops.gcp_cloud_functions",
     "tools.devops.github_agent",
     "tools.devops.on_premise_deployer",
+    "tools.ensemble_router",
     "tools.ephemeral_synthesizer",
     "tools.freebuff_client",
     "tools.graph_service",
