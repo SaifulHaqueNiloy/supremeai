@@ -261,7 +261,7 @@ The canonical inventory of *secret names* (not values) is **`secrets_registry.ya
 
 | Variable | Notes |
 |----------|-------|
-| `GEMINI_API_KEY` | Default general/chat model `gemini/gemini-2.0-flash` (`GEMINI_MODEL_NAME` overrides) |
+| `GEMINI_API_KEY` | Default general/chat model `gemini/gemini-2.5-flash` (`GEMINI_MODEL_NAME` overrides) |
 | `GROQ_API_KEY` | Coding model `groq/llama-3.3-70b-versatile` |
 | `OPENAI_API_KEY`, `OPENAI_BASE_URL` | OpenAI + compatible endpoints |
 | `OPENROUTER_API_KEY`, `CLAUDE_OPENROUTER_MODEL` | Default `anthropic/claude-3.5-haiku:free` |
@@ -280,14 +280,14 @@ The canonical inventory of *secret names* (not values) is **`secrets_registry.ya
 |----------|---------------------------------|-------------|
 | `MODEL_CODING` | `groq/llama-3.3-70b-versatile` | Coding, refactoring, and code analysis |
 | `MODEL_REASONING` | `openrouter/meta-llama/llama-3.3-70b-instruct` | Mathematical, deep logic, and strategy |
-| `MODEL_VISION` | `gemini/gemini-2.0-flash` | Multimodal / image perception |
-| `MODEL_CHAT` | `gemini/gemini-2.0-flash` | Interactive user conversational chat |
-| `MODEL_GENERAL` | `gemini/gemini-2.0-flash` | General assistant queries and fallback |
+| `MODEL_VISION` | `gemini/gemini-2.5-flash` | Multimodal / image perception |
+| `MODEL_CHAT` | `gemini/gemini-2.5-flash` | Interactive user conversational chat |
+| `MODEL_GENERAL` | `gemini/gemini-2.5-flash` | General assistant queries and fallback |
 | `MODEL_MULTILINGUAL` | `openrouter/meta-llama/llama-3.3-70b-instruct` | Bengali, Banglish, and regional translation |
 | `EMBEDDING_MODEL` | `text-embedding-3-small` | Semantic memory vector embeddings |
-| `ROUTE_LADDER_SIMPLE` | `gemini/gemini-2.0-flash,groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct` | Cost optimizer simple tasks ladder |
-| `ROUTE_LADDER_MEDIUM` | `gemini/gemini-2.0-flash,groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct` | Medium complexity task ladder |
-| `ROUTE_LADDER_COMPLEX` | `groq/llama-3.3-70b-versatile,openrouter/meta-llama/llama-3.3-70b-instruct,gemini/gemini-2.0-flash` | Heavy reasoning and coding task ladder |
+| `ROUTE_LADDER_SIMPLE` | `gemini/gemini-2.5-flash,bynara/agnes-2.5-flash,bai/qwen3.8-flash` | Cost optimizer simple tasks ladder |
+| `ROUTE_LADDER_MEDIUM` | `gemini/gemini-2.5-flash,bynara/laguna-s-2.1,bai/mimo-v2.5` | Medium complexity task ladder |
+| `ROUTE_LADDER_COMPLEX` | `gemini/gemini-2.5-pro,bynara/laguna-s-2.1,gemini/gemini-2.5-flash` | Heavy reasoning and coding task ladder |
 
 ### Database & Storage
 
@@ -11930,13 +11930,13 @@ model_reasoning: str = Field(
     default="openrouter/meta-llama/llama-3.3-70b-instruct", validation_alias="MODEL_REASONING"
 )
 model_vision: str = Field(
-    default="gemini/gemini-2.0-flash", validation_alias="MODEL_VISION"
+    default="gemini/gemini-2.5-flash", validation_alias="MODEL_VISION"
 )
 model_chat: str = Field(
-    default="gemini/gemini-2.0-flash", validation_alias="MODEL_CHAT"
+    default="gemini/gemini-2.5-flash", validation_alias="MODEL_CHAT"
 )
 model_general: str = Field(
-    default="gemini/gemini-2.0-flash", validation_alias="MODEL_GENERAL"
+    default="gemini/gemini-2.5-flash", validation_alias="MODEL_GENERAL"
 )
 embedding_model: str = Field(
     default="text-embedding-3-small", validation_alias="EMBEDDING_MODEL"
