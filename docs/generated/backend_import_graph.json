@@ -4,6 +4,94 @@
   "edge_count": 3393,
   "edges": [
     {
+      "from": "_archive.batch-1.backend.core.brand_compliance",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "_archive.batch-1.backend.debug_ci_boot",
+      "to": "tests.core.test_allowed_hosts_policy"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.benchmark.load_test_phase3",
+      "to": "core.llm.llm_gateway"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.benchmark.load_test_phase3",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.benchmark.load_test_phase3",
+      "to": "core.orchestration.cloud_sandbox_orchestrator"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.benchmark.load_test_phase3",
+      "to": "utils.firestore_helpers"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.find_router_error",
+      "to": "api"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.find_router_error",
+      "to": "api.routers"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.refactor_root_cause",
+      "to": "core.errors.error_bus"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.refactor_root_cause",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.run_chaos_experiment",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.run_chaos_experiment",
+      "to": "core.resilience.chaos_engine"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.run_chaos_experiment",
+      "to": "core.resilience.circuit_breaker"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.self_test_and_improve",
+      "to": "core.adaptive_optimizer"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.self_test_and_improve",
+      "to": "core.integration_layer"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.self_test_and_improve",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "_archive.batch-1.backend.scripts.self_test_and_improve",
+      "to": "core.self_benchmark"
+    },
+    {
+      "from": "_archive.batch-1.backend.seed_db_configs",
+      "to": "core.config_cache"
+    },
+    {
+      "from": "_archive.batch-1.backend.seed_db_configs",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "_archive.batch-1.backend.seed_db_configs",
+      "to": "database.session"
+    },
+    {
+      "from": "_archive.batch-1.backend.seed_db_configs",
+      "to": "models.system_config"
+    },
+    {
+      "from": "_archive.batch-1.backend.seed_db_configs",
+      "to": "utils.branding"
+    },
+    {
       "from": "adapters",
       "to": "adapters.base_adapter"
     },
@@ -4064,10 +4152,6 @@
       "to": "core.behavioral_intelligence.schema"
     },
     {
-      "from": "core.brand_compliance",
-      "to": "core.logging_config"
-    },
-    {
       "from": "core.browser_session_manager",
       "to": "core.effective_policy"
     },
@@ -7052,10 +7136,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "debug_ci_boot",
-      "to": "tests.core.test_allowed_hosts_policy"
-    },
-    {
       "from": "docs.examples.retry_integration_example",
       "to": "core.logging_config"
     },
@@ -8496,32 +8576,8 @@
       "to": "core.logging_config"
     },
     {
-      "from": "scripts.benchmark.load_test_phase3",
-      "to": "core.llm.llm_gateway"
-    },
-    {
-      "from": "scripts.benchmark.load_test_phase3",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "scripts.benchmark.load_test_phase3",
-      "to": "core.orchestration.cloud_sandbox_orchestrator"
-    },
-    {
-      "from": "scripts.benchmark.load_test_phase3",
-      "to": "utils.firestore_helpers"
-    },
-    {
       "from": "scripts.devops.ai_log_analyzer",
       "to": "core.logging_config"
-    },
-    {
-      "from": "scripts.find_router_error",
-      "to": "api"
-    },
-    {
-      "from": "scripts.find_router_error",
-      "to": "api.routers"
     },
     {
       "from": "scripts.load_seed_data",
@@ -8538,26 +8594,6 @@
     {
       "from": "scripts.migrate_files_to_db",
       "to": "core.logging_config"
-    },
-    {
-      "from": "scripts.refactor_root_cause",
-      "to": "core.errors.error_bus"
-    },
-    {
-      "from": "scripts.refactor_root_cause",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "scripts.run_chaos_experiment",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "scripts.run_chaos_experiment",
-      "to": "core.resilience.chaos_engine"
-    },
-    {
-      "from": "scripts.run_chaos_experiment",
-      "to": "core.resilience.circuit_breaker"
     },
     {
       "from": "scripts.run_dependency_check",
@@ -8580,22 +8616,6 @@
       "to": "database.supabase_client"
     },
     {
-      "from": "scripts.self_test_and_improve",
-      "to": "core.adaptive_optimizer"
-    },
-    {
-      "from": "scripts.self_test_and_improve",
-      "to": "core.integration_layer"
-    },
-    {
-      "from": "scripts.self_test_and_improve",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "scripts.self_test_and_improve",
-      "to": "core.self_benchmark"
-    },
-    {
       "from": "scripts.store_ci_roadmap_to_memory",
       "to": "core.logging_config"
     },
@@ -8614,26 +8634,6 @@
     {
       "from": "scripts.sync_knowledge",
       "to": "services.memory_service"
-    },
-    {
-      "from": "seed_db_configs",
-      "to": "core.config_cache"
-    },
-    {
-      "from": "seed_db_configs",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "seed_db_configs",
-      "to": "database.session"
-    },
-    {
-      "from": "seed_db_configs",
-      "to": "models.system_config"
-    },
-    {
-      "from": "seed_db_configs",
-      "to": "utils.branding"
     },
     {
       "from": "services.auto_healer",
@@ -13578,6 +13578,24 @@
   ],
   "module_count": 1957,
   "modules": [
+    "_archive.batch-1.backend.core.brand_compliance",
+    "_archive.batch-1.backend.core.permission_cache",
+    "_archive.batch-1.backend.core.prompts.ai_handshake_prompt",
+    "_archive.batch-1.backend.debug_ci_boot",
+    "_archive.batch-1.backend.get_tb",
+    "_archive.batch-1.backend.get_tb_collect",
+    "_archive.batch-1.backend.reports.optimization_engine",
+    "_archive.batch-1.backend.scripts.audit_import_walk",
+    "_archive.batch-1.backend.scripts.benchmark.load_test_phase3",
+    "_archive.batch-1.backend.scripts.dev.update_imports",
+    "_archive.batch-1.backend.scripts.find_router_error",
+    "_archive.batch-1.backend.scripts.refactor_logging",
+    "_archive.batch-1.backend.scripts.refactor_root_cause",
+    "_archive.batch-1.backend.scripts.run_chaos_experiment",
+    "_archive.batch-1.backend.scripts.self_healing_tests",
+    "_archive.batch-1.backend.scripts.self_test_and_improve",
+    "_archive.batch-1.backend.seed_db_configs",
+    "_archive.batch-1.backend.update_md",
     "adapters",
     "adapters.base_adapter",
     "adapters.business_adapter",
@@ -13983,7 +14001,6 @@
     "core.behavioral_intelligence.state_estimator",
     "core.behavioral_intelligence.strategy_router",
     "core.billing_plans",
-    "core.brand_compliance",
     "core.browser_compat_store",
     "core.browser_session_catalog",
     "core.browser_session_manager",
@@ -14239,7 +14256,6 @@
     "core.otp_router",
     "core.output_validator",
     "core.performance_enhancer",
-    "core.permission_cache",
     "core.persistence",
     "core.persistence.pooled_pg",
     "core.persistence.write_behind",
@@ -14270,7 +14286,6 @@
     "core.plugins.seed_manifests",
     "core.presence_registry",
     "core.prompt_handler",
-    "core.prompts.ai_handshake_prompt",
     "core.provider_rate_limiter",
     "core.providers.appwrite",
     "core.providers.appwrite.adapter",
@@ -14419,7 +14434,6 @@
     "database.storage_client",
     "database.supabase_client",
     "database.tenant_db",
-    "debug_ci_boot",
     "docs.examples.retry_integration_example",
     "ecosystem",
     "ecosystem._store",
@@ -14470,8 +14484,6 @@
     "evolution.performance_monitor",
     "evolution.strategy_optimizer",
     "examples.sample_buggy",
-    "get_tb",
-    "get_tb_collect",
     "integrations",
     "integrations._flags",
     "integrations.browser_use_adapter",
@@ -14605,7 +14617,6 @@
     "pyerrorfix.fixers.with_fixer",
     "pyerrorfix.pyerrorfix_config",
     "reports",
-    "reports.optimization_engine",
     "runs",
     "runs.api",
     "runs.bridges",
@@ -14647,35 +14658,25 @@
     "scout.web_crawler_agent",
     "scripts",
     "scripts.adapt_coldstart_knowledge",
-    "scripts.audit_import_walk",
     "scripts.auto_find_blindspots",
     "scripts.auto_test_gen",
     "scripts.benchmark",
-    "scripts.benchmark.load_test_phase3",
     "scripts.check_single_alembic_head",
     "scripts.dev",
-    "scripts.dev.update_imports",
     "scripts.devops",
     "scripts.devops.ai_log_analyzer",
     "scripts.devops.bug_prophet",
-    "scripts.find_router_error",
     "scripts.import_knowledge_base",
     "scripts.load_seed_data",
     "scripts.migrate_embeddings",
     "scripts.migrate_files_to_db",
-    "scripts.refactor_logging",
-    "scripts.refactor_root_cause",
-    "scripts.run_chaos_experiment",
     "scripts.run_dependency_check",
     "scripts.seed_ecosystem",
     "scripts.seed_tools_registry",
-    "scripts.self_healing_tests",
-    "scripts.self_test_and_improve",
     "scripts.store_ci_roadmap_to_memory",
     "scripts.superai_free_tier_monitor",
     "scripts.sync_knowledge",
     "scripts.validate_openapi",
-    "seed_db_configs",
     "services",
     "services.auto_healer",
     "services.billing",
@@ -15513,7 +15514,6 @@
     "tools.social.viral_referral_engine",
     "tools.sso_integrator",
     "tools.tenant_rate_limiter",
-    "update_md",
     "utils",
     "utils.api_tracker",
     "utils.branding",
