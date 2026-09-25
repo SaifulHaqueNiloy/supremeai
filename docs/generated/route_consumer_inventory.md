@@ -4,9 +4,9 @@
 
 | metric | value |
 |---|---|
-| backend routes | 826 |
-| routes with frontend consumer | 263 |
-| unique frontend `/api/...` refs | 142 |
+| backend routes | 832 |
+| routes with frontend consumer | 269 |
+| unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
@@ -18,7 +18,7 @@
 | classification | count | meaning |
 |---|---|---|
 | `user-facing` | 161 | frontend consumer matched |
-| `admin-only` | 324 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `admin-only` | 330 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
@@ -306,6 +306,12 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/admin-api/service-uptime` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | POST | `/api/admin-api/test-service` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | POST | `/api/admin/actions/:param` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/admin/ai/assign` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/components/admin/AISurfaceAssignment.tsx` |
+| GET | `/api/admin/ai/assignment` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
+| GET | `/api/admin/ai/overview` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/components/admin/AISurfaceAssignment.tsx` |
+| GET | `/api/admin/ai/providers` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
+| GET | `/api/admin/ai/surfaces` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/admin/ai/test/:param` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/components/admin/AISurfaceAssignment.tsx` |
 | GET | `/api/admin/alerts` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | POST | `/api/admin/alerts` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | POST | `/api/admin/alerts/:param/resolve` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
