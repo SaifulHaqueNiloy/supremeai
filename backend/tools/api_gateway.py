@@ -12,8 +12,8 @@ from core.automation.dispatcher import automation_dispatcher
 from core.automation.models import AutomationEvent, ExecutionEnvelope
 from core.config import settings
 from core.logging_config import logger
-from core.rate_limiter import AsyncRateLimiter
 from core.security.authentication.auth_middleware import AuthMiddleware
+from middleware.rate_limiter import AsyncRateLimiter
 
 auth_middleware = AuthMiddleware.__new__(AuthMiddleware)
 auth_middleware.enabled = bool(getattr(settings, "supremeai_api_token", None))

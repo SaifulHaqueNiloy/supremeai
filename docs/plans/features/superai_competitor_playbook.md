@@ -283,7 +283,7 @@ status: historical
 4. RELIABILITY Issues
    └── Issue: Often down or buggy
    └── User Pain: "It's not working again"
-   └── Our Opportunity: 99.9% Uptime guarantee
+   └── Our Opportunity target: 99.9% Uptime guarantee (goal — needs evidence)
    └── Implementation: Multi-provider fallback system
 ```
 

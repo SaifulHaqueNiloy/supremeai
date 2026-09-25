@@ -24,7 +24,6 @@ except ImportError:
 #      This is the app's HOT PATH — file:line evidence:
 #        * core/rate_limit.py:94            (per-request rate limiting →
 #                                            redis_manager.get_client_async())
-#        * core/rate_limit_quota.py:28      (aioredis.from_url(settings.redis_url))
 #        * core/cache_manager.py:50         (redis.from_url(self.redis_url))
 #        * core/intelligent_cache.py:146    (os.environ["REDIS_URL"] → TCP client)
 #        * core/llm/llm_gateway/litellm_runtime.py:51 (litellm redis cache)

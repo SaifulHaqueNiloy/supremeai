@@ -1066,13 +1066,6 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Auto-classified by CI drift remediation (P4) — heuristic default, needs manual review.",
     ),
     ConfigSpec(
-        "SUPREMEAI_ADMIN_SECRET",
-        frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
-        frozenset({ConfigSource.VAULT, ConfigSource.ENV}),
-        frozenset({"backend"}),
-        description="Dedicated admin-gate secret (>= 12 chars, no dev fallback) required in production/staging; distinct from SUPREMEAI_DOCS_PASSWORD.",
-    ),
-    ConfigSpec(
         "SUPREMEAI_DOCS_PASSWORD",
         frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
         frozenset({ConfigSource.VAULT, ConfigSource.ENV}),

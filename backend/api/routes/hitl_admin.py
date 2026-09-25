@@ -12,7 +12,7 @@ M17 P-C সৎ-সেমান্টিকস ফিক্স: আগে `get_te
 না হলে লাউড 503 — নীরব খালি-কিউ ভান নেই।
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
@@ -22,6 +22,12 @@ from services.hitl.engine import (
     ApprovalNotAuthorizedError,
     HITLEngine,
     HITLStateError,
+)
+from services.hitl.resume_token import (
+    ResumeTokenAlreadyUsedError,
+    ResumeTokenError,
+    ResumeTokenExpiredError,
+    consume_resume_token,
 )
 
 router = APIRouter()
@@ -154,5 +160,52 @@ async def reject_pending_action(
             tenant_id=current_admin.get("tenant_id"),
         )
         return {"status": "success", "message": f"Record {record_id} rejected.", "record": record}
+    except Exception as e:
+        raise _decision_error_response(e) from e
+
+
+class ResumeDecisionRequest(BaseModel):
+    decision: str  # "approve" | "reject"
+    reason: str = ""
+
+
+@router.get("/resume/{record_id}")
+async def resume_decision_via_token(
+    record_id: str,
+    token: str = Query(min_length=8),
+    decision: str = Query(default="approve", pattern="^(approve|reject)$"),
+    reason: str = Query(default=""),
+):
+    """M17 P-A "one-bridge-many-doors" (issue #1278): approve/reject WITHOUT a
+    dashboard session — the one-time resume token IS the credential.
+
+    Any channel (Telegram/email/mobile browser) opens this URL; the engine's
+    existing CAS + dispatch contract does the rest. Errors: 403 forged/
+    unknown token · 404 unknown record · 409 replay/already-decided ·
+    410 expired token · 400 unknown target · 500 execution failure.
+    """
+    engine = _hitl_engine()
+    try:
+        actor_id = consume_resume_token(engine, record_id, token)
+    except ResumeTokenAlreadyUsedError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e)) from e
+    except ResumeTokenExpiredError as e:
+        raise HTTPException(status_code=status.HTTP_410_GONE, detail=str(e)) from e
+    except ResumeTokenError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e)) from e
+    except ValueError as e:
+        raise _decision_error_response(e) from e
+
+    if not actor_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, detail="Token has no bound actor."
+        )
+
+    try:
+        if decision == "approve":
+            record = engine.approve(admin_user_id=actor_id, record_id=record_id)
+            return {"status": "success", "decision": "approve", "record": record}
+        record = engine.reject(admin_user_id=actor_id, record_id=record_id, reason=reason)
+        return {"status": "success", "decision": "reject", "record": record}
     except Exception as e:
         raise _decision_error_response(e) from e

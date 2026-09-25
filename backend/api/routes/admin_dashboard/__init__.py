@@ -477,4 +477,8 @@ from .endpoints_security import (  # noqa: E402  (registers routes + re-export)
     get_security_findings,
     run_security_scan,
 )
+from .endpoints_security_memory import (  # noqa: E402  (registers routes + re-export)
+    get_security_memory,
+    get_security_tasks,
+)
 from .endpoints_ws import admin_websocket  # noqa: E402  (registers route + re-export)

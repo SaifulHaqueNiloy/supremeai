@@ -98,7 +98,7 @@ Greenfield code is the fallback.
 Source plans:
 
 - `docs/plans/features/free_tier_production_upgrade_plan_v2.md`
-- `docs/plans/infrastructure/free_tier_federation_master_plan_v4.md`
+- `docs/plans/infrastructure/free_tier_federation_master_plan.md`
 - `docs/plans/features/free_tier_scaling_constitution_and_compliance_policy.md`
 - `docs/plans/features/multi_cloud_free_tier_federation_master_plan_v3.md` (archived; superseded by v4)
 
@@ -200,7 +200,7 @@ Do not create duplicate services when the capability already exists elsewhere.
 
 Source: `docs/plans/PRODUCTION_UPGRADE_PLAN.md` and `docs/PRODUCTION_READINESS_PLAN_V3.md`
 
-Enterprise targets such as 99.99% uptime or sub-100ms P95 are **future targets**, not current guarantees.
+Enterprise targets such as 99.99% uptime or sub-100ms P95 are **future target (planned)**, not current guarantees.
 
 Free-tier production work should prioritize:
 

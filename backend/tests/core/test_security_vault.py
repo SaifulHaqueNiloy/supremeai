@@ -11,7 +11,9 @@ os.environ.setdefault("ENCRYPTION_KEY", "9llmzMU2XSRhbAS-R__JMW1XLZzc0ll7obD_Rqa
 if "core.security.security_vault" in sys.modules:
     importlib.reload(sys.modules["core.security.security_vault"])
 
-from core.security import security_vault
+# Wave 3.9 (issue #1265): implementation folded into secure_credential_store;
+# security_vault is a re-export shim. The _vault instance lives in the impl module.
+from core.security import secure_credential_store, security_vault
 from core.security.security_vault import decrypt_token, encrypt_token
 
 
@@ -47,7 +49,7 @@ def test_encrypt_token_uses_fernet(monkeypatch):
             return b"encrypted-bytes"
 
     # বাংলা মন্তব্য: monkeypatch ব্যবহার করে security_vault.fernet mock করা হলো
-    monkeypatch.setattr(security_vault, "_vault", MockFernet())
+    monkeypatch.setattr(secure_credential_store, "_vault", MockFernet())
     result = encrypt_token("hello")
     assert result == "encrypted-bytes"
 
@@ -58,6 +60,6 @@ def test_decrypt_token_handles_exception(monkeypatch):
             raise Exception("Decryption failed")
 
     # বাংলা মন্তব্য: monkeypatch ব্যবহার করে security_vault.fernet mock করা হলো
-    monkeypatch.setattr(security_vault, "_vault", MockFernet())
+    monkeypatch.setattr(secure_credential_store, "_vault", MockFernet())
     with pytest.raises(ValueError, match="Decryption failed"):
         decrypt_token("invalid")

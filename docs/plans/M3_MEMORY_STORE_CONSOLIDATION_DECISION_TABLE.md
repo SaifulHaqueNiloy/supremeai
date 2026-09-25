@@ -6,7 +6,7 @@ status: active
 canonical: true
 owner_circle: Memory Circle
 target_scope: supremeai_internal
-last_verified: 2026-09-17
+last_verified: 2026-09-25
 supersedes: []
 superseded_by: []
 depends_on:
@@ -73,3 +73,45 @@ Secondary live tiers (kept, deliberately separate concerns):
 ## Update rule
 
 Any change to the memory module topology (new store, deletion, merge) must update this table in the same PR. The canonical declaration may only change with a founder-level decision record.
+
+---
+
+## Re-verification 2026-09-25 (Wave 3.3, issue #1259 — WAVE_MASTER_PLAN §Wave 3)
+
+Fresh audit of main @ e46af6a (exploration report) re-verified the table's
+core claims and adds two structural findings. **No verdict changes.**
+
+### Verified claims (spot-checks, byte-safe grep)
+- ✅ #1 `CascadeMemoryService` — still the heaviest fan-in (26 prod importer files + 13 test)
+- ✅ #9 `memory/mcp_server.py` — **subprocess-wiring re-confirmed**:
+  `infrastructure/mcp-control-plane/src/adapters/memory/index.ts:34-37` launches it
+  (`python memory/mcp_server.py`) — the fresh audit's "0 importers = orphan"
+  first read was wrong; process-level wiring is real. Verdict **KEEP** stands.
+- ✅ #8 `SQLiteMemoryStore` — still load-bearing by inheritance + cost_auditor
+- ✅ Canonical declaration unchanged: Supabase `ai_memory` (pgvector) via
+  CascadeMemoryService, exposed by UnifiedMemoryInterface.
+
+### New structural finding 1 — two parallel SQLite fallback engines
+`services/memory_service.py` re-implements its own inline sqlite3 fallback
+(`data/memory.db`; import sqlite3:7, db_path:146, connect sites 256/425/578/610/…)
+SEPARATE from `memory/sqlite_store.py` (SQLiteMemoryStore, the base class of
+SupabaseStore). Consequence: two engines maintain fallback-schema divergence.
+**Action (sequenced, NOT this wave):** extract the fallback engine into
+SQLiteMemoryStore (or a shared base) so `ai_memory`-unavailable degradation
+flows through ONE engine. Data risk = none if the extraction keeps
+`data/memory.db` schema byte-compatible; needs its own issue + migration test.
+
+### New structural finding 2 — facade adoption is the bottleneck
+`core/unified_memory.py` (the declared facade) has only 4 direct prod
+importers while CascadeMemoryService is imported directly by 26. The
+consolidation lever is NOT merging store files (big-bang merge stays
+FORBIDDEN per the 2026-09-25 plan audit) — it is **routing new callers
+through the facade** and migrating existing direct importers in small
+verified batches. L2 orphan-spine deletions (#16-#21) remain gated on the
+knip pass as the table already mandates.
+
+### Wave gate contribution
+Memory domain: ০ fake-assurance (all live stores verified), consolidation
+direction locked (facade-first, no big-bang), two structural risks registered
+with owners. Plan row 3.3 = audit-doc deliverable SATISFIED.
+

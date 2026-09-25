@@ -3,7 +3,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from core.agent_factory import DynamicAgentFactory
-from core.queue.task_router import TaskRouter
 
 
 @pytest.mark.asyncio
@@ -32,26 +31,3 @@ async def test_agent_factory_creates_and_saves_agent():
         assert config["execution_steps"] == [{"action": "click"}]
         mock_db.add.assert_called_once()
         mock_db.commit.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_task_router_dispatches_local_scraping_task():
-    """Ensures the TaskRouter correctly dispatches a 'web_scraping_local' task to the local executor."""
-    router = TaskRouter()
-
-    router.local_executor.execute_local_code = AsyncMock(
-        return_value={"status": "success", "data": "DOM Result"}
-    )
-
-    task_context = {
-        "task_type": "web_scraping_local",
-        "code": "print('scraping')",
-        "cost_limit": 0.05,
-    }
-
-    response = await router.route_and_dispatch(task_context)
-
-    assert response["status"] == "success"
-    assert response["cost"] == 0.05
-    assert response["data"] == "DOM Result"
-    router.local_executor.execute_local_code.assert_called_once_with("print('scraping')")

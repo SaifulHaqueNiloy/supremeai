@@ -350,7 +350,7 @@ client-service:
 ### SLA Guarantees
 - **Detection SLA**: 99% of threats detected within 1 minute
 - **Response SLA**: 95% of automated responses within 30 seconds
-- **Availability SLA**: 99.9% uptime guaranteed
+- **Availability SLA target**: 99.9% uptime (design goal — evidence pending measurement)
 
 ## Security Considerations
 
