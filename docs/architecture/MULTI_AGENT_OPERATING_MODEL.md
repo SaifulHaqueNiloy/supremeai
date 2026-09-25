@@ -148,13 +148,33 @@ The fixer continues on the **same task branch and same PR**.
 
 This is the final decision gate.
 
+### Final Outcome First
+
+The PR Manager must first determine the **intended final outcome** before judging the PR.
+
+Follow this decision loop:
+
+1. **What are we ultimately trying to achieve?**
+2. **What state should the project be in after this work?**
+3. **Does this PR move the project toward that state?**
+4. **Does it move any required behavior, dependency, or protection away from that state?**
+5. **Does another active/merged PR change that conclusion?**
+6. **What should the final combined state contain?**
+7. **Can that final state be verified?**
+
+Use this priority:
+
+**Final Outcome → Required Behavior → Dependencies/Impact → Implementation → Tests**
+
+Tests and CI are evidence, not the definition of the goal. A PR can be green and still move the project away from the intended outcome.
+
 The PR Manager does **not** simply ask:
 
 > "Are all checks green?"
 
 It asks:
 
-> **"After this change is combined with the rest of the project, is this the correct final state?"**
+> **"What final state are we trying to create, and does the combined result move us toward that state?"**
 
 Responsibilities:
 
