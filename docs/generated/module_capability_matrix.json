@@ -332,6 +332,111 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/_archive/batch-5/billing_plans.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/cloud_storage.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/cors_policy.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/db_repository.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/email_service.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/rate_limiter.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/error_pattern_db.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/gcp_firestore.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/idempotency_middleware.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/log_batcher.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/logging.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/metrics.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/metrics_collector.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/pgbouncer_pool.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/tenant_db.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/adapters/__init__.py"
     },
     {
@@ -3944,13 +4049,6 @@
       "path": "backend/core/behavioral_intelligence/strategy_router.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/billing_plans.py"
-    },
-    {
       "capability_signals": [
         "browser"
       ],
@@ -4367,13 +4465,6 @@
       "path": "backend/core/clients/render_api.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/cloud_storage.py"
-    },
-    {
       "capability_signals": [
         "memory"
       ],
@@ -4639,13 +4730,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/cors_policy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/cost_guard.py"
     },
     {
@@ -4668,13 +4752,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/db.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/db_repository.py"
     },
     {
       "capability_signals": [
@@ -4739,13 +4816,6 @@
       "path": "backend/core/effective_policy.py"
     },
     {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/email_service.py"
-    },
-    {
       "capability_signals": [
         "capability",
         "memory"
@@ -4772,13 +4842,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/env_validator.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/error_pattern_db.py"
     },
     {
       "capability_signals": [],
@@ -4942,13 +5005,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/gcp_firestore.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/generation_monitor.py"
     },
     {
@@ -5075,13 +5131,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/i18n/language_directive.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/idempotency_middleware.py"
     },
     {
       "capability_signals": [],
@@ -5620,20 +5669,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/log_batcher.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/logging.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/logging_config.py"
     },
     {
@@ -5828,20 +5863,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/messaging/upstash_redis_queue.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/metrics.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/metrics_collector.py"
     },
     {
       "capability_signals": [
@@ -6236,13 +6257,6 @@
       "path": "backend/core/persistence/write_behind.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/pgbouncer_pool.py"
-    },
-    {
       "capability_signals": [
         "browser"
       ],
@@ -6587,13 +6601,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/rate_limit_quota.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/rate_limiter.py"
     },
     {
       "capability_signals": [
@@ -7471,13 +7478,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/telemetry/system_telemetry.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/tenant_db.py"
     },
     {
       "capability_signals": [

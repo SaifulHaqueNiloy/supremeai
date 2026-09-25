@@ -107,3 +107,51 @@ evidence from canonical auditor `scripts/audit/find_duplicates.py`.
 | backend/ecosystem/task_engine.py | 30 | `adaptive_engine/task_engine.py` (`__init__`, api/routes/chat, api/routes/ecosystem_admin, core/orchestration/capability_adapters redirected) |
 
 Total: 10 files, ~242 lines.
+
+## batch-5 — archived 2026-09-26 (issue #1374)
+
+Verification date: 2026-09-26 · Scheduled delete-after review: 2026-10-09
+Phase 2 (Duplicate Consolidation) batch 3 — the 6 zero-importer `core/` shims
+resolved per plan §3 method. All 6 were pure lazy re-export bridges (~150 lines
+total) with **zero importers** (canonical auditors `find_duplicates.py` +
+`find_dead_modules.py` + manual grep across tests/workflows/docker/docs);
+unlike batches 1–4 no importer redirects were needed. The 5 shim-contract test
+entries were removed from `backend/tests/unit_light/test_deprecated_shims.py`
+(rate_limiter was never listed there).
+
+| Original path | Lines | Canonical replacement |
+|---|---|---|
+| backend/core/billing_plans.py | 30 | `services/billing/billing_plans.py` |
+| backend/core/cloud_storage.py | 24 | `services/storage/cloud_storage.py` |
+| backend/core/cors_policy.py | 25 | `middleware/cors_policy.py` |
+| backend/core/db_repository.py | 30 | `database/db_repository.py` |
+| backend/core/email_service.py | 32 | `services/email/email_service.py` |
+| backend/core/rate_limiter.py | 9 | `middleware/rate_limiter.py` |
+
+Total: 6 files, ~150 lines.
+
+## batch-6 — archived 2026-09-26 (issue #1396)
+
+Verification date: 2026-09-26 · Scheduled delete-after review: 2026-10-09
+Phase 2 (Duplicate Consolidation) batch 4 — the 9 low-importer `core/` shims
+resolved per plan §3 method: every live importer redirected name-for-name to
+the canonical module, then the stale shim archived. Covers 76 replacement
+sites across 44 files (incl. 2 root dev scripts, 1 generated-template line in
+scripts/testing/_gen_services.py, and the `patch("core.pgbouncer_pool.get_db_pool")`
+target in tests/api/test_api_keys.py — shim-path patches are silent no-ops).
+`core/logging_config.py` (646 importers) intentionally excluded — dedicated
+batch next. The shim-contract suite now parametrizes over that single shim.
+
+| Original path | Lines | Canonical replacement |
+|---|---|---|
+| backend/core/log_batcher.py | 24 | `monitoring/log_batcher.py` |
+| backend/core/idempotency_middleware.py | 30 | `middleware/idempotency_middleware.py` |
+| backend/core/metrics.py | 30 | `monitoring/metrics.py` |
+| backend/core/logging.py | 24 | `monitoring/logging.py` |
+| backend/core/error_pattern_db.py | 24 | `core/errors/error_pattern_db.py` |
+| backend/core/metrics_collector.py | 24 | `monitoring/metrics_collector.py` |
+| backend/core/tenant_db.py | 21 | `database/tenant_db.py` |
+| backend/core/pgbouncer_pool.py | 24 | `database/pgbouncer_pool.py` |
+| backend/core/gcp_firestore.py | 24 | `services/storage/gcp_firestore.py` |
+
+Total: 9 files, ~225 lines.

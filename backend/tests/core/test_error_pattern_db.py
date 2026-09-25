@@ -12,7 +12,7 @@ This module tests:
 import os
 import tempfile
 
-from core.error_pattern_db import ErrorPatternDB
+from core.errors.error_pattern_db import ErrorPatternDB
 
 
 class TestErrorPatternDB:

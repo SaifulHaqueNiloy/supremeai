@@ -93,7 +93,7 @@ def _hitl_engine() -> HITLEngine:
             return self.client.collection(name)
 
     try:
-        from core.gcp_firestore import get_firestore_client
+        from services.storage.gcp_firestore import get_firestore_client
 
         client = get_firestore_client()
     except Exception as e:  # বাংলা: সমাধান-ব্যর্থতা লাউড — নীরব [] নয়

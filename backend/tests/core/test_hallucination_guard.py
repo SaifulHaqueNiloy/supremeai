@@ -7,7 +7,7 @@ import pytest
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from core.code_validator import CodeValidator
-from core.error_pattern_db import ErrorPatternDB
+from core.errors.error_pattern_db import ErrorPatternDB
 from core.factual_verifier import FactualVerifier
 from core.generation_monitor import GenerationMonitor
 from core.output_validator import OutputValidator

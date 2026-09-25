@@ -14,7 +14,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from core.cache import get_cache
-from core.tenant_db import TenantAwareFirestore
+from database.tenant_db import TenantAwareFirestore
 
 MIN_DATA_POINTS = 10
 FORECAST_CACHE_TTL = 600  # 10 minutes

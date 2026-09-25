@@ -20,8 +20,8 @@ from core.self_evolution.agent_breeder import AgentBreeder, BreederConfig
 from core.self_evolution.auto_skill_creator import AutoSkillCreator
 from core.self_evolution.fitness_engine import FitnessEngine
 from core.self_evolution.performance_oracle import PerformanceOracle
-from core.tenant_db import TenantAwareFirestore
 from database.session import get_db_session
+from database.tenant_db import TenantAwareFirestore
 from models.evolution import CodeProposal
 from models.meta_ai import AgentGenome
 

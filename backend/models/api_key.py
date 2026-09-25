@@ -8,7 +8,7 @@ from __future__ import annotations
 from datetime import UTC, datetime
 from typing import Any
 
-from core.pgbouncer_pool import get_db_pool
+from database.pgbouncer_pool import get_db_pool
 
 
 def now_epoch() -> int:
