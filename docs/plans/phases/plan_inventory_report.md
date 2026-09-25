@@ -1,3 +1,14 @@
+---
+id: plan-inventory-report
+subject: "Plan inventory report — generated registry-vs-filesystem reconciliation"
+document_role: audit
+planning_authority: Architecture Governance / Planning Circle
+status: historical
+evidence_state: unverified
+last_verified: 2026-09-25
+target_scope: supremeai_internal
+---
+
 # docs/plans/ Inventory & Governance Report
 
 > Generated: 2026-09-25 by `scripts/governance/lint_plans.py` (report-only mode)  
@@ -40,7 +51,7 @@
 
 ### `unverified-claim` (6)
 
-- [WARNING] unverified-claim       supremeai/docs/plans/architecture/dynamic_ai_architecture_v5_zero_downtime.md: L1251: confident claim without evidence marker — `Runs locally, no API keys needed, 100% uptime`
+- [WARNING] unverified-claim       supremeai/docs/plans/architecture/dynamic_ai_architecture_zero_downtime.md: L1251: confident claim without evidence marker — `Runs locally, no API keys needed, 100% uptime`
 - [WARNING] unverified-claim       supremeai/docs/plans/features/antihacking_security_defense_framework.md: L353: confident claim without evidence marker — `- **Availability SLA**: 99.9% uptime guaranteed`
 - [WARNING] unverified-claim       supremeai/docs/plans/features/superai_competitor_playbook.md: L286: confident claim without evidence marker — `└── Our Opportunity: 99.9% Uptime guarantee`
 - [WARNING] unverified-claim       supremeai/docs/plans/implementation_plan.md: L203: confident claim without evidence marker — `Enterprise targets such as 99.99% uptime or sub-100ms P95 are **future targets**, not current guarantees.`
@@ -49,10 +60,10 @@
 
 ### `versioned-filename` (6)
 
-- [WARNING] versioned-filename     supremeai/docs/plans/architecture/dynamic_ai_architecture_v5_zero_downtime.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
-- [WARNING] versioned-filename     supremeai/docs/plans/features/evolution_patch_v3_implementation_plan.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
-- [WARNING] versioned-filename     supremeai/docs/plans/features/free_tier_federation_master_plan_v4.1_missing_services_analysis.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
-- [WARNING] versioned-filename     supremeai/docs/plans/infrastructure/SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY_V2.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
-- [WARNING] versioned-filename     supremeai/docs/plans/infrastructure/free_tier_federation_master_plan_v4.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
+- [WARNING] versioned-filename     supremeai/docs/plans/architecture/dynamic_ai_architecture_zero_downtime.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
+- [WARNING] versioned-filename     supremeai/docs/plans/features/evolution_patch_implementation_plan.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
+- [WARNING] versioned-filename     supremeai/docs/plans/features/free_tier_federation_missing_services_analysis.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
+- [WARNING] versioned-filename     supremeai/docs/plans/infrastructure/SUPREMEAI_CONFIGURATION_CONTROL_REGISTRY.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
+- [WARNING] versioned-filename     supremeai/docs/plans/infrastructure/free_tier_federation_master_plan.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
 - [WARNING] versioned-filename     supremeai/docs/plans/infrastructure/production_upgrade_implementation_plan_v2.md: filename uses banned versioning pattern (_v2/_final/_latest/…); changes belong in this living plan's evolution section
 
