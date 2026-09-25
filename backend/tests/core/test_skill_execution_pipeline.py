@@ -8,7 +8,7 @@ from __future__ import annotations
 import pytest
 
 from core.base import BaseSkill
-from core.orchestration.orchestrator import Orchestrator
+from core.orchestration.periodic_task_scheduler import Orchestrator
 from core.skill_manager import SkillManager
 
 

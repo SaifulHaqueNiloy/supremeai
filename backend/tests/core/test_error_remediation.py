@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from core.error_remediation import ErrorRemediation
+from core.errors.error_remediation import ErrorRemediation
 
 pytestmark = pytest.mark.anyio
 
@@ -41,7 +41,7 @@ class TestErrorRemediation:
 
     async def test_lookup_fix_no_qdrant(self):
         """Qdrant ছাড়াই লুকআপ ফিক্স ফলব্যাক রিটার্ন করে।"""
-        with patch("core.error_remediation.HAS_QDRANT", False):
+        with patch("core.errors.error_remediation.HAS_QDRANT", False):
             remediation = ErrorRemediation()
             result = await remediation.lookup_fix("error-signature-123")
             assert result is not None and "Retry" in result
@@ -54,7 +54,7 @@ class TestErrorRemediation:
         mock_result.payload = {"fix": "Retry with exponential backoff"}
         mock_qdrant.search.return_value = [mock_result]
 
-        with patch("core.error_remediation.HAS_QDRANT", True):
+        with patch("core.errors.error_remediation.HAS_QDRANT", True):
             with patch("core.error_remediation.QdrantClient", return_value=mock_qdrant):
                 remediation = ErrorRemediation()
                 result = await remediation.lookup_fix("error-signature-123")
@@ -66,7 +66,7 @@ class TestErrorRemediation:
         mock_qdrant = MagicMock()
         mock_qdrant.search.return_value = []
 
-        with patch("core.error_remediation.HAS_QDRANT", True):
+        with patch("core.errors.error_remediation.HAS_QDRANT", True):
             with patch("core.error_remediation.QdrantClient", return_value=mock_qdrant):
                 remediation = ErrorRemediation()
                 result = await remediation.lookup_fix("error-signature-123")
@@ -78,7 +78,7 @@ class TestErrorRemediation:
         mock_qdrant = MagicMock()
         mock_qdrant.search.side_effect = Exception("Qdrant connection error")
 
-        with patch("core.error_remediation.HAS_QDRANT", True):
+        with patch("core.errors.error_remediation.HAS_QDRANT", True):
             with patch("core.error_remediation.QdrantClient", return_value=mock_qdrant):
                 remediation = ErrorRemediation()
                 result = await remediation.lookup_fix("error-signature-123")

@@ -38,7 +38,7 @@ from core.config import settings
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from core.metrics_collector import metrics_collector
-from core.orchestration.orchestrator import Orchestrator
+from core.orchestration.periodic_task_scheduler import Orchestrator
 from core.reliability_controller import ReliabilityController
 from core.startup_validator import StartupValidator
 from utils.http_client import set_shared_client
