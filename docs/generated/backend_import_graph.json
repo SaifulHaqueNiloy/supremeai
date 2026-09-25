@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3388,
+  "edge_count": 3395,
   "edges": [
     {
       "from": "adapters",
@@ -5348,6 +5348,14 @@
       "to": "core.logging_config"
     },
     {
+      "from": "core.mcp_audit_chain",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.mcp_audit_chain",
+      "to": "models.mcp_audit_event"
+    },
+    {
       "from": "core.mcp_client",
       "to": "core.config"
     },
@@ -7717,6 +7725,10 @@
     },
     {
       "from": "models.localization",
+      "to": "models.base"
+    },
+    {
+      "from": "models.mcp_audit_event",
       "to": "models.base"
     },
     {
@@ -10672,6 +10684,18 @@
       "to": "core.mcp_allowlist"
     },
     {
+      "from": "tests.core.test_mcp_audit_chain",
+      "to": "core.mcp_audit_chain"
+    },
+    {
+      "from": "tests.core.test_mcp_audit_chain",
+      "to": "models.base"
+    },
+    {
+      "from": "tests.core.test_mcp_audit_chain",
+      "to": "models.mcp_audit_event"
+    },
+    {
       "from": "tests.core.test_mcp_client",
       "to": "core.mcp_client"
     },
@@ -13157,6 +13181,10 @@
     },
     {
       "from": "tools.mcp.mcp_server",
+      "to": "core.mcp_audit_chain"
+    },
+    {
+      "from": "tools.mcp.mcp_server",
       "to": "core.mcp_policy"
     },
     {
@@ -13556,7 +13584,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1954,
+  "module_count": 1958,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -13673,6 +13701,7 @@
     "alembic_migrations.versions.k5l6m7n8o9p0_drop_dead_performance_metrics",
     "alembic_migrations.versions.t7u8v9w0x1y2_recreate_performance_metrics",
     "alembic_migrations.versions.tier_s_features",
+    "alembic_migrations.versions.u8v9w0x1y2z3_create_mcp_audit_events",
     "analyze_coverage",
     "api",
     "api.dependencies",
@@ -14159,6 +14188,7 @@
     "core.markdown_indexer",
     "core.mcp_allowlist",
     "core.mcp_audit",
+    "core.mcp_audit_chain",
     "core.mcp_client",
     "core.mcp_policy",
     "core.memory",
@@ -14515,6 +14545,7 @@
     "models.integration",
     "models.local_model_handler",
     "models.localization",
+    "models.mcp_audit_event",
     "models.mcp_gateway",
     "models.meta_ai",
     "models.morphic",
@@ -15020,6 +15051,7 @@
     "tests.core.test_maintenance_pipeline",
     "tests.core.test_markdown_export",
     "tests.core.test_mcp_allowlist",
+    "tests.core.test_mcp_audit_chain",
     "tests.core.test_mcp_client",
     "tests.core.test_mcp_policy",
     "tests.core.test_mcp_servers_integration",

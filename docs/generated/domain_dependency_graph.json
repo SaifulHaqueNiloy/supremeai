@@ -4212,7 +4212,7 @@
     {
       "evidence": [
         {
-          "line": 75,
+          "line": 99,
           "path": "backend/core/mcp_audit.py"
         }
       ],
@@ -4222,7 +4222,7 @@
     {
       "evidence": [
         {
-          "line": 96,
+          "line": 120,
           "path": "backend/core/mcp_audit.py"
         }
       ],
@@ -4252,8 +4252,28 @@
     {
       "evidence": [
         {
+          "line": 26,
+          "path": "backend/models/mcp_audit_event.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/scout/policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 23,
+          "path": "backend/tests/core/test_mcp_audit_chain.py"
         }
       ],
       "source": "security",
@@ -4338,6 +4358,16 @@
       ],
       "source": "security",
       "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 134,
+          "path": "backend/core/mcp_audit_chain.py"
+        }
+      ],
+      "source": "security",
+      "target": "identity"
     },
     {
       "evidence": [
@@ -4464,6 +4494,16 @@
         {
           "line": 21,
           "path": "backend/core/mcp_audit.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 32,
+          "path": "backend/core/mcp_audit_chain.py"
         }
       ],
       "source": "security",

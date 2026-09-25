@@ -8328,7 +8328,8 @@
     },
     {
       "capability_signals": [
-        "capability"
+        "capability",
+        "mcp"
       ],
       "classification": "human_review",
       "entrypoints": [],
