@@ -104,20 +104,128 @@ curl -X POST "$UPSTASH_REDIS_REST_URL" \
   (`heartbeat_ping.py --slot agent-1 --agent-id Antigravity`) as a startup
   task, or wire the shell pinger into your launcher script.
 
+**Copy-paste pack (no hooks in Antigravity — rules + keep-alive):**
+
+`.antigravity/rules/heartbeat.md` (project rule):
+
+````markdown
+# Slot heartbeat (agent-1)
+At session start and after every completed task, report this agent slot:
+1. connected on boot, task set to the current objective
+2. idle when waiting for input
+3. working + task whenever a multi-step task starts
+
+```bash
+curl -sf "$AGENT_DASHBOARD_URL/api/agents/heartbeat" -X POST \
+  -H 'Content-Type: application/json' \
+  -d '{"slot":"agent-1","agentId":"Antigravity","status":"connected","task":"session start"}'
+```
+````
+
+Keep-alive floor so the slot never decays silently between runs:
+
+```bash
+AGENT_DASHBOARD_URL="http://localhost:3000" nohup \
+  ./download/agent-heartbeat.sh --loop agent-1 "Antigravity" >/dev/null 2>&1 &
+```
+
 ### agent-2: Claude Code
 - ✅ Documented: add a `SessionStart` hook (`~/.claude/settings.json`) that
   launches the pinger loop with `--slot agent-2 --agent-id "Claude Code"`;
   kill it in the `SessionEnd` hook. MCP-connected sessions can instead call
   the `agent_heartbeat` tool directly.
 
+**Copy-paste pack (native lifecycle hooks — cleanest integration):**
+
+`.claude/settings.json`:
+
+```json
+{
+  "hooks": {
+    "SessionStart": [{ "hooks": [{ "type": "command", "command": "curl -sf $AGENT_DASHBOARD_URL/api/agents/heartbeat -X POST -H 'Content-Type: application/json' -d '{\"slot\":\"agent-2\",\"agentId\":\"Claude Code\",\"status\":\"connected\",\"task\":\"session start\"}'" }] }],
+    "UserPromptSubmit": [{ "hooks": [{ "type": "command", "command": "curl -sf $AGENT_DASHBOARD_URL/api/agents/heartbeat -X POST -H 'Content-Type: application/json' -d '{\"slot\":\"agent-2\",\"agentId\":\"Claude Code\",\"status\":\"working\",\"task\":\"processing prompt\"}'" }] }],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "curl -sf $AGENT_DASHBOARD_URL/api/agents/heartbeat -X POST -H 'Content-Type: application/json' -d '{\"slot\":\"agent-2\",\"agentId\":\"Claude Code\",\"status\":\"idle\"}'" }] }]
+  }
+}
+```
+
+Export the dashboard base once in the shell profile:
+`export AGENT_DASHBOARD_URL="http://localhost:3000"`.
+
 ### agent-3: Cursor
 - ✅ Documented: a minimal VSCode-style extension (works in Cursor) whose
   `activate()` starts a 45s `setInterval` REST ping and `deactivate()` clears
   it. Publish or install locally; see the contract above.
 
+**Copy-paste pack (rule + process watcher — no extension build needed):**
+
+`.cursor/rules/heartbeat.mdc` (always-apply project rule):
+
+```markdown
+---
+description: SupremeAI slot heartbeat (agent-3)
+globs:
+alwaysApply: true
+---
+On the FIRST terminal command of a session:
+  curl -sf "$AGENT_DASHBOARD_URL/api/agents/heartbeat" -X POST -H 'Content-Type: application/json' \
+    -d '{"slot":"agent-3","agentId":"Cursor","status":"connected","task":"session start"}'
+Before substantive multi-step work: status=working, task=<objective>.
+When going idle / finishing: status=idle. Never narrate the calls.
+```
+
+Editor-presence watcher (pings while a Cursor window is open):
+
+```bash
+#!/usr/bin/env bash
+BASE="${AGENT_DASHBOARD_URL:-http://localhost:3000}"
+while pgrep -x "Cursor" >/dev/null 2>&1; do
+  curl -sf "$BASE/api/agents/heartbeat" -X POST -H 'Content-Type: application/json' \
+    -d '{"slot":"agent-3","agentId":"Cursor","status":"idle"}' || true
+  sleep 45
+done
+```
+
 ### agent-4: Cline
 - ✅ Documented: same extension approach as agent-3 (`onStartupFinished` +
   45s `setInterval`, stop on `deactivate`), packaged as `.vsix`.
+
+**Copy-paste pack (native MCP — Cline speaks MCP, so expose heartbeat as a tool):**
+
+`cline-heartbeat.mjs` (stdio MCP server, 20 lines):
+
+```js
+import { Server } from '@modelcontextprotocol/sdk/server/index.js'
+import StdioServerTransport from '@modelcontextprotocol/sdk/server/stdio.js'
+import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js'
+
+const BASE = process.env.AGENT_DASHBOARD_URL ?? 'http://localhost:3000'
+const beat = (status, task) => fetch(BASE + '/api/agents/heartbeat', {
+  method: 'POST', headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ slot: 'agent-4', agentId: 'Cline', status, ...(task ? { task } : {}) }),
+}).then(r => r.json()).catch(() => null)
+
+const server = new Server({ name: 'heartbeat', version: '1.0.0' }, { capabilities: { tools: {} } })
+server.setRequestHandler(ListToolsRequestSchema, () => ({
+  tools: [{ name: 'heartbeat', description: 'Report presence to the SupremeAI board',
+    inputSchema: { type: 'object', properties: { status: { enum: ['connected', 'idle', 'working'] }, task: { type: 'string' } }, required: ['status'] } }],
+}))
+server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  const { status, task } = req.params.arguments ?? {}
+  return { content: [{ type: 'text', text: JSON.stringify(await beat(status ?? 'idle', task)) }] }
+})
+await server.connect(new StdioServerTransport())
+```
+
+Register it in Cline → MCP Servers → stdio command `node /path/to/cline-heartbeat.mjs`,
+then add `.clinerules`: call `heartbeat` with `connected` on session start,
+`working` + task for substantive work, `idle` when done.
+
+> **Interactive source of truth:** all packs above are rendered with copy
+> buttons and live slot-state chips on the Z.ai preview dashboard
+> (**Integrations tab**), each with a "send test heartbeat" button that fires
+> a real `connected → idle` sequence so you can watch your slot flip on the
+> board before wiring the permanent hook.
 
 ### agent-5: Windsurf
 - ✅ Documented: identical to agent-3/4 (VSCode-compatible).
