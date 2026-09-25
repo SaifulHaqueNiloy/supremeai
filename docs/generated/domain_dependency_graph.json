@@ -572,16 +572,6 @@
     {
       "evidence": [
         {
-          "line": 18,
-          "path": "backend/scripts/migrate_llm_routers.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
           "line": 36,
           "path": "backend/scripts/superai_free_tier_monitor.py"
         }
@@ -1612,26 +1602,6 @@
     {
       "evidence": [
         {
-          "line": 96,
-          "path": "backend/tests/services/test_task_router.py"
-        }
-      ],
-      "source": "execution",
-      "target": "ai"
-    },
-    {
-      "evidence": [
-        {
-          "line": 106,
-          "path": "backend/tests/services/test_task_router.py"
-        }
-      ],
-      "source": "execution",
-      "target": "ai"
-    },
-    {
-      "evidence": [
-        {
           "line": 24,
           "path": "backend/api/routes/scheduled_tasks.py"
         }
@@ -2074,16 +2044,6 @@
         {
           "line": 23,
           "path": "backend/core/queue/task_queue_enhanced.py"
-        }
-      ],
-      "source": "execution",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 3,
-          "path": "backend/core/queue/task_router.py"
         }
       ],
       "source": "execution",
@@ -2973,6 +2933,16 @@
       "evidence": [
         {
           "line": 14,
+          "path": "backend/services/knowledge_qa.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 14,
           "path": "backend/services/memory_service.py"
         }
       ],
@@ -3132,7 +3102,7 @@
     {
       "evidence": [
         {
-          "line": 14,
+          "line": 15,
           "path": "backend/services/knowledge_qa.py"
         }
       ],
@@ -4322,6 +4292,26 @@
     {
       "evidence": [
         {
+          "line": 17,
+          "path": "backend/api/routes/admin_dashboard/endpoints_security_memory.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 42,
+          "path": "backend/tests/api/routes/test_admin_security_telemetry.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
           "line": 20,
           "path": "backend/tests/security/test_cross_tenant_isolation.py"
         }
@@ -4464,6 +4454,16 @@
         {
           "line": 8,
           "path": "backend/api/routes/admin_dashboard/endpoints_security.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 16,
+          "path": "backend/api/routes/admin_dashboard/endpoints_security_memory.py"
         }
       ],
       "source": "security",
@@ -5022,8 +5022,8 @@
     {
       "evidence": [
         {
-          "line": 18,
-          "path": "backend/core/security/security_pipeline.py"
+          "line": 227,
+          "path": "backend/core/security/secure_credential_store.py"
         }
       ],
       "source": "security",
@@ -5032,8 +5032,8 @@
     {
       "evidence": [
         {
-          "line": 15,
-          "path": "backend/core/security/security_vault.py"
+          "line": 18,
+          "path": "backend/core/security/security_pipeline.py"
         }
       ],
       "source": "security",
