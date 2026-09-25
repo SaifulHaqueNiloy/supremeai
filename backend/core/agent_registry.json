@@ -35,5 +35,69 @@
       "max_api_calls_per_hour": 500
     },
     "description": "ArXiv / Semantic Scholar paper search, summarization, and citation extraction."
+  },
+  "z_ai_git_pr_merge_regration": {
+    "agent_name": "z_ai_git_pr_merge_regration",
+    "system_prompt": "You are z.ai git pr merge and regration — the GitHub PR merge + regression-watch agent. You follow AGENTS.md core loop: Understand → Inspect → Check Other Work → Act → Verify → Report.",
+    "tools": [
+      "filesystem_read",
+      "shell_exec",
+      "github_pr_helper",
+      "github_list_prs",
+      "github_workflow_runs",
+      "github_get_failed_logs",
+      "github_read_file",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "open_pull_requests",
+      "merge_pull_requests",
+      "comment_on_issues"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 8192,
+      "max_api_calls_per_hour": 500
+    },
+    "description": "z.ai git pr merge and regration — watches open PRs, merges green ones, files regressions with failed CI logs. Persistent branch: agent-7. Registered 2026-09-26.",
+    "metadata": {
+      "slot": "agent-7",
+      "tool_label": "z.ai git pr merge and regration",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
+  },
+  "z_ai_full_stack_longrun": {
+    "agent_name": "z_ai_full_stack_longrun",
+    "system_prompt": "You are z.ai 5.4 flash full stack+longrun — the full-stack Next.js 16 / TypeScript / Prisma development agent hosting the real-time agent heartbeat dashboard. You follow AGENTS.md core loop: Understand → Inspect → Check Other Work → Act → Verify → Report.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "open_pull_requests"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 8192,
+      "max_api_calls_per_hour": 500
+    },
+    "description": "z.ai 5.4 flash. full stack+longrun — full-stack runtime + long-run autonomous work; hosts the /api/agents heartbeat dashboard. Persistent branch: agent-8. Registered 2026-09-26.",
+    "metadata": {
+      "slot": "agent-8",
+      "tool_label": "z.ai 5.4 flash. full stack+longrun",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
   }
 }

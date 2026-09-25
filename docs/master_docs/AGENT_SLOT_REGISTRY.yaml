@@ -97,7 +97,7 @@ slots:
   - slot: agent-9
     tool: "Continue"
     maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
+    assigned_on: "2026-09-26"
     expires_on: "2026-10-03"
     active: false
     notes: "Standby — observability + metrics dashboards (activatable on demand)"
@@ -105,7 +105,7 @@ slots:
   - slot: agent-10
     tool: "SupremeAI"
     maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
+    assigned_on: "2026-09-26"
     expires_on: "2026-10-03"
     active: true
     notes: "Self-development mode (reserved per OPS-08 §5)"
