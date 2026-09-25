@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-25 07:23 UTC
+- **Date:** 2026-09-25 07:37 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,8 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/tests/unit_light/test_deprecated_shims.py`
+  - `backend/core/rate_limit_quota.py`
   - `CHECKPOINT.md`
+  - `backend/tests/unit_light/test_rate_limit_quota.py`
+  - `backend/services/hitl/resume_token.py`
+  - `backend/tests/unit_light/test_security_rate_limiter.py`
+  - `backend/core/rate_limiter.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
