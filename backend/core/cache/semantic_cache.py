@@ -13,7 +13,7 @@ from typing import Any
 
 from adaptive_engine.experience_db import Experience, ExperienceDatabase
 from core.config_cache import config_cache
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 

@@ -15,7 +15,7 @@ from pydantic import BaseModel
 from api.dependencies import get_current_user_token
 from api.routes.admin_dashboard import require_admin_token
 from api.routes.browser import router
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.observability.audit_logger import AuditLogger
 from core.security.secure_credential_store import SecureCredentialStore
 

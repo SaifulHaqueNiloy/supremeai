@@ -41,7 +41,7 @@ import threading
 from contextlib import contextmanager
 from typing import Any
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 
 # psycopg2 মডিউল না থাকলে যেন সার্ভিস ক্র্যাশ না করে, সে জন্য সেফ ইমপোর্ট ফলব্যাক ব্যবহার করা হলো।
 try:

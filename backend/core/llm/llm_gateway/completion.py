@@ -22,7 +22,7 @@ from typing import Any
 
 import httpx
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.llm.telemetry import track_llm_call
 from core.logging_config import logger
 

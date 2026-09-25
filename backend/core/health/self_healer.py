@@ -4,7 +4,7 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 
 from ..messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus

@@ -13,7 +13,7 @@ from typing import Any
 
 import httpx
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from core.resilience.circuit_breaker import CircuitBreakerState
 from utils.firestore_helpers import get_firestore_db
