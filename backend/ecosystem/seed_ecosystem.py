@@ -10,7 +10,6 @@ Idempotency: each function checks ``find_by_signature`` / ``match_policy`` /
 explicit existence queries before insert, so re-running never raises.
 """
 
-from __future__ import annotations
 
 import os
 import sys

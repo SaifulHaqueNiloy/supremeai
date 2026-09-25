@@ -6,7 +6,6 @@ Tracks failure/success counts and opens the circuit when threshold exceeded.
 After cooldown, transitions to half-open state for recovery testing.
 """
 
-from __future__ import annotations
 
 import threading
 import time

@@ -33,35 +33,17 @@ Import-time side effects (scraper-service URL read + ``MultiLevelCache``
 instantiation) live only in ``_scraping.py``, mirroring the monolithic
 module where they ran once at import time."""
 
-import asyncio  # noqa: F401  (module-attr parity with pre-split module)
-import hashlib  # noqa: F401  (module-attr parity with pre-split module)
-import ipaddress  # noqa: F401  (module-attr parity with pre-split module)
-import json  # noqa: F401  (module-attr parity with pre-split module)
 import os  # noqa: F401  (module-attr parity with pre-split module)
-import socket  # noqa: F401  (module-attr parity with pre-split module)
 import urllib.error  # noqa: F401  (module-attr parity with pre-split module)
 import urllib.request  # noqa: F401  (module-attr parity with pre-split module)
-import uuid  # noqa: F401  (module-attr parity with pre-split module)
-from datetime import UTC, datetime  # noqa: F401  (module-attr parity)
-from typing import Any, Literal  # noqa: F401  (module-attr parity)
-from urllib.parse import urlparse  # noqa: F401  (module-attr parity)
 
-import httpx  # noqa: F401  (module-attr parity with pre-split module)
 from fastapi import APIRouter, Depends, HTTPException, Response  # noqa: F401  (module-attr parity)
-from pydantic import BaseModel, Field  # noqa: F401  (module-attr parity)
 
-from api.deps import get_current_tenant, get_current_user_token  # noqa: F401  (module-attr parity)
-from api.routes.admin_dashboard import require_admin_token  # noqa: F401  (module-attr parity)
-from core.browser_compat_store import browser_compat_store  # noqa: F401  (module-attr parity)
 from core.browser_session_catalog import (  # noqa: F401  (module-attr parity)
     SavedBrowserSession,
     browser_session_catalog,
 )
-from core.browser_session_manager import session_manager  # noqa: F401  (module-attr parity)
 from core.cache.redis_manager import MultiLevelCache  # noqa: F401  (module-attr parity)
-from core.config import settings  # noqa: F401  (module-attr parity with pre-split module)
-from core.effective_policy import get_effective_policy, policy_store  # noqa: F401  (parity)
-from core.errors.error_bus import with_error_bus  # noqa: F401  (module-attr parity)
 from core.logging_config import logger  # noqa: F401  (module-attr parity)
 from core.neon_repository import (  # noqa: F401  (module-attr parity)
     create_task as create_neon_task,
@@ -81,12 +63,9 @@ from core.neon_repository import (  # noqa: F401  (module-attr parity)
 from core.neon_repository import (  # noqa: F401  (module-attr parity)
     update_task_status as update_neon_task_status,
 )
-from core.observability.audit_logger import AuditLogger  # noqa: F401  (module-attr parity)
 from core.security.secure_credential_store import (  # noqa: F401  (module-attr parity)
     SecureCredentialStore,
 )
-from core.task_policy import evaluate_goal  # noqa: F401  (module-attr parity)
-from tools.ai_agents.browser_agent import BrowseRequest  # noqa: F401  (module-attr parity)
 
 router = APIRouter(
     prefix="/api/browser", tags=["browser"], dependencies=[Depends(get_current_user_token)]
@@ -201,7 +180,6 @@ from ._session_store import (  # noqa: F401,E402  (re-exports)
     list_sessions,
     update_session,
 )
-from ._state import BROWSER_STATUS, RECENT_ACTIVITIES  # noqa: F401,E402  (re-exports)
 from ._surf_actions import (  # noqa: F401,E402  (re-exports)
     ClickAtRequest,
     ClickRequest,

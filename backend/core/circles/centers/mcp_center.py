@@ -6,7 +6,6 @@ for post-approval tool invocation. Blocking subprocess work runs in a worker
 thread. ``mcp.invoke`` is HIGH risk + approval-gated (governed path).
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

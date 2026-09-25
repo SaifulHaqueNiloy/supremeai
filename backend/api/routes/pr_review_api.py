@@ -9,7 +9,6 @@ Endpoints:
   GET  /api/v1/pr-review/{pr_id}/status — রিভিউ স্ট্যাটাস
 """
 
-from __future__ import annotations
 
 import hashlib
 import hmac

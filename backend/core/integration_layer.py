@@ -7,7 +7,6 @@ Provides a single high-level unified interface for:
 - Graceful Shutdown and Session Telemetry
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

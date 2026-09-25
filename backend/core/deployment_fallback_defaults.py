@@ -8,7 +8,6 @@ value always comes from the canonical `SUPREMEAI_USER_BACKEND_URL` /
 deployment settings.
 """
 
-from __future__ import annotations
 
 import os
 

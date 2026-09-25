@@ -12,7 +12,6 @@
 4. section header সহ একটি একক prompt string + পূর্ণাঙ্গ রিপোর্ট রিটার্ন।
 """
 
-from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field

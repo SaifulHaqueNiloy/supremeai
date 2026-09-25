@@ -11,7 +11,6 @@ Used by:
   * The documentation site
 """
 
-from __future__ import annotations
 
 from typing import Any
 

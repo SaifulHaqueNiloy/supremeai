@@ -8,7 +8,6 @@ ROADMAP §44 — correlation IDs (deployment_id, resource_id, commit_sha) দি
 distributed debugging সম্ভব হয়।
 """
 
-from __future__ import annotations
 
 import enum
 import uuid

@@ -1,7 +1,6 @@
 # backend/runtime/task_context.py
 """Task Context and Execution Trace Tracker for Canonical Task Runtime."""
 
-from __future__ import annotations
 
 import hashlib
 import time

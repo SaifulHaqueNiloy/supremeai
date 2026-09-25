@@ -1,6 +1,5 @@
 """Grounded, tenant-isolated knowledge-base question answering."""
 
-from __future__ import annotations
 
 import hashlib
 import json

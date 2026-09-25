@@ -1,6 +1,5 @@
 """Pydantic request/response schemas for the Mission Orchestration API."""
 
-from __future__ import annotations
 
 import uuid
 from datetime import datetime

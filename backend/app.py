@@ -9,7 +9,6 @@ existing ``from core.app import app`` call site (including the uvicorn boot
 string ``core.app:app`` in ``main.py``) keeps working unchanged.
 """
 
-from __future__ import annotations
 
 import os
 import sys

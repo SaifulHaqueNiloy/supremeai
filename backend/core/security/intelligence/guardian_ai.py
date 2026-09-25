@@ -17,7 +17,6 @@ Dependencies:
 - `re`: For regex-based pattern matching.
 """
 
-from __future__ import annotations
 
 import json
 import re

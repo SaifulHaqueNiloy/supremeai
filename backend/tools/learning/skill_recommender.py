@@ -11,7 +11,6 @@ ML/heuristic-based smart recommendation engine that:
 - Returns ranked skill list with relevance scores
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

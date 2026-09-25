@@ -14,7 +14,6 @@ Usage:  python backend/scripts/check_single_alembic_head.py [versions_dir]
 Exit codes: 0 = single head, 1 = multiple heads / graph error, 2 = no revisions found.
 """
 
-from __future__ import annotations
 
 import ast
 import sys

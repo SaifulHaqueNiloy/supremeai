@@ -5,7 +5,6 @@ L3: Browsing Memory Engine — Retains and accumulates site behavior patterns,
 common dialogs (e.g. cookie banners, auth popups), flow histories, and latencies.
 """
 
-from __future__ import annotations
 
 import time
 from typing import Any

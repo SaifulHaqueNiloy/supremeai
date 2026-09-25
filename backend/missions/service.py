@@ -18,7 +18,6 @@ Every state change:
 3. emits one structured log line carrying ``mission_id``.
 """
 
-from __future__ import annotations
 
 import uuid
 from collections.abc import Callable

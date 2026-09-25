@@ -9,7 +9,6 @@ Key Features:
 - Dynamic Scope Guard: Prevents unauthorized write/mutation operations on READ_ONLY targets.
 """
 
-from __future__ import annotations
 
 import threading
 from dataclasses import dataclass, field

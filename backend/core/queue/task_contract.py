@@ -1,6 +1,5 @@
 """Provider-neutral task envelope and idempotency primitives."""
 
-from __future__ import annotations
 
 import hashlib
 import json

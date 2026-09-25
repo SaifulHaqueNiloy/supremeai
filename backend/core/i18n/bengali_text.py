@@ -18,7 +18,6 @@ context_engine.budget / llm_router / token_juice) থেকে বাংলা-�
   কাট; সংযুক্তাক্ষর/কার-চিহ্নের মাঝে কাটা নিষিদ্ধ।
 """
 
-from __future__ import annotations
 
 import os
 import unicodedata

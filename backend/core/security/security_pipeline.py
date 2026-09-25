@@ -6,7 +6,6 @@ Prompt Firewall, Security Headers) to prevent redundant overhead and guarantee c
 conditional loading based on application configuration.
 """
 
-from __future__ import annotations
 
 import time
 from collections.abc import Callable

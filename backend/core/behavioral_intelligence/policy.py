@@ -1,6 +1,5 @@
 """Deterministic safety and privacy gates for behavioral intelligence."""
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any

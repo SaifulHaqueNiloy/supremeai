@@ -6,7 +6,6 @@ knowledge from Python `seed_data` modules (
 
 """
 
-from __future__ import annotations
 
 import ast
 import contextlib

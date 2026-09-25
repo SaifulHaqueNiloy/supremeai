@@ -10,7 +10,6 @@ ROADMAP §12–§16, §55. Implements:
 বাংলা: এটি ROADMAP §12-এ বর্ণিত Capability Registry-র production foundation।
 """
 
-from __future__ import annotations
 
 import enum
 import uuid
@@ -19,7 +18,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from adaptive_engine._store import ensure_columns, get_conn, jdump, jload
 
 # ---------------------------------------------------------------------------
 # Enums

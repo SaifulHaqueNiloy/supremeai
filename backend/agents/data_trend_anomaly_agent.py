@@ -21,7 +21,6 @@ Dependencies:
 
 # বাংলা মন্তব্য: ইনসাইট-মেজ — মেমোরি ক্যাশ এবং Z-স্কোর অ্যালগরিদম ব্যবহার করে অসঙ্গতি ও ট্রেন্ড ডিটেকশন রিপোর্ট তৈরি করে।
 
-from __future__ import annotations
 
 import hashlib
 import json

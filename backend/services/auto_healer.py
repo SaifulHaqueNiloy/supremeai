@@ -35,7 +35,6 @@ from core.resilience.circuit_breaker import CircuitBreakerState
 proactive_healer_instance = get_proactive_healer()
 
 try:
-    import aiohttp
 
     HTTP_AVAILABLE = True
 except ImportError:

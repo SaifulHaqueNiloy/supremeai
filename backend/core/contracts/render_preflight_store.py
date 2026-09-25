@@ -4,7 +4,6 @@ Supports SQLite persistence for local testing/offline execution/CI,
 and integrates with Supabase / PostgreSQL when available.
 """
 
-from __future__ import annotations
 
 import json
 import logging

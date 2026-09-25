@@ -14,7 +14,6 @@ runs when the gate is explicitly enabled (local development only), and a loud
 warning is emitted once at import/boot when it is.
 """
 
-from __future__ import annotations
 
 import ast
 import tempfile

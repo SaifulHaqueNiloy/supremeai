@@ -3,9 +3,7 @@
 বাংলা: Browser/scraper আলাদা microservice. Playwright এখানে, Core API-তে নয়।
 """
 
-from __future__ import annotations
 
-import asyncio
 import logging
 import os
 

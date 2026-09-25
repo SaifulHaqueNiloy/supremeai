@@ -15,7 +15,6 @@ Usage:
     await supervisor.shutdown_all(timeout=30)
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

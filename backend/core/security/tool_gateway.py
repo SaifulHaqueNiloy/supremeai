@@ -34,7 +34,6 @@ Usage::
         ...run the tool...
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
@@ -94,7 +93,6 @@ def _audit(event: str, decision: PolicyDecision, detail: dict[str, Any] | None =
     payload = {"tool": decision.tool_name, **(detail or {})}
     try:
         import asyncio
-        import inspect
 
         from core.security.audit_logger import log_security_event
 

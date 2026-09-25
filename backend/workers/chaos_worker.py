@@ -1,7 +1,6 @@
 # backend/workers/chaos_worker.py
 """Autonomous Self-Testing & Chaos Auditor with Circuit Breaker and Error Bus."""
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

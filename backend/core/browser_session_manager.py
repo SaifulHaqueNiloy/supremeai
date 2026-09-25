@@ -4,7 +4,6 @@ The manager deliberately owns browser contexts rather than pages globally. A
 context is isolated per session and is closed on explicit release or expiry.
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

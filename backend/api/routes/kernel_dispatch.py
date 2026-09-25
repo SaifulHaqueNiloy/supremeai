@@ -5,7 +5,6 @@ Exposes POST /api/v1/kernel/dispatch:
 - Delegates to supreme_kernel
 """
 
-from __future__ import annotations
 
 from typing import Any
 

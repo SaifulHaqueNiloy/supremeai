@@ -4,7 +4,6 @@
 Defines the abstract interface and performance tracking for all domain adapters.
 """
 
-from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field

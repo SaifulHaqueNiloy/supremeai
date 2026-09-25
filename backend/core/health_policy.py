@@ -13,7 +13,6 @@
 আরও দেখুন: docs/deployment/HEALTH_CONTRACT.md (readiness semantics)
 """
 
-from __future__ import annotations
 
 CORE_ROLES = ("core", "")
 DEGRADED_ROLES = ("worker", "scraper", "mcp")

@@ -5,7 +5,6 @@ Built-in commands include /research, /summarize, /image, /code,
 /translate, /think, /export, /clear, and /help.
 """
 
-from __future__ import annotations
 
 import asyncio
 import io

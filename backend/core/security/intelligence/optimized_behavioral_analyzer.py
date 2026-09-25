@@ -5,7 +5,6 @@ with significantly improved performance using deque-based circular buffers,
 memory-bounded operations, and pre-computed hourly distributions.
 """
 
-from __future__ import annotations
 
 import time
 from collections import defaultdict, deque

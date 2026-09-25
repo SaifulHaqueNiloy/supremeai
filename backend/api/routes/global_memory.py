@@ -5,9 +5,7 @@ Exposes the existing memory_service for user-facing global memory management:
 list, create, update, delete, semantic search, sync, and stats.
 """
 
-from __future__ import annotations
 
-from datetime import UTC, datetime
 from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException

@@ -6,7 +6,6 @@ Removes the need for monolithic GCP Secret Manager.
 Strict secret handling ensures exceptions are raised for missing secrets.
 """
 
-from __future__ import annotations
 
 import asyncio
 import os

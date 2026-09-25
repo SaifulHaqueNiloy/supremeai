@@ -5,7 +5,6 @@ Cluster status/telemetry, TelDrive vault & on-demand backup, AI brain,
 DevOps, security and constitutional-rules panels.
 """
 
-from __future__ import annotations
 
 from core.config import settings
 from core.logging_config import logger

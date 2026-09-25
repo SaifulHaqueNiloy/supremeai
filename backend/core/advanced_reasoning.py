@@ -7,7 +7,6 @@ Multi-type reasoning engine for complex problem solving:
 - Parallel alternative path generation and confidence-weighted synthesis.
 """
 
-from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Callable

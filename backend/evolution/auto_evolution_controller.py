@@ -9,7 +9,6 @@ Coordinates:
 5. Continuous 6-State Evolution Cycle with Automated Rollback Guard
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime

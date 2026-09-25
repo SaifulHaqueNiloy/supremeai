@@ -2,7 +2,6 @@
 
 # বাংলা মন্তব্য: ভাষা-বট ও ভয়েস-দিদি এপিআই এন্ডপয়েন্টসমূহ।
 
-from __future__ import annotations
 
 from typing import Any
 

@@ -17,9 +17,7 @@ Dispatcher auto-selects adapter based on settings (Telegram first, then Email,
 then Mock fallback)।
 """
 
-from __future__ import annotations
 
-from typing import Any
 from uuid import uuid4
 
 from core.logging_config import logger

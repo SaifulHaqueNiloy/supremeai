@@ -9,7 +9,6 @@ Headless, Zero-Cost Terminal-Based AI Agent Registry
 প্রতিটি এজেন্টের জন্য MCP (Model Context Protocol) সার্ভার কনফিগারেশন এবং CLI কমান্ড সংজ্ঞায়িত করা হয়েছে।
 """
 
-from __future__ import annotations
 
 from typing import Any
 

@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 from core.capability_activation import capability_activation_store
 from core.capability_gateway import register_core_capabilities

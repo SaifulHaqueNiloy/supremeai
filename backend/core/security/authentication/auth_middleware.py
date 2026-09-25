@@ -3,7 +3,6 @@
 বাংলা: অথেনটিকেশন মিডলওয়্যার — JWT বিয়ারার টোকেন ভ্যালিডেশন, Fail-Closed।
 """
 
-from __future__ import annotations
 
 import hmac
 import json
@@ -12,7 +11,6 @@ from typing import Any
 
 import jwt
 from jwt import ExpiredSignatureError
-from jwt import PyJWTError as JWTError
 
 from core.config import settings
 from core.logging_config import logger

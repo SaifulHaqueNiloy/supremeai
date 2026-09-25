@@ -1,7 +1,6 @@
 # backend/runtime/budget_guard.py
 """Hard Enforcement Budget Guard for Canonical Task Runtime."""
 
-from __future__ import annotations
 
 from core.task_contract import TaskContract
 

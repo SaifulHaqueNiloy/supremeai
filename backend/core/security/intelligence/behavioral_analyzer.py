@@ -4,7 +4,6 @@ This module provides real-time behavioral analysis and anomaly detection
 to identify potential security threats based on user behavior patterns.
 """
 
-from __future__ import annotations
 
 import time
 from collections import defaultdict

@@ -17,13 +17,10 @@ ESTIMATED IMPACT:
 - Consistent learning behavior across entire application
 """
 
-from __future__ import annotations
 
-import asyncio
 import hashlib
 import json
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto

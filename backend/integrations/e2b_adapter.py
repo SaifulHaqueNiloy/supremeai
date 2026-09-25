@@ -7,7 +7,6 @@ touch না পড়ে। project-এর `sandbox/docker_sandbox.py`-এর �
 একটি optional E2B bridge + subprocess/আইসোলেশন fallback রাখা হয়।
 """
 
-from __future__ import annotations
 
 import shlex
 import shutil

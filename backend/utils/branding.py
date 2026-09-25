@@ -6,7 +6,6 @@ to SupremeAI branded display names. The frontend keeps a parallel map in
 via GET /api/admin/model-branding.
 """
 
-from __future__ import annotations
 
 import logging
 from typing import Any

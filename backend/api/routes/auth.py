@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import asyncio
 from datetime import UTC, datetime, timedelta
@@ -7,7 +6,6 @@ from typing import Any
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.security import OAuth2PasswordBearer
-from jwt import PyJWTError as JWTError
 from pydantic import BaseModel, EmailStr, Field, model_validator
 
 # বাংলা: A5/A6 (admin users) রুটের জন্য admin guard — circular import এড়াতে

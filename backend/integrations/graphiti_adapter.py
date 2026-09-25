@@ -11,7 +11,6 @@ Graphiti (real-time knowledge graphs for agents) থেকে নেওয়া
 episode triples + recency/keyword ranking) ব্যবহার হয়।
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

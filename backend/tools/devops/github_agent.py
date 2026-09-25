@@ -1,5 +1,4 @@
 import base64
-from datetime import datetime as dt
 
 import httpx
 from sqlalchemy import select

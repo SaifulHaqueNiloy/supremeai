@@ -1,7 +1,6 @@
 # SupremeAI 2.0 - Behavioral Anomaly Detection Guard
 # বাংলা মন্তব্য: এটি এআই এজেন্টের টুল রান, ইনপুট/আউটপুট ফ্রিকোয়েন্সি ও আচরণের অস্বাভাবিকতা স্বয়ংক্রিয়ভাবে মনিটর ও ব্লক করে।
 
-from __future__ import annotations
 
 import time
 from collections import defaultdict

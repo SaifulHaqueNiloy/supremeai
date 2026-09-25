@@ -5,7 +5,6 @@ and message content — using PostgreSQL ILIKE pattern matching.
 Returns ranked results with match type indicators.
 """
 
-from __future__ import annotations
 
 import asyncio
 

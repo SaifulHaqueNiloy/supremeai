@@ -14,7 +14,6 @@ validate_before_use + realpath path-traversal guard + bounded skills-dir
 write। দুই পৃষ্ঠ একই নিরাপত্তা-চুক্তিতে চলে; ৭→১ স্টোর-একত্রীকরণ M17 P-D।
 """
 
-from __future__ import annotations
 
 import os
 from collections.abc import Callable

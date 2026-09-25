@@ -11,7 +11,6 @@ Catches:
   * Unused import        — imported name never referenced in the module.
 """
 
-from __future__ import annotations
 
 import ast
 from typing import Any

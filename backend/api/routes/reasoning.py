@@ -4,12 +4,10 @@ Exposes tree-of-thought and debate engine reasoning capabilities via REST
 and SSE streaming endpoints.
 """
 
-from __future__ import annotations
 
 import json
 import uuid
 from enum import StrEnum
-from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse

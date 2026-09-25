@@ -13,7 +13,6 @@ ROADMAP §56: knowledge explosion protection — relevance/confidence/freshness/
 usage/duplication দিয়ে low-value transient তথ্য discard বা summarize।
 """
 
-from __future__ import annotations
 
 import enum
 import hashlib

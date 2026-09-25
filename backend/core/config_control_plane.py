@@ -5,7 +5,6 @@ orchestration/health semantics without creating a second source of truth.
 Secret values are never returned; only presence and metadata are exposed.
 """
 
-from __future__ import annotations
 
 import os
 from dataclasses import dataclass

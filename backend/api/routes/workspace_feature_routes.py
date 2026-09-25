@@ -5,7 +5,6 @@ Import this module and call `register_tier_s_routes(app)` to wire
 every Tier-S router into a FastAPI application in one step.
 """
 
-from __future__ import annotations
 
 from typing import TYPE_CHECKING
 

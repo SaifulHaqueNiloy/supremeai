@@ -15,7 +15,6 @@
   fail-open-for-metering) — কিন্তু ব্যর্থতা নীরবে গিলে ফেলা হয় না, loguru error যায়।
 """
 
-from __future__ import annotations
 
 import math
 from typing import Any

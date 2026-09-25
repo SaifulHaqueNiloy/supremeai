@@ -43,7 +43,6 @@ class CostAuditor:
 
         image_report_path = os.path.join(self.report_dir, "cost_report.png")
         try:
-            import matplotlib.pyplot as plt
 
             _fig, ax = plt.subplots(figsize=(6, 4))
             types = list(by_type.keys())

@@ -1,7 +1,6 @@
 # backend/core/skills/__init__.py
 """SupremeAI Core Skills Package (Unified Single Source)."""
 
-from __future__ import annotations
 
 from core.skills.base import BaseSkill
 from core.skills.core_skills import (

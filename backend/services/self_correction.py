@@ -8,7 +8,6 @@ Features:
 - Fitness-Weighted Vector Consolidation: Persists verified trajectories into ai_memory (pgvector).
 """
 
-from __future__ import annotations
 
 import time
 from collections.abc import Callable

@@ -8,7 +8,6 @@ Provides:
 - get_tenant_db: Tenant-aware database client.
 """
 
-from __future__ import annotations
 
 import jwt
 from fastapi import Depends, HTTPException, Request, status
@@ -266,9 +265,7 @@ async def verify_idempotency(request: Request) -> None:
 
     # বাংলা মন্তব্য: Exception হলেও lock release হবে এমন ব্যবস্থা করা
     # response send হলে বা exception হলে উভয় ক্ষেত্রেই lock release হবে
-    import asyncio
 
-    from starlette.middleware.base import BaseHTTPMiddleware
 
     # বাংলা মন্তব্য: Background task দিয়ে request complete হলে lock release করা
     # এটি response middleware হিসেবে কাজ করে

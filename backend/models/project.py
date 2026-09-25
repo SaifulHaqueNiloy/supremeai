@@ -10,7 +10,6 @@
 can be scoped to a project space without any further schema drift.
 """
 
-from __future__ import annotations
 
 import uuid
 

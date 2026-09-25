@@ -5,7 +5,6 @@
 মডিউলও নির্দ্বিধায় এখান থেকে import করতে পারে (roadmap item 1.4, issue #1173)।
 """
 
-from __future__ import annotations
 
 import json
 from typing import Any

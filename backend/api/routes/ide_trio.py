@@ -9,7 +9,6 @@ Exposes the Gemini → Kilo → Cline pipeline as REST endpoints:
     GET  /api/v1/ide-trio/health   — pipeline health check
 """
 
-from __future__ import annotations
 
 from typing import Any
 

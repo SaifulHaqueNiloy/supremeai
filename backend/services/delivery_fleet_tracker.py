@@ -11,7 +11,6 @@ Rider tracking system for delivery management.
 - Zero-cost: uses Upstash Redis + free map APIs
 """
 
-from __future__ import annotations
 
 import math
 from dataclasses import dataclass

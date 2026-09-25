@@ -16,7 +16,6 @@ Supabase REST client (sync) হওয়ায় এখানকার অপ�
 (যেমন connections.py → db.upsert) অনুসরণ করে।
 """
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime

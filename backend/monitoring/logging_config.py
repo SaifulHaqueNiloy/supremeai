@@ -25,7 +25,8 @@ from loguru import logger
 try:
     from starlette_context import context
     from starlette_context.header_keys import HeaderKeys
-except ImportError:
+except ImportError as e:
+    import logging; logging.getLogger(__name__).warning('logging_config.py: ImportError caught: %s', e)
 
     class DummyContext(dict):
         def exists(self):

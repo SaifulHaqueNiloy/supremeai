@@ -5,7 +5,6 @@ MCP client management, quick actions, live telemetry, knowledge-base
 search, multi-session menu and TOTP-authorized critical actions.
 """
 
-from __future__ import annotations
 
 import asyncio
 import os

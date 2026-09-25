@@ -11,7 +11,6 @@ The existing websocket_hitl.py uses this exact pattern:
 We replicate the same pattern as an SSE generator instead of WS connection.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

@@ -5,7 +5,6 @@ Enforces:
 Proposal -> Static/Security Scan -> Sandbox Benchmark -> Canary Gate -> Auto-Rollback
 """
 
-from __future__ import annotations
 
 import json
 import os

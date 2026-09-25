@@ -23,7 +23,6 @@ JSON columns use ``JSON().with_variant(JSONB, "postgresql")`` (same pattern as
 sqlite-testable while using JSONB in production PostgreSQL.
 """
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime

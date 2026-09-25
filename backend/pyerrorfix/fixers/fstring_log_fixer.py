@@ -1,6 +1,5 @@
 """Convert `logger.info(f"x {y}")` → `logger.info('x %s', y)` (lazy logging)."""
 
-from __future__ import annotations
 
 import ast
 

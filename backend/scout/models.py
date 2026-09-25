@@ -1,11 +1,9 @@
 """Pydantic data models for policy-driven web crawling."""
 
-from __future__ import annotations
 
 import enum
 import uuid
 from datetime import UTC, datetime
-from typing import Any
 
 from pydantic import BaseModel, Field
 

@@ -1,7 +1,6 @@
 # backend/evolution/fitness_evaluator.py
 """Multi-factor Evidence-Backed Fitness Evaluator for Self-Evolution."""
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 

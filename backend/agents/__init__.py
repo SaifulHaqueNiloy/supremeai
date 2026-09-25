@@ -7,7 +7,6 @@ SupremeAI 2.0 — Agent Package Initialization
 নতুন এজেন্ট যোগ করলে এখানে রেজিস্টার করতে হবে।
 """
 
-from __future__ import annotations
 
 # Fixed imports with fallback
 try:

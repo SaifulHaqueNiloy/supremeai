@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 """
 SupremeAI Continual Learning - Elastic Weight Consolidation (EWC)

@@ -17,7 +17,6 @@ The LearningStore singleton is started by the app lifespan
 callers may also ``start()``/``stop()`` it manually.
 """
 
-from __future__ import annotations
 
 from .calibration import (
     MAX_RATIO,

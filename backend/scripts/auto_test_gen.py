@@ -14,7 +14,6 @@ Usage:
     python backend/scripts/auto_test_gen.py --module brain/economic_optimizer.py --dry-run
 """
 
-from __future__ import annotations
 
 import argparse
 import ast
@@ -28,7 +27,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import httpx as requests
 
 from core.logging_config import logger
 

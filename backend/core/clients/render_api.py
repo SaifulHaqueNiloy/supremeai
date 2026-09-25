@@ -18,7 +18,6 @@ stdlib-only — scripts/lib/render_client.py-এর সাথে সামঞ্
 backend package boundary রক্ষা করতে scripts থেকে import করা হয়নি।
 """
 
-from __future__ import annotations
 
 import json
 import urllib.error  # noqa: F401 — re-exported for caller convenience

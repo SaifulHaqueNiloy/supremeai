@@ -29,7 +29,6 @@ conventions:
 - Docs: docs/master_docs/INTEG-01-MCP_INTEGRATION_HANDBOOK.md (delegation protocol)
 """
 
-from __future__ import annotations
 
 from typing import Any
 

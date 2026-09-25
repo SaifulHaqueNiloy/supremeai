@@ -8,7 +8,6 @@ Pinecone-shaped interface (save_experience, find_similar_experiences) অক্�
 যাতে কোনো caller ভাঙে না।
 """
 
-from __future__ import annotations
 
 from typing import Any
 

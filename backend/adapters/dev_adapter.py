@@ -5,7 +5,6 @@ Handles coding tasks: debugging, implementation, refactoring, code review, testi
 Supports 12+ programming languages.
 """
 
-from __future__ import annotations
 
 import re
 from collections.abc import Callable

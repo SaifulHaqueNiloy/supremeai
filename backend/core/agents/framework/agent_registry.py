@@ -10,7 +10,6 @@ Canonical entry point for agent lifecycle (create -> active -> paused -> archive
 per AGENTS.md and SUPREMEAI_CORE_CONSTITUTION.md.
 """
 
-from __future__ import annotations
 
 from typing import Any
 

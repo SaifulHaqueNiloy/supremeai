@@ -5,7 +5,6 @@ Incremental Markdown Corpus Indexer for SupremeAI living documentation.
 Chunks markdown documents by headings (#, ##, ###) and indexes them using EmbeddingEngine.
 """
 
-from __future__ import annotations
 
 import re
 from pathlib import Path

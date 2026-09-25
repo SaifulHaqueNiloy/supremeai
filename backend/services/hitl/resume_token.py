@@ -14,7 +14,6 @@
   MAX_TOKENS_PER_RECORD টাকেন (পুরোনো আগে-ব্যবহৃতগুলো প্রত্যাহারযোগ্য)।
 """
 
-from __future__ import annotations
 
 import base64
 import hashlib

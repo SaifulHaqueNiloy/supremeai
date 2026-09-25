@@ -1,7 +1,6 @@
 # backend/models/base.py
 """Shared DeclarativeBase and Common Mixins for SupremeAI ORM."""
 
-from __future__ import annotations
 
 from datetime import UTC, datetime
 

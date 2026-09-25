@@ -17,7 +17,6 @@ Security Features:
 - Resource quotas per skill execution
 """
 
-from __future__ import annotations
 
 import ast
 import asyncio

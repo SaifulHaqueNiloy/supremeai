@@ -1,7 +1,6 @@
 # SupremeAI 2.0 - Multimodal Vision Service Engine
 # বাংলা মন্তব্য: এটি ইমেজ এবং ভিজ্যুয়াল ডায়াগ্রাম/আর্কিটেকচার এনালাইসিস এবং ইউআই স্ক্রিনশট থেকে কোড প্রস্তুত করে।
 
-from __future__ import annotations
 
 import base64
 import os

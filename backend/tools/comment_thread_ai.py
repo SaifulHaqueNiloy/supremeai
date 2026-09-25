@@ -7,7 +7,6 @@ Handles GitHub PR/issue comment threads:
 4. Detect stale/blocked PRs
 """
 
-from __future__ import annotations
 
 from typing import Any
 

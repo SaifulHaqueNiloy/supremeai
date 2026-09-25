@@ -16,7 +16,6 @@
 কোনো স্তরেই নীরব ভান নেই — প্রতিটি ফলাফলে স্পষ্ট ``status`` থাকে।
 """
 
-from __future__ import annotations
 
 import asyncio
 import os

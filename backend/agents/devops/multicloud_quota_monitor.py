@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import asyncio
 import logging
@@ -22,7 +21,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
 from pathlib import Path
 
-import httpx as requests
 
 from core.logging_config import logger
 

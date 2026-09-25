@@ -21,7 +21,6 @@ still importable and a placeholder type still renders ``vector(384)`` in DDL;
 vector *operations* raise a clear runtime error instead of an AttributeError.
 """
 
-from __future__ import annotations
 
 import uuid
 from datetime import datetime

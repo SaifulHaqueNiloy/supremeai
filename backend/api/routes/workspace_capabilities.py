@@ -1,6 +1,5 @@
 """Tenant-scoped capability discovery and lifecycle operations."""
 
-from __future__ import annotations
 
 from urllib.parse import urlparse
 

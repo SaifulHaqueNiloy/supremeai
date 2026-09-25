@@ -1,7 +1,6 @@
 # backend/runtime/task_executor.py
 """Task Executor for Canonical Task Runtime."""
 
-from __future__ import annotations
 
 import time
 from typing import Any

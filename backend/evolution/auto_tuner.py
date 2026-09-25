@@ -5,7 +5,6 @@ Automatic hyperparameter tuning using multiple optimization strategies
 (Bayesian, Simulated Annealing, Grid/Random Search, Genetic Algorithm).
 """
 
-from __future__ import annotations
 
 import random
 from collections import deque

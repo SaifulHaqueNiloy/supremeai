@@ -6,7 +6,6 @@ the original class head, copied verbatim, is composed with the feature
 mixins below into the public ``TelegramBotHandler`` class.
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

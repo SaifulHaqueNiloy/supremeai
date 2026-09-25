@@ -3,7 +3,6 @@ SupremeAI Database Configuration — Optimized Connection Pool
 v4.0: Connection pooling, slow query logging, health checks
 """
 
-from __future__ import annotations
 
 import os
 import time

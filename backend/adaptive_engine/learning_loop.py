@@ -14,7 +14,6 @@ manual workarounds, system incidents, new APIs/repositories/standards,
 performance gaps, resource limitations।
 """
 
-from __future__ import annotations
 
 import enum
 import uuid

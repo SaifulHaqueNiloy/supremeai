@@ -4,7 +4,6 @@
 `importlib.util.find_spec` দিয়ে sentence-transformers গ্রেসফুলি লোড করা) অনুসরণ করে।
 """
 
-from __future__ import annotations
 
 import importlib.util
 import os

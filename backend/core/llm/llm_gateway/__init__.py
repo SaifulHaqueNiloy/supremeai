@@ -19,24 +19,12 @@
 #   streaming.py       — streaming completion fallback loop
 #   gateway.py         — LLMGateway class assembly (mixins) + properties
 #   http_client.py     — shared httpx pool + zero-leak SSE relay
-import asyncio
-import contextlib
-import json
 import os
-import random
 import time
-from collections.abc import AsyncGenerator
-from typing import Any
 
 import httpx
 
-from core.errors.error_bus import with_error_bus
-from core.llm.telemetry import track_llm_call
-from core.logging_config import logger
-from utils.firestore_helpers import get_firestore_db
 
-from ...config import settings  # Fixed import path - using relative import
-from ...cost_guard import CostGuard  # Fixed import path - using relative import
 from ...health.self_healer import (
     SelfHealerService,  # Fixed import path - using relative import
 )
@@ -45,8 +33,6 @@ from ...messaging.event_bus import (  # Fixed import path - using relative impor
     ErrorEvent,
     error_event_bus,
 )
-from ...observability.interfaces import PrivacyMode
-from ...observability.providers.langfuse_adapter import LangfuseAdapter
 from ...prompt_handler import (
     compress_prompt_messages,
     normalize_prompt,  # Fixed import path - using relative import
@@ -57,12 +43,7 @@ from ...resilience.circuit_breaker import (
 from ...resilience.circuit_breaker_manager import (
     get_shared_circuit_breaker,  # Fixed import path - using relative import
 )
-from ..interfaces import ExecutionMode
-from ..providers import CloudProviderAdapter, OllamaLocalAdapter
-from .completion import CompletionMixin
 from .gateway import LLMGateway
-from .http_client import get_http_client, shutdown_http_client, stream_llm_response
-from .litellm_runtime import LitellmSetupMixin
 from .registry import (
     _MODEL_KEY_MAP,
     _provider_key_pool,
@@ -70,14 +51,12 @@ from .registry import (
     _resolve_key_attr,
     _resolve_litellm_target,
 )
-from .resilience import ResilienceMixin
 from .routing import (
     _DEFAULT_FALLBACK_MODELS,
     _POLICY_PATH,
     TASK_MODEL_MAP,
     RoutingMixin,
 )
-from .streaming import StreamingMixin
 
 # ── মডিউল-লেভেল Lazy Singleton এক্সপোর্ট ──────────────────────────────────────
 # বাংলা: প্রতিটি ইমপোর্টকে এক ইনস্ট্যান্স দেওয়া হয় — ঘন ঘন নতুন অবজেক্ট তৈরি হয় না।

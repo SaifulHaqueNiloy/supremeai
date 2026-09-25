@@ -28,7 +28,6 @@ FILES AFFECTED:
 APPLY: Replace entire file with this fixed version
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

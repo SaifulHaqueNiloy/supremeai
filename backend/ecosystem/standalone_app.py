@@ -14,7 +14,6 @@ Bugs B1–B12 from `ecosystem_plan.md` §1.3 are fixed inline.
 Auth is stdlib-only (PBKDF2 + HMAC-SHA256 JWT). No bcrypt / PyJWT dependency.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json
@@ -23,7 +22,6 @@ import sys
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 

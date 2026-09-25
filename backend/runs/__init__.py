@@ -18,7 +18,6 @@ Module map:
   canonical ``models.base.Base``.
 """
 
-from __future__ import annotations
 
 from runs.models import Run, RunEvent
 from runs.retry import RetryClass, is_retryable

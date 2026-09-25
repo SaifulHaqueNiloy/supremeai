@@ -4,7 +4,6 @@
 Core API থেকে আলাদা — heavy runtime এখানে, Core API light থাকে।
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

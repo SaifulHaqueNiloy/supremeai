@@ -4,7 +4,6 @@
 verify_admin_session_fail_closed ব্যবহার হবে (JWT ভিত্তিক)।
 """
 
-from __future__ import annotations
 
 import logging
 import os

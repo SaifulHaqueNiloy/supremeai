@@ -17,7 +17,6 @@ For full-duplex realtime voice (rare on free-tier), keep using WS behind
 ``WS_FALLBACK=true`` flag.
 """
 
-from __future__ import annotations
 
 import asyncio
 import base64

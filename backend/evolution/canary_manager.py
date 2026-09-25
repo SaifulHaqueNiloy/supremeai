@@ -1,7 +1,6 @@
 # backend/evolution/canary_manager.py
 """Real Canary Rollout Controller and Automatic Rollback Gate."""
 
-from __future__ import annotations
 
 import hashlib
 import random

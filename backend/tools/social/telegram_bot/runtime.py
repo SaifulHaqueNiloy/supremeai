@@ -4,7 +4,6 @@
 Long-polling loop (dev/local) and webhook registration helper.
 """
 
-from __future__ import annotations
 
 import asyncio
 

@@ -7,7 +7,6 @@ The goal is to give runtime configuration, CI drift checks and future admin tool
 one stable vocabulary. Secret values remain in Infisical/deployment environments.
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum

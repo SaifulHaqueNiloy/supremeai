@@ -11,7 +11,6 @@ Key Features:
 - IP Churn Detection + Fault-Tolerant Context
 """
 
-from __future__ import annotations
 
 import hashlib
 import secrets

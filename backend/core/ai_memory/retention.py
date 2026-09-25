@@ -21,7 +21,6 @@ Design rules (constitution: honest failures, no silent no-ops):
   cleanup that could not run raises.
 """
 
-from __future__ import annotations
 
 import os
 from dataclasses import dataclass

@@ -16,7 +16,6 @@ unstable"):
   * pure in-process state; zero network; never raises
 """
 
-from __future__ import annotations
 
 import threading
 

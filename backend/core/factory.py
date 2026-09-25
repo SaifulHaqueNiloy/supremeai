@@ -12,7 +12,6 @@ Connects and orchestrates ALL phases and modules:
 - Graceful Shutdown & Comprehensive Health Check
 """
 
-from __future__ import annotations
 
 from datetime import datetime
 from typing import Any

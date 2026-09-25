@@ -13,7 +13,6 @@ Sessions come from ``database.session.get_db_session`` and are committed
 explicitly after writes (repo pattern).
 """
 
-from __future__ import annotations
 
 import uuid
 from typing import Any

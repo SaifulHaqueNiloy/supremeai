@@ -11,7 +11,6 @@ Catches:
     f-strings passed to DB-API execute.
 """
 
-from __future__ import annotations
 
 import ast
 import re

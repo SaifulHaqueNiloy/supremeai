@@ -7,7 +7,6 @@ Pinpoints underlying root causes from system anomalies using Pearl's Do-Calculus
 from typing import Any
 
 try:
-    import pandas as pd
 except ImportError:
     pd = None
 from brain.causal.discovery import CausalDiscoveryEngine

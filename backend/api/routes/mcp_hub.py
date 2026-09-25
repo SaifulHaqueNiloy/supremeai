@@ -35,7 +35,6 @@ Scope contract (keep-simple, Task 7-d):
     (Phase E); they do not bypass the scope subset check.
 """
 
-from __future__ import annotations
 
 import hashlib
 import re

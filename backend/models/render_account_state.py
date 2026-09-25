@@ -1,6 +1,5 @@
 """Render Account State and Preflight Event SQLAlchemy Models."""
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime, timezone

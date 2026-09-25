@@ -13,7 +13,6 @@ Catches:
   * bare `pytest.raises` without `match=` — swallows the wrong error silently.
 """
 
-from __future__ import annotations
 
 import ast
 

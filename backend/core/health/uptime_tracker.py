@@ -15,7 +15,6 @@ longer permits SQLite fallback; CRITICAL logged once via core.degraded_mode):
 instead of ever touching an ephemeral file. Dev/test behaviour is unchanged.
 """
 
-from __future__ import annotations
 
 import logging
 import os

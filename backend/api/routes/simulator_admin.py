@@ -3,7 +3,6 @@
 বাংলা মন্তব্য: সিমুলেটর অ্যাডমিন এপিআই যা সিমুলেটর ব্যবহারের স্ট্যাটিস্টিকস ও কোটা ম্যানেজ করে।
 """
 
-from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 

@@ -1,6 +1,5 @@
 """Canonical reusable Agent Review Workflow facade."""
 
-from __future__ import annotations
 
 from typing import Any
 

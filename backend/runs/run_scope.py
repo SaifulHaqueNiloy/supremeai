@@ -13,7 +13,6 @@
   ``None`` হিসেবে পর্যবেক্ষণ-অনুপস্থিতি জানায়; কখনো ভান নয়, কখনো raise নয়।
 """
 
-from __future__ import annotations
 
 import asyncio
 import contextlib

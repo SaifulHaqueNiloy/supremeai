@@ -10,7 +10,6 @@ TypeError on modern Python:
   * `print >>` Python2, `xrange`, `unicode`, `basestring`.
 """
 
-from __future__ import annotations
 
 import ast
 

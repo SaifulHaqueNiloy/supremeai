@@ -5,7 +5,6 @@ Manages system backups, automated gzip compression, SHA-256 integrity verificati
 fast in-memory checkpoints, and rollback on system degradation.
 """
 
-from __future__ import annotations
 
 import gzip
 import hashlib

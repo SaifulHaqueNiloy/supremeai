@@ -10,7 +10,6 @@ Monitors and optimizes system performance.
 - Zero-cost: heuristic-based without external metrics systems
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

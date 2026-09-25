@@ -23,7 +23,6 @@ JSON) without importing the sqlite module (which refuses to boot outside
 degraded mode); production may swap in the HITLEngine adapter.
 """
 
-from __future__ import annotations
 
 import hashlib
 import json

@@ -4,7 +4,6 @@ Governs:
 - Dynamic learning, Self-healing, Adaptive experience, Skills mutation
 """
 
-from __future__ import annotations
 
 from core.circles.contracts import CircleName
 

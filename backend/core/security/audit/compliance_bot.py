@@ -17,7 +17,6 @@ Dependencies:
 - `datetime`: For retention date calculations.
 """
 
-from __future__ import annotations
 
 import asyncio
 import re

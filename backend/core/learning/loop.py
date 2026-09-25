@@ -20,7 +20,6 @@ Design contracts:
   * Zero cost: pure PostgREST reads/aggregates, no LLM calls.
 """
 
-from __future__ import annotations
 
 import asyncio
 import os

@@ -14,7 +14,6 @@
 ফ্ল্যাগ OFF হলে সরাসরাই zero-cost free fallback এগুলোতে রুট করে।
 """
 
-from __future__ import annotations
 
 import os
 from typing import Any

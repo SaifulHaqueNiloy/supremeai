@@ -11,10 +11,8 @@ Backward-compat: AUTOMATION_REGISTRY (dict[str, str]) ও get_workflow_route()
 কাজ চালিয়ে যাবে।
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Optional
 
 
 @dataclass(frozen=True)

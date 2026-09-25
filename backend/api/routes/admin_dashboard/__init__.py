@@ -48,11 +48,9 @@ from core.config import settings  # noqa: F401  (module-attr parity with pre-spl
 from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from core.utils.time_utils import utc_now
-from models.ci_report import CIReportPayload, create_ci_report  # noqa: F401  (module-attr parity)
 from tools.billing.cost_auditor import CostAuditor
 from tools.knowledge.codebase_exporter import export_codebase_to_markdown
 
-from ._models import ConfigUpdate, UserUpdate  # noqa: F401  (re-export)
 
 router = APIRouter(
     prefix="/admin-api",
@@ -314,8 +312,6 @@ def get_costs_breakdown():
         }
 
 
-from .endpoints_deploy import trigger_deploy  # noqa: E402  (registers route + re-export)
-from .endpoints_health import get_health_map  # noqa: E402  (registers route + re-export)
 from .endpoints_metrics import (  # noqa: E402  (registers routes + re-export)
     get_metrics,
     get_providers,
@@ -468,7 +464,6 @@ from .endpoints_crud import (  # noqa: E402  (registers routes + re-export)
     update_settings,
     update_workspace,
 )
-from .endpoints_events import get_events, list_reports  # noqa: E402  (registers routes + re-export)
 from .endpoints_gate import (  # noqa: E402  (registers route + re-export)
     GateOverridePayload,
     execute_manual_gate_override,
@@ -481,4 +476,3 @@ from .endpoints_security_memory import (  # noqa: E402  (registers routes + re-e
     get_security_memory,
     get_security_tasks,
 )
-from .endpoints_ws import admin_websocket  # noqa: E402  (registers route + re-export)

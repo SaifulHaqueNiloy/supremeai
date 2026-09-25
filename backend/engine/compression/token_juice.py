@@ -6,7 +6,6 @@ JSON API payloads, Git diffs, Tracebacks) by 60-80% before passing them to LLMs,
 dramatically saving tokens and inference latency.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

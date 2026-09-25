@@ -12,7 +12,6 @@
 #     Path.resolve() করে root-এর ভিতরে আছে কিনা কড়াভাবে যাচাই করা হয়।
 #  ৩. Authentication required (get_current_user_token) — unauthenticated write বন্ধ।
 #  ৪. File size cap ও extension allowlist — arbitrary binary/অতিরিক্ত বড় ফাইল রুখতে।
-from __future__ import annotations
 
 import re
 from pathlib import Path

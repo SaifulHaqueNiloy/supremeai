@@ -18,7 +18,6 @@ attachment files, RAG/vector stores) land in the integration slice (M2-C);
 this package is the pure, offline-testable core.
 """
 
-from __future__ import annotations
 
 from context.budget import BudgetReport, ContextBudget, pack_items
 from context.engine import ContextBundle, ContextEngine, RawCandidate, render_bundle

@@ -1,7 +1,6 @@
 # SupremeAI 2.0 - Smart Model Router Engine
 # বাংলা মন্তব্য: এটি ব্যবহারকারীর কমান্ডের ইনটেন্ট অনুযায়ী স্বয়ংক্রিয়ভাবে সঠিক HF / LLM মডেলে রাউট করে।
 
-from __future__ import annotations
 
 from typing import Any
 

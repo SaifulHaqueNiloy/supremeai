@@ -10,7 +10,6 @@ a center imports another center, or if the governance core grows domain
 imports.
 """
 
-from __future__ import annotations
 
 from collections.abc import Iterator
 

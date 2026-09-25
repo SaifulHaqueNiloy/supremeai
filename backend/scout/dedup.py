@@ -1,6 +1,5 @@
 """Zero-token content deduplication engine (Exact SHA-256 + Jaccard Similarity)."""
 
-from __future__ import annotations
 
 import hashlib
 import re

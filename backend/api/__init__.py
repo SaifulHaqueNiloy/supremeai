@@ -5,7 +5,6 @@ Centralized router registration with ErrorEventBus integration.
 No router is loaded silently; all failures are captured and reported.
 """
 
-from __future__ import annotations
 
 import importlib
 

@@ -5,7 +5,6 @@ Tiered in-memory management (HOT -> WARM -> COLD -> FROZEN),
 online deduplication, automatic compression, and emergency consolidation.
 """
 
-from __future__ import annotations
 
 import gzip
 import hashlib

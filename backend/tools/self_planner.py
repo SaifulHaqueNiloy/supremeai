@@ -5,8 +5,8 @@ from typing import Any
 from core.errors.error_bus import with_error_bus
 
 try:
-    import networkx as nx
-except ImportError:
+except ImportError as e:
+    import logging; logging.getLogger(__name__).warning('self_planner.py: ImportError caught: %s', e)
 
     class _MockDiGraph:
         def __init__(self, *args, **kwargs):
@@ -56,7 +56,8 @@ from core.logging_config import logger
 
 try:
     from brain.model_router import ModelRouter
-except Exception:
+except Exception as e:
+    import logging; logging.getLogger(__name__).warning('self_planner.py: Exception caught: %s', e)
 
     class ModelRouter:
         pass

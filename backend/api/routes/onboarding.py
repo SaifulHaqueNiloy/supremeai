@@ -3,7 +3,6 @@ Onboarding API — POST /api/onboarding/complete
 Validates user's initial setup: API keys, preferred model, first chat confirmation.
 """
 
-from __future__ import annotations
 
 import pathlib
 import time

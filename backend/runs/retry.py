@@ -13,7 +13,6 @@ invalid_input | deterministic | resource_exhausted | approval_required``
 Pure module — no imports beyond the standard library.
 """
 
-from __future__ import annotations
 
 import enum
 

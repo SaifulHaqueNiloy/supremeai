@@ -20,7 +20,6 @@ Constitution:
    - Law #19 (Observable): সব ingest/submit observable logging সহ
 """
 
-from __future__ import annotations
 
 import hashlib
 import hmac

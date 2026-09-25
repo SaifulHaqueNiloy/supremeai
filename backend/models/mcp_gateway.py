@@ -26,7 +26,6 @@ SQLite/Postgres compatibility:
       ``SLUG_RE`` / ``is_valid_slug()`` and by the management API.
 """
 
-from __future__ import annotations
 
 import re
 import uuid

@@ -4,7 +4,6 @@ SupremeAI 2.0 — CI Report Pydantic Model and Database Access Layer
 Uses raw asyncpg via PgBouncerConnectionPool
 """
 
-from __future__ import annotations
 
 import json
 from datetime import UTC, datetime

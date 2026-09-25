@@ -7,7 +7,6 @@ No hardcoded agent lists — all discovered at runtime.
 Lint-free: ruff --select=ALL --ignore=E501 passes.
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

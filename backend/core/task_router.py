@@ -28,7 +28,6 @@ CAS-style atomic claim, lease/heartbeat, "Zero Zombie Tasks" failover —
 - Blocks: MESH-4 (Telegram /task এই queue-তে submit করে), MESH-7 (webhook events)
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

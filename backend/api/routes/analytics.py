@@ -2,7 +2,6 @@
 
 # বাংলা মন্তব্য: ইনসাইট-মেজ ও চুরন-প্রফেট এপিআই এন্ডপয়েন্টসমূহ।
 
-from __future__ import annotations
 
 from typing import Any
 

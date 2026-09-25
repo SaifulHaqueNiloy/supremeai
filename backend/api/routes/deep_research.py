@@ -8,7 +8,6 @@ synthesises a structured report with citations.
 Provides both a synchronous endpoint and an SSE streaming variant.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

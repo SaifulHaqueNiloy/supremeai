@@ -6,7 +6,6 @@ including input-output type compatibility verification, dynamic weights,
 and fallback routing.
 """
 
-from __future__ import annotations
 
 try:
     import networkx as nx

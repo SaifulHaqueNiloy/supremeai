@@ -12,7 +12,6 @@ Provides:
 বাংলা মন্তব্য: জেনেটিক অ্যালগরিদম এবং পারফরম্যান্স ট্র্যাকিং-এর জন্য ডাটা মডেল।
 """
 
-from __future__ import annotations
 
 import enum
 import uuid

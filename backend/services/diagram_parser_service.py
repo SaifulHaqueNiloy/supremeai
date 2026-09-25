@@ -11,7 +11,6 @@ Dedicated diagram parsing service supporting multiple formats:
 - Caching layer for performance
 """
 
-from __future__ import annotations
 
 import hashlib
 import json

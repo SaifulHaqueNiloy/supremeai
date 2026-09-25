@@ -5,7 +5,6 @@ Guarantees that no task is marked 'COMPLETED' without objective, verifiable evid
 Separates model self-confidence from external factual verification.
 """
 
-from __future__ import annotations
 
 import ast
 import time

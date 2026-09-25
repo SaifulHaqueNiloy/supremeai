@@ -1,6 +1,5 @@
 """Reporters: console, JSON, SARIF, Markdown."""
 
-from __future__ import annotations
 
 import json
 import sys

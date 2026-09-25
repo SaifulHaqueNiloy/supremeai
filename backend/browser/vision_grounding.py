@@ -5,7 +5,6 @@ L4 Vision Grounding Fallback: When SemanticDOM fails (e.g. canvas, shadow DOM,
 obfuscated HTML), capture a screenshot and visually ground target coordinates via VLM.
 """
 
-from __future__ import annotations
 
 import base64
 from typing import Any

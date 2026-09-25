@@ -10,7 +10,6 @@ layer (:mod:`runs.service`) calls these BEFORE mutating a run and records a
 unit-testable.
 """
 
-from __future__ import annotations
 
 import enum
 from dataclasses import dataclass, field

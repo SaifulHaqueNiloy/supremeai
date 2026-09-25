@@ -32,7 +32,6 @@ direct channel ছিল না। আগে একমাত্র পথ ছি
 - Docs: docs/master_docs/INTEG-01-MCP_INTEGRATION_HANDBOOK.md (delegation protocol)
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

@@ -3,7 +3,6 @@
 These contracts are intentionally serializable and contain no persistence or provider code.
 """
 
-from __future__ import annotations
 
 import hashlib
 import json

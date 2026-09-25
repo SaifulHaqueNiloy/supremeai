@@ -3,7 +3,6 @@
 SupremeAI Mixture of Experts (MoE) Router — Facade Bridge to AdvancedModelRouter.
 """
 
-from __future__ import annotations
 
 from core.config import settings
 from core.llm.advanced_model_router import (

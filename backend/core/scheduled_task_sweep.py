@@ -19,7 +19,6 @@
 Stale-সীমা: `SCHEDULED_TASK_SWEEP_STALE_CLAIM_SECONDS` (ডিফল্ট ৯০০ সেকেন্ড)।
 """
 
-from __future__ import annotations
 
 import asyncio
 import os

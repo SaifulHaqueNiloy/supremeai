@@ -7,7 +7,6 @@ rate from VPNs/CGNAT/mobile-switching has been observed and is acceptable.
 বাংলা মন্তব্য: অ্যাডমিন সিকিউরিটি ওটিপি মিডলওয়্যার। এটি ইউজারের আইপি, কান্ট্রি ও ডিভাইস ফিঙ্গারপ্রিন্ট ভেরিফিকেশন চেক করে।
 """
 
-from __future__ import annotations
 
 import json
 import os

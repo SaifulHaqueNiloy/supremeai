@@ -11,7 +11,6 @@ Fully autonomous learning agent that:
 Zero-cost: uses heuristic scoring + free-tier LLM routing + cached results.
 """
 
-from __future__ import annotations
 
 import hashlib
 import json

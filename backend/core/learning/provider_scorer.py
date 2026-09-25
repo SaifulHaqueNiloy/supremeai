@@ -18,7 +18,6 @@ an in-process score snapshot each cycle and the gateway reads it behind
 ENABLE_ADAPTIVE_ROUTING (default false).
 """
 
-from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field

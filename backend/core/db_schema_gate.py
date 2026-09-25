@@ -12,7 +12,6 @@ can't be resolved the gate reports ``checked=False`` (honest "unknown" —
 never fabricated success).
 """
 
-from __future__ import annotations
 
 import time
 from datetime import UTC, datetime

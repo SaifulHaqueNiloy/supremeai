@@ -19,7 +19,6 @@ re-queue)। তাই এখানে batcher.publish() (SSE-only fanout, DB wr
     emit_reasoning_step(session_id, step=1, content="Refining research query")
 """
 
-from __future__ import annotations
 
 from datetime import UTC, datetime
 from typing import Any

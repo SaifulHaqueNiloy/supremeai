@@ -33,7 +33,6 @@ PATCH v4 (2026-08-30):
   and returns without raising — callers should treat it as best-effort.
 """
 
-from __future__ import annotations
 
 import atexit
 import os

@@ -4,7 +4,6 @@ Governs:
 - Tasks, Agents, Scrapers, Browser automation, Tool invocations
 """
 
-from __future__ import annotations
 
 from core.circles.contracts import CircleName
 

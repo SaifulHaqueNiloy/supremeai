@@ -15,7 +15,6 @@ The exec path only runs when the gate is explicitly enabled (local development
 only), with a loud one-time warning emitted at import/boot when it is.
 """
 
-from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field

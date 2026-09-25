@@ -7,7 +7,6 @@ execution event is mirrored here — that is the zero-infrastructure
 realtime bus (no external queue required).
 """
 
-from __future__ import annotations
 
 import time
 from collections import deque

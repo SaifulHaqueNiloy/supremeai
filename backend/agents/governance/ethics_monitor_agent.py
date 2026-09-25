@@ -5,7 +5,6 @@ Ensures AI decisions align with ethical guidelines.
 Provides ethical assessment, bias checking, and ethics compliance reporting.
 """
 
-from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass

@@ -5,7 +5,6 @@ Tracks real-time system metrics, detects statistical Z-score anomalies,
 and generates smart multi-severity alerts with trend analysis.
 """
 
-from __future__ import annotations
 
 import asyncio
 import statistics

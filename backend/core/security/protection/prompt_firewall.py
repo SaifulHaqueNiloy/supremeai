@@ -11,7 +11,6 @@ Key Features:
 - Intent classification (keyword-based)
 """
 
-from __future__ import annotations
 
 import re
 from typing import Any

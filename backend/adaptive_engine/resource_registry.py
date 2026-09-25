@@ -9,7 +9,6 @@ ROADMAP §46: MCP god-object এড়াতে → generic control operation �
 → provider adapter পথ অনুসরণ করা হয়।
 """
 
-from __future__ import annotations
 
 import abc
 import enum

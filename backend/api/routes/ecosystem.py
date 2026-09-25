@@ -1,6 +1,5 @@
 """Ecosystem user-facing routes — Phase 5, 12, 14 (ROADMAP §22, §36, §45)."""
 
-from __future__ import annotations
 
 from typing import Any
 

@@ -14,7 +14,6 @@ Architecture:
 এই রাউটারটি UniversalRulesEngine ব্যবহার করে সব AI মডেলকে রুলস মানে হতে হবে।
 """
 
-from __future__ import annotations
 
 import hashlib
 import json
@@ -34,7 +33,6 @@ from core.llm.free_tier_tracker import get_tracker
 from core.llm.llm_gateway import get_llm_gateway
 from core.logging import get_logger
 from core.metrics import counter, timed
-from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
 from services.dynamic_ai.orchestrator import get_ai_orchestrator
 from services.llm.providers import (

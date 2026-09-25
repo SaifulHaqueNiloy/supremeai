@@ -4,7 +4,6 @@ Generates pytest / Vitest / Flutter tests using ModelRouter.
 Replaces old BanglaAiConnector pattern.
 """
 
-from __future__ import annotations
 
 import ast
 import os

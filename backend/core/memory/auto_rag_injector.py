@@ -17,7 +17,6 @@ Zero-Hardcoding: কোনো provider/model নাম এখানে নেই
 ``core.embeddings`` (local-first) থেকে, store আসে ``core.ai_memory`` থেকে।
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

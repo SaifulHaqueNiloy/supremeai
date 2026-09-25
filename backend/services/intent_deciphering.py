@@ -7,7 +7,6 @@ Autonomous intent interpretation:
 - Integrates semantic vector memory recall (ai_memory / pgvector) to leverage past successful solutions.
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any

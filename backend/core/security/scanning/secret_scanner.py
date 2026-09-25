@@ -17,7 +17,6 @@ Dependencies:
 - `re`: For regex pattern matching.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

@@ -10,7 +10,6 @@ ALWAYS starts, even if Celery or Redis is unavailable (status becomes degraded).
 Run with:  python worker_service.py   (backend/ as working dir)
 """
 
-from __future__ import annotations
 
 import asyncio
 import atexit
@@ -25,7 +24,6 @@ import signal
 import subprocess
 import sys
 import uuid
-from collections.abc import Callable, Coroutine
 from typing import Any, Literal
 
 import uvicorn

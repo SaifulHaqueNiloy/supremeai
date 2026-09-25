@@ -12,7 +12,6 @@ the request body. Dispatch goes through the Global Governance Core, so
 global policy, the approval gate and audit fan-out all apply.
 """
 
-from __future__ import annotations
 
 from typing import Any
 

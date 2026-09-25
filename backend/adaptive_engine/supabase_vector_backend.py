@@ -22,7 +22,6 @@ Env vars:
 - USE_SUPABASE_VECTOR=false → use ChromaDB/Qdrant (requires local disk)
 """
 
-from __future__ import annotations
 
 import json
 import uuid

@@ -4,7 +4,6 @@ Manages code artifacts that can be live-previewed in iframes.
 Supports HTML, React, SVG, Mermaid, and generic code artifacts.
 """
 
-from __future__ import annotations
 
 from enum import StrEnum
 from typing import Any

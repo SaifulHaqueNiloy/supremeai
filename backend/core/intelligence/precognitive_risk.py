@@ -1,6 +1,5 @@
 """Proposal-only risk scoring with bounded noise and no autonomous execution."""
 
-from __future__ import annotations
 
 import hashlib
 import random

@@ -4,7 +4,6 @@ Signals are short-lived hypotheses used to choose response strategy. They are
 not diagnoses, identity claims, or durable user profiles.
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum

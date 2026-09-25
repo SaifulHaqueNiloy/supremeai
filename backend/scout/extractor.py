@@ -1,6 +1,5 @@
 """Zero-token extractive summarization engine using sentence salience scoring."""
 
-from __future__ import annotations
 
 import collections
 import re

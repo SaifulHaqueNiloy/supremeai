@@ -5,7 +5,6 @@ Manages reusable prompt templates. Builtin templates are seeded on first access.
 Custom templates are user-scoped.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

@@ -17,7 +17,6 @@ try:
     from .circuit_breaker import CircuitBreakerManager
 except ImportError:
     # Fallback to core circuit breaker
-    from core.circuit_breaker import RedisCircuitBreaker as CircuitBreakerManager
 
 
 class TaskType(StrEnum):
@@ -61,7 +60,8 @@ except ImportError:
 
 try:
     from .provider_registry import ProviderConfig, ProviderRegistry
-except ImportError:
+except ImportError as e:
+    import logging; logging.getLogger(__name__).warning('orchestrator.py: ImportError caught: %s', e)
 
     class ProviderConfig:
         def __init__(self, **kwargs):

@@ -2,7 +2,6 @@
 
 # বাংলা মন্তব্য: ক্যাশ প্যাকেজ ইনিশিয়ালাইজেশন এবং এজেন্টদের জন্য সাধারণ গেট ও সেট মেথড সম্পন্ন ক্যাশ প্রক্সি ক্লাস।
 
-from __future__ import annotations
 
 import json
 from typing import Any

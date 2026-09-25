@@ -29,7 +29,6 @@ The flag still governs the degraded REST-only boot (``database/session.py``)
 and dev/staging behaviour.
 """
 
-from __future__ import annotations
 
 import os
 import sys

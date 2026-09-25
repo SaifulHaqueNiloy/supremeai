@@ -13,7 +13,6 @@ Usage:
 
 # বাংলা মন্তব্য: Tier-7 ক্রিয়েটিভ এজেন্টগুলোকে স্কিল রেজিস্ট্রিতে রেজিস্টার করার মডিউল।
 
-from __future__ import annotations
 
 from typing import Any
 

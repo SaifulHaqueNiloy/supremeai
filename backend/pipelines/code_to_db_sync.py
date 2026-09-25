@@ -9,7 +9,6 @@ Syncs code changes and transactional outbox updates to database endpoints.
 - Bangla inline comments for team clarity (AGENTS.md compliant)
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

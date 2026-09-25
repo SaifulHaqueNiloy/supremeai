@@ -1,9 +1,7 @@
 """Telemetry and event publishing for policy-driven web crawler."""
 
-from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
 from typing import Any
 
 from core.logging_config import logger

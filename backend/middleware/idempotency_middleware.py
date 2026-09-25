@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 # বাংলা মন্তব্য: নন-ব্লকিং অপারেশনের জন্য asyncio এবং redis.asyncio ইম্পোর্ট করা হলো
 import base64

@@ -1,6 +1,5 @@
 """Crawl policy evaluation engine and SSRF security enforcement."""
 
-from __future__ import annotations
 
 import re
 from urllib.parse import urlparse

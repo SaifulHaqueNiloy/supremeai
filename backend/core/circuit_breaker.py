@@ -20,7 +20,6 @@ Usage:
         result = await call_external_api()
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

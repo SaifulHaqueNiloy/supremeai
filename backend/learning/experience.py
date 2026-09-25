@@ -1,7 +1,6 @@
 # backend/learning/experience.py
 """Experience Ledger and Record Primitives for Continual Learning."""
 
-from __future__ import annotations
 
 import json
 import os

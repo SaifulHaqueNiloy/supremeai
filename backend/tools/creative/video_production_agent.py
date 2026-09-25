@@ -16,7 +16,6 @@ this agent only orchestrates and returns job handles.
 
 # বাংলা মন্তব্য: ভিডিও প্রোডাকশন এজেন্টের জন্য কোড। এটি মূলত ব্যাকগ্রাউন্ড ওয়ার্কারদের কাছে টাস্ক ডেলিগেট করে।
 
-from __future__ import annotations
 
 import asyncio
 import uuid

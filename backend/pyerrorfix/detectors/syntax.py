@@ -5,7 +5,6 @@ parses with a real compile() and inspects the resulting SyntaxError details.
 It also uses ``tokenize`` to find mixed tab/space usage.
 """
 
-from __future__ import annotations
 
 import asyncio
 import io

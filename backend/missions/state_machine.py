@@ -19,7 +19,6 @@ This module has NO imports beyond the standard library — it is importable in
 any environment and has no database coupling.
 """
 
-from __future__ import annotations
 
 PLANNED = "planned"
 APPROVED = "approved"

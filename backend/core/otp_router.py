@@ -10,7 +10,6 @@ supports both if triggered explicitly by an admin.
 বাংলা মন্তব্য: অ্যাডমিন অথেনটিকেশনের জন্য ওটিপি সুইচিং রাউটার। ডিসকর্ড ওয়েবহুক এবং রিসেন্ড ইমেল সার্ভিস ব্যবহার করে।
 """
 
-from __future__ import annotations
 
 import os
 import re

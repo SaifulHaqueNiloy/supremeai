@@ -8,7 +8,6 @@ Production-ready HTTP interface for SupremeAI:
 - Smart Memory Management (`/api/v1/memory/stats`, `/api/v1/memory/consolidate`)
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

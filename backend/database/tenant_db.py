@@ -6,7 +6,6 @@ Fixes Applied (Autonomous Architecture Audit):
 - 🔴 [CRITICAL] try/except ব্লকে fallback `firestore.Client()` কল করার আগে existence check যোগ করা
 """
 
-from __future__ import annotations
 
 from fastapi import HTTPException, status
 

@@ -16,12 +16,10 @@ real — no fabricated results, no canned papers:
                       BibTeX) from real paper metadata.
 """
 
-from __future__ import annotations
 
 import re
 import urllib.parse
 import urllib.request
-import xml.etree.ElementTree as ET
 from typing import Any
 
 _ATOM_NS = "{http://www.w3.org/2005/Atom}"

@@ -18,7 +18,6 @@ touching this file — it's the load-bearing tradeoff of this whole design):
     nothing.
 """
 
-from __future__ import annotations
 
 import atexit
 import queue

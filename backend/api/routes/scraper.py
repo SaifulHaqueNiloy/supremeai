@@ -15,7 +15,6 @@ Hardening (production-readiness plan, item 1):
   service in ``services/scraper/main.py``).
 """
 
-from __future__ import annotations
 
 import asyncio
 import os

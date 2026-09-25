@@ -10,10 +10,8 @@ Governed Single-Door Entry Facade:
 - Emits distributed trace and audit journal events
 """
 
-from __future__ import annotations
 
 import time
-from typing import Any
 
 from core.circles.contracts import (
     CircleName,

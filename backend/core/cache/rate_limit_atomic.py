@@ -10,7 +10,6 @@ pre-fix production stack spent up to 12 billable ops per HTTP request
 গুলো আলাদাভাবে বিল হয় না। তাই ৪-কমান্ড pipeline → ১টি atomic EVAL (75%+ সাশ্রয়)।
 """
 
-from __future__ import annotations
 
 import logging
 from typing import Any

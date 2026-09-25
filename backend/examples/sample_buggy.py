@@ -11,7 +11,6 @@ import pickle  # noqa: F401  (used by security detector)
 import subprocess
 import time
 
-import httpx as requests
 
 import os
 

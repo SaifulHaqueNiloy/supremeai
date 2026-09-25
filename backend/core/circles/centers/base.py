@@ -18,7 +18,6 @@ the Global Governance Core — NOT here. Centers must not import each
 other; this is enforced by tests/test_fcc_boundaries.py.
 """
 
-from __future__ import annotations
 
 import asyncio
 import inspect

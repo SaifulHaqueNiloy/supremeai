@@ -5,7 +5,6 @@ item. A ContextItem cannot be constructed without its provenance — the
 dataclass has no default for it, and the engine never fabricates one.
 """
 
-from __future__ import annotations
 
 import enum
 import uuid

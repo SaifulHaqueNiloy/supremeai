@@ -1,7 +1,6 @@
 """Inline keyboard builders for :class:`TelegramBotHandler`
 (verbatim split artifact of the former single-module telegram_bot.py)."""
 
-from __future__ import annotations
 
 from typing import Any
 

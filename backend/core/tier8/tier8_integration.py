@@ -7,7 +7,6 @@ service registry, event bus, and health monitor.
 No hardcoded values. All config via env vars or ConfigProxy.
 """
 
-from __future__ import annotations
 
 import os
 from typing import Any

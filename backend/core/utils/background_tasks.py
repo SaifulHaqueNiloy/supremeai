@@ -10,7 +10,6 @@ Usage:
     task = track_task(asyncio.create_task(some_coro()))
 """
 
-from __future__ import annotations
 
 import asyncio
 import logging
@@ -122,7 +121,8 @@ def security_memory_snapshot() -> dict:
             current, peak = tracemalloc.get_traced_memory()
             heap_used = f"{current / 1024 / 1024:.1f} MB"
             heap_total = f"{peak / 1024 / 1024:.1f} MB (peak)"
-    except Exception:
+    except Exception as e:
+        import logging; logging.getLogger(__name__).warning('background_tasks.py: Exception caught: %s', e)
         pass
 
     return {

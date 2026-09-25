@@ -11,7 +11,6 @@ they own. Cross-user access returns 404 (never 403) so mission existence is
 not leaked.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

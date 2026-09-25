@@ -12,7 +12,6 @@ Video frame analysis pipeline that:
 - Returns structured component tree + generated code
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

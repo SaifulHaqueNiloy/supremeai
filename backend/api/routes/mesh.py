@@ -39,7 +39,6 @@ conventions:
 - Depends on: backend/core/presence_registry.py, backend/core/task_router.py
 """
 
-from __future__ import annotations
 
 from typing import Any
 

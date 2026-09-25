@@ -30,7 +30,6 @@ Guards (enforced by :func:`assert_transition`):
 - Terminal -> ``FINALIZED`` requires nothing extra (any terminal may seal).
 """
 
-from __future__ import annotations
 
 from runs.retry import is_retryable as _is_retryable_class
 

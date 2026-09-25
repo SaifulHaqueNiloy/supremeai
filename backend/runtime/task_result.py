@@ -1,7 +1,6 @@
 # backend/runtime/task_result.py
 """Task Result Object for Canonical Task Runtime."""
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import datetime

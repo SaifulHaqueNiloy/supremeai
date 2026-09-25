@@ -1,7 +1,6 @@
 # backend/evolution/artifact_integrity.py
 """Cryptographic Artifact Integrity and Hashing Gate for Self-Evolution."""
 
-from __future__ import annotations
 
 import hashlib
 import json

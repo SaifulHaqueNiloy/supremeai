@@ -5,7 +5,6 @@ Automates strategy selection using Upper Confidence Bound (UCB) and Epsilon-Gree
 evaluating execution quality and evolving new heuristic approaches.
 """
 
-from __future__ import annotations
 
 import random
 from collections.abc import Callable

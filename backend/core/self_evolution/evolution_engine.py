@@ -7,7 +7,6 @@ interaction. It also manages user feedback and persists all evolutionary
 data using a dual-storage strategy (Supabase and local SQLite).
 """
 
-from __future__ import annotations
 
 import hashlib
 import os

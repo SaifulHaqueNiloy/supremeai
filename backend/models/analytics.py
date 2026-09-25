@@ -5,7 +5,6 @@ InsightMage auto-reports and ChurnProphet retention predictions.
 
 # বাংলা মন্তব্য: ডাটা এনালিটিক্স ও চুরন প্রেডিকশন সম্পর্কিত টেবিলসমূহ।
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime

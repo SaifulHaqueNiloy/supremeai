@@ -5,7 +5,6 @@
 Defines roles, permissions, and authorization logic for the entire platform.
 """
 
-from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field

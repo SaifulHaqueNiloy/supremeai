@@ -5,7 +5,6 @@ Specialized for Bengali language processing and cultural adaptation.
 Provides transliteration, sentiment analysis, and Bangla text processing.
 """
 
-from __future__ import annotations
 
 import hashlib
 import re

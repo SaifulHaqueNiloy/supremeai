@@ -5,7 +5,6 @@
 করে — কোনো ক্র্যাশ হয় না। প্যাকেজ ইনস্টল: `pip install duckduckgo-search` (বা `ddgs`)।
 """
 
-from __future__ import annotations
 
 import importlib.util
 from typing import Any

@@ -17,7 +17,6 @@ in tests and the lazy ``from api.routes.metrics import metrics_engine`` in
 core/maintenance_pipeline.py keep resolving to the same objects.
 """
 
-from __future__ import annotations
 
 from typing import Any
 

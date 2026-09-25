@@ -1,6 +1,5 @@
 """Central tenant-scoped registry for zero-friction capability connections."""
 
-from __future__ import annotations
 
 import asyncio
 import time

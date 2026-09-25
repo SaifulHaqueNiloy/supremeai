@@ -7,7 +7,6 @@ ROADMAP §42 — unified memory model: startup / idle / peak / current / limit /
 percent / trend। এটি top memory consumers ও memory regression detection দেয়।
 """
 
-from __future__ import annotations
 
 import enum
 import uuid

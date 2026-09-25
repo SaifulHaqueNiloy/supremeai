@@ -10,7 +10,6 @@ the best available free provider for each request.
 Supports optional Redis persistence for multi-worker environments.
 """
 
-from __future__ import annotations
 
 import time
 from collections import deque

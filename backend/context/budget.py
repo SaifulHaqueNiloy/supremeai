@@ -15,7 +15,6 @@ Packing policy (greedy, deterministic, auditable):
    reads these reports, nothing is silently lost.
 """
 
-from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass, field

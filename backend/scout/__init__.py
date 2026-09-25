@@ -1,6 +1,5 @@
 """SupremeAI Scout: Policy-Driven Web Crawler, Deduplication & Summarization Package."""
 
-from __future__ import annotations
 
 from scout.cache import CrawlerCache
 from scout.crawler import CrawlerService

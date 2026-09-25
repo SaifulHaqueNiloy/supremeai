@@ -19,7 +19,6 @@ basic-auth দিয়ে সুরক্ষিত। এই মিডলওয
 (core/app_builder.py) যাতে CORS/সিকিউরিটি চেইনের অর্ডারিং অক্ষত থাকে।
 """
 
-from __future__ import annotations
 
 import base64
 import json

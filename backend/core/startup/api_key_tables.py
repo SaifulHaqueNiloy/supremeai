@@ -1,6 +1,5 @@
 """Startup database initialization helpers for SupremeAI."""
 
-from __future__ import annotations
 
 import time
 

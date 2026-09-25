@@ -10,7 +10,6 @@ Endpoints:
   POST /recipe  — scripted multi-step browser actions
 """
 
-from __future__ import annotations
 
 import os
 

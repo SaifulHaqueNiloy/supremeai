@@ -15,7 +15,6 @@ Bengali:
     মডেল স্কিমার যেকোনো পরিবর্তনে টাইপ ড্রিফট সনাক্ত করা হয়
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

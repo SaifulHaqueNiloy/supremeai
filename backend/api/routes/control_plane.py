@@ -1,6 +1,5 @@
 """Versioned control-plane discovery and server-side service probes."""
 
-from __future__ import annotations
 
 import time
 from datetime import UTC, datetime, timezone

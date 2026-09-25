@@ -7,7 +7,6 @@ Handles:
 - Zero-cost rate limit & quota distribution.
 """
 
-from __future__ import annotations
 
 import os
 from collections.abc import Sequence

@@ -16,7 +16,6 @@ Invariants enforced here (roadmap §19):
 - **Budget honesty**: the packer's drop report is part of the bundle.
 """
 
-from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Iterable
 from dataclasses import dataclass, field

@@ -13,7 +13,6 @@ sequence and returns a structured ``TrioPipelineResult`` containing
 the generated code, review findings, and production-readiness report.
 """
 
-from __future__ import annotations
 
 import hashlib
 from datetime import UTC, datetime

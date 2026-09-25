@@ -4,7 +4,6 @@
 Redis atomic INCRBY ব্যবহার করে সব ওয়ার্কার জুড়ে একটাই consistent দৈনিক কাউন্টার রাখে।
 """
 
-from __future__ import annotations
 
 import time
 

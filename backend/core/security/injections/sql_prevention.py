@@ -16,7 +16,6 @@ Key Components:
 - `SQLAuditor`: Audit codebase for SQL injection vulnerabilities
 """
 
-from __future__ import annotations
 
 import ast
 import re

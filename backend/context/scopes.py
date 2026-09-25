@@ -7,7 +7,6 @@ STEP``, with RUN/STEP anchored to M1's canonical ``run_id`` (parent_run_id on
 No DB coupling — pure module (same discipline as runs/state_machine.py).
 """
 
-from __future__ import annotations
 
 import enum
 from dataclasses import dataclass

@@ -3,7 +3,6 @@
 Split out of the former single-module api/routes/browser.py verbatim.
 """
 
-from __future__ import annotations
 
 import json
 import uuid

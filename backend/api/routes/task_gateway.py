@@ -1,6 +1,5 @@
 """Canonical Core API task gateway with durable tenant-scoped records."""
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime

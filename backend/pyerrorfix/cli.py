@@ -22,7 +22,6 @@ Usage
 Exit codes: 0 = no errors, 1 = errors found, 2 = invocation error.
 """
 
-from __future__ import annotations
 
 import argparse
 import json

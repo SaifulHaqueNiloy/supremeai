@@ -5,7 +5,6 @@
 - Mode enum backend-এ validate হয় — client যা পাঠাক, ভাঙবে না।
 """
 
-from __future__ import annotations
 
 from fastapi import APIRouter, Depends
 

@@ -1,7 +1,6 @@
 import os
 import time
 from collections import OrderedDict
-from typing import Optional, Protocol
 
 from core.logging_config import logger
 

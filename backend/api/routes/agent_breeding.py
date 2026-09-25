@@ -15,7 +15,6 @@ Endpoints:
 বাংলা মন্তব্য: Agent breeding, performance tracking, weakest link detection API routes.
 """
 
-from __future__ import annotations
 
 import secrets
 import uuid

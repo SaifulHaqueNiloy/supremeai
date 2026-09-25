@@ -9,7 +9,6 @@ Key Capabilities:
 - Multi-Repo Support: Manages parallel worktrees/workspaces for different target entities.
 """
 
-from __future__ import annotations
 
 import subprocess
 from pathlib import Path

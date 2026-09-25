@@ -9,7 +9,6 @@ CLI handler for terminal-based AI interactions.
 - Zero-cost: uses LLM routing + command sandboxing
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

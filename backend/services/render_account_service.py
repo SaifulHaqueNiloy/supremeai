@@ -4,7 +4,6 @@ Handles account status checks, build minute calculations, cooldowns (with bounde
 audit event recording, and fail-closed evaluation.
 """
 
-from __future__ import annotations
 
 import json
 import os

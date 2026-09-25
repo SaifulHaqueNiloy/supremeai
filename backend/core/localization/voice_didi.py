@@ -7,9 +7,7 @@ minimal literacy requirements.
 
 # বাংলা মন্তব্য: ভয়েস-দিদি — স্বল্প-শিক্ষিত ব্যবহারকারীদের জন্য সহজে ভয়েস কম্যান্ড প্রসেসিং ও ইন্টেন্ট সনাক্তকরণ মডিউল।
 
-from __future__ import annotations
 
-import os
 import uuid
 from typing import Any
 

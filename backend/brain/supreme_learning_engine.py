@@ -1,6 +1,5 @@
 import warnings
 
-from core.unified_learning import LearningEvent, LearningQuery, LearningType, get_learning_engine
 
 
 class SupremeLearningEngine:

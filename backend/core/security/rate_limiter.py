@@ -6,7 +6,6 @@ This file remains as a deprecation shim per the no-file-delete doctrine
 Canonical rate limiting logic lives in :mod:`middleware.rate_limiter`.
 """
 
-from __future__ import annotations
 
 import time
 from typing import Literal

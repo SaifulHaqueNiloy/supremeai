@@ -9,7 +9,6 @@ OBSERVE phase: implements the previously-stub /metrics endpoint with real
 aggregated data, so admin can observe the entire system from one place.
 """
 
-from __future__ import annotations
 
 import os
 import time

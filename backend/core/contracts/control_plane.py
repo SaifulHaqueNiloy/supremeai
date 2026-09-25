@@ -1,6 +1,5 @@
 """Memory candidate, learning promotion, realtime, and frontend envelopes."""
 
-from __future__ import annotations
 
 import hashlib
 import json

@@ -20,7 +20,6 @@ The envelopes bridge to the legacy in-process contracts
 pre-FCC ``circle_registry`` stay interoperable during migration.
 """
 
-from __future__ import annotations
 
 from typing import Any
 from uuid import uuid4

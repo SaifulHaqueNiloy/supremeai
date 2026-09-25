@@ -10,7 +10,6 @@ Supported client styles:
 2. First-message handshake: client sends ``{"type": "auth", "token": "<jwt>"}``
 """
 
-from __future__ import annotations
 
 from typing import Any
 

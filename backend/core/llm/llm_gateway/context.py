@@ -11,7 +11,6 @@ inference করবে, তখন টেন্যান্ট/টাস্ক/�
 ভুয়া "সব-রুট ওয়্যারড" দাবি করে না।
 """
 
-from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field

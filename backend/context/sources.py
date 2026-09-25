@@ -4,7 +4,6 @@
 API-কে Context Engine-এর RawCandidate contract-এ রূপান্তর করা হয়।
 """
 
-from __future__ import annotations
 
 import hashlib
 from typing import Any

@@ -3,7 +3,6 @@
 Performance-Aware Router for SupremeAI 2.0 — Facade Bridge to AdvancedModelRouter.
 """
 
-from __future__ import annotations
 
 from typing import Any, TypedDict
 

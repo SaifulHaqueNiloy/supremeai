@@ -9,7 +9,6 @@ retry limit / time limit / risk threshold / fallback / escalation সব enforce
 ROADMAP §29: resource-aware routing (capability, CPU, memory, queue, health, cost)।
 """
 
-from __future__ import annotations
 
 import enum
 import uuid
@@ -19,7 +18,6 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from adaptive_engine._store import get_conn, jdump, jload
-from adaptive_engine.correlation import CorrelationContext, current_correlation
 
 
 class TaskState(enum.StrEnum):

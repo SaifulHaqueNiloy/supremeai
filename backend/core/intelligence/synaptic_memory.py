@@ -1,6 +1,5 @@
 """Governed synaptic memory consolidation with reversible archival."""
 
-from __future__ import annotations
 
 import threading
 from dataclasses import dataclass, field

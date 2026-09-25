@@ -1,9 +1,7 @@
 """Authentication and rate limiting helpers for the admin dashboard."""
 
-from __future__ import annotations
 
 import asyncio
-import secrets
 
 import jwt
 from fastapi import Depends, HTTPException, Request

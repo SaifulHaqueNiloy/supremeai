@@ -1,6 +1,5 @@
 """Add missing `await` before known-coroutine calls."""
 
-from __future__ import annotations
 
 import ast
 

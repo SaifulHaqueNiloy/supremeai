@@ -7,7 +7,6 @@ No hardcoded values. All config via env / config proxy.
 Lint-free: ruff --select=ALL --ignore=E501 passes.
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

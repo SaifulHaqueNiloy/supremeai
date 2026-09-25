@@ -5,7 +5,6 @@
 lightweight column migration সাপোর্ট। এটি production-এ zero-risk deploy দেয়।
 """
 
-from __future__ import annotations
 
 import json
 import sqlite3

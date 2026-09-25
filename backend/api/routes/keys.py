@@ -8,7 +8,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from core.logging_config import logger
-from core.security.authentication.rbac import get_current_user_token as verify_token_dependency
 from database.supabase_client import SupabaseDB
 
 router = APIRouter(prefix="/keys", tags=["User Keys"])

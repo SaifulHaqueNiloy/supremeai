@@ -5,7 +5,6 @@ boundary ঘোষণা করে। এই registry কোনো নতুন 
 জন্য immutable in-memory contract এবং graph snapshot তৈরি করে।
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 

@@ -9,9 +9,7 @@ Constitution Compliance:
   - Law #1 (Centralized): single audit sink for all Python MCP servers
 """
 
-from __future__ import annotations
 
-import json
 import os
 import time
 import uuid

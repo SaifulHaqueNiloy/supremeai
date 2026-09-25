@@ -5,7 +5,6 @@ alive. It centralizes admission, degradation, and offload decisions so adapters
 can remain small and testable.
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum

@@ -12,7 +12,6 @@ Key Components:
 - `UserSegmenter`: Automatic user segmentation.
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

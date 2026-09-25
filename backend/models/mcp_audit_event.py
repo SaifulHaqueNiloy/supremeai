@@ -15,7 +15,6 @@ Constitution Compliance:
   - Law #1 (Centralized): single chain store — core/mcp_audit_chain.py
 """
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime

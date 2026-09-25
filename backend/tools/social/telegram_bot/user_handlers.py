@@ -1,7 +1,6 @@
 """User-facing info panels for :class:`TelegramBotHandler`
 (verbatim split artifact of the former single-module telegram_bot.py)."""
 
-from __future__ import annotations
 
 from core.config import settings
 

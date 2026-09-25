@@ -9,7 +9,6 @@ This middleware ensures:
 - IP Churn detection for malware immunity
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

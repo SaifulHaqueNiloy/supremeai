@@ -5,7 +5,6 @@ Navigates high-dimensional fitness landscapes using Incremental, Radical,
 Adaptive, and Targeted mutation/crossover modes.
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum

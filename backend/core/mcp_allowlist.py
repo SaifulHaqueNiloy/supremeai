@@ -10,7 +10,6 @@ Dependencies:
 - `os`: For accessing environment variables to configure MCP servers.
 - `typing`: For type hinting to improve code readability and maintainability."""
 
-from __future__ import annotations
 
 import os
 from typing import Any

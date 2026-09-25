@@ -10,7 +10,6 @@ Catches the specific linter codes and style issues the user listed:
   * `N816`  — snake_case variable assigned camelCase attribute (naming mismatch).
 """
 
-from __future__ import annotations
 
 import ast
 import re

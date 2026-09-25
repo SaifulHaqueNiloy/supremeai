@@ -5,7 +5,6 @@ Every route must raise HTTPException — never return raw error dicts.
 This module provides shared error models and a centralized handler.
 """
 
-from __future__ import annotations
 
 from fastapi import HTTPException, Request
 from fastapi.responses import JSONResponse

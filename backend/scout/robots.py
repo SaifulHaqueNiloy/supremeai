@@ -7,7 +7,6 @@
 log-এ থাকবে (No Silent Failure)।
 """
 
-from __future__ import annotations
 
 import time
 from urllib.parse import urljoin, urlparse

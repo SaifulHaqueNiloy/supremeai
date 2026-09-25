@@ -25,7 +25,6 @@ Deviations from the plan document (deliberate, documented):
   semantics are preserved in the generic core instead.
 """
 
-from __future__ import annotations
 
 from missions.models import Mission, MissionTraceEvent
 from missions.service import MissionNotFound, MissionService

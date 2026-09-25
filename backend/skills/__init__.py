@@ -4,7 +4,6 @@
 Unifies dynamic skill provisioning with core skills.
 """
 
-from __future__ import annotations
 
 from core.skills import (
     BaseSkill,
@@ -22,7 +21,8 @@ from core.skills import (
 
 try:
     from .provisioner import SkillProvisioner
-except ImportError:
+except ImportError as e:
+    import logging; logging.getLogger(__name__).warning('__init__.py: ImportError caught: %s', e)
 
     class SkillProvisioner:
         """Fallback stub when provisioner unavailable."""

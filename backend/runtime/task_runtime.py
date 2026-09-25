@@ -5,7 +5,6 @@ Orchestrates:
 TaskContract -> TaskStateMachine -> Planner -> BudgetGuard -> TaskExecutor -> VerifierEngine -> Memory -> TaskResult
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

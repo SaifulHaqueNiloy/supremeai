@@ -5,7 +5,6 @@ Vendor-agnostic chain (Issue #466): Central ModelRouter -> SupremeOrchestrator
 -> graceful zero-key response. No direct vendor API calls are made here.
 """
 
-from __future__ import annotations
 
 import asyncio
 

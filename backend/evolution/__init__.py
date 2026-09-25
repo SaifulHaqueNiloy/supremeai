@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 # Re-export from core.evolution
 from core.self_evolution import (

@@ -1,7 +1,6 @@
 # backend/runtime/planner.py
 """Canonical Planner Subsystem for SupremeAI Control Plane."""
 
-from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field

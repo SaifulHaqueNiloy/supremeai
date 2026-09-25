@@ -11,7 +11,6 @@
 কোনো FastAPI/pydantic import নেই — ইচ্ছাকৃতভাবে dependency-free রাখা হয়েছে।
 """
 
-from __future__ import annotations
 
 import os
 from collections.abc import Iterable

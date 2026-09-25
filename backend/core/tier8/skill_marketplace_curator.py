@@ -7,7 +7,6 @@ Zero hardcoded skills — all runtime-discovered.
 Lint-free: ruff --select=ALL --ignore=E501 passes.
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

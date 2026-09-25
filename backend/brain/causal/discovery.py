@@ -7,7 +7,6 @@ Discovers Causal Directed Acyclic Graphs (DAGs) from observational telemetry met
 from typing import Any
 
 try:
-    import pandas as pd
 except ImportError:
     pd = None
 from core.logging_config import logger

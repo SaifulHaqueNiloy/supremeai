@@ -6,7 +6,6 @@ GitHub Action, SARIF output, etc.). Keeping it stable and self-describing is
 what makes the tool reusable across projects and pipelines.
 """
 
-from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
 from enum import StrEnum

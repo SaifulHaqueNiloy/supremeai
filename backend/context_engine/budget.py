@@ -5,7 +5,6 @@ token অনুমান। বাজেট অজানা provider-এর জ�
 free-tier worst-common-case যাতে কোনো provider-এর TPM ভাঙে না।
 """
 
-from __future__ import annotations
 
 import os
 

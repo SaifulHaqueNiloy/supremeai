@@ -8,7 +8,6 @@ GET  /api/admin/tenant-limits/{id}/usage — per-tenant usage stats
 POST /api/admin/tenant-limits/{id}/reset-usage — reset today's counters
 """
 
-from __future__ import annotations
 
 import time
 from typing import Any

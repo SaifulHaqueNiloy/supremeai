@@ -12,7 +12,6 @@ preferred_language) আগে কেবল সংরক্ষিত হতো �
   fail-closed (M05 P-A শৃঙ্খলা)।
 """
 
-from __future__ import annotations
 
 import os
 

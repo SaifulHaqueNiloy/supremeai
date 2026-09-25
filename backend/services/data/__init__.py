@@ -4,7 +4,6 @@ Implementations remain owned by ``backend.database``. The facade is lazy so
 health checks and capability discovery do not import optional database clients.
 """
 
-from __future__ import annotations
 
 import importlib
 

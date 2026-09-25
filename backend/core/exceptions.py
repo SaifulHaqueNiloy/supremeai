@@ -6,7 +6,6 @@ SupremeAI backend. All custom exceptions inherit from `SupremeAIException` to en
 consistent error logging, status codes, and structured JSON client responses.
 """
 
-from __future__ import annotations
 
 from typing import Any
 

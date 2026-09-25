@@ -10,7 +10,6 @@ Security rules:
 - User শুধু নিজের স্কোপ দেখে — tenant ফিল্টার backend-authoritative।
 """
 
-from __future__ import annotations
 
 import logging
 import uuid

@@ -23,7 +23,6 @@ All bridges funnel through :class:`runs.service.RunService` so idempotency,
 lifecycle, budgets and the audit stream are enforced at ONE boundary.
 """
 
-from __future__ import annotations
 
 import uuid
 from typing import Any

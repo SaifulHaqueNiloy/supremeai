@@ -9,11 +9,9 @@ fallback) declare করে।
 report করে। Enable/disable সব settings layer (env vars) এর মাধ্যমে হয়।
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
-from typing import Any, Optional
 
 from ..config import settings
 

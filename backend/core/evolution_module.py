@@ -5,7 +5,6 @@ Uses Genetic Algorithm principles (Mutation, Crossover, Selection, Elitism)
 to autonomously evolve and optimize solution strategies over multiple generations.
 """
 
-from __future__ import annotations
 
 import asyncio
 import random

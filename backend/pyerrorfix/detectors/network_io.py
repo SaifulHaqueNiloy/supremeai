@@ -13,7 +13,6 @@ Catches:
     (alias of TimeoutError but framed for the requests library).
 """
 
-from __future__ import annotations
 
 import ast
 

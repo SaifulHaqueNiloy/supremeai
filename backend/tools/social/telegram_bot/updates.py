@@ -7,7 +7,6 @@ and the critical/destructive instruction interceptor
 (``tools.social.telegram_security``).
 """
 
-from __future__ import annotations
 
 from typing import Any
 

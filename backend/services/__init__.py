@@ -7,9 +7,7 @@ Module-level declaration here (None) allows `from services import global_http_cl
 to succeed at import time, even before lifespan runs.
 """
 
-from __future__ import annotations
 
-from typing import Optional
 
 try:
     import httpx

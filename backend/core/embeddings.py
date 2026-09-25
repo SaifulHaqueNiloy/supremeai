@@ -17,7 +17,6 @@ Vectors stored under the hash fallback are NOT comparable with vectors from a
 semantic provider — reindex/refresh stored memories after switching providers.
 """
 
-from __future__ import annotations
 
 import hashlib
 import importlib.util

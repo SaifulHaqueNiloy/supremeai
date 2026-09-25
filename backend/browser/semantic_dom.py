@@ -5,7 +5,6 @@ L4: Semantic DOM Engine — Embeds interactive DOM elements to resolve queries b
 not fragile CSS/XPath syntax (e.g. 'click the checkout button', 'open user profile').
 """
 
-from __future__ import annotations
 
 import math
 from typing import Any

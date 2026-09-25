@@ -91,7 +91,6 @@ def _validate_image_header(content: bytes, mime_type: str) -> bool:
     if mime_type == "image/svg+xml":
         try:
             try:
-                import defusedxml.ElementTree as ET
             except ImportError:
                 import xml.etree.ElementTree as ET
 

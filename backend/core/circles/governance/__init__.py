@@ -4,7 +4,6 @@ Governs:
 - Auth, Tenant isolation, Security, RBAC, Admin decisions, Audit journal
 """
 
-from __future__ import annotations
 
 from typing import Any
 

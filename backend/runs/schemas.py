@@ -6,7 +6,6 @@ triggering async lazy loads (all serialized columns are client-side loaded
 per the models' ``_utcnow`` defaults).
 """
 
-from __future__ import annotations
 
 import uuid
 from datetime import datetime

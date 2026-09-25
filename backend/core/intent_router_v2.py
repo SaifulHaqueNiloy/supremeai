@@ -24,7 +24,6 @@ A thin sync wrapper ``route_sync(prompt)`` is provided for legacy non-async
 call sites.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

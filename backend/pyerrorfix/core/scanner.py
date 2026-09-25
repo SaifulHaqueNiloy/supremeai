@@ -1,6 +1,5 @@
 """Scanner orchestrator: runs every detector and (optionally) every fixer."""
 
-from __future__ import annotations
 
 import time
 from pathlib import Path

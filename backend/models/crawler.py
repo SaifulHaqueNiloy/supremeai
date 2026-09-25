@@ -1,10 +1,8 @@
 """SQLAlchemy ORM models for Crawler Policies, Domain Rules, and Crawl History."""
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime
-from typing import Any
 
 from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Integer, String, Text
 from sqlalchemy.dialects.postgresql import JSONB

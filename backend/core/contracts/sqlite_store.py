@@ -3,7 +3,6 @@
 Production adapters must implement the same semantics against the approved database.
 """
 
-from __future__ import annotations
 
 import json
 import sqlite3

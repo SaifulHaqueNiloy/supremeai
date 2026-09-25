@@ -10,7 +10,6 @@ Provides:
 - IdempotencyMiddleware: Redis-based distributed idempotency for POST paths.
 """
 
-from __future__ import annotations
 
 import asyncio
 import hmac

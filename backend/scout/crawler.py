@@ -1,6 +1,5 @@
 """Primary policy-governed crawler service."""
 
-from __future__ import annotations
 
 import asyncio
 import collections

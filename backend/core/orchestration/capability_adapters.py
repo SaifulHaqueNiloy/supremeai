@@ -5,7 +5,6 @@ bypass the policy gateway; each spoke can later replace its status handler with 
 real task-backed implementation without changing the chat contract.
 """
 
-from __future__ import annotations
 
 from typing import Any
 

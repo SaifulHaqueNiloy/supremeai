@@ -4,7 +4,6 @@ Governs:
 - Database, Redis, Queues, Cache, Cloudflare, Network egress
 """
 
-from __future__ import annotations
 
 from core.circles.contracts import CircleName
 

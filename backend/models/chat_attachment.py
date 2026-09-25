@@ -22,7 +22,6 @@ world-এ যোগ দেয়; ``JSON().with_variant(JSONB)`` sqlite-testable
 ORM পথ দেয়।
 """
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime

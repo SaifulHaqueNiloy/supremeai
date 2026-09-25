@@ -5,7 +5,6 @@ BhashaBot translation cache and VoiceDidi voice processing records.
 
 # বাংলা মন্তব্য: ল্যারালাইজেশন ও ভয়েস সেশন ডেটা সংরক্ষণের জন্য টেবিল ও স্কিমা।
 
-from __future__ import annotations
 
 import uuid
 from datetime import UTC, datetime

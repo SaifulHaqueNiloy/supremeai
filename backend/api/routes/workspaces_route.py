@@ -8,7 +8,6 @@ Endpoints:
 - `GET /admin-api/workspaces/targets`: List all registered target entities and their live scopes.
 """
 
-from __future__ import annotations
 
 from typing import Any
 

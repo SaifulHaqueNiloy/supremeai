@@ -17,7 +17,6 @@ memory-fallback = Graceful Degradation), এবং সম্পূর্ণ CRUD
   GET   /events                   — সত্যিকারের telemetry (আর placeholder নয়)
 """
 
-from __future__ import annotations
 
 from typing import Any
 

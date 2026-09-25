@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 import asyncio
 import json
@@ -201,7 +200,6 @@ class HoneypotMiddleware:
 
             # 4. Fire security event to event bus
             try:
-                from core.messaging.event_bus import ErrorEventBus as _EventBus
 
                 _bus = _EventBus()
                 _bus.emit(

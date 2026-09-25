@@ -1,7 +1,6 @@
 # backend/learning/pattern_detector.py
 """Structured Pattern Detector with Canonical Taxonomy for Continuous Learning."""
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime

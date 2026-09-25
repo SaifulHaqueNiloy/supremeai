@@ -39,7 +39,6 @@ missions ``state`` column; it avoids PG enum-type churn in migrations and
 keeps sqlite tests honest.
 """
 
-from __future__ import annotations
 
 import enum
 import uuid

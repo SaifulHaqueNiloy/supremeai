@@ -9,7 +9,6 @@
 # - nine_router.py (Cost estimation & route classification)
 # - advanced_model_router.py (Tier 0 deterministic fast-path)
 
-from __future__ import annotations
 
 import json
 import re

@@ -5,7 +5,6 @@ previously embedded in ``llm_router.py``.  The public classes are re-exported by
 that module for backwards compatibility.
 """
 
-from __future__ import annotations
 
 import json
 from collections.abc import AsyncGenerator
@@ -18,7 +17,6 @@ import httpx
 from core.config import settings
 from core.logging import get_logger
 from core.metrics import timed
-from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 
 logger = get_logger(__name__)
 

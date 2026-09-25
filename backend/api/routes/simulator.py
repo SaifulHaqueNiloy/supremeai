@@ -8,14 +8,12 @@ Falls back to in-memory dicts if Redis is unavailable (e.g. in test environments
 বাংলা মন্তব্য: সিমুলেটর ইউজার এপিআই যা আপস্ট্যাশ রেডিস ডেটাবেস ব্যবহার করে, কিন্তু টেস্ট এনভায়রনমেন্টে লোকাল মেমোরি ফলব্যাক ব্যবহার করে।
 """
 
-from __future__ import annotations
 
 import asyncio
 import json
 import os
 from datetime import UTC, datetime
 from typing import Any
-from urllib.parse import urljoin
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel

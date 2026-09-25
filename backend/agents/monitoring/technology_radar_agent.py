@@ -5,7 +5,6 @@ Tracks emerging technologies and assesses their applicability.
 Monitors tech trends, evaluates relevance, and generates adoption recommendations.
 """
 
-from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass

@@ -23,7 +23,6 @@ Governed path (risky or durable work):
     request → policy → approval gate → center → audit/event fan-out
 """
 
-from __future__ import annotations
 
 import asyncio
 import threading

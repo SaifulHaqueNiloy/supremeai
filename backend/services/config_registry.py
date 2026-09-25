@@ -4,7 +4,6 @@ The registry contains only safe defaults and validation metadata. Operational
 values remain in ``system_config``; immutable safety bounds stay in code.
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any

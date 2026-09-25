@@ -3,7 +3,6 @@ SupremeAI 2.0 — TelDrive / Telegram Zero-Cost Storage Engine
 Provides Client-Side AES-256 Encrypted Storage on Telegram Cloud.
 """
 
-from __future__ import annotations
 
 import base64
 import gzip

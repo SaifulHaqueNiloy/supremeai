@@ -10,7 +10,6 @@ Monitoring and alerting agent for production systems.
 - Zero-cost: uses Upstash Redis + Discord webhooks
 """
 
-from __future__ import annotations
 
 import os
 from dataclasses import dataclass

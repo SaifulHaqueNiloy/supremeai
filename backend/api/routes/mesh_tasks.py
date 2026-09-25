@@ -20,7 +20,6 @@ backend/core/task_router.py-তে — এখানে কেবল পাতল
 - Issue: #926 (P0-critical) · Depends on: backend/core/task_router.py
 """
 
-from __future__ import annotations
 
 from typing import Any
 

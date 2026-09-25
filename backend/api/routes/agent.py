@@ -25,7 +25,6 @@ Provides:
     did not implement). No steps are run in this mode.
 """
 
-from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field

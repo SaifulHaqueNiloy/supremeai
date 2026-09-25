@@ -3,7 +3,6 @@ API Key Management Database Access Layer
 Uses raw asyncpg via PgBouncerConnectionPool
 """
 
-from __future__ import annotations
 
 from datetime import UTC, datetime
 from typing import Any

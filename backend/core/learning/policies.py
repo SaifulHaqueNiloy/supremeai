@@ -16,7 +16,6 @@ All functions are pure, deterministic and unit-testable; every output is
 clamped so no adaptation can run away.
 """
 
-from __future__ import annotations
 
 from collections.abc import Sequence
 

@@ -5,7 +5,6 @@ Identifies sequences, structural/hierarchical schemas, temporal frequencies,
 semantic similarities, and behavioral interaction patterns with online self-learning.
 """
 
-from __future__ import annotations
 
 import asyncio
 import hashlib

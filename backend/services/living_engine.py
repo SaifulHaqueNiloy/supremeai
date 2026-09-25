@@ -11,7 +11,6 @@ The unified master orchestrator coordinating:
 7. Dual-Loop Self-Correction & Verification
 """
 
-from __future__ import annotations
 
 import time
 from dataclasses import dataclass, field

@@ -8,7 +8,6 @@ Catches:
     across workers without a guard.
 """
 
-from __future__ import annotations
 
 import ast
 

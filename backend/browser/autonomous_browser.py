@@ -5,15 +5,12 @@ L5: Goal-Driven Autonomous Browser Agent — Takes natural language GOALS (not m
 reasons with ReasoningOrchestrator, executes actions via L4 cascade, and replans on failures.
 """
 
-from __future__ import annotations
 
 import asyncio
 from typing import Any
 
 from brain.reasoning_orchestrator import ReasoningOrchestrator
 from browser.browsing_memory import BrowsingMemory
-from browser.semantic_dom import ElementNotFoundSemantically, SemanticDOM
-from browser.vision_grounding import LowConfidenceGrounding, VisionGrounding
 from core.logging_config import logger
 
 

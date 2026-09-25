@@ -7,7 +7,6 @@ Hierarchical task decomposition & DAG execution planner:
 - Automatically inserts Epistemic Probing, AST Analysis, Execution, Formal Verification, and Memory Consolidation nodes.
 """
 
-from __future__ import annotations
 
 import uuid
 from collections import defaultdict, deque

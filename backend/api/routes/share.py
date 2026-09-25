@@ -4,7 +4,6 @@ Allows users to generate public share links for conversations,
 view shared conversations without authentication, list and revoke shares.
 """
 
-from __future__ import annotations
 
 import asyncio
 import secrets

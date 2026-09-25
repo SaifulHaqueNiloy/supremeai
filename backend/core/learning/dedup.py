@@ -17,7 +17,6 @@ Safety contract (plan §13.3: "bounded timeouts and cancellation handling"):
     normally" — dedup can never reduce availability.
 """
 
-from __future__ import annotations
 
 import asyncio
 import copy

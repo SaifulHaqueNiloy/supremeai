@@ -4,7 +4,6 @@ Phase 6: Risk classification, budget enforcement, action authorization.
 Safe actions auto-allowed; HIGH/CRITICAL require approval (§28).
 """
 
-from __future__ import annotations
 
 import enum
 import logging

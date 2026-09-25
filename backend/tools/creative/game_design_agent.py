@@ -15,7 +15,6 @@ Zero-cost design: orchestration-only; heavy generation deferred.
 
 # বাংলা মন্তব্য: গেম ডিজাইন এজেন্টের জন্য কোড। এটি গেম মেকানিক্স ও কনসেপ্টের ডিজাইন ডকুমেন্ট তৈরি করে।
 
-from __future__ import annotations
 
 import asyncio
 import uuid

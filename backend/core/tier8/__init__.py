@@ -22,7 +22,6 @@ Usage:
     )
 """
 
-from __future__ import annotations
 
 from core.tier8.agent_evolution_engine import (
     AgentEvolutionEngine,

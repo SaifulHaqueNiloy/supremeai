@@ -1,6 +1,5 @@
 """Remove unused imports + sort imports (isort-lite, zero-dependency)."""
 
-from __future__ import annotations
 
 import ast
 import re

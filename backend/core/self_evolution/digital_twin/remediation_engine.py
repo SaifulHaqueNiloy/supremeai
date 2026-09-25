@@ -24,7 +24,8 @@ from .topology import get_topology_mapper
 
 try:
     from core.monitoring.health_checker import HealthChecker
-except ImportError:
+except ImportError as e:
+    import logging; logging.getLogger(__name__).warning('remediation_engine.py: ImportError caught: %s', e)
 
     class HealthChecker:
         def check_health(self) -> bool:
@@ -36,7 +37,8 @@ except ImportError:
 
 try:
     from core.backup.backup_manager import BackupManager
-except ImportError:
+except ImportError as e:
+    import logging; logging.getLogger(__name__).warning('remediation_engine.py: ImportError caught: %s', e)
 
     class BackupManager:
         def create_backup(self) -> str:

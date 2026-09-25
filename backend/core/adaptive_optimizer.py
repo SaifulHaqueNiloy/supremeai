@@ -9,7 +9,6 @@ Automatically improves system based on benchmark results and detected weaknesses
 - Continuous improvement loop
 """
 
-from __future__ import annotations
 
 import statistics
 import time

@@ -12,10 +12,8 @@ Creation)। সব ক্যাপ হার্ড — Render 512MB container-�
 Failure); ব্যর্থ হলে কলার আজকের মতোই probe চালায় — কোনো ভুয়া map নয় (#8)।
 """
 
-from __future__ import annotations
 
 import ast
-import math
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -244,7 +242,6 @@ class CodeIndexer:
         বের হয় না); boost সর্বোচ্চ ×{_GOAL_BOOST_CAP}।
         """
         try:
-            import numpy as np  # local-only, best-effort; repo already vendors numpy
 
             from core.embeddings import get_local_encoder, hash_vectorize, local_embed
 

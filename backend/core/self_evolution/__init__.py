@@ -6,7 +6,6 @@ Provides unified exports for:
 - Advanced Evolutionary Research (DigitalTwin, AdversarialDefense, NeuralSymbolic, FederatedLearning, TheoryOfMind, TemporalAbstraction)
 """
 
-from __future__ import annotations
 
 # Core Production Evolution Components
 from .agent_breeder import AgentBreeder

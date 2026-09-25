@@ -15,7 +15,6 @@
 #
 # Fail-closed: প্রোডাকশনে key সেট থাকলে অথেনটিকেটেড রিকোয়েস্ট ছাড়া কিছুই ঢুকবে না।
 # Fail-open: ডেভ/টেস্ট env বা key সেট না থাকলে middleware no-op (যাতে লোকাল dev ব্রেক না হয়)।
-from __future__ import annotations
 
 import hmac
 import os

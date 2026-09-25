@@ -20,7 +20,6 @@ Design constraints honoured:
   and degrade to the mirror.
 """
 
-from __future__ import annotations
 
 import asyncio
 import json

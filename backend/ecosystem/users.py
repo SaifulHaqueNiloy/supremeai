@@ -11,7 +11,6 @@ Module exports a singleton ``get_user_store()`` + ``get_session_store()`` so the
 FastAPI app can resolve them via ``Depends``.
 """
 
-from __future__ import annotations
 
 import base64
 import enum
@@ -30,7 +29,6 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from ecosystem._store import ensure_columns, get_conn, get_db_path
 
 logger = logging.getLogger(__name__)
 

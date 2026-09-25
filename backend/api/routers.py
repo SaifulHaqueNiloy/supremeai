@@ -1,6 +1,5 @@
 """Centralized router registration for SupremeAI API."""
 
-from __future__ import annotations
 
 from fastapi import Depends, FastAPI
 

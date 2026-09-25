@@ -1,7 +1,6 @@
 # SupremeAI 2.0 - Multimodal Voice Service Engine
 # বাংলা মন্তব্য: এটি স্পিচ-টু-টেক্সট (Whisper STT) এবং টেক্সট-টু-স্পিচ (Bengali TTS) ভয়েস ইন্টারেকশন প্রসেস করে।
 
-from __future__ import annotations
 
 import os
 import time

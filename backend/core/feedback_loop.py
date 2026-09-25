@@ -14,7 +14,6 @@ Dependencies:
 - `time`: For generating timestamps for each recorded event.
 - `typing`: For type hinting to improve code readability and maintainability."""
 
-from __future__ import annotations
 
 import time
 from typing import Any

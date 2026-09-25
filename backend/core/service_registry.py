@@ -1,6 +1,5 @@
 """Canonical server-side registry for SupremeAI runtime services."""
 
-from __future__ import annotations
 
 import os
 from dataclasses import dataclass

@@ -5,7 +5,6 @@ Provides a single unified contract for all agents, planners, executors,
 evaluators, and evolution engines across SupremeAI.
 """
 
-from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass, field

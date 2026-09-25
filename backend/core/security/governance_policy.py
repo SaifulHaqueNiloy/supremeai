@@ -1,7 +1,6 @@
 # backend/core/security/governance_policy.py
 """Centralized Allowlist-First Governance Kernel for Self-Evolution Safety."""
 
-from __future__ import annotations
 
 import os
 import re

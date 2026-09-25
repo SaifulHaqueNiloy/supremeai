@@ -1,7 +1,6 @@
 # backend/evolution/benchmark_runner.py
 """Baseline vs. Candidate Comparative Benchmark Engine."""
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any

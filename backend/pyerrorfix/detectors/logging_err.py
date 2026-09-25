@@ -1,4 +1,3 @@
-from __future__ import annotations
 
 """Logging & exception-handling detector (NEW category).
 

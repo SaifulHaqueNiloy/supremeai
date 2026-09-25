@@ -21,7 +21,6 @@ async call sites through it cannot be done safely blind. Until that wiring
 lands, this gate makes the in-process path opt-in.
 """
 
-from __future__ import annotations
 
 import os
 

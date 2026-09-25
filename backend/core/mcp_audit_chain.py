@@ -16,7 +16,6 @@ Append-only চুক্তি: এই module কখনো UPDATE/DELETE ইস�
 দিয়েও deny করার SQL — docs/governance/mcp_audit_retention.md।
 """
 
-from __future__ import annotations
 
 import hashlib
 import json

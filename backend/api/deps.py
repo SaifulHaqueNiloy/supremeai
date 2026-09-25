@@ -14,7 +14,6 @@ layer in `api.dependencies` already threads `request.state.correlation_id` into
 ErrorEvents (see verify_autonomous_agent_token).
 """
 
-from __future__ import annotations
 
 from api.dependencies import (
     get_ai_integrator,

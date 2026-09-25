@@ -8,7 +8,6 @@ SwarmPubSub channel as Server-Sent Events — no simulation, exactly the
 ``{"type": "DEBATE_UPDATE", ...}`` payloads engine/debate_engine.py broadcasts.
 """
 
-from __future__ import annotations
 
 import asyncio
 

@@ -6,7 +6,6 @@ Uses the existing Supabase client for data access and reportlab / python-docx
 when available for document generation.
 """
 
-from __future__ import annotations
 
 import io
 from datetime import UTC, datetime

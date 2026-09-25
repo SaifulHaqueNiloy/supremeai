@@ -22,7 +22,6 @@ registry-তে live presence রেকর্ড হিসেবে জমা �
 - Blocks: MESH-3 (local daemon এই endpoint কল করে), MESH-2 (dashboard node list পড়ে)
 """
 
-from __future__ import annotations
 
 import asyncio
 import time

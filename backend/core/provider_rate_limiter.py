@@ -9,7 +9,6 @@ Handles free-tier API rate limits gracefully:
 - Cost-aware routing (prioritizing $0-cost free tiers)
 """
 
-from __future__ import annotations
 
 import asyncio
 import os

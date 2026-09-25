@@ -11,7 +11,6 @@
 - :class:`ProviderUnavailableError` — নির্দিষ্ট provider/model অপ্রাপ্য।
 """
 
-from __future__ import annotations
 
 
 class GatewayError(Exception):

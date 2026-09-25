@@ -3,7 +3,6 @@
 The same interface can be implemented by Supabase/Postgres after manual setup.
 """
 
-from __future__ import annotations
 
 from dataclasses import dataclass, field
 from typing import Any
