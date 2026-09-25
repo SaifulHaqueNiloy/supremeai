@@ -54,7 +54,7 @@ def _secret() -> bytes:
             os.environ.get("ENV") in {"test", "testing", "ci"}
             or "pytest" in __import__("sys").modules
         ):
-            secret = "test-only-resume-token-secret"
+            secret = "test_only_resume_token_secret"
         else:
             raise RuntimeError("jwt_secret is required to sign HITL resume tokens (fail-closed).")
     return secret.encode("utf-8")

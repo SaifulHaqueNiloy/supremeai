@@ -1,3 +1,11 @@
+"""Daily Quota Limiter — Sliding window daily usage limiter.
+
+Tracks and enforces daily usage quotas per user to prevent abuse
+and control LLM costs over a 24-hour period.
+"""
+
+from __future__ import annotations
+
 import time
 
 import redis.asyncio as aioredis
