@@ -99,6 +99,15 @@ curl -X POST "$UPSTASH_REDIS_REST_URL" \
 
 ## Per-tool integration status
 
+> **Registry update (PRs #1426/#1427/#1424, 2026-09-26):** external IDE
+> tools were retired from fixed registry slots — Claude Code, Cursor and
+> Cline no longer occupy agent-2/3/4, while agent-5/6 were renamed
+> (z.ai issue solver / z.ai platform watchdog) and agent-12
+> (z.ai action log watcher) joined. Per #1402 v2 ("agents CONNECT, they
+> don't BUILD"), **any tool can still connect**: register a slot via PR to
+> `docs/master_docs/AGENT_SLOT_REGISTRY.yaml`, then apply the pack below,
+> substituting your own `agent-N` wherever a retired slot id appears.
+
 ### agent-1: Antigravity
 - ✅ Documented: run the pinger loop alongside the IDE process
   (`heartbeat_ping.py --slot agent-1 --agent-id Antigravity`) as a startup
@@ -129,11 +138,13 @@ AGENT_DASHBOARD_URL="http://localhost:3000" nohup \
   ./download/agent-heartbeat.sh --loop agent-1 "Antigravity" >/dev/null 2>&1 &
 ```
 
-### agent-2: Claude Code
+### Claude Code (self-registered — previously agent-2)
 - ✅ Documented: add a `SessionStart` hook (`~/.claude/settings.json`) that
-  launches the pinger loop with `--slot agent-2 --agent-id "Claude Code"`;
+  launches the pinger loop with `--slot agent-N --agent-id "Claude Code"`;
   kill it in the `SessionEnd` hook. MCP-connected sessions can instead call
-  the `agent_heartbeat` tool directly.
+  the `agent_heartbeat` tool directly. **Substitute `agent-2` with your own
+  registered slot id** (external IDE tools were retired from fixed slots by
+  #1426).
 
 **Copy-paste pack (native lifecycle hooks — cleanest integration):**
 
@@ -152,10 +163,11 @@ AGENT_DASHBOARD_URL="http://localhost:3000" nohup \
 Export the dashboard base once in the shell profile:
 `export AGENT_DASHBOARD_URL="http://localhost:3000"`.
 
-### agent-3: Cursor
+### Cursor (self-registered — previously agent-3)
 - ✅ Documented: a minimal VSCode-style extension (works in Cursor) whose
   `activate()` starts a 45s `setInterval` REST ping and `deactivate()` clears
-  it. Publish or install locally; see the contract above.
+  it. Publish or install locally; see the contract above. **Substitute
+  `agent-3` with your own registered slot id** (#1426).
 
 **Copy-paste pack (rule + process watcher — no extension build needed):**
 
@@ -186,9 +198,10 @@ while pgrep -x "Cursor" >/dev/null 2>&1; do
 done
 ```
 
-### agent-4: Cline
-- ✅ Documented: same extension approach as agent-3 (`onStartupFinished` +
+### Cline (self-registered — previously agent-4)
+- ✅ Documented: same extension approach as Cursor (`onStartupFinished` +
   45s `setInterval`, stop on `deactivate`), packaged as `.vsix`.
+  **Substitute `agent-4` with your own registered slot id** (#1426).
 
 **Copy-paste pack (native MCP — Cline speaks MCP, so expose heartbeat as a tool):**
 
@@ -200,9 +213,10 @@ import StdioServerTransport from '@modelcontextprotocol/sdk/server/stdio.js'
 import { ListToolsRequestSchema, CallToolRequestSchema } from '@modelcontextprotocol/sdk/types.js'
 
 const BASE = process.env.AGENT_DASHBOARD_URL ?? 'http://localhost:3000'
+const SLOT = process.env.HEARTBEAT_SLOT ?? 'agent-N'   // ← your registered slot id
 const beat = (status, task) => fetch(BASE + '/api/agents/heartbeat', {
   method: 'POST', headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ slot: 'agent-4', agentId: 'Cline', status, ...(task ? { task } : {}) }),
+  body: JSON.stringify({ slot: SLOT, agentId: 'Cline', status, ...(task ? { task } : {}) }),
 }).then(r => r.json()).catch(() => null)
 
 const server = new Server({ name: 'heartbeat', version: '1.0.0' }, { capabilities: { tools: {} } })
@@ -225,22 +239,27 @@ then add `.clinerules`: call `heartbeat` with `connected` on session start,
 > buttons and live slot-state chips on the Z.ai preview dashboard
 > (**Integrations tab**), each with a "send test heartbeat" button that fires
 > a real `connected → idle` sequence so you can watch your slot flip on the
-> board before wiring the permanent hook.
+> board before wiring the permanent hook. External-tool packs take a
+> "your slot" input so the test ping targets a slot that actually exists in
+> the registry.
 
-### agent-5: Windsurf
-- ✅ Documented: identical to agent-3/4 (VSCode-compatible).
+### agent-5: z.ai issue solver (renamed from Windsurf, #1427)
+- ✅ Documented: internal z.ai platform agent — connect via the MCP tower
+  (`agent_heartbeat` tool) or the pinger loop:
+  `heartbeat_ping.py --slot agent-5 --agent-id "z.ai issue solver"`.
 
-### agent-6: Devin
-- ✅ Documented: add `heartbeat_ping.py --slot agent-6 --agent-id Devin --once`
-  to the session-manager startup script + a 45s scheduler (cron/systemd timer).
+### agent-6: z.ai platform watchdog (renamed from Devin, #1427)
+- ✅ Documented: internal z.ai platform agent — long-running 3rd-party
+  platform monitoring. Use the pinger loop with a 45s scheduler
+  (cron/systemd timer) around its watch cycles.
 
 ### agent-7: GitHub Copilot Workspace
 - ✅ Documented: a repository GitHub Action triggered on session start that
   runs a single `--once` ping; re-run per session.
 
-### agent-8: Aider
-- ✅ Documented: wrap launches with `heartbeat_ping.sh agent-8 Aider &` in the
-  shell profile / wrapper script; stop the process on exit.
+### agent-8: z.ai 5.4 flash. full stack+longrun (renamed from Aider, #1427)
+- ✅ Documented: wrap launches with `heartbeat_ping.sh agent-8 "z.ai 5.4 flash" &`
+  in the wrapper script; stop the process on exit.
 
 ### agent-9: Continue
 - ✅ Documented: VSCode/JetBrains extension approach (agent-3 pattern).
@@ -254,7 +273,16 @@ then add `.clinerules`: call `heartbeat` with `connected` on session start,
 - The preview dashboard pings its own slot every 45s from
   `src/app/page.tsx → postHeartbeat()` (reference implementation for HTTP
   transports). It also exposes `POST/GET /api/agents/heartbeat` and
-  `GET /api/agents` for the whole fleet.
+  `GET /api/agents` for the whole fleet. The dashboard additionally serves
+  the **live canonical registry** — `GET /api/agents` reads
+  `AGENT_SLOT_REGISTRY.yaml` straight from main (5-min cache, compiled-mirror
+  fallback) and flags drift, so newly added slots accept heartbeats without
+  a dashboard redeploy.
+
+### agent-12: z.ai action log watcher (added #1424)
+- ✅ Documented: watches GitHub Actions logs, detects failures, reports and
+  creates issues. Connect via the MCP tower (`agent_heartbeat`) or:
+  `heartbeat_ping.py --slot agent-12 --agent-id "z.ai action log watcher"`.
 
 ## Dashboard endpoints (Z.ai preview)
 
