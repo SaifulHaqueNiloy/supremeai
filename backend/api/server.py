@@ -108,7 +108,9 @@ _prod_origins_env = (
     or _os.getenv("CORS_ORIGINS")
     or _os.getenv("ALLOWED_ORIGINS", "")
 )
-_prod_origins = parse_origin_list(_prod_origins_env)  # roadmap 1.4 (#1173): JSON-array ও comma — দুটোই কাজ করে
+_prod_origins = parse_origin_list(
+    _prod_origins_env
+)  # roadmap 1.4 (#1173): JSON-array ও comma — দুটোই কাজ করে
 _configured_origins = _dev_origins + _prod_origins
 _admin_raw = parse_origin_list(_os.getenv("ADMIN_CORS_ORIGINS", ""))
 _allowed_origins = sorted(

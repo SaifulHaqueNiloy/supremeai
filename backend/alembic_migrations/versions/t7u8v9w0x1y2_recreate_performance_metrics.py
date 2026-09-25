@@ -1,9 +1,9 @@
 """Recreate live performance_metrics table — neutralize k5l6m7n8o9p0 drop (issue #1177)
 
 R9-এর "zero writers/readers" দাবিটি পুরনো: `core/self_evolution/performance_oracle.py`
-`PerformanceMetric`-এ INSERT (record_metric) ও SELECT (get_agent_stats / 
+`PerformanceMetric`-এ INSERT (record_metric) ও SELECT (get_agent_stats /
 identify_weakest_links) করে, আর `api/routes/agent_breeding.py`-এর লাইভ admin
-routes (`POST /metrics`, `GET /metrics/{agent}`, `/weakest-links`, 
+routes (`POST /metrics`, `GET /metrics/{agent}`, `/weakest-links`,
 `/top-performers`) সরাসরি ওরাকলটি ব্যবহার করে।
 
 k5l6m7n8o9p0 (already merged) drops this table on `alembic upgrade head` →
@@ -57,9 +57,7 @@ def upgrade() -> None:
         sa.Column("unit", sa.String(length=50), nullable=False),
         sa.Column(
             "context",
-            sa.JSON().with_variant(
-                postgresql.JSONB(astext_type=sa.Text()), "postgresql"
-            ),
+            sa.JSON().with_variant(postgresql.JSONB(astext_type=sa.Text()), "postgresql"),
             nullable=False,
         ),
         sa.Column("version", sa.Integer(), nullable=False),

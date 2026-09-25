@@ -14,9 +14,8 @@ from urllib.parse import urlparse
 
 from fastapi import HTTPException, Response
 
-from core.config_parsers import parse_origin_list
-
 from api.routes.browser import router
+from core.config_parsers import parse_origin_list
 from core.logging_config import logger
 
 # বাংলা মন্তব্য: ইন-অ্যাপ ব্রাউজার proxy (public) — বাহিরের সাইট X-Frame-Options/frame-ancestors দিয়ে

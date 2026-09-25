@@ -72,7 +72,9 @@ class TestMigratedCallers:
     def test_origin_validator_load_origins(self, monkeypatch):
         from core.security.origin_validator import _load_origins
 
-        monkeypatch.setenv("T_ORIGINS_OV", '["https://admin.example.com", "https://admin.example.com"]')
+        monkeypatch.setenv(
+            "T_ORIGINS_OV", '["https://admin.example.com", "https://admin.example.com"]'
+        )
         assert _load_origins("T_ORIGINS_OV", frozenset()) == frozenset(
             {"https://admin.example.com"}
         )
