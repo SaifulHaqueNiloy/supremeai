@@ -7,8 +7,8 @@ SupremeAI 2.0 — Inter-Agent Knowledge Persistence Store
 import datetime
 from typing import Any
 
-from core.gcp_firestore import GCPFirestoreVerificationQueue
 from core.logging_config import logger
+from services.storage.gcp_firestore import GCPFirestoreVerificationQueue
 
 
 class AgentKnowledgeStore:

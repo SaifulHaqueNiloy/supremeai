@@ -42,7 +42,7 @@ from datetime import datetime
 # FIX (import): canonical location is adaptive_engine.experience_db
 from adaptive_engine.experience_db import ExperienceDatabase
 from core.cache import get_redis_client
-from core.logging import get_logger
+from monitoring.logging import get_logger
 
 
 @dataclass

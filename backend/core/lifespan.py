@@ -16,13 +16,13 @@ Dependencies:
 - `core.messaging.event_bus`: Facilitates internal error reporting and event emission.
 - `core.maintenance_pipeline`: Manages background monitoring and health checks for the system.
 - `core.orchestration.orchestrator`: Initializes and manages the core AI orchestration engine.
-- `core.pgbouncer_pool`: Handles the initialization and closing of PostgreSQL database connection pools.
+- `database.pgbouncer_pool`: Handles the initialization and closing of PostgreSQL database connection pools.
 - `core.cache.redis_manager`: Manages connections to the Redis caching service.
 - `core.observability.telemetry`: Initializes OpenTelemetry for distributed tracing.
 - `core.sentinel_agent`: Manages a background agent responsible for periodic system tasks.
 - `database.db`: Used for bootstrapping and ensuring the integrity of the Supabase database schema.
 - `tools.ai_agents.browser_agent`: Provides functionality to shut down any globally managed browser instances.
-- `core.metrics_collector`: Collects system metrics for observability and monitoring."""
+- `monitoring.metrics_collector`: Collects system metrics for observability and monitoring."""
 
 # backend/core/lifespan.py
 # ⚠️ WARNING: DO NOT MOVE THIS FILE. It is heavily integrated into the FastAPI startup lifecycle.
@@ -37,10 +37,10 @@ from core import services
 from core.config import settings
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
-from core.metrics_collector import metrics_collector
 from core.orchestration.periodic_task_scheduler import Orchestrator
 from core.reliability_controller import ReliabilityController
 from core.startup_validator import StartupValidator
+from monitoring.metrics_collector import metrics_collector
 from utils.http_client import set_shared_client
 
 

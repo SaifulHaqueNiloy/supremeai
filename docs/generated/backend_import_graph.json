@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3395,
+  "edge_count": 3394,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -98,10 +98,6 @@
     {
       "from": "_archive.batch-2.backend.core.context_manager",
       "to": "core.config"
-    },
-    {
-      "from": "_archive.batch-2.backend.core.context_manager",
-      "to": "core.logging"
     },
     {
       "from": "_archive.batch-2.backend.core.test_retry_handler",
@@ -337,7 +333,7 @@
     },
     {
       "from": "adaptive_engine.self_improving_agent",
-      "to": "core.logging"
+      "to": "monitoring.logging"
     },
     {
       "from": "adaptive_engine.source_governance",
@@ -437,7 +433,7 @@
     },
     {
       "from": "agents.data_trend_anomaly_agent",
-      "to": "core.tenant_db"
+      "to": "database.tenant_db"
     },
     {
       "from": "agents.data_trend_anomaly_agent",
@@ -741,7 +737,7 @@
     },
     {
       "from": "agents.monitoring.predictive_analytics_agent",
-      "to": "core.tenant_db"
+      "to": "database.tenant_db"
     },
     {
       "from": "agents.monitoring.technology_radar_agent",
@@ -861,7 +857,7 @@
     },
     {
       "from": "agents.user_retention_risk_agent",
-      "to": "core.tenant_db"
+      "to": "database.tenant_db"
     },
     {
       "from": "agents.user_retention_risk_agent",
@@ -933,7 +929,7 @@
     },
     {
       "from": "api.dependencies",
-      "to": "core.tenant_db"
+      "to": "database.tenant_db"
     },
     {
       "from": "api.dependencies",
@@ -1345,15 +1341,15 @@
     },
     {
       "from": "api.routes.admin_routes",
-      "to": "core.gcp_firestore"
-    },
-    {
-      "from": "api.routes.admin_routes",
       "to": "core.logging_config"
     },
     {
       "from": "api.routes.admin_routes",
       "to": "models.admin"
+    },
+    {
+      "from": "api.routes.admin_routes",
+      "to": "services.storage.gcp_firestore"
     },
     {
       "from": "api.routes.admin_v1",
@@ -1645,10 +1641,6 @@
     },
     {
       "from": "api.routes.billing_api",
-      "to": "core.gcp_firestore"
-    },
-    {
-      "from": "api.routes.billing_api",
       "to": "core.llm.token_deductor"
     },
     {
@@ -1666,6 +1658,10 @@
     {
       "from": "api.routes.billing_api",
       "to": "services.billing.billing_plans"
+    },
+    {
+      "from": "api.routes.billing_api",
+      "to": "services.storage.gcp_firestore"
     },
     {
       "from": "api.routes.branch_conversations",
@@ -2385,11 +2381,11 @@
     },
     {
       "from": "api.routes.evolution",
-      "to": "core.tenant_db"
+      "to": "database.session"
     },
     {
       "from": "api.routes.evolution",
-      "to": "database.session"
+      "to": "database.tenant_db"
     },
     {
       "from": "api.routes.evolution",
@@ -3621,7 +3617,7 @@
     },
     {
       "from": "api.v1.telemetry",
-      "to": "core.metrics_collector"
+      "to": "monitoring.metrics_collector"
     },
     {
       "from": "app",
@@ -4281,11 +4277,11 @@
     },
     {
       "from": "core.cache.multi_layer_cache",
-      "to": "core.metrics_collector"
+      "to": "core.swarm_pubsub"
     },
     {
       "from": "core.cache.multi_layer_cache",
-      "to": "core.swarm_pubsub"
+      "to": "monitoring.metrics_collector"
     },
     {
       "from": "core.cache.query_cache",
@@ -5213,10 +5209,6 @@
     },
     {
       "from": "core.lifespan",
-      "to": "core.metrics_collector"
-    },
-    {
-      "from": "core.lifespan",
       "to": "core.orchestration.periodic_task_scheduler"
     },
     {
@@ -5226,6 +5218,10 @@
     {
       "from": "core.lifespan",
       "to": "core.startup_validator"
+    },
+    {
+      "from": "core.lifespan",
+      "to": "monitoring.metrics_collector"
     },
     {
       "from": "core.lifespan",
@@ -5245,7 +5241,7 @@
     },
     {
       "from": "core.llm.distributed_budget",
-      "to": "core.logging"
+      "to": "monitoring.logging"
     },
     {
       "from": "core.llm.free_tier_tracker",
@@ -6281,15 +6277,15 @@
     },
     {
       "from": "core.security.api_key_middleware",
-      "to": "core.pgbouncer_pool"
-    },
-    {
-      "from": "core.security.api_key_middleware",
       "to": "core.resilience.circuit_breaker"
     },
     {
       "from": "core.security.api_key_middleware",
       "to": "core.security"
+    },
+    {
+      "from": "core.security.api_key_middleware",
+      "to": "database.pgbouncer_pool"
     },
     {
       "from": "core.security.api_key_middleware",
@@ -6545,7 +6541,7 @@
     },
     {
       "from": "core.self_evolution.auto_skill_creator",
-      "to": "core.tenant_db"
+      "to": "database.tenant_db"
     },
     {
       "from": "core.self_evolution.continual_learning.ewc",
@@ -6713,10 +6709,6 @@
     },
     {
       "from": "core.shutdown",
-      "to": "core.metrics_collector"
-    },
-    {
-      "from": "core.shutdown",
       "to": "core.persistence"
     },
     {
@@ -6725,7 +6717,11 @@
     },
     {
       "from": "core.shutdown",
-      "to": "core.pgbouncer_pool"
+      "to": "database.pgbouncer_pool"
+    },
+    {
+      "from": "core.shutdown",
+      "to": "monitoring.metrics_collector"
     },
     {
       "from": "core.shutdown",
@@ -6809,11 +6805,11 @@
     },
     {
       "from": "core.startup.api_key_tables",
-      "to": "core.metrics_collector"
+      "to": "database.pgbouncer_pool"
     },
     {
       "from": "core.startup.api_key_tables",
-      "to": "core.pgbouncer_pool"
+      "to": "monitoring.metrics_collector"
     },
     {
       "from": "core.startup.services",
@@ -6841,15 +6837,15 @@
     },
     {
       "from": "core.startup.services",
-      "to": "core.pgbouncer_pool"
-    },
-    {
-      "from": "core.startup.services",
       "to": "core.reliability_controller"
     },
     {
       "from": "core.startup.services",
       "to": "core.startup.api_key_tables"
+    },
+    {
+      "from": "core.startup.services",
+      "to": "database.pgbouncer_pool"
     },
     {
       "from": "core.startup_validator",
@@ -6977,7 +6973,7 @@
     },
     {
       "from": "core.tier8.codebase_refactor_proposer",
-      "to": "core.error_pattern_db"
+      "to": "core.errors.error_pattern_db"
     },
     {
       "from": "core.tier8.codebase_refactor_proposer",
@@ -7745,7 +7741,7 @@
     },
     {
       "from": "models.api_key",
-      "to": "core.pgbouncer_pool"
+      "to": "database.pgbouncer_pool"
     },
     {
       "from": "models.automation_execution",
@@ -7757,7 +7753,7 @@
     },
     {
       "from": "models.ci_report",
-      "to": "core.pgbouncer_pool"
+      "to": "database.pgbouncer_pool"
     },
     {
       "from": "models.crawler",
@@ -8913,19 +8909,19 @@
     },
     {
       "from": "services.llm.llm_router",
-      "to": "core.logging"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "core.metrics"
-    },
-    {
-      "from": "services.llm.llm_router",
       "to": "core.resilience.circuit_breaker"
     },
     {
       "from": "services.llm.llm_router",
       "to": "core.resilience.circuit_breaker_manager"
+    },
+    {
+      "from": "services.llm.llm_router",
+      "to": "monitoring.logging"
+    },
+    {
+      "from": "services.llm.llm_router",
+      "to": "monitoring.metrics"
     },
     {
       "from": "services.llm.llm_router",
@@ -8941,15 +8937,15 @@
     },
     {
       "from": "services.llm.providers",
-      "to": "core.logging"
-    },
-    {
-      "from": "services.llm.providers",
-      "to": "core.metrics"
-    },
-    {
-      "from": "services.llm.providers",
       "to": "core.resilience.circuit_breaker"
+    },
+    {
+      "from": "services.llm.providers",
+      "to": "monitoring.logging"
+    },
+    {
+      "from": "services.llm.providers",
+      "to": "monitoring.metrics"
     },
     {
       "from": "services.memory_service",
@@ -10285,7 +10281,7 @@
     },
     {
       "from": "tests.core.test_config_validation",
-      "to": "core.pgbouncer_pool"
+      "to": "database.pgbouncer_pool"
     },
     {
       "from": "tests.core.test_config_validator_full",
@@ -10429,7 +10425,7 @@
     },
     {
       "from": "tests.core.test_error_pattern_db",
-      "to": "core.error_pattern_db"
+      "to": "core.errors.error_pattern_db"
     },
     {
       "from": "tests.core.test_error_remediation",
@@ -10481,7 +10477,7 @@
     },
     {
       "from": "tests.core.test_gcp_firestore",
-      "to": "core.gcp_firestore"
+      "to": "services.storage.gcp_firestore"
     },
     {
       "from": "tests.core.test_gcp_integration",
@@ -10489,11 +10485,11 @@
     },
     {
       "from": "tests.core.test_gcp_integration",
-      "to": "core.gcp_firestore"
+      "to": "core.messaging.gcp_pubsub_queue"
     },
     {
       "from": "tests.core.test_gcp_integration",
-      "to": "core.messaging.gcp_pubsub_queue"
+      "to": "services.storage.gcp_firestore"
     },
     {
       "from": "tests.core.test_gcp_integration",
@@ -10505,7 +10501,7 @@
     },
     {
       "from": "tests.core.test_hallucination_guard",
-      "to": "core.error_pattern_db"
+      "to": "core.errors.error_pattern_db"
     },
     {
       "from": "tests.core.test_hallucination_guard",
@@ -10537,7 +10533,7 @@
     },
     {
       "from": "tests.core.test_idempotency_middleware",
-      "to": "core.idempotency_middleware"
+      "to": "middleware.idempotency_middleware"
     },
     {
       "from": "tests.core.test_immune_system",
@@ -10657,7 +10653,7 @@
     },
     {
       "from": "tests.core.test_log_batcher",
-      "to": "core.log_batcher"
+      "to": "monitoring.log_batcher"
     },
     {
       "from": "tests.core.test_long_term_memory",
@@ -10741,7 +10737,7 @@
     },
     {
       "from": "tests.core.test_multi_tenant_isolation",
-      "to": "core.tenant_db"
+      "to": "database.tenant_db"
     },
     {
       "from": "tests.core.test_multicloud",
@@ -10801,7 +10797,7 @@
     },
     {
       "from": "tests.core.test_pgbouncer_pool",
-      "to": "core.pgbouncer_pool"
+      "to": "database.pgbouncer_pool"
     },
     {
       "from": "tests.core.test_playwright_manager",
@@ -13033,11 +13029,11 @@
     },
     {
       "from": "tools.learning.agent_knowledge_store",
-      "to": "core.gcp_firestore"
+      "to": "core.logging_config"
     },
     {
       "from": "tools.learning.agent_knowledge_store",
-      "to": "core.logging_config"
+      "to": "services.storage.gcp_firestore"
     },
     {
       "from": "tools.learning.domain_adapter",
@@ -13630,6 +13626,15 @@
     "_archive.batch-5.db_repository",
     "_archive.batch-5.email_service",
     "_archive.batch-5.rate_limiter",
+    "_archive.batch-6.error_pattern_db",
+    "_archive.batch-6.gcp_firestore",
+    "_archive.batch-6.idempotency_middleware",
+    "_archive.batch-6.log_batcher",
+    "_archive.batch-6.logging",
+    "_archive.batch-6.metrics",
+    "_archive.batch-6.metrics_collector",
+    "_archive.batch-6.pgbouncer_pool",
+    "_archive.batch-6.tenant_db",
     "adapters",
     "adapters.base_adapter",
     "adapters.business_adapter",
@@ -14118,7 +14123,6 @@
     "core.embeddings",
     "core.enum_guard",
     "core.env_validator",
-    "core.error_pattern_db",
     "core.errors",
     "core.errors.error_bus",
     "core.errors.error_handler",
@@ -14137,7 +14141,6 @@
     "core.feature_flags",
     "core.feedback_loop",
     "core.firebase_auth",
-    "core.gcp_firestore",
     "core.generation_monitor",
     "core.health",
     "core.health.health_monitor",
@@ -14152,7 +14155,6 @@
     "core.i18n",
     "core.i18n.bengali_text",
     "core.i18n.language_directive",
-    "core.idempotency_middleware",
     "core.immune_system",
     "core.in_process_dispatcher",
     "core.integration_layer",
@@ -14217,8 +14219,6 @@
     "core.localization",
     "core.localization.bhasha_bot",
     "core.localization.voice_didi",
-    "core.log_batcher",
-    "core.logging",
     "core.logging_config",
     "core.maintenance_pipeline",
     "core.markdown_indexer",
@@ -14241,8 +14241,6 @@
     "core.messaging.pubsub",
     "core.messaging.service",
     "core.messaging.upstash_redis_queue",
-    "core.metrics",
-    "core.metrics_collector",
     "core.microvm_sandbox",
     "core.middleware.docs_auth",
     "core.middleware.health_aware_middleware",
@@ -14285,7 +14283,6 @@
     "core.persistence",
     "core.persistence.pooled_pg",
     "core.persistence.write_behind",
-    "core.pgbouncer_pool",
     "core.playwright_manager",
     "core.plugins",
     "core.plugins.capability_resolver",
@@ -14425,7 +14422,6 @@
     "core.task_router",
     "core.telemetry",
     "core.telemetry.system_telemetry",
-    "core.tenant_db",
     "core.testing.qa_suite",
     "core.tier8",
     "core.tier8.agent_evolution_engine",

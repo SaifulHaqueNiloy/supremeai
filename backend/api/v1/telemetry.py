@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 
 from core.cache.multi_layer_cache import multi_layer_cache
 from core.config import settings
-from core.metrics_collector import metrics_collector
+from monitoring.metrics_collector import metrics_collector
 
 router = APIRouter(prefix="/telemetry", tags=["telemetry"])
 

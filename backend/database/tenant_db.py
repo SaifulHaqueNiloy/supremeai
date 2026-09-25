@@ -82,7 +82,7 @@ class TenantAwareFirestore:
     def _resolve_db_client(self):
         """Try to resolve a Firestore client — handling the case where google.cloud isn't installed."""
         try:
-            from core.gcp_firestore import get_firestore_client
+            from services.storage.gcp_firestore import get_firestore_client
 
             client = get_firestore_client()
             if client is not None:

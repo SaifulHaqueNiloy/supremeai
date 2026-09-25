@@ -57,7 +57,6 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
         SupremeContextMiddleware,
         TenantExtractionMiddleware,
     )
-    from core.idempotency_middleware import IdempotencyMiddleware
     from core.lifespan import app_lifespan
 
     # P0 (production docs exposure policy): gates /docs, /redoc and openapi.json.
@@ -80,6 +79,7 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     from core.security.origin_validator import TrustedOriginMiddleware
     from core.security.protection.honeypot import HoneypotMiddleware
     from middleware.chaos_injector import ChaosInjectorMiddleware
+    from middleware.idempotency_middleware import IdempotencyMiddleware
 
     @asynccontextmanager
     async def _lifespan(app: FastAPI):

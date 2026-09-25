@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from core.idempotency_middleware import IdempotencyMiddleware
+from middleware.idempotency_middleware import IdempotencyMiddleware
 
 
 class TestIdempotencyMiddleware:

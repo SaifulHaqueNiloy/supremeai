@@ -112,7 +112,7 @@ class ConnectionManager:
             pool = await connection_manager.raw_pool()
             rows = await pool.fetch("SELECT * FROM users WHERE id = $1", user_id)
         """
-        from core.pgbouncer_pool import get_db_pool
+        from database.pgbouncer_pool import get_db_pool
 
         if self._raw_pool is None:
             self._raw_pool = await get_db_pool()
@@ -128,7 +128,7 @@ class ConnectionManager:
         Returns:
             The asyncpg Pool instance.
         """
-        from core.pgbouncer_pool import get_db_pool_with_retry
+        from database.pgbouncer_pool import get_db_pool_with_retry
 
         if self._raw_pool is None:
             self._raw_pool = await get_db_pool_with_retry(

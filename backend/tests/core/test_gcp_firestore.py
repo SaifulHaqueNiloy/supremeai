@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
-from core.gcp_firestore import GCPFirestoreVerificationQueue
+from services.storage.gcp_firestore import GCPFirestoreVerificationQueue
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -108,7 +108,7 @@ class FakeDocument:
 def test_enqueue_adds_document():
     queue = GCPFirestoreVerificationQueue(project_id="test-project")
     mock_client = FakeFirestoreClient()
-    with patch("core.gcp_firestore.get_firestore_client", return_value=mock_client):
+    with patch("services.storage.gcp_firestore.get_firestore_client", return_value=mock_client):
         queue.client = mock_client
         queue.enqueue("task_1", {"url": "http://example.com"}, priority=1, metadata={})
 
@@ -121,7 +121,7 @@ def test_enqueue_adds_document():
 def test_peek_does_not_remove():
     queue = GCPFirestoreVerificationQueue(project_id="test-project")
     mock_client = FakeFirestoreClient()
-    with patch("core.gcp_firestore.get_firestore_client", return_value=mock_client):
+    with patch("services.storage.gcp_firestore.get_firestore_client", return_value=mock_client):
         queue.client = mock_client
         queue.enqueue("task_1", {}, priority=1, metadata={})
         peeked = queue.peek(limit=1)
@@ -134,7 +134,7 @@ def test_peek_does_not_remove():
 def test_mark_verified_updates_status():
     queue = GCPFirestoreVerificationQueue(project_id="test-project")
     mock_client = FakeFirestoreClient()
-    with patch("core.gcp_firestore.get_firestore_client", return_value=mock_client):
+    with patch("services.storage.gcp_firestore.get_firestore_client", return_value=mock_client):
         queue.client = mock_client
         queue.enqueue("task_1", {}, priority=1, metadata={})
         ok = queue.mark_verified("task_1")
@@ -144,7 +144,7 @@ def test_mark_verified_updates_status():
 def test_delete_removes_task():
     queue = GCPFirestoreVerificationQueue(project_id="test-project")
     mock_client = FakeFirestoreClient()
-    with patch("core.gcp_firestore.get_firestore_client", return_value=mock_client):
+    with patch("services.storage.gcp_firestore.get_firestore_client", return_value=mock_client):
         queue.client = mock_client
         res = queue.enqueue("task_1", {}, priority=1, metadata={})
         queue.delete(res["queue_id"])
@@ -155,7 +155,7 @@ def test_delete_removes_task():
 def test_stats_returns_counts():
     queue = GCPFirestoreVerificationQueue(project_id="test-project")
     mock_client = FakeFirestoreClient()
-    with patch("core.gcp_firestore.get_firestore_client", return_value=mock_client):
+    with patch("services.storage.gcp_firestore.get_firestore_client", return_value=mock_client):
         queue.client = mock_client
         queue.enqueue("t1", {}, priority=1, metadata={})
         queue.enqueue("t2", {}, priority=1, metadata={})
@@ -166,6 +166,6 @@ def test_stats_returns_counts():
 def test_provider_name():
     queue = GCPFirestoreVerificationQueue(project_id="test-project")
     mock_client = FakeFirestoreClient()
-    with patch("core.gcp_firestore.get_firestore_client", return_value=mock_client):
+    with patch("services.storage.gcp_firestore.get_firestore_client", return_value=mock_client):
         queue.client = mock_client
         assert "firestore" in queue.provider.lower()

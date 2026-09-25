@@ -992,6 +992,16 @@
     {
       "evidence": [
         {
+          "line": 18,
+          "path": "backend/api/routes/billing_api.py"
+        }
+      ],
+      "source": "billing",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 22,
           "path": "backend/api/routes/billing_api.py"
         }
@@ -2242,6 +2252,16 @@
     {
       "evidence": [
         {
+          "line": 28,
+          "path": "backend/agents/user_retention_risk_agent.py"
+        }
+      ],
+      "source": "identity",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 8,
           "path": "backend/api/routes/admin_dashboard/endpoints_users.py"
         }
@@ -2614,6 +2634,16 @@
         {
           "line": 53,
           "path": "backend/skills/core_knowledge_qa.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 10,
+          "path": "backend/tools/learning/agent_knowledge_store.py"
         }
       ],
       "source": "knowledge",
@@ -4222,8 +4252,38 @@
     {
       "evidence": [
         {
+          "line": 18,
+          "path": "backend/core/security/api_key_middleware.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 22,
           "path": "backend/core/security/api_key_middleware.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 48,
+          "path": "backend/core/security/audit/compliance_bot.py"
+        }
+      ],
+      "source": "security",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 51,
+          "path": "backend/core/security/audit/compliance_bot.py"
         }
       ],
       "source": "security",

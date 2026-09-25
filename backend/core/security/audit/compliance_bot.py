@@ -13,7 +13,7 @@ Key Components:
 
 Dependencies:
 - `core.config`: For accessing application settings.
-- `core.gcp_firestore`: For Firestore database operations.
+- `services.storage.gcp_firestore`: For Firestore database operations.
 - `datetime`: For retention date calculations.
 """
 
@@ -45,10 +45,10 @@ if sys.platform == "win32":
 # --- Path Setup ---
 try:
     from core.config import settings  # noqa: F401 -- শুধু importability probe (path-setup)
-    from core.gcp_firestore import get_firestore_client
+    from services.storage.gcp_firestore import get_firestore_client
 except ImportError:
     sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
-    from core.gcp_firestore import get_firestore_client
+    from services.storage.gcp_firestore import get_firestore_client
 
 
 class RegulationType(Enum):

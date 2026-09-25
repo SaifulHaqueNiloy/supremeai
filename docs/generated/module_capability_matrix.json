@@ -374,6 +374,69 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/_archive/batch-6/error_pattern_db.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/gcp_firestore.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/idempotency_middleware.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/log_batcher.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/logging.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/metrics.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/metrics_collector.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/pgbouncer_pool.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-6/tenant_db.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/adapters/__init__.py"
     },
     {
@@ -4785,13 +4848,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/error_pattern_db.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/errors/__init__.py"
     },
     {
@@ -4949,13 +5005,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/gcp_firestore.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/generation_monitor.py"
     },
     {
@@ -5082,13 +5131,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/i18n/language_directive.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/idempotency_middleware.py"
     },
     {
       "capability_signals": [],
@@ -5627,20 +5669,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/log_batcher.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/logging.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/logging_config.py"
     },
     {
@@ -5835,20 +5863,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/messaging/upstash_redis_queue.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/metrics.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/metrics_collector.py"
     },
     {
       "capability_signals": [
@@ -6241,13 +6255,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/persistence/write_behind.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/pgbouncer_pool.py"
     },
     {
       "capability_signals": [
@@ -7471,13 +7478,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/telemetry/system_telemetry.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/tenant_db.py"
     },
     {
       "capability_signals": [

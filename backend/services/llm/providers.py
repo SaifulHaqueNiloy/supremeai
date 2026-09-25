@@ -16,9 +16,9 @@ from typing import Any, Protocol
 import httpx
 
 from core.config import settings
-from core.logging import get_logger
-from core.metrics import timed
 from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
+from monitoring.logging import get_logger
+from monitoring.metrics import timed
 
 logger = get_logger(__name__)
 

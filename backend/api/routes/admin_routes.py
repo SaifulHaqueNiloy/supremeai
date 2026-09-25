@@ -38,7 +38,7 @@ Dependencies:
 - `core.services`: For accessing various core services like parallel router, GCP router, queues, and rules engine.
 - `core.config`: For accessing application settings (e.g., `settings.jwt_secret`, `settings.admin_emails`).
 - `core.messaging.events`: For `get_firebase_auth` to interact with Firebase Admin SDK.
-- `core.gcp_firestore`: For `get_firestore_client` to interact with Firestore for admin user management.
+- `services.storage.gcp_firestore`: For `get_firestore_client` to interact with Firestore for admin user management.
 - `models.admin`: For Pydantic models defining admin request payloads.
 - `jwt`: For encoding JSON Web Tokens (JWTs).
 - `google.cloud.firestore`: For Firestore field deletion.
@@ -146,12 +146,12 @@ from api.dependencies import get_current_user_token
 from core import services
 from core.config import settings
 from core.firebase_auth import get_firebase_auth
-from core.gcp_firestore import get_firestore_client
 from models.admin import (
     AdminFirebaseLoginRequest,
     AdminFirebaseTotpSetupRequest,
     AdminFirebaseTotpVerifyRequest,
 )
+from services.storage.gcp_firestore import get_firestore_client
 
 router = APIRouter()
 

@@ -2,12 +2,12 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 
-from core.pgbouncer_pool import PgBouncerConnectionPool
+from database.pgbouncer_pool import PgBouncerConnectionPool
 
 
 @pytest.mark.asyncio
 async def test_singleton_pattern():
-    from core.pgbouncer_pool import PgBouncerConnectionPool, get_db_pool, init_db_pool
+    from database.pgbouncer_pool import PgBouncerConnectionPool, get_db_pool, init_db_pool
 
     with patch.object(PgBouncerConnectionPool, "connect", new_callable=AsyncMock):
         await init_db_pool("test_dsn")
@@ -20,7 +20,7 @@ async def test_singleton_pattern():
 async def test_connect():
     pool = PgBouncerConnectionPool("test_dsn")
     with patch(
-        "core.pgbouncer_pool.asyncpg.create_pool", new_callable=AsyncMock
+        "database.pgbouncer_pool.asyncpg.create_pool", new_callable=AsyncMock
     ) as mock_create_pool:
         mock_pool = MagicMock()
         mock_create_pool.return_value = mock_pool
