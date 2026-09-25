@@ -22,6 +22,17 @@ supersedes: []
 superseded_by: []
 ---
 
+> ⚠️ **CONFLICT NOTE (2026-09-25):** এই প্ল্যানটি সঠিক, কিন্তু আসল কোড
+> (`frontend/src/components/Onboarding/OnboardingWizard.tsx`) প্ল্যানের বিপরীত।
+> প্ল্যান বলে "zero-config, 60s, কোনো API key না" কিন্তু কোড = `StepApiKey →
+> StepModelSelect → StepFirstChat` (প্রথম ধাপেই API key চায়)।
+>
+> **সমাধান:** কোড fix করতে হবে প্ল্যান অনুযায়ী (আলাদা Issue, code PR)।
+> এই প্ল্যানটি archive করা হয়নি কারণ প্ল্যান সঠিক — কোড ভুল।
+>
+> দর্শন: [CP06 Decoupled 3-Layer Topology](../../plan-network/core-plans/CP06_DECOUPLED_THREE_LAYER_TOPOLOGY.md)
+
+
 # Customer Onboarding Flow
 
 **Status:** proposed  

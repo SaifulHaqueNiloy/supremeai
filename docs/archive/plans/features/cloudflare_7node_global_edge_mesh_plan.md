@@ -7,6 +7,10 @@ document_role: implementation
 planning_authority: Architecture Governance / Planning Circle
 status: historical
 
+superseded_by: ["CP07"]
+archive_reason: "Multi-account quota violation (ToS abuse). CP07 forbids account multiplication for quota."
+disposition: archive-dry-branch
+archived_date: "2026-09-25"
 ---
 
 # Implementation Plan: Supreme-Cloudflare 7-Node Global Edge Mesh

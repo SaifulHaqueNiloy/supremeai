@@ -7,6 +7,10 @@ document_role: architecture
 planning_authority: Architecture Governance / Planning Circle
 status: historical
 
+superseded_by: ["CP06"]
+archive_reason: "Dark-mode doctrine conflict — master plan is dark-first, this said dark-optional."
+disposition: archive-dry-branch
+archived_date: "2026-09-25"
 ---
 
 # UX Best Practices — SupremeAI

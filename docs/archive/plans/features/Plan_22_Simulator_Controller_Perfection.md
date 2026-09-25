@@ -7,6 +7,10 @@ document_role: implementation
 planning_authority: Architecture Governance / Planning Circle
 status: historical
 
+superseded_by: ["CP05"]
+archive_reason: "Self-contradictory (offline sandbox vs live external API calls). CP05 needs clear sandbox."
+disposition: archive-dry-branch
+archived_date: "2026-09-25"
 ---
 
 # Plan 22: Environmental Simulator & Execution Sandbox

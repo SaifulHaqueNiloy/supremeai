@@ -7,6 +7,10 @@ document_role: architecture
 planning_authority: Architecture Governance / Planning Circle
 status: historical
 
+superseded_by: ["CP03"]
+archive_reason: "Qdrant conflict — CP03 canonical store is Supabase pgvector (M3 decision)."
+disposition: archive-dry-branch
+archived_date: "2026-09-25"
 ---
 
 # Plan 3: Continuous Learning & Long-Term Memory (RAG + Episodic Graph)
