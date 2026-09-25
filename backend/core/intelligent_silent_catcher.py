@@ -24,7 +24,7 @@ def handle_unhandled_exception(exc_type, exc_value, exc_tb):
     error_msg = f"UNHANDLED_RUNTIME_EXCEPTION: {exc_value}"
     tb_str = "".join(traceback.format_tb(exc_tb))
 
-    logger.error(error_msg, traceback=tb_str)
+    logger.error("{}", error_msg)
 
     # Try to find the originating module
     module = "intelligent_silent_catcher"
