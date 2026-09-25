@@ -142,7 +142,20 @@ async def initialize_independent_services(app):
             # Always call get_client_async() to trigger lazy init first
             client = await redis_manager.get_client_async()
             if client:
-                await client.ping()
+                try:
+                    await client.ping()
+                except Exception as ping_err:
+                    # Federation failover at boot (issue #460 Pillar 2): the
+                    # canonical primary can be quota-exhausted while a sibling
+                    # account is healthy. report_failure() rotates the pool;
+                    # retry ONCE before the fail-fast policy blocks startup.
+                    # Non-quota errors leave the pool untouched → re-raise as
+                    # before (policy intent preserved).
+                    redis_manager.report_failure(ping_err)
+                    client = await redis_manager.get_client_async()
+                    if not client:
+                        raise ping_err
+                    await client.ping()
                 logger.info("[OK] Redis connection verified successfully.")
                 await ReliabilityController.restore_from_persistence()
             else:
