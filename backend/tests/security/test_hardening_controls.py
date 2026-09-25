@@ -31,7 +31,7 @@ from fastapi import HTTPException
 # Import-light helpers that do NOT pull the whole app fixture graph
 # ---------------------------------------------------------------------------
 from core.middleware.security import RequestValidationMiddleware
-from core.security.ssrf_protection import SSRFProtection
+from core.security.protection.ssrf_protection import SSRFProtection
 from utils.client_ip import get_client_ip
 
 BACKEND_DIR = Path(__file__).resolve().parent.parent.parent
@@ -212,7 +212,7 @@ class TestSSRFProtectionUnit:
 
     @pytest.mark.unit
     def test_private_ip_literal_blocked(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         for url in ("http://10.0.0.1/", "http://192.168.1.10/", "http://172.16.5.5/"):
             result = SSRFProtection().validate_url(url)
@@ -220,7 +220,7 @@ class TestSSRFProtectionUnit:
 
     @pytest.mark.unit
     def test_loopback_and_linklocal_blocked(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         for url in ("http://127.0.0.1/admin", "http://[::1]/", "http://169.254.169.254/"):
             result = SSRFProtection().validate_url(url)
@@ -228,7 +228,7 @@ class TestSSRFProtectionUnit:
 
     @pytest.mark.unit
     def test_cloud_metadata_blocked(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         result = SSRFProtection().validate_url("http://169.254.169.254/latest/meta-data/")
         assert result.is_safe is False
@@ -236,7 +236,7 @@ class TestSSRFProtectionUnit:
 
     @pytest.mark.unit
     def test_internal_hostname_suffix_blocked(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         for url in ("http://db.internal/", "http://api.corp/", "http://files.local/"):
             result = SSRFProtection().validate_url(url)
@@ -244,20 +244,20 @@ class TestSSRFProtectionUnit:
 
     @pytest.mark.unit
     def test_localhost_blocked(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         assert SSRFProtection().validate_url("http://localhost/").is_safe is False
 
     @pytest.mark.unit
     def test_non_http_scheme_blocked(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         for url in ("file:///etc/passwd", "gopher://internal", "ftp://10.0.0.1/x"):
             assert SSRFProtection().validate_url(url).is_safe is False
 
     @pytest.mark.unit
     def test_domain_resolving_to_private_ip_blocked(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         # Public-looking host whose DNS resolves to loopback must be rejected.
         with patch.object(SSRFProtection, "_resolve_hostname", return_value="127.0.0.1"):
@@ -266,7 +266,7 @@ class TestSSRFProtectionUnit:
 
     @pytest.mark.unit
     def test_dns_rebinding_flagged(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         # First resolve = public, second resolve = private → rebinding attack.
         result = SSRFProtection().validate_url("http://roundrobin.example/")
@@ -275,7 +275,7 @@ class TestSSRFProtectionUnit:
 
     @pytest.mark.unit
     def test_public_url_allowed(self):
-        from core.security.ssrf_protection import SSRFProtection
+        from core.security.protection.ssrf_protection import SSRFProtection
 
         result = SSRFProtection().validate_url("http://93.184.216.34/")
         assert result.is_safe is True

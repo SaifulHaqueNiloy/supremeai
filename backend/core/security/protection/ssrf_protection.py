@@ -16,7 +16,7 @@ Key Features:
 - Configurable through environment variables
 
 Usage:
-    from core.security.ssrf_protection import SSRFProtection
+    from core.security.protection.ssrf_protection import SSRFProtection
 
     ssrf = SSRFProtection()
     result = ssrf.validate_url("https://example.com")
