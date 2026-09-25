@@ -163,6 +163,56 @@
       "path": "backend/_archive/batch-1/backend/update_md.py"
     },
     {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-2/backend/core/context_manager.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-2/backend/core/models/shared_workspace.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/_archive/batch-2/backend/core/test_retry_handler.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-2/backend/core/utils/firestore_helpers.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "capability",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/_archive/batch-2/backend/scripts/seed_ecosystem.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -4353,15 +4403,6 @@
     },
     {
       "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/context_manager.py"
-    },
-    {
-      "capability_signals": [
         "browser"
       ],
       "classification": "adapter",
@@ -5748,15 +5789,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/models/__init__.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/models/shared_workspace.py"
     },
     {
       "capability_signals": [
@@ -7337,15 +7369,6 @@
       "path": "backend/core/tenant_db.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "backend/core/test_retry_handler.py"
-    },
-    {
       "capability_signals": [
         "execute",
         "health",
@@ -7513,16 +7536,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/utils/background_tasks.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/utils/firestore_helpers.py"
     },
     {
       "capability_signals": [],
@@ -9618,19 +9631,6 @@
       ],
       "kind": "py",
       "path": "backend/scripts/run_dependency_check.py"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "capability",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "backend/scripts/seed_ecosystem.py"
     },
     {
       "capability_signals": [
