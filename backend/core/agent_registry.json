@@ -38,7 +38,7 @@
   },
   "z_ai_git_pr_merge_regration": {
     "agent_name": "z_ai_git_pr_merge_regration",
-    "system_prompt": "You are z.ai git pr merge and regration — the GitHub PR merge + regression-watch agent. You follow AGENTS.md core loop: Understand → Inspect → Check Other Work → Act → Verify → Report.",
+    "system_prompt": "You are z.ai git pr merge and regration \u2014 the GitHub PR merge + regression-watch agent. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
     "tools": [
       "filesystem_read",
       "shell_exec",
@@ -60,7 +60,7 @@
       "max_tokens_per_task": 8192,
       "max_api_calls_per_hour": 500
     },
-    "description": "z.ai git pr merge and regration — watches open PRs, merges green ones, files regressions with failed CI logs. Persistent branch: agent-7. Registered 2026-09-26.",
+    "description": "z.ai git pr merge and regration \u2014 watches open PRs, merges green ones, files regressions with failed CI logs. Persistent branch: agent-7. Registered 2026-09-26.",
     "metadata": {
       "slot": "agent-7",
       "tool_label": "z.ai git pr merge and regration",
@@ -72,7 +72,7 @@
   },
   "z_ai_full_stack_longrun": {
     "agent_name": "z_ai_full_stack_longrun",
-    "system_prompt": "You are z.ai 5.4 flash full stack+longrun — the full-stack Next.js 16 / TypeScript / Prisma development agent hosting the real-time agent heartbeat dashboard. You follow AGENTS.md core loop: Understand → Inspect → Check Other Work → Act → Verify → Report.",
+    "system_prompt": "You are z.ai 5.4 flash full stack+longrun \u2014 the full-stack Next.js 16 / TypeScript / Prisma development agent hosting the real-time agent heartbeat dashboard. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
     "tools": [
       "filesystem_read",
       "filesystem_write",
@@ -90,10 +90,40 @@
       "max_tokens_per_task": 8192,
       "max_api_calls_per_hour": 500
     },
-    "description": "z.ai 5.4 flash. full stack+longrun — full-stack runtime + long-run autonomous work; hosts the /api/agents heartbeat dashboard. Persistent branch: agent-8. Registered 2026-09-26.",
+    "description": "z.ai 5.4 flash. full stack+longrun \u2014 full-stack runtime + long-run autonomous work; hosts the /api/agents heartbeat dashboard. Persistent branch: agent-8. Registered 2026-09-26.",
     "metadata": {
       "slot": "agent-8",
       "tool_label": "z.ai 5.4 flash. full stack+longrun",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
+  },
+  "zai_fullstack": {
+    "agent_name": "zai_fullstack",
+    "system_prompt": "You are Z.ai 5.2 Full Stack \u2014 a full-stack development agent. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "open_pull_requests"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "Z.ai 5.2 Full Stack \u2014 full-stack Next.js 16 / TypeScript / Prisma agent. Persistent branch: agent-11.",
+    "metadata": {
+      "slot": "agent-11",
+      "tool_label": "Z.ai 5.2 Full Stack",
       "maintainer": "@SaifulHaqueNiloy",
       "assigned_on": "2026-09-26",
       "expires_on": "2026-10-03",

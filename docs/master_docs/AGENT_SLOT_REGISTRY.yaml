@@ -110,6 +110,14 @@ slots:
     active: true
     notes: "Self-development mode (reserved per OPS-08 §5)"
 
+  - slot: agent-11
+    tool: "Z.ai 5.2 Full Stack"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-26"
+    expires_on: "2026-10-03"
+    active: true
+    notes: "Full-stack Next.js 16 / TypeScript / Prisma agent — hosts the real-time heartbeat dashboard"
+
 # Validation rules
 validation_rules:
   - "slot MUST match pattern: agent-[0-9]+"
@@ -117,7 +125,7 @@ validation_rules:
   - "maintainer MUST be a GitHub username (starts with @)"
   - "expires_on MUST be <= 7 days from assigned_on"
   - "Only one active assignment per slot at a time"
-  - "Active slots MUST be <= 9 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)"
+  - "Active slots MUST be <= 10 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)"
   - "Auto-expiry: assignments past expires_on are auto-deactivated"
 
 # How to claim/update a slot
