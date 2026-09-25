@@ -1,128 +1,81 @@
-# Agent Slot Registry (GAP-08 fix)
-# ================================
-# পলিমরফিক এজেন্ট স্লট রেজিস্ট্রি — কে কোন স্লট, কতদিনের জন্য, কোন maintainer
-# অ্যাসাইন করেছেন তার living record।
-#
-# Problem (ARCH-GAP-01 GAP-08):
-#   OPS-06 বলছে agent-1=Antigravity, agent-2=Claude, agent-10=SupremeAI —
-#   কিন্তু এই ম্যাপিং কোথাও formally রেকর্ড করা হয়নি। একই সময়ে দুজন ভিন্ন
-#   maintainer দুটি ভিন্ন টুলকে agent-1 হিসেবে অ্যাসাইন করতে পারেন — কোনো
-#   conflict prevention নেই।
-#
-# Solution:
-#   এই YAML ফাইলটি single source of truth। প্রতিটি স্লট অ্যাসাইনমেন্টের জন্য:
-#     - slot: agent-N
-#     - tool: <tool name>
-#     - maintainer: <github username>
-#     - assigned_on: <date>
-#     - expires_on: <date>  (max 7 days, then auto-release)
-#     - active: true/false
-
-version: "1.0"
-
-# Real-time liveness: assigned slots show 🟢 online on the /api/agents
-# dashboard when their tool pings the shared heartbeat store. Integration
-# guide per tool: docs/agents/heartbeat-integration.md (issue #1402).
-
-# Agent slot assignments — per OPS-06 §5 (Polymorphic Agent Assignment)
-# 10 slots defined; maintainer activates/deactivates as needed.
-# Note: OPS-06 Safeguard 5 (Max Concurrent Agent Policy) currently caps active
-# slots at 9 for rate-budget reasons. If >9 slots are activated simultaneously,
-# update Safeguard 5's policy threshold accordingly.
+version: '1.0'
 slots:
-  - slot: agent-1
-    tool: "Antigravity"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: true
-    notes: "Backend feature work + CI fixes"
-
-  - slot: agent-2
-    tool: "Claude Code"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: true
-    notes: "Frontend + test coverage"
-
-  - slot: agent-3
-    tool: "Cursor"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: true
-    notes: "Infrastructure + deployment scripts"
-
-  - slot: agent-4
-    tool: "Cline"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: true
-    notes: "Database + migration work"
-
-  - slot: agent-5
-    tool: "z.ai git issue and log"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Git issue triage, log parsing, and audit verification"
-
-  - slot: agent-6
-    tool: "z.ai long run 3rd party platform"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Long-running third party platform integration and external sync"
-
-  - slot: agent-7
-    tool: "z.ai git pr merge and regration"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "PR review, merge orchestration, and regression prevention"
-
-  - slot: agent-8
-    tool: "z.ai 5.4 flash. full stack+longrun"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-26"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Full-stack development and long-running autonomous execution"
-
-  - slot: agent-9
-    tool: "Continue"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-10-03"
-    active: false
-    notes: "Standby — observability + metrics dashboards (activatable on demand)"
-
-  - slot: agent-10
-    tool: "SupremeAI"
-    maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-10-03"
-    active: true
-    notes: "Self-development mode (reserved per OPS-08 §5)"
-
-# Validation rules
+- slot: agent-1
+  tool: Z.ai Code (sleep)
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-20'
+  expires_on: '2026-09-27'
+  active: false
+  notes: Limit reached — inactive/sleep mode
+- slot: agent-5
+  tool: planner-and-issues
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Plan + issue create. Founder discusses → planner formalizes → assigns to
+    solver
+- slot: agent-6
+  tool: solver-a
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Claims issue from queue, solves, opens PR. Parallel with solver-b
+- slot: agent-7
+  tool: solver-b
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Claims issue from queue, solves, opens PR. Parallel with solver-a
+- slot: agent-8
+  tool: pr-verifier
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: PR helper bot decision check + code quality. Fixes wrong merges
+- slot: agent-9
+  tool: Continue
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: false
+  notes: Standby — observability + metrics dashboards (activatable on demand)
+- slot: agent-10
+  tool: SupremeAI (super agent)
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Orchestrator + fallback. Assigns alternatives if agent inactive. Does any
+    role if needed
+- slot: agent-11
+  tool: platform-agent
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Periodic check of Kaggle/Colab/Modal/Render/HF via API key. Fixes + creates
+    issues
+- slot: agent-12
+  tool: browser-tester + log watcher
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Browser test after merge + CI/Actions log watch. Creates issues on failure
 validation_rules:
-  - "slot MUST match pattern: agent-[0-9]+"
-  - "tool MUST be a non-empty string"
-  - "maintainer MUST be a GitHub username (starts with @)"
-  - "expires_on MUST be <= 7 days from assigned_on"
-  - "Only one active assignment per slot at a time"
-  - "Active slots MUST be <= 9 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)"
-  - "Auto-expiry: assignments past expires_on are auto-deactivated"
-
-# How to claim/update a slot
+- 'slot MUST match pattern: agent-[0-9]+'
+- tool MUST be a non-empty string
+- maintainer MUST be a GitHub username (starts with @)
+- expires_on MUST be <= 7 days from assigned_on
+- Only one active assignment per slot at a time
+- Active slots MUST be <= 10 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)
+- 'Auto-expiry: assignments past expires_on are auto-deactivated'
 usage:
-  - "Maintainer edits this file directly via PR (protected scope per SECURITY_GUARDIAN.md)"
-  - "PR title: 'chore(agents): assign agent-N to <tool>'"
-  - "Previous slot holder MUST be notified via @mention in PR description"
-  - "If slot is being transferred, old assignment's expires_on MUST be set to today"
+- Maintainer edits this file directly via PR (protected scope per SECURITY_GUARDIAN.md)
+- 'PR title: ''chore(agents): assign agent-N to <tool>'''
+- Previous slot holder MUST be notified via @mention in PR description
+- If slot is being transferred, old assignment's expires_on MUST be set to today

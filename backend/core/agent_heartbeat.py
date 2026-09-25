@@ -115,9 +115,7 @@ def _build_payload() -> str:
             "agentId": AGENT_ID,
             "source": SOURCE,
             "updatedAtMs": now_ms,
-            "updatedAt": time.strftime(
-                "%Y-%m-%dT%H:%M:%S.000Z", time.gmtime(now_ms / 1000)
-            ),
+            "updatedAt": time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime(now_ms / 1000)),
         }
     )
 

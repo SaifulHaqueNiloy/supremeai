@@ -35,5 +35,192 @@
       "max_api_calls_per_hour": 500
     },
     "description": "ArXiv / Semantic Scholar paper search, summarization, and citation extraction."
+  },
+  "z_ai_git_pr_merge_regration": {
+    "agent_name": "z_ai_git_pr_merge_regration",
+    "system_prompt": "You are z.ai git pr merge and regration \u2014 the GitHub PR merge + regression-watch agent. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+    "tools": [
+      "filesystem_read",
+      "shell_exec",
+      "github_pr_helper",
+      "github_list_prs",
+      "github_workflow_runs",
+      "github_get_failed_logs",
+      "github_read_file",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "open_pull_requests",
+      "merge_pull_requests",
+      "comment_on_issues"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 8192,
+      "max_api_calls_per_hour": 500
+    },
+    "description": "z.ai git pr merge and regration \u2014 watches open PRs, merges green ones, files regressions with failed CI logs. Persistent branch: agent-7. Registered 2026-09-26.",
+    "metadata": {
+      "slot": "agent-7",
+      "tool_label": "z.ai git pr merge and regration",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
+  },
+  "z_ai_full_stack_longrun": {
+    "agent_name": "z_ai_full_stack_longrun",
+    "system_prompt": "You are z.ai 5.4 flash full stack+longrun \u2014 the full-stack Next.js 16 / TypeScript / Prisma development agent hosting the real-time agent heartbeat dashboard. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "open_pull_requests"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 8192,
+      "max_api_calls_per_hour": 500
+    },
+    "description": "z.ai 5.4 flash. full stack+longrun \u2014 full-stack runtime + long-run autonomous work; hosts the /api/agents heartbeat dashboard. Persistent branch: agent-8. Registered 2026-09-26.",
+    "metadata": {
+      "slot": "agent-8",
+      "tool_label": "z.ai 5.4 flash. full stack+longrun",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
+  },
+  "zai_fullstack": {
+    "agent_name": "zai_fullstack",
+    "system_prompt": "You are Z.ai 5.2 Full Stack \u2014 a full-stack development agent. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "open_pull_requests"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "Z.ai 5.2 Full Stack \u2014 full-stack Next.js 16 / TypeScript / Prisma agent. Persistent branch: agent-11.",
+    "metadata": {
+      "slot": "agent-11",
+      "tool_label": "Z.ai 5.2 Full Stack",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
+  },
+  "zai_issue_solver": {
+    "agent_name": "zai_issue_solver",
+    "system_prompt": "You are z.ai issue solver \u2014 you read GitHub issues, debug them, fix the code, and open PRs. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "open_pull_requests",
+      "comment_on_issues"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "z.ai issue solver \u2014 reads GitHub issues, debugs, fixes, opens PR. Persistent branch: agent-5.",
+    "metadata": {
+      "slot": "agent-5",
+      "tool_label": "z.ai issue solver",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
+  },
+  "zai_platform_watchdog": {
+    "agent_name": "zai_platform_watchdog",
+    "system_prompt": "You are z.ai platform watchdog \u2014 you monitor 3rd party platforms (Kaggle, Colab, Modal, Render, HF), detect issues, fix them or create GitHub issues. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "open_pull_requests",
+      "internet_access"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "z.ai platform watchdog \u2014 monitors 3rd party platforms, fixes issues, creates issues. Persistent branch: agent-6.",
+    "metadata": {
+      "slot": "agent-6",
+      "tool_label": "z.ai platform watchdog",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
+  },
+  "zai_action_log_watcher": {
+    "agent_name": "zai_action_log_watcher",
+    "system_prompt": "You are z.ai action log watcher \u2014 you watch GitHub Actions logs, detect failures, report them, and create issues.",
+    "tools": [
+      "filesystem_read",
+      "shell_exec",
+      "github_workflow_runs",
+      "github_get_failed_logs",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "open_pull_requests",
+      "comment_on_issues"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "z.ai action log watcher \u2014 watches GitHub Actions logs, detects failures, reports + creates issues. Persistent branch: agent-12.",
+    "metadata": {
+      "slot": "agent-12",
+      "tool_label": "z.ai action log watcher",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
   }
 }
