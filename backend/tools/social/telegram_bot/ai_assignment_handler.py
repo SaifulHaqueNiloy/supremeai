@@ -5,6 +5,7 @@ Commands:
   /ai_surfaces — show all surfaces + assigned AI
   /ai_assign   — assign AI to a surface (admin only)
 """
+
 from __future__ import annotations
 
 import os
@@ -49,7 +50,9 @@ class AIAssignmentHandlerMixin:
                 missing += 1
 
             lines.append(f"{icon} <b>{name}</b> ({tier}, {speed}, {cost})")
-            lines.append(f"   Key: <code>{env_key}</code> — {'✅ set' if has_key else '❌ missing'}")
+            lines.append(
+                f"   Key: <code>{env_key}</code> — {'✅ set' if has_key else '❌ missing'}"
+            )
 
         lines.append(f"\n📊 <b>Summary:</b> {working} working, {missing} missing")
         lines.append("\n💡 <i>/ai_surfaces — দেখো কোন AI কোথায় ব্যস্ত</i>")
@@ -71,10 +74,14 @@ class AIAssignmentHandlerMixin:
         # Get current assignment (from in-memory store or API)
         try:
             import httpx
-            backend_url = os.environ.get("BACKEND_URL", "http://localhost:8080")
-            async with httpx.AsyncClient(timeout=5) as client:
-                resp = await client.get(f"{backend_url}/api/admin/ai/assignment")
-                assignment = resp.json() if resp.status_code == 200 else {}
+
+            backend_url = os.environ.get("BACKEND_URL", "")
+            if backend_url:
+                async with httpx.AsyncClient(timeout=5) as client:
+                    resp = await client.get(f"{backend_url}/api/admin/ai/assignment")
+                    assignment = resp.json() if resp.status_code == 200 else {}
+            else:
+                assignment = {}
         except Exception:
             assignment = {}
 
@@ -113,8 +120,20 @@ class AIAssignmentHandlerMixin:
         provider = args[1].lower()
 
         valid_surfaces = ["web_chat", "ide", "telegram", "api", "research", "automation"]
-        valid_providers = ["groq", "gemini", "openrouter", "mistral", "deepseek", "cerebras",
-                          "openai", "anthropic", "byna", "bai", "modal", "auto"]
+        valid_providers = [
+            "groq",
+            "gemini",
+            "openrouter",
+            "mistral",
+            "deepseek",
+            "cerebras",
+            "openai",
+            "anthropic",
+            "byna",
+            "bai",
+            "modal",
+            "auto",
+        ]
 
         if surface not in valid_surfaces:
             await self.bot.send_message(
@@ -132,10 +151,18 @@ class AIAssignmentHandlerMixin:
             )
             return
 
-        # Call backend API to assign
+        # Call backend API to assign (BACKEND_URL must point at the running
+        # backend; no localhost fallback — constitution ARCH-001).
+        if not os.environ.get("BACKEND_URL"):
+            await self.bot.send_message(
+                chat_id,
+                "❌ BACKEND_URL কনফিগার করা নেই — /ai_assign ব্যবহার করা যাবে না।",
+            )
+            return
         try:
             import httpx
-            backend_url = os.environ.get("BACKEND_URL", "http://localhost:8080")
+
+            backend_url = os.environ["BACKEND_URL"]
             admin_token = os.environ.get("SUPREMEAI_ADMIN_SECRET", "")
             async with httpx.AsyncClient(timeout=10) as client:
                 resp = await client.post(
@@ -163,4 +190,3 @@ class AIAssignmentHandlerMixin:
                 chat_id,
                 f"❌ Error: {str(e)[:60]}",
             )
-
