@@ -22,6 +22,151 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/_archive/batch-1/backend/core/brand_compliance.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/core/permission_cache.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/core/prompts/ai_handshake_prompt.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/debug_ci_boot.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/get_tb.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/get_tb_collect.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/reports/optimization_engine.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/audit_import_walk.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/benchmark/load_test_phase3.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/dev/update_imports.py"
+    },
+    {
+      "capability_signals": [
+        "register"
+      ],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/find_router_error.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/refactor_logging.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/refactor_root_cause.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/run_chaos_experiment.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/self_healing_tests.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/scripts/self_test_and_improve.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/seed_db_configs.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-1/backend/update_md.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/adapters/__init__.py"
     },
     {
@@ -3631,13 +3776,6 @@
       "path": "backend/core/billing_plans.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/brand_compliance.py"
-    },
-    {
       "capability_signals": [
         "browser"
       ],
@@ -5926,15 +6064,6 @@
       "path": "backend/core/performance_enhancer.py"
     },
     {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/permission_cache.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -6198,15 +6327,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/prompt_handler.py"
-    },
-    {
-      "capability_signals": [
-        "capability"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/prompts/ai_handshake_prompt.py"
     },
     {
       "capability_signals": [
@@ -7525,13 +7645,6 @@
       "path": "backend/database/tenant_db.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/debug_ci_boot.py"
-    },
-    {
       "capability_signals": [
         "execute"
       ],
@@ -7970,20 +8083,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/examples/sample_buggy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/get_tb.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/get_tb_collect.py"
     },
     {
       "capability_signals": [
@@ -9051,13 +9150,6 @@
       "path": "backend/reports/__init__.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/reports/optimization_engine.py"
-    },
-    {
       "capability_signals": [
         "browser",
         "mcp"
@@ -9410,15 +9502,6 @@
     {
       "capability_signals": [],
       "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "backend/scripts/audit_import_walk.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/scripts/auto_find_blindspots.py"
@@ -9440,15 +9523,6 @@
       "path": "backend/scripts/benchmark/__init__.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "backend/scripts/benchmark/load_test_phase3.py"
-    },
-    {
       "capability_signals": [
         "mcp"
       ],
@@ -9465,15 +9539,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/scripts/dev/__init__.py"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/scripts/dev/update_imports.py"
     },
     {
       "capability_signals": [],
@@ -9504,15 +9569,6 @@
       ],
       "kind": "py",
       "path": "backend/scripts/devops/bug_prophet.py"
-    },
-    {
-      "capability_signals": [
-        "register"
-      ],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/scripts/find_router_error.py"
     },
     {
       "capability_signals": [
@@ -9557,29 +9613,6 @@
     {
       "capability_signals": [],
       "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/scripts/refactor_logging.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "backend/scripts/refactor_root_cause.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/scripts/run_chaos_experiment.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
       "entrypoints": [
         "main"
       ],
@@ -9609,22 +9642,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/scripts/seed_tools_registry.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/scripts/self_healing_tests.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "backend/scripts/self_test_and_improve.py"
     },
     {
       "capability_signals": [
@@ -9663,16 +9680,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/scripts/validate_openapi.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/seed_db_configs.py"
     },
     {
       "capability_signals": [],
@@ -16907,13 +16914,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/update_md.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/utils/__init__.py"
     },
     {
@@ -23048,6 +23048,18 @@
     },
     {
       "capability_signals": [
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main",
+        "register"
+      ],
+      "kind": "py",
+      "path": "scripts/audit/find_dead_modules.py"
+    },
+    {
+      "capability_signals": [
         "browser",
         "health",
         "register"
@@ -24100,6 +24112,7 @@
     {
       "capability_signals": [
         "execute",
+        "mcp",
         "register"
       ],
       "classification": "canonical",
@@ -25758,6 +25771,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "health",
         "mcp"
       ],
@@ -25810,5 +25824,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2962
+  "source_file_count": 2963
 }
