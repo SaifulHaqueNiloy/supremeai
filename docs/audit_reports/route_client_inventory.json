@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 575,
+    "backend_routes": 576,
     "frontend_unique_refs": 142,
     "matched": 244,
-    "orphan_routes": 331
+    "orphan_routes": 332
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -102,6 +102,7 @@
     "/api/v1/pending": 1,
     "/api/v1/approve": 1,
     "/api/v1/reject": 1,
+    "/api/v1/resume": 1,
     "/api/v1/internal": 1,
     "/api/v1/kernel": 1,
     "/api/living-brain/status": 1,
@@ -131,7 +132,7 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 255,
+    "unclassified-orphan": 256,
     "internal": 44,
     "admin-only": 32
   },
@@ -1107,6 +1108,13 @@
       "method": "POST",
       "declared": "/reject/{record_id}",
       "resolved": "/api/v1/reject/:param",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/hitl_admin.py",
+      "method": "GET",
+      "declared": "/resume/{record_id}",
+      "resolved": "/api/v1/resume/:param",
       "classification": "unclassified-orphan"
     },
     {
