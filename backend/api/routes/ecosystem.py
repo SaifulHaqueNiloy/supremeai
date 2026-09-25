@@ -7,6 +7,7 @@ from typing import Any
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel, Field
 
+from adaptive_engine.correlation import new_correlation_context
 from ecosystem import (
     Capability,
     CapabilityLifecycleState,
@@ -22,7 +23,6 @@ from ecosystem import (
     get_resource_registry,
     get_task_engine,
 )
-from ecosystem.correlation import new_correlation_context
 
 router = APIRouter(prefix="/api/v1/ecosystem", tags=["ecosystem"])
 

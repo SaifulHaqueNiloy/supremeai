@@ -38,6 +38,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from sse_starlette.sse import EventSourceResponse
 
+from adaptive_engine._store import ensure_columns, get_conn, jdump, jload
+from adaptive_engine.approval_workflow import ApprovalDecision
+from adaptive_engine.governance import BudgetKind
 from ecosystem import (
     ApprovalProposal,
     Capability,
@@ -70,9 +73,6 @@ from ecosystem import (
     get_source_governance,
     get_task_engine,
 )
-from ecosystem._store import ensure_columns, get_conn, jdump, jload
-from ecosystem.approval_workflow import ApprovalDecision
-from ecosystem.governance import BudgetKind
 from ecosystem.users import (
     User,
     UserExistsError,

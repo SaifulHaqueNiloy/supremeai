@@ -15,6 +15,9 @@ logger = logging.getLogger(__name__)
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, Field
 
+from adaptive_engine.approval_workflow import ApprovalDecision, ApprovalProposal
+from adaptive_engine.learning_loop import LearningOpportunity, LearningStage
+from adaptive_engine.task_engine import TaskState, get_task_engine
 from api.dependencies import get_current_user_token
 from ecosystem import (
     Capability,
@@ -33,9 +36,6 @@ from ecosystem import (
     get_learning_loop,
     get_source_governance,
 )
-from ecosystem.approval_workflow import ApprovalDecision, ApprovalProposal
-from ecosystem.learning_loop import LearningOpportunity, LearningStage
-from ecosystem.task_engine import TaskState, get_task_engine
 
 
 # বাংলা: admin auth — JWT প্রথম (module docstring-এর production intent),

@@ -23,6 +23,8 @@ _BACKEND = _THIS.parent.parent
 if str(_BACKEND) not in sys.path:
     sys.path.insert(0, str(_BACKEND))
 
+from adaptive_engine.approval_workflow import ApprovalProposal
+from adaptive_engine.learning_loop import LearningOpportunity, LearningStage
 from ecosystem import (
     Capability,
     CapabilityLifecycleState,
@@ -38,8 +40,6 @@ from ecosystem import (
     get_learning_loop,
     get_source_governance,
 )
-from ecosystem.approval_workflow import ApprovalProposal
-from ecosystem.learning_loop import LearningOpportunity, LearningStage
 
 # ---------------------------------------------------------------------------
 # Capabilities

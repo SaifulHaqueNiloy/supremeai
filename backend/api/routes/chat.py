@@ -103,7 +103,7 @@ async def list_chat_capabilities():
 @router.get("/tasks/{task_id}")
 async def get_chat_task(task_id: str, user: dict = Depends(get_current_user_token)):
     """Read durable task state through Chat with strict tenant ownership checks."""
-    from ecosystem.task_engine import TaskEngine
+    from adaptive_engine.task_engine import TaskEngine
 
     tenant_id = user.get("tenant_id") or user.get("sub")
     if not tenant_id:
