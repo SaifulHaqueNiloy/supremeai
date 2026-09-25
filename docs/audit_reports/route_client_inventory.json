@@ -6,9 +6,9 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 576,
-    "frontend_unique_refs": 142,
-    "matched": 244,
+    "backend_routes": 582,
+    "frontend_unique_refs": 145,
+    "matched": 250,
     "orphan_routes": 332
   },
   "orphan_by_family": {
@@ -3214,6 +3214,66 @@
         "frontend/src/services/agentService.test.ts",
         "frontend/src/services/agentService.ts",
         "frontend/src/services/apiClient.test.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/ai_assignment.py",
+      "method": "GET",
+      "declared": "/api/admin/ai/surfaces",
+      "resolved": "/api/admin/ai/surfaces",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/ai_assignment.py",
+      "method": "GET",
+      "declared": "/api/admin/ai/providers",
+      "resolved": "/api/admin/ai/providers",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/ai_assignment.py",
+      "method": "GET",
+      "declared": "/api/admin/ai/assignment",
+      "resolved": "/api/admin/ai/assignment",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/ai_assignment.py",
+      "method": "POST",
+      "declared": "/api/admin/ai/assign",
+      "resolved": "/api/admin/ai/assign",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/ai_assignment.py",
+      "method": "POST",
+      "declared": "/api/admin/ai/test/{provider_id}",
+      "resolved": "/api/admin/ai/test/:param",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/ai_assignment.py",
+      "method": "GET",
+      "declared": "/api/admin/ai/overview",
+      "resolved": "/api/admin/ai/overview",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
       ]
     },
     {
