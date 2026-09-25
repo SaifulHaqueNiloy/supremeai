@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3256,
+  "edge_count": 3380,
   "edges": [
     {
       "from": "adapters",
@@ -297,7 +297,7 @@
     },
     {
       "from": "agents.domain.bangla_nlp_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "agents.domain.bangla_nlp_agent",
@@ -365,7 +365,7 @@
     },
     {
       "from": "agents.governance.ethics_monitor_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "agents.governance.ethics_monitor_agent",
@@ -393,7 +393,7 @@
     },
     {
       "from": "agents.governance.governance_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "agents.governance.governance_agent",
@@ -417,7 +417,7 @@
     },
     {
       "from": "agents.headless_terminal_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "agents.headless_terminal_agent",
@@ -437,7 +437,7 @@
     },
     {
       "from": "agents.infrastructure.auto_scaling_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "agents.infrastructure.auto_scaling_agent",
@@ -501,7 +501,7 @@
     },
     {
       "from": "agents.infrastructure.performance_tuning_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "agents.infrastructure.performance_tuning_agent",
@@ -729,7 +729,7 @@
     },
     {
       "from": "api",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api",
@@ -745,7 +745,7 @@
     },
     {
       "from": "api.dependencies",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.dependencies",
@@ -773,7 +773,7 @@
     },
     {
       "from": "api.errors",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.errors",
@@ -789,7 +789,7 @@
     },
     {
       "from": "api.middleware",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.middleware",
@@ -885,7 +885,7 @@
     },
     {
       "from": "api.routes.admin_dashboard",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.admin_dashboard",
@@ -973,7 +973,7 @@
     },
     {
       "from": "api.routes.admin_dashboard.endpoints_config",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.admin_dashboard.endpoints_config",
@@ -985,7 +985,7 @@
     },
     {
       "from": "api.routes.admin_dashboard.endpoints_crud",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.admin_dashboard.endpoints_crud",
@@ -1193,7 +1193,11 @@
     },
     {
       "from": "api.routes.agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
+    },
+    {
+      "from": "api.routes.agent",
+      "to": "core.logging_config"
     },
     {
       "from": "api.routes.agent",
@@ -1277,6 +1281,10 @@
     },
     {
       "from": "api.routes.agent_tasks",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "api.routes.agent_tasks",
       "to": "core.security.authentication.rbac"
     },
     {
@@ -1318,6 +1326,10 @@
     {
       "from": "api.routes.analytics",
       "to": "api.dependencies"
+    },
+    {
+      "from": "api.routes.analytics",
+      "to": "core.logging_config"
     },
     {
       "from": "api.routes.analytics",
@@ -1393,6 +1405,10 @@
     },
     {
       "from": "api.routes.async_task_router",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "api.routes.async_task_router",
       "to": "core.orchestration.agent_orchestrator"
     },
     {
@@ -1409,7 +1425,7 @@
     },
     {
       "from": "api.routes.auth",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.auth",
@@ -1509,7 +1525,7 @@
     },
     {
       "from": "api.routes.browser",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.browser",
@@ -1593,7 +1609,7 @@
     },
     {
       "from": "api.routes.browser._credentials",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.browser._credentials",
@@ -1789,7 +1805,7 @@
     },
     {
       "from": "api.routes.byoc_api",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.byoc_api",
@@ -1825,7 +1841,7 @@
     },
     {
       "from": "api.routes.cdc_webhooks",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.cdc_webhooks",
@@ -2093,7 +2109,7 @@
     },
     {
       "from": "api.routes.dock_integrations",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.dock_integrations",
@@ -2329,6 +2345,10 @@
     },
     {
       "from": "api.routes.hitl_admin",
+      "to": "services.hitl.dispatch"
+    },
+    {
+      "from": "api.routes.hitl_admin",
       "to": "services.hitl.engine"
     },
     {
@@ -2529,7 +2549,7 @@
     },
     {
       "from": "api.routes.marketplace_endpoints",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.marketplace_endpoints",
@@ -2602,6 +2622,26 @@
     {
       "from": "api.routes.memory",
       "to": "memory.sliding_window"
+    },
+    {
+      "from": "api.routes.mesh",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "api.routes.mesh",
+      "to": "core.presence_registry"
+    },
+    {
+      "from": "api.routes.mesh",
+      "to": "core.task_router"
+    },
+    {
+      "from": "api.routes.mesh_mailbox",
+      "to": "core.agent_mailbox"
+    },
+    {
+      "from": "api.routes.mesh_tasks",
+      "to": "core.task_router"
     },
     {
       "from": "api.routes.meta_ai",
@@ -2757,7 +2797,7 @@
     },
     {
       "from": "api.routes.realtime_dashboard",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.realtime_dashboard",
@@ -2921,7 +2961,7 @@
     },
     {
       "from": "api.routes.simulator",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "api.routes.simulator",
@@ -3481,7 +3521,7 @@
     },
     {
       "from": "brain.gcp_router",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "brain.gcp_router",
@@ -3494,6 +3534,10 @@
     {
       "from": "brain.mcp_client",
       "to": "core.logging_config"
+    },
+    {
+      "from": "brain.mcp_client",
+      "to": "core.mcp_allowlist"
     },
     {
       "from": "brain.model_registry",
@@ -3709,7 +3753,7 @@
     },
     {
       "from": "core.admin_god",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.admin_god",
@@ -3736,12 +3780,16 @@
       "to": "models.dynamic_agent"
     },
     {
+      "from": "core.agent_mailbox",
+      "to": "core.logging_config"
+    },
+    {
       "from": "core.agent_review_workflow",
       "to": "core.orchestration.trio_pipeline"
     },
     {
       "from": "core.agent_supervisor",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.agent_supervisor",
@@ -3813,7 +3861,7 @@
     },
     {
       "from": "core.agents.framework.task_runner_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.agents.framework.task_runner_agent",
@@ -3825,7 +3873,7 @@
     },
     {
       "from": "core.agents.legacy.system_health_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.agents.legacy.system_health_agent",
@@ -3865,7 +3913,7 @@
     },
     {
       "from": "core.agents.live.vision_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.agents.live.vision_agent",
@@ -3878,6 +3926,10 @@
     {
       "from": "core.ai_memory",
       "to": "core.ai_memory.vector_store"
+    },
+    {
+      "from": "core.ai_memory.retention",
+      "to": "core.logging_config"
     },
     {
       "from": "core.ai_memory.vector_store",
@@ -4061,7 +4113,7 @@
     },
     {
       "from": "core.cache.semantic_cache",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.cache.semantic_cache",
@@ -4364,6 +4416,10 @@
       "to": "services.config_service"
     },
     {
+      "from": "core.clients",
+      "to": "core.clients.render_api"
+    },
+    {
       "from": "core.code_indexer",
       "to": "core.logging_config"
     },
@@ -4617,7 +4673,7 @@
     },
     {
       "from": "core.errors.error_remediation",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.errors.error_remediation",
@@ -4630,6 +4686,18 @@
     {
       "from": "core.errors.error_remediation",
       "to": "core.resilience.circuit_breaker"
+    },
+    {
+      "from": "core.evolution.evolution_orchestrator",
+      "to": "core.evolution.learning_pipeline"
+    },
+    {
+      "from": "core.evolution.evolution_orchestrator",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.evolution.learning_pipeline",
+      "to": "core.logging_config"
     },
     {
       "from": "core.execution_adapters",
@@ -4721,7 +4789,7 @@
     },
     {
       "from": "core.health.self_healer",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.health.self_healer",
@@ -4849,7 +4917,7 @@
     },
     {
       "from": "core.intelligent_silent_catcher",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.intelligent_silent_catcher",
@@ -4997,7 +5065,7 @@
     },
     {
       "from": "core.llm.llm_gateway",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.llm.llm_gateway",
@@ -5021,7 +5089,7 @@
     },
     {
       "from": "core.llm.llm_gateway.completion",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.llm.llm_gateway.completion",
@@ -5125,7 +5193,7 @@
     },
     {
       "from": "core.llm.llm_gateway.litellm_runtime",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.llm.llm_gateway.litellm_runtime",
@@ -5149,7 +5217,7 @@
     },
     {
       "from": "core.llm.llm_gateway.routing",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.llm.llm_gateway.routing",
@@ -5309,7 +5377,7 @@
     },
     {
       "from": "core.messaging.gcp_pubsub_queue",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.messaging.gcp_pubsub_queue",
@@ -5325,7 +5393,7 @@
     },
     {
       "from": "core.messaging.nats_messaging",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.messaging.nats_messaging",
@@ -5365,7 +5433,7 @@
     },
     {
       "from": "core.microvm_sandbox",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.microvm_sandbox",
@@ -5398,6 +5466,10 @@
     {
       "from": "core.middleware.health_aware_middleware",
       "to": "services.config_service"
+    },
+    {
+      "from": "core.middleware.origin_shield",
+      "to": "core.logging_config"
     },
     {
       "from": "core.middleware.query_timing",
@@ -5504,8 +5576,12 @@
       "to": "core.logging_config"
     },
     {
+      "from": "core.optimization.optimized_redis_client",
+      "to": "core.resilience.circuit_breaker"
+    },
+    {
       "from": "core.optimization.performance_optimizer",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.optimization.performance_optimizer",
@@ -5517,7 +5593,7 @@
     },
     {
       "from": "core.orchestration.agent_orchestrator",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.orchestration.agent_orchestrator",
@@ -5697,7 +5773,7 @@
     },
     {
       "from": "core.persistence.pooled_pg",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.persistence.pooled_pg",
@@ -5808,6 +5884,10 @@
       "to": "core.plugins.mcp_security"
     },
     {
+      "from": "core.presence_registry",
+      "to": "core.logging_config"
+    },
+    {
       "from": "core.provider_rate_limiter",
       "to": "core.config"
     },
@@ -5853,7 +5933,7 @@
     },
     {
       "from": "core.queue.task_queue_enhanced",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.queue.task_queue_enhanced",
@@ -5889,7 +5969,7 @@
     },
     {
       "from": "core.reliability_controller",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.reliability_controller",
@@ -5954,6 +6034,10 @@
     {
       "from": "core.resilience.predictive_circuit_breaker",
       "to": "core.logging_config"
+    },
+    {
+      "from": "core.resilience.predictive_circuit_breaker",
+      "to": "core.resilience.circuit_breaker"
     },
     {
       "from": "core.resilience.predictive_circuit_breaker",
@@ -6125,7 +6209,7 @@
     },
     {
       "from": "core.security.protection.honeypot",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.security.protection.honeypot",
@@ -6161,7 +6245,7 @@
     },
     {
       "from": "core.security.rate_limiter",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.security.rate_limiter",
@@ -6173,11 +6257,15 @@
     },
     {
       "from": "core.security.scanning.secret_scanner",
+      "to": "core.contracts.security_policy"
+    },
+    {
+      "from": "core.security.scanning.secret_scanner",
       "to": "core.logging_config"
     },
     {
       "from": "core.security.secret_vault",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.security.secret_vault",
@@ -6201,7 +6289,7 @@
     },
     {
       "from": "core.security.security_vault",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.security.security_vault",
@@ -6216,8 +6304,8 @@
       "to": "core.security.secure_credential_store"
     },
     {
-      "from": "core.security.ssrf_protection",
-      "to": "core.security.protection.ssrf_protection"
+      "from": "core.security.tool_gateway",
+      "to": "core.contracts.security_policy"
     },
     {
       "from": "core.security.tool_gateway",
@@ -6241,7 +6329,7 @@
     },
     {
       "from": "core.self_evolution.agent_breeder",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.self_evolution.agent_breeder",
@@ -6257,7 +6345,7 @@
     },
     {
       "from": "core.self_evolution.auto_skill_creator",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.self_evolution.auto_skill_creator",
@@ -6298,6 +6386,10 @@
     {
       "from": "core.self_evolution.daily_learner",
       "to": "services.llm.llm_router"
+    },
+    {
+      "from": "core.self_evolution.digital_twin",
+      "to": "core.contracts.security_policy"
     },
     {
       "from": "core.self_evolution.digital_twin",
@@ -6373,7 +6465,7 @@
     },
     {
       "from": "core.self_evolution.self_evolution_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.self_evolution.self_evolution_agent",
@@ -6413,7 +6505,7 @@
     },
     {
       "from": "core.services",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.shutdown",
@@ -6462,6 +6554,10 @@
     {
       "from": "core.skill_manager",
       "to": "core.mcp_client"
+    },
+    {
+      "from": "core.skill_manager",
+      "to": "core.security.codegen_gate"
     },
     {
       "from": "core.skill_manager",
@@ -6628,6 +6724,10 @@
       "to": "core.effective_policy"
     },
     {
+      "from": "core.task_router",
+      "to": "core.logging_config"
+    },
+    {
       "from": "core.telemetry",
       "to": "core.observability.telemetry"
     },
@@ -6681,7 +6781,7 @@
     },
     {
       "from": "core.tier8.agent_evolution_engine",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.tier8.agent_evolution_engine",
@@ -6837,7 +6937,7 @@
     },
     {
       "from": "core.utils.firestore_helpers",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "core.utils.firestore_helpers",
@@ -6921,11 +7021,15 @@
     },
     {
       "from": "database.tenant_db",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "database.tenant_db",
       "to": "core.logging_config"
+    },
+    {
+      "from": "debug_ci_boot",
+      "to": "tests.core.test_allowed_hosts_policy"
     },
     {
       "from": "docs.examples.retry_integration_example",
@@ -7254,6 +7358,18 @@
     {
       "from": "integrations.e2b_adapter",
       "to": "integrations._flags"
+    },
+    {
+      "from": "integrations.github_webhook",
+      "to": "core.config"
+    },
+    {
+      "from": "integrations.github_webhook",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.github_webhook",
+      "to": "core.task_router"
     },
     {
       "from": "integrations.graphiti_adapter",
@@ -8413,7 +8529,7 @@
     },
     {
       "from": "scripts.refactor_root_cause",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "scripts.refactor_root_cause",
@@ -8516,6 +8632,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "services.auto_healer",
+      "to": "core.resilience.circuit_breaker"
+    },
+    {
       "from": "services.config_service",
       "to": "core.logging_config"
     },
@@ -8589,7 +8709,7 @@
     },
     {
       "from": "services.email.email_service",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "services.email.email_service",
@@ -8849,11 +8969,19 @@
     },
     {
       "from": "services.render_account_service",
+      "to": "core.clients.render_api"
+    },
+    {
+      "from": "services.render_account_service",
       "to": "core.logging_config"
     },
     {
       "from": "services.render_account_service",
       "to": "database.supabase_client"
+    },
+    {
+      "from": "services.render_preflight_service",
+      "to": "core.clients.render_api"
     },
     {
       "from": "services.rider_tracker",
@@ -9180,6 +9308,26 @@
       "to": "core.app"
     },
     {
+      "from": "tests.api.routes.test_admin_routes_full",
+      "to": "core.cache.redis_manager"
+    },
+    {
+      "from": "tests.api.routes.test_browser_routes_full",
+      "to": "api.routes.browser_routes"
+    },
+    {
+      "from": "tests.api.routes.test_browser_routes_full",
+      "to": "core.security.protection.ssrf_protection"
+    },
+    {
+      "from": "tests.api.routes.test_deep_research_full",
+      "to": "api.deps"
+    },
+    {
+      "from": "tests.api.routes.test_deep_research_full",
+      "to": "api.routes.deep_research"
+    },
+    {
       "from": "tests.api.routes.test_mcp_hub",
       "to": "database.session"
     },
@@ -9188,12 +9336,52 @@
       "to": "database.session"
     },
     {
+      "from": "tests.api.routes.test_mesh_heartbeat",
+      "to": "api.routes.mesh"
+    },
+    {
+      "from": "tests.api.routes.test_mesh_heartbeat",
+      "to": "core.presence_registry"
+    },
+    {
+      "from": "tests.api.routes.test_mesh_mailbox",
+      "to": "api.routes.mesh_mailbox"
+    },
+    {
+      "from": "tests.api.routes.test_mesh_mailbox",
+      "to": "core.agent_mailbox"
+    },
+    {
+      "from": "tests.api.routes.test_mesh_tasks",
+      "to": "api.routes.mesh"
+    },
+    {
+      "from": "tests.api.routes.test_mesh_tasks",
+      "to": "api.routes.mesh_tasks"
+    },
+    {
+      "from": "tests.api.routes.test_mesh_tasks",
+      "to": "core.presence_registry"
+    },
+    {
+      "from": "tests.api.routes.test_mesh_tasks",
+      "to": "core.task_router"
+    },
+    {
       "from": "tests.api.routes.test_missions_boundaries",
       "to": "api.dependencies"
     },
     {
       "from": "tests.api.routes.test_missions_boundaries",
       "to": "database.session"
+    },
+    {
+      "from": "tests.api.routes.test_slash_commands_full",
+      "to": "api.deps"
+    },
+    {
+      "from": "tests.api.routes.test_slash_commands_full",
+      "to": "api.routes.slash_commands"
     },
     {
       "from": "tests.api.test_admin",
@@ -9334,6 +9522,14 @@
     {
       "from": "tests.api.test_files_endpoint",
       "to": "api.routes.files"
+    },
+    {
+      "from": "tests.api.test_github_webhook",
+      "to": "core.task_router"
+    },
+    {
+      "from": "tests.api.test_github_webhook",
+      "to": "integrations.github_webhook"
     },
     {
       "from": "tests.api.test_graph_routes",
@@ -9584,6 +9780,14 @@
       "to": "core.contracts.policy"
     },
     {
+      "from": "tests.core.evolution.test_learning_pipeline",
+      "to": "core.evolution.evolution_orchestrator"
+    },
+    {
+      "from": "tests.core.evolution.test_learning_pipeline",
+      "to": "core.evolution.learning_pipeline"
+    },
+    {
       "from": "tests.core.health.test_uptime_tracker_observability",
       "to": "core.health"
     },
@@ -9628,6 +9832,18 @@
       "to": "core.orchestration.conversation_orchestrator"
     },
     {
+      "from": "tests.core.orchestration.test_swarm_agent_roles_full",
+      "to": "core.orchestration"
+    },
+    {
+      "from": "tests.core.orchestration.test_swarm_agent_roles_full",
+      "to": "core.orchestration.swarm_agent_roles"
+    },
+    {
+      "from": "tests.core.orchestration.test_swarm_agent_roles_full",
+      "to": "models.shared_workspace"
+    },
+    {
       "from": "tests.core.orchestration.test_swarm_orchestrator",
       "to": "core.orchestration.swarm_orchestrator"
     },
@@ -9664,12 +9880,100 @@
       "to": "core.queue.task_queue_enhanced"
     },
     {
+      "from": "tests.core.queue.test_task_queue_enhanced_full",
+      "to": "core.config"
+    },
+    {
+      "from": "tests.core.queue.test_task_queue_enhanced_full",
+      "to": "core.queue"
+    },
+    {
+      "from": "tests.core.queue.test_task_queue_enhanced_full",
+      "to": "core.queue.task_queue_enhanced"
+    },
+    {
+      "from": "tests.core.queue.test_task_queue_full",
+      "to": "core.config"
+    },
+    {
+      "from": "tests.core.queue.test_task_queue_full",
+      "to": "core.queue"
+    },
+    {
+      "from": "tests.core.queue.test_task_queue_full",
+      "to": "core.queue.task_queue"
+    },
+    {
+      "from": "tests.core.security.test_ast_scanner_full",
+      "to": "core.security.scanning.ast_scanner"
+    },
+    {
+      "from": "tests.core.security.test_behavioral_analyzer_full",
+      "to": "core.security.intelligence.behavioral_analyzer"
+    },
+    {
+      "from": "tests.core.security.test_behavioral_analyzer_full",
+      "to": "core.security.intelligence.behavioral_analyzer"
+    },
+    {
+      "from": "tests.core.security.test_compliance_bot_full",
+      "to": "core.security.audit.compliance_bot"
+    },
+    {
+      "from": "tests.core.security.test_enhanced_ast_scanner_full",
+      "to": "core.security.enhanced_ast_scanner"
+    },
+    {
+      "from": "tests.core.security.test_enhanced_ast_scanner_full",
+      "to": "core.security.enhanced_ast_scanner"
+    },
+    {
+      "from": "tests.core.security.test_honeypot_full",
+      "to": "core.security.protection.honeypot"
+    },
+    {
+      "from": "tests.core.security.test_honeypot_full",
+      "to": "core.security.protection.honeypot"
+    },
+    {
       "from": "tests.core.security.test_oauth_csrf",
       "to": "api.routes.integrations"
     },
     {
       "from": "tests.core.security.test_oauth_csrf",
       "to": "core.config"
+    },
+    {
+      "from": "tests.core.security.test_origin_validator_full",
+      "to": "core.security.origin_validator"
+    },
+    {
+      "from": "tests.core.security.test_origin_validator_full",
+      "to": "core.security.origin_validator"
+    },
+    {
+      "from": "tests.core.security.test_secret_scanner_full",
+      "to": "core.security.scanning.secret_scanner"
+    },
+    {
+      "from": "tests.core.security.test_secret_scanner_full",
+      "to": "core.security.scanning.secret_scanner"
+    },
+    {
+      "from": "tests.core.security.test_secret_vault_full",
+      "to": "core.security.secret_vault"
+    },
+    {
+      "from": "tests.core.security.test_secret_vault_full",
+      "to": "core.security.secret_vault"
+    },
+    {
+      "from": "tests.core.security.test_secure_credential_store_full",
+      "to": "core.security.secure_credential_store"
+    },
+    {
+      "from": "tests.core.security.test_secure_credential_store_full",
+      "to": "core.security.secure_credential_store"
     },
     {
       "from": "tests.core.test_admin_dashboard_full",
@@ -9710,6 +10014,14 @@
     {
       "from": "tests.core.test_agent_supervisor_shutdown",
       "to": "core.agent_supervisor"
+    },
+    {
+      "from": "tests.core.test_ai_memory_retention",
+      "to": "core.ai_memory"
+    },
+    {
+      "from": "tests.core.test_ai_memory_retention",
+      "to": "core.ai_memory.retention"
     },
     {
       "from": "tests.core.test_allowed_hosts_policy",
@@ -9892,6 +10204,10 @@
       "to": "core.circles.registry"
     },
     {
+      "from": "tests.core.test_circuit_breaker",
+      "to": "core.resilience.circuit_breaker"
+    },
+    {
       "from": "tests.core.test_cloud_provider_cache",
       "to": "core.llm.providers.cloud_adapter"
     },
@@ -9938,6 +10254,14 @@
     {
       "from": "tests.core.test_config_validation",
       "to": "core.pgbouncer_pool"
+    },
+    {
+      "from": "tests.core.test_config_validator_full",
+      "to": "core.config_validator"
+    },
+    {
+      "from": "tests.core.test_config_validator_full",
+      "to": "core.config_validator"
     },
     {
       "from": "tests.core.test_constants",
@@ -10176,6 +10500,10 @@
       "to": "core.human_behavior"
     },
     {
+      "from": "tests.core.test_idempotency_lock_cache_response",
+      "to": "core.cache.redis_manager"
+    },
+    {
       "from": "tests.core.test_idempotency_middleware",
       "to": "core.idempotency_middleware"
     },
@@ -10336,12 +10664,32 @@
       "to": "core.microvm_sandbox"
     },
     {
+      "from": "tests.core.test_microvm_sandbox_full",
+      "to": "core.microvm_sandbox"
+    },
+    {
+      "from": "tests.core.test_microvm_sandbox_full",
+      "to": "core.microvm_sandbox"
+    },
+    {
       "from": "tests.core.test_model_registry_readiness",
       "to": "brain.model_registry"
     },
     {
       "from": "tests.core.test_models_evolution",
       "to": "models.evolution"
+    },
+    {
+      "from": "tests.core.test_monitoring_full",
+      "to": "core.monitoring"
+    },
+    {
+      "from": "tests.core.test_monitoring_full",
+      "to": "core.monitoring"
+    },
+    {
+      "from": "tests.core.test_multi_layer_cache_full",
+      "to": "core.cache.multi_layer_cache"
     },
     {
       "from": "tests.core.test_multi_tenant_isolation",
@@ -10400,6 +10748,14 @@
       "to": "core.config"
     },
     {
+      "from": "tests.core.test_performance_enhancer_full",
+      "to": "core.performance_enhancer"
+    },
+    {
+      "from": "tests.core.test_performance_enhancer_full",
+      "to": "core.performance_enhancer"
+    },
+    {
       "from": "tests.core.test_pgbouncer_pool",
       "to": "core.pgbouncer_pool"
     },
@@ -10434,6 +10790,22 @@
     {
       "from": "tests.core.test_query_cache_coverage",
       "to": "core.cache.query_cache"
+    },
+    {
+      "from": "tests.core.test_rate_limit_atomic",
+      "to": "core.cache.rate_limit_atomic"
+    },
+    {
+      "from": "tests.core.test_rate_limit_full",
+      "to": "core.cache.redis_manager"
+    },
+    {
+      "from": "tests.core.test_rate_limit_full",
+      "to": "core.config"
+    },
+    {
+      "from": "tests.core.test_rate_limit_full",
+      "to": "core.rate_limit"
     },
     {
       "from": "tests.core.test_rbac",
@@ -10496,12 +10868,28 @@
       "to": "core.security.secret_vault"
     },
     {
+      "from": "tests.core.test_secret_vault_async_env_899",
+      "to": "core.security.secret_vault"
+    },
+    {
       "from": "tests.core.test_security",
       "to": "core.config"
     },
     {
       "from": "tests.core.test_security_firewall",
       "to": "core.security.protection.prompt_firewall"
+    },
+    {
+      "from": "tests.core.test_security_pipeline_898",
+      "to": "core.security.api_key_limiter"
+    },
+    {
+      "from": "tests.core.test_security_pipeline_898",
+      "to": "core.security.origin_validator"
+    },
+    {
+      "from": "tests.core.test_security_pipeline_898",
+      "to": "core.security.security_pipeline"
     },
     {
       "from": "tests.core.test_security_rate_limit_backend",
@@ -10546,6 +10934,10 @@
     {
       "from": "tests.core.test_skill_execution_pipeline",
       "to": "core.skill_manager"
+    },
+    {
+      "from": "tests.core.test_skill_manager",
+      "to": "core.security.codegen_gate"
     },
     {
       "from": "tests.core.test_skill_manager",
@@ -10634,6 +11026,10 @@
     {
       "from": "tests.core.test_task_contract",
       "to": "core.queue.task_contract"
+    },
+    {
+      "from": "tests.core.test_task_router",
+      "to": "core.task_router"
     },
     {
       "from": "tests.core.test_tier8",
@@ -10756,6 +11152,22 @@
       "to": "engine.vector_db"
     },
     {
+      "from": "tests.hitl.test_hitl_approval_contract",
+      "to": "services.hitl"
+    },
+    {
+      "from": "tests.hitl.test_hitl_approval_contract",
+      "to": "services.hitl.dispatch"
+    },
+    {
+      "from": "tests.hitl.test_hitl_approval_contract",
+      "to": "services.hitl.engine"
+    },
+    {
+      "from": "tests.hitl.test_hitl_engine",
+      "to": "services.hitl.engine"
+    },
+    {
       "from": "tests.learning.test_learning",
       "to": "learning.experience"
     },
@@ -10862,6 +11274,10 @@
     {
       "from": "tests.middleware.test_m13_config_and_failmode",
       "to": "middleware.tenant_rate_limiter"
+    },
+    {
+      "from": "tests.middleware.test_origin_shield",
+      "to": "core.middleware.origin_shield"
     },
     {
       "from": "tests.missions.test_mission_orchestration",
@@ -11137,7 +11553,15 @@
     },
     {
       "from": "tests.security.test_codegen_gate_fail_closed",
+      "to": "core.skill_manager"
+    },
+    {
+      "from": "tests.security.test_codegen_gate_fail_closed",
       "to": "services.tool_forge"
+    },
+    {
+      "from": "tests.security.test_codegen_gate_fail_closed",
+      "to": "tools.code.safe_executor"
     },
     {
       "from": "tests.security.test_codegen_gate_fail_closed",
@@ -11153,7 +11577,7 @@
     },
     {
       "from": "tests.security.test_hardening_controls",
-      "to": "core.security.ssrf_protection"
+      "to": "core.security.protection.ssrf_protection"
     },
     {
       "from": "tests.security.test_hardening_controls",
@@ -11204,6 +11628,10 @@
       "to": "core.security.injections.sql_prevention"
     },
     {
+      "from": "tests.security.test_ssrf_protection",
+      "to": "core.security.protection.ssrf_protection"
+    },
+    {
       "from": "tests.security.test_telegram_admin_identity",
       "to": "core.config"
     },
@@ -11222,6 +11650,18 @@
     {
       "from": "tests.services.dynamic_ai.test_learning_engine_shim",
       "to": "services.dynamic_ai.orchestrator"
+    },
+    {
+      "from": "tests.services.test_auto_healer_full",
+      "to": "core.resilience.circuit_breaker"
+    },
+    {
+      "from": "tests.services.test_auto_healer_full",
+      "to": "services.auto_healer"
+    },
+    {
+      "from": "tests.services.test_auto_healer_full",
+      "to": "services.auto_healer"
     },
     {
       "from": "tests.services.test_config_registry",
@@ -11322,6 +11762,14 @@
     {
       "from": "tests.services.test_living_engine",
       "to": "services.living_engine"
+    },
+    {
+      "from": "tests.services.test_llm_providers_full",
+      "to": "services.llm"
+    },
+    {
+      "from": "tests.services.test_llm_providers_full",
+      "to": "services.llm.providers"
     },
     {
       "from": "tests.services.test_llm_router",
@@ -11708,8 +12156,36 @@
       "to": "workers.synaptic_dream"
     },
     {
-      "from": "tests.tools.test_agent_tools",
-      "to": "tools.agent_tools"
+      "from": "tests.tools.code.test_code_smell_detector_full",
+      "to": "tools.code.code_smell_detector"
+    },
+    {
+      "from": "tests.tools.code.test_code_smell_detector_full",
+      "to": "tools.code.code_smell_detector"
+    },
+    {
+      "from": "tests.tools.code.test_pre_commit_ai_full",
+      "to": "tools.code.pre_commit_ai"
+    },
+    {
+      "from": "tests.tools.code.test_pre_commit_ai_full",
+      "to": "tools.code.pre_commit_ai"
+    },
+    {
+      "from": "tests.tools.mcp.test_mcp_neon_full",
+      "to": "tools.mcp.mcp_neon"
+    },
+    {
+      "from": "tests.tools.mcp.test_mcp_supabase_full",
+      "to": "tools.mcp.mcp_supabase"
+    },
+    {
+      "from": "tests.tools.social.test_viral_referral_engine_full",
+      "to": "tools.social.viral_referral_engine"
+    },
+    {
+      "from": "tests.tools.social.test_viral_referral_engine_full",
+      "to": "tools.social.viral_referral_engine"
     },
     {
       "from": "tests.tools.test_auto_coverage_improver",
@@ -11790,6 +12266,14 @@
     {
       "from": "tests.tools.test_local_code_executor",
       "to": "tools.code.local_code_executor"
+    },
+    {
+      "from": "tests.tools.test_mcp_github_write",
+      "to": "tools.mcp.mcp_github_cicd"
+    },
+    {
+      "from": "tests.tools.test_mcp_github_write_tools",
+      "to": "tools.mcp.mcp_github_cicd"
     },
     {
       "from": "tests.tools.test_mcp_server_kg",
@@ -12229,7 +12713,7 @@
     },
     {
       "from": "tools.code.code_smell_detector",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "tools.code.code_smell_detector",
@@ -12300,6 +12784,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "tools.code.safe_executor",
+      "to": "core.security.codegen_gate"
+    },
+    {
       "from": "tools.code.voice_coder",
       "to": "core.logging_config"
     },
@@ -12313,7 +12801,7 @@
     },
     {
       "from": "tools.collaborative_editor",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "tools.collaborative_editor",
@@ -12533,7 +13021,7 @@
     },
     {
       "from": "tools.learning.skill_recommender",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "tools.learning.skill_recommender",
@@ -12549,7 +13037,7 @@
     },
     {
       "from": "tools.learning.style_learner",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "tools.learning.style_learner",
@@ -12594,6 +13082,10 @@
     {
       "from": "tools.mcp.mcp_github_cicd",
       "to": "core.config"
+    },
+    {
+      "from": "tools.mcp.mcp_github_cicd",
+      "to": "core.mcp_audit"
     },
     {
       "from": "tools.mcp.mcp_github_cicd",
@@ -12793,7 +13285,7 @@
     },
     {
       "from": "tools.self_planner",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "tools.self_planner",
@@ -12801,7 +13293,7 @@
     },
     {
       "from": "tools.social.email_agent",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "tools.social.email_agent",
@@ -13009,11 +13501,15 @@
     },
     {
       "from": "workers.chaos_worker",
-      "to": "core.error_bus"
+      "to": "core.errors.error_bus"
     },
     {
       "from": "workers.chaos_worker",
       "to": "core.logging_config"
+    },
+    {
+      "from": "workers.chaos_worker",
+      "to": "core.resilience.circuit_breaker"
     },
     {
       "from": "workers.chaos_worker",
@@ -13028,7 +13524,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1884,
+  "module_count": 1951,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -13122,6 +13618,7 @@
     "alembic_migrations.versions.2026_09_13_090000_add_crawler_persistence",
     "alembic_migrations.versions.2026_09_13_100000_add_ai_memory_table",
     "alembic_migrations.versions.2026_09_14_010000_create_mcp_gateway_tables",
+    "alembic_migrations.versions.2026_09_14_120000_add_mission_orchestration_tables",
     "alembic_migrations.versions.2026_09_15_020000_create_task_records",
     "alembic_migrations.versions.2026_09_15_120000_create_canonical_run_tables",
     "alembic_migrations.versions.2026_09_15_130000_add_context_metadata_to_chat_attachments",
@@ -13278,6 +13775,9 @@
     "api.routes.mcp_marketplace",
     "api.routes.media",
     "api.routes.memory",
+    "api.routes.mesh",
+    "api.routes.mesh_mailbox",
+    "api.routes.mesh_tasks",
     "api.routes.meta_ai",
     "api.routes.metrics",
     "api.routes.missions",
@@ -13388,6 +13888,7 @@
     "core.admin_god",
     "core.advanced_reasoning",
     "core.agent_factory",
+    "core.agent_mailbox",
     "core.agent_review_workflow",
     "core.agent_supervisor",
     "core.agents",
@@ -13407,6 +13908,7 @@
     "core.agents.live.computer_agent",
     "core.agents.live.vision_agent",
     "core.ai_memory",
+    "core.ai_memory.retention",
     "core.ai_memory.vector_store",
     "core.app",
     "core.app_builder",
@@ -13467,6 +13969,8 @@
     "core.circles.manifests",
     "core.circles.registry",
     "core.circuit_breaker",
+    "core.clients",
+    "core.clients.render_api",
     "core.cloud_storage",
     "core.code_indexer",
     "core.code_validator",
@@ -13512,8 +14016,6 @@
     "core.embeddings",
     "core.enum_guard",
     "core.env_validator",
-    "core.error_bus",
-    "core.error_handler",
     "core.error_pattern_db",
     "core.error_remediation",
     "core.errors",
@@ -13521,6 +14023,9 @@
     "core.errors.error_handler",
     "core.errors.error_pattern_db",
     "core.errors.error_remediation",
+    "core.evolution",
+    "core.evolution.evolution_orchestrator",
+    "core.evolution.learning_pipeline",
     "core.evolution_module",
     "core.exceptions",
     "core.execution_adapters",
@@ -13641,6 +14146,7 @@
     "core.microvm_sandbox",
     "core.middleware.docs_auth",
     "core.middleware.health_aware_middleware",
+    "core.middleware.origin_shield",
     "core.middleware.query_timing",
     "core.middleware.security",
     "core.models",
@@ -13707,6 +14213,7 @@
     "core.plugins.permission_manager",
     "core.plugins.security_scanner",
     "core.plugins.seed_manifests",
+    "core.presence_registry",
     "core.prompt_handler",
     "core.prompts.ai_handshake_prompt",
     "core.provider_rate_limiter",
@@ -13739,6 +14246,7 @@
     "core.retry_budget",
     "core.retry_handler",
     "core.router",
+    "core.routing.cloudflare_edge_pool",
     "core.rules_mutator",
     "core.scheduled_task_sweep",
     "core.schema_exporter",
@@ -13775,7 +14283,6 @@
     "core.security.secure_credential_store",
     "core.security.security_pipeline",
     "core.security.security_vault",
-    "core.security.ssrf_protection",
     "core.security.tool_gateway",
     "core.security.ws_auth",
     "core.self_benchmark",
@@ -13822,6 +14329,7 @@
     "core.target_registry",
     "core.task_contract",
     "core.task_policy",
+    "core.task_router",
     "core.telemetry",
     "core.telemetry.system_telemetry",
     "core.tenant_db",
@@ -13858,6 +14366,7 @@
     "database.storage_client",
     "database.supabase_client",
     "database.tenant_db",
+    "debug_ci_boot",
     "docs.examples.retry_integration_example",
     "ecosystem",
     "ecosystem._store",
@@ -13914,6 +14423,7 @@
     "integrations._flags",
     "integrations.browser_use_adapter",
     "integrations.e2b_adapter",
+    "integrations.github_webhook",
     "integrations.graphiti_adapter",
     "integrations.mem0_adapter",
     "integrations.openhands_adapter",
@@ -14219,15 +14729,22 @@
     "tests.api.routes.commandcenter.test_overview",
     "tests.api.routes.commandcenter.test_secure",
     "tests.api.routes.commandcenter.test_system",
+    "tests.api.routes.test_admin_routes_full",
+    "tests.api.routes.test_browser_routes_full",
     "tests.api.routes.test_config_contract",
     "tests.api.routes.test_connections",
     "tests.api.routes.test_conversations_list",
+    "tests.api.routes.test_deep_research_full",
     "tests.api.routes.test_global_memory_stats",
     "tests.api.routes.test_knowledge_search_seed",
     "tests.api.routes.test_mcp_hub",
     "tests.api.routes.test_mcp_hub_contract",
+    "tests.api.routes.test_mesh_heartbeat",
+    "tests.api.routes.test_mesh_mailbox",
+    "tests.api.routes.test_mesh_tasks",
     "tests.api.routes.test_missions_boundaries",
     "tests.api.routes.test_session_stream",
+    "tests.api.routes.test_slash_commands_full",
     "tests.api.routes.test_tenant_admin_isolation",
     "tests.api.test_admin",
     "tests.api.test_admin_ramp",
@@ -14258,6 +14775,7 @@
     "tests.api.test_errors",
     "tests.api.test_feedback",
     "tests.api.test_files_endpoint",
+    "tests.api.test_github_webhook",
     "tests.api.test_graph_routes",
     "tests.api.test_health",
     "tests.api.test_hitl_route_ownership",
@@ -14289,6 +14807,8 @@
     "tests.byoc.test_cloud_connector",
     "tests.byoc.test_container_orchestrator",
     "tests.byoc.test_resource_manager",
+    "tests.ci.pr_helper.test_ai_fix_generator",
+    "tests.ci.pr_helper.test_intelligent_decision",
     "tests.cloud_db_load_test",
     "tests.conftest",
     "tests.context.test_context_budget",
@@ -14308,12 +14828,15 @@
     "tests.core.contracts.test_redaction",
     "tests.core.contracts.test_security_policy",
     "tests.core.contracts.test_sqlite_store",
+    "tests.core.evolution",
+    "tests.core.evolution.test_learning_pipeline",
     "tests.core.health.test_uptime_tracker_observability",
     "tests.core.intelligence.test_control_plane",
     "tests.core.intelligence.test_synaptic_risk",
     "tests.core.orchestration.test_conversation_orchestrator",
     "tests.core.orchestration.test_hub_spokes",
     "tests.core.orchestration.test_spoke_contracts",
+    "tests.core.orchestration.test_swarm_agent_roles_full",
     "tests.core.orchestration.test_swarm_orchestrator",
     "tests.core.orchestration.test_synthetic_business_workflows",
     "tests.core.orchestration.test_trio_pipeline",
@@ -14322,7 +14845,18 @@
     "tests.core.plugins.test_manifest_registry",
     "tests.core.plugins.test_security_scanner",
     "tests.core.queue.test_task_queue_enhanced",
+    "tests.core.queue.test_task_queue_enhanced_full",
+    "tests.core.queue.test_task_queue_full",
+    "tests.core.security.test_ast_scanner_full",
+    "tests.core.security.test_behavioral_analyzer_full",
+    "tests.core.security.test_compliance_bot_full",
+    "tests.core.security.test_enhanced_ast_scanner_full",
+    "tests.core.security.test_honeypot_full",
     "tests.core.security.test_oauth_csrf",
+    "tests.core.security.test_origin_validator_full",
+    "tests.core.security.test_secret_scanner_full",
+    "tests.core.security.test_secret_vault_full",
+    "tests.core.security.test_secure_credential_store_full",
     "tests.core.test_admin_dashboard_full",
     "tests.core.test_admin_god",
     "tests.core.test_admin_god_security",
@@ -14330,6 +14864,7 @@
     "tests.core.test_advanced_wiring",
     "tests.core.test_agent_factory",
     "tests.core.test_agent_supervisor_shutdown",
+    "tests.core.test_ai_memory_retention",
     "tests.core.test_allowed_hosts_policy",
     "tests.core.test_approval_manager",
     "tests.core.test_audit_logger",
@@ -14341,6 +14876,7 @@
     "tests.core.test_automation_idempotency_coverage",
     "tests.core.test_autonoguard_engine",
     "tests.core.test_autonoguard_middleware",
+    "tests.core.test_batch4_contracts",
     "tests.core.test_bengali_text",
     "tests.core.test_billing_system",
     "tests.core.test_billing_zero_cost",
@@ -14351,6 +14887,7 @@
     "tests.core.test_capability_activation",
     "tests.core.test_capability_discovery",
     "tests.core.test_capability_gateway",
+    "tests.core.test_circuit_breaker",
     "tests.core.test_cloud_provider_cache",
     "tests.core.test_cloud_sandbox",
     "tests.core.test_code_indexer",
@@ -14361,6 +14898,7 @@
     "tests.core.test_config_cache",
     "tests.core.test_config_proxy",
     "tests.core.test_config_validation",
+    "tests.core.test_config_validator_full",
     "tests.core.test_constants",
     "tests.core.test_container_auditor",
     "tests.core.test_context_and_actions",
@@ -14426,6 +14964,7 @@
     "tests.core.test_health_ttl_cache",
     "tests.core.test_hotfix_regressions",
     "tests.core.test_human_behavior",
+    "tests.core.test_idempotency_lock_cache_response",
     "tests.core.test_idempotency_middleware",
     "tests.core.test_immune_system",
     "tests.core.test_immune_system_scanner",
@@ -14454,8 +14993,11 @@
     "tests.core.test_memory_manager",
     "tests.core.test_memory_service",
     "tests.core.test_microvm_sandbox",
+    "tests.core.test_microvm_sandbox_full",
     "tests.core.test_model_registry_readiness",
     "tests.core.test_models_evolution",
+    "tests.core.test_monitoring_full",
+    "tests.core.test_multi_layer_cache_full",
     "tests.core.test_multi_tenant_isolation",
     "tests.core.test_multicloud",
     "tests.core.test_nats_messaging",
@@ -14465,6 +15007,7 @@
     "tests.core.test_output_validator",
     "tests.core.test_output_validator_coverage",
     "tests.core.test_payments",
+    "tests.core.test_performance_enhancer_full",
     "tests.core.test_pgbouncer_pool",
     "tests.core.test_playwright_manager",
     "tests.core.test_predictive_resilience",
@@ -14473,6 +15016,8 @@
     "tests.core.test_pubsub",
     "tests.core.test_qa_suite_honesty",
     "tests.core.test_query_cache_coverage",
+    "tests.core.test_rate_limit_atomic",
+    "tests.core.test_rate_limit_full",
     "tests.core.test_rate_limiter_lua_invariants",
     "tests.core.test_rbac",
     "tests.core.test_reasoning_orchestrator",
@@ -14484,8 +15029,11 @@
     "tests.core.test_schema_validator",
     "tests.core.test_scraper_resolution",
     "tests.core.test_secret_vault",
+    "tests.core.test_secret_vault_async_env_899",
     "tests.core.test_security",
+    "tests.core.test_security_and_intelligence_contracts",
     "tests.core.test_security_firewall",
+    "tests.core.test_security_pipeline_898",
     "tests.core.test_security_rate_limit_backend",
     "tests.core.test_security_regression",
     "tests.core.test_security_vault",
@@ -14507,6 +15055,7 @@
     "tests.core.test_swarm_pubsub_extended",
     "tests.core.test_target_registry",
     "tests.core.test_task_contract",
+    "tests.core.test_task_router",
     "tests.core.test_tier8",
     "tests.core.test_tier8_evolution",
     "tests.core.test_token_budget",
@@ -14525,6 +15074,7 @@
     "tests.engine.test_tree_of_thought",
     "tests.engine.test_vector_db",
     "tests.factories",
+    "tests.hitl.test_hitl_approval_contract",
     "tests.hitl.test_hitl_engine",
     "tests.integration.test_integration_suite",
     "tests.learning.test_learning",
@@ -14543,8 +15093,10 @@
     "tests.memory.test_supabase_store_fallback",
     "tests.middleware.test_anti_hacking",
     "tests.middleware.test_cors_policy",
+    "tests.middleware.test_docs_auth_contract",
     "tests.middleware.test_m13_config_and_failmode",
     "tests.middleware.test_middleware_anti_hacking",
+    "tests.middleware.test_origin_shield",
     "tests.missions.test_mission_failure_modes",
     "tests.missions.test_mission_orchestration",
     "tests.missions.test_mission_seal_and_recovery",
@@ -14587,6 +15139,7 @@
     "tests.scripts.test_generate_firebase_config",
     "tests.scripts.test_import_knowledge_base_rollback",
     "tests.scripts.test_plan_backend_test_groups",
+    "tests.scripts.test_resolve_production_targets",
     "tests.security.test_admin_fail_closed",
     "tests.security.test_adversarial_webhook_signatures",
     "tests.security.test_auth",
@@ -14601,10 +15154,12 @@
     "tests.security.test_patch_v4_render_log_fixes",
     "tests.security.test_refresh_path_regression",
     "tests.security.test_sql_prevention",
+    "tests.security.test_ssrf_protection",
     "tests.security.test_telegram_admin_identity",
     "tests.security.test_tool_policy_gateway",
     "tests.security.test_ws_auth",
     "tests.services.dynamic_ai.test_learning_engine_shim",
+    "tests.services.test_auto_healer_full",
     "tests.services.test_config_registry",
     "tests.services.test_diagram_parser_service",
     "tests.services.test_dynamic_planner",
@@ -14625,6 +15180,7 @@
     "tests.services.test_knowledge_qa",
     "tests.services.test_language_router",
     "tests.services.test_living_engine",
+    "tests.services.test_llm_providers_full",
     "tests.services.test_llm_router",
     "tests.services.test_memory_service",
     "tests.services.test_minio_client",
@@ -14680,7 +15236,12 @@
     "tests.test_task_gateway",
     "tests.test_tenant_di",
     "tests.test_workers_phase5",
-    "tests.tools.test_agent_tools",
+    "tests.tools.code.test_code_smell_detector_full",
+    "tests.tools.code.test_pre_commit_ai_full",
+    "tests.tools.mcp.conftest",
+    "tests.tools.mcp.test_mcp_neon_full",
+    "tests.tools.mcp.test_mcp_supabase_full",
+    "tests.tools.social.test_viral_referral_engine_full",
     "tests.tools.test_auto_coverage_improver",
     "tests.tools.test_auto_test_generator",
     "tests.tools.test_bengali_ocr_converter",
@@ -14698,6 +15259,8 @@
     "tests.tools.test_image_to_code_react",
     "tests.tools.test_knowledge_base_indexer",
     "tests.tools.test_local_code_executor",
+    "tests.tools.test_mcp_github_write",
+    "tests.tools.test_mcp_github_write_tools",
     "tests.tools.test_mcp_server_kg",
     "tests.tools.test_mcp_telegram",
     "tests.tools.test_meta_architect_coverage_full",
