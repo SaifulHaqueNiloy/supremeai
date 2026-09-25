@@ -25,17 +25,16 @@ interface StepProps {
   data: Record<string, string>;
   updateData: (updates: Record<string, string>) => void;
   nextStep: () => void;
-  prevStep: () => void;
 }
 
-const StepModelSelect = ({ data, updateData, nextStep, prevStep }: StepProps) => {
+const StepModelSelect = ({ data, updateData, nextStep }: StepProps) => {
   useEffect(() => {
     loadSupremeBranding();
   }, []);
 
   return (
     <div className="flex flex-col space-y-4 animate-fadeIn">
-      <h3 className="text-xl font-semibold">Step 2: Choose your default brain</h3>
+      <h3 className="text-xl font-semibold">Step 1: Choose your default brain</h3>
       <p className="text-gray-400 text-sm">You can always change this later. SupremeAI will route tasks to the best model automatically.</p>
 
       <div className="space-y-3 mt-4">
@@ -61,12 +60,7 @@ const StepModelSelect = ({ data, updateData, nextStep, prevStep }: StepProps) =>
       </div>
 
       <div className="flex justify-between pt-6">
-        <button
-          onClick={prevStep}
-          className="px-6 py-2 text-gray-400 hover:text-white transition-colors"
-        >
-          Back
-        </button>
+        <span aria-hidden="true" />
         <button
           onClick={nextStep}
           className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium shadow-lg shadow-blue-500/30"

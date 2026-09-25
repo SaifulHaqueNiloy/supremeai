@@ -1,12 +1,22 @@
 import { useState } from 'react';
-import StepApiKey from './StepApiKey';
 import StepModelSelect from './StepModelSelect';
 import StepFirstChat from './StepFirstChat';
 
+/**
+ * Zero-config onboarding (Wave 2.6, issue #1243 — plan: customer_onboarding_flow.md).
+ *
+ * The plan's core thesis: "zero-config, 60s, কোনো API key না" — the very first
+ * thing a new user should NOT be asked for is an API key. The previous flow
+ * (`StepApiKey → StepModelSelect → StepFirstChat`) violated the plan by leading
+ * with the API-key wall (CONFLICT_ANALYSIS verdict: plan correct, code wrong).
+ *
+ * New flow: StepModelSelect (Step 1) → StepFirstChat (Step 2) — first task in
+ * 60 seconds, no key required. StepApiKey.tsx remains on disk (unused) per the
+ * "no file deletion" doctrine (WAVE_MASTER_PLAN §10 rule 4).
+ */
 const OnboardingWizard = () => {
   const [step, setStep] = useState(1);
   const [onboardingData, setOnboardingData] = useState({
-    apiKey: '',
     model: 'gpt-4o',
     firstPrompt: ''
   });
@@ -25,15 +35,14 @@ const OnboardingWizard = () => {
 
         {/* Progress Bar */}
         <div className="flex justify-between mb-8">
-          {[1, 2, 3].map((num) => (
-            <div key={num} className={`w-1/3 h-2 rounded-full mx-1 ${step >= num ? 'bg-blue-500' : 'bg-gray-600'}`} />
+          {[1, 2].map((num) => (
+            <div key={num} className={`w-1/2 h-2 rounded-full mx-1 ${step >= num ? 'bg-blue-500' : 'bg-gray-600'}`} />
           ))}
         </div>
 
-        {/* Steps */}
-        {step === 1 && <StepApiKey data={onboardingData} updateData={handleUpdate} nextStep={nextStep} />}
-        {step === 2 && <StepModelSelect data={onboardingData} updateData={handleUpdate} nextStep={nextStep} prevStep={prevStep} />}
-        {step === 3 && <StepFirstChat data={onboardingData} updateData={handleUpdate} prevStep={prevStep} />}
+        {/* Steps — zero-config: model first, first chat second, no API key wall */}
+        {step === 1 && <StepModelSelect data={onboardingData} updateData={handleUpdate} nextStep={nextStep} />}
+        {step === 2 && <StepFirstChat data={onboardingData} updateData={handleUpdate} prevStep={prevStep} />}
       </div>
     </div>
   );

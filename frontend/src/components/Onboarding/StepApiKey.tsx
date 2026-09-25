@@ -1,3 +1,9 @@
+/**
+ * DEPRECATED (Wave 2.6, issue #1243): zero-config onboarding removed the
+ * API-key wall from the wizard flow (plan: customer_onboarding_flow.md —
+ * "zero-config, 60s, কোনো API key না"). Kept on disk per the no-file-delete
+ * doctrine (WAVE_MASTER_PLAN §10 rule 4); NOT imported by OnboardingWizard.
+ */
 
 interface StepApiKeyData {
   apiKey?: string;
