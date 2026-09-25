@@ -191,5 +191,36 @@
       "expires_on": "2026-10-03",
       "active": true
     }
+  },
+  "zai_action_log_watcher": {
+    "agent_name": "zai_action_log_watcher",
+    "system_prompt": "You are z.ai action log watcher \u2014 you watch GitHub Actions logs, detect failures, report them, and create issues.",
+    "tools": [
+      "filesystem_read",
+      "shell_exec",
+      "github_workflow_runs",
+      "github_get_failed_logs",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "open_pull_requests",
+      "comment_on_issues"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "z.ai action log watcher \u2014 watches GitHub Actions logs, detects failures, reports + creates issues. Persistent branch: agent-12.",
+    "metadata": {
+      "slot": "agent-12",
+      "tool_label": "z.ai action log watcher",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
   }
 }
