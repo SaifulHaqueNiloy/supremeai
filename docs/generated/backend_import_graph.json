@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3388,
+  "edge_count": 3391,
   "edges": [
     {
       "from": "adapters",
@@ -9764,6 +9764,18 @@
       "to": "context_engine.engine"
     },
     {
+      "from": "tests.contracts.test_contract_baseline",
+      "to": "core.config"
+    },
+    {
+      "from": "tests.contracts.test_contract_baseline",
+      "to": "core.config_parsers"
+    },
+    {
+      "from": "tests.contracts.test_contract_baseline",
+      "to": "core.security.origin_validator"
+    },
+    {
       "from": "tests.core.automation.test_execution_recorder",
       "to": "core.automation.execution_recorder"
     },
@@ -13556,7 +13568,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1954,
+  "module_count": 1955,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -14850,6 +14862,7 @@
     "tests.context.test_context_scopes",
     "tests.context_engine.test_budget_config",
     "tests.context_engine.test_context_engine",
+    "tests.contracts.test_contract_baseline",
     "tests.core.automation.test_execution_recorder",
     "tests.core.automation.test_execution_recorder_run_bridge",
     "tests.core.conftest",
