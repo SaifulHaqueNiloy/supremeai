@@ -1029,6 +1029,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/alembic_migrations/versions/t7u8v9w0x1y2_recreate_performance_metrics.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/alembic_migrations/versions/tier_s_features.py"
     },
     {
@@ -4111,6 +4118,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/config_fields.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/config_parsers.py"
     },
     {
       "capability_signals": [],
@@ -15470,6 +15486,13 @@
       "path": "backend/tests/unit_light/test_async_rate_limiter_lua.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/unit_light/test_config_parsers.py"
+    },
+    {
       "capability_signals": [
         "execute"
       ],
@@ -25495,15 +25518,6 @@
     {
       "capability_signals": [],
       "classification": "human_review",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "scripts/sync_render_secrets.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/tenant/__init__.py"
@@ -25705,5 +25719,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2952
+  "source_file_count": 2954
 }
