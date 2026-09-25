@@ -25758,6 +25758,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "health",
         "mcp"
       ],
