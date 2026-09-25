@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3398,
+  "edge_count": 3392,
   "edges": [
     {
       "from": "adapters",
@@ -1090,6 +1090,18 @@
     {
       "from": "api.routes.admin_dashboard.endpoints_security",
       "to": "core.utils.time_utils"
+    },
+    {
+      "from": "api.routes.admin_dashboard.endpoints_security_memory",
+      "to": "api.routes.admin_dashboard"
+    },
+    {
+      "from": "api.routes.admin_dashboard.endpoints_security_memory",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "api.routes.admin_dashboard.endpoints_security_memory",
+      "to": "core.utils.background_tasks"
     },
     {
       "from": "api.routes.admin_dashboard.endpoints_users",
@@ -2346,6 +2358,10 @@
     {
       "from": "api.routes.hitl_admin",
       "to": "services.hitl.engine"
+    },
+    {
+      "from": "api.routes.hitl_admin",
+      "to": "services.hitl.resume_token"
     },
     {
       "from": "api.routes.hybrid_search",
@@ -4904,10 +4920,6 @@
       "to": "core.models"
     },
     {
-      "from": "core.intelligence",
-      "to": "core.router"
-    },
-    {
       "from": "core.intelligence.manual_tasks",
       "to": "core.intelligence.models"
     },
@@ -5262,10 +5274,6 @@
     {
       "from": "core.llm.llm_gateway.streaming",
       "to": "core.logging_config"
-    },
-    {
-      "from": "core.llm.llm_gateway_with_learning",
-      "to": "core.unified_learning"
     },
     {
       "from": "core.llm.provider_router",
@@ -5968,18 +5976,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "core.queue.task_router",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.queue.task_router",
-      "to": "core.orchestration.cloud_sandbox_orchestrator"
-    },
-    {
-      "from": "core.queue.task_router",
-      "to": "tools.code.local_code_executor"
-    },
-    {
       "from": "core.rag.hybrid_retriever",
       "to": "core.rag.sparse_bm25"
     },
@@ -6082,10 +6078,6 @@
     {
       "from": "core.retry_handler",
       "to": "core.logging_config"
-    },
-    {
-      "from": "core.router",
-      "to": "core.unified_router"
     },
     {
       "from": "core.rules_mutator",
@@ -6309,27 +6301,27 @@
     },
     {
       "from": "core.security.secure_credential_store",
+      "to": "core.config"
+    },
+    {
+      "from": "core.security.secure_credential_store",
+      "to": "core.errors.error_bus"
+    },
+    {
+      "from": "core.security.secure_credential_store",
       "to": "core.logging_config"
+    },
+    {
+      "from": "core.security.secure_credential_store",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.security.secure_credential_store",
+      "to": "core.messaging.event_bus"
     },
     {
       "from": "core.security.security_pipeline",
       "to": "core.logging_config"
-    },
-    {
-      "from": "core.security.security_vault",
-      "to": "core.config"
-    },
-    {
-      "from": "core.security.security_vault",
-      "to": "core.errors.error_bus"
-    },
-    {
-      "from": "core.security.security_vault",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.security.security_vault",
-      "to": "core.messaging.event_bus"
     },
     {
       "from": "core.security.security_vault",
@@ -8548,26 +8540,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "scripts.migrate_llm_routers",
-      "to": "core.llm.llm_gateway"
-    },
-    {
-      "from": "scripts.migrate_llm_routers",
-      "to": "core.llm.llm_gateway_with_learning"
-    },
-    {
-      "from": "scripts.migrate_llm_routers",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "scripts.migrate_llm_routers",
-      "to": "core.resilience.circuit_breaker_manager"
-    },
-    {
-      "from": "scripts.migrate_llm_routers",
-      "to": "services.llm.llm_router"
-    },
-    {
       "from": "scripts.refactor_root_cause",
       "to": "core.errors.error_bus"
     },
@@ -8808,6 +8780,10 @@
       "to": "database.tenant_db"
     },
     {
+      "from": "services.hitl.resume_token",
+      "to": "core.logging_config"
+    },
+    {
       "from": "services.ide_trio.gemini_writer",
       "to": "core.config"
     },
@@ -8842,6 +8818,10 @@
     {
       "from": "services.knowledge_qa",
       "to": "core.llm.llm_gateway"
+    },
+    {
+      "from": "services.knowledge_qa",
+      "to": "core.logging_config"
     },
     {
       "from": "services.knowledge_qa",
@@ -10058,10 +10038,6 @@
     {
       "from": "tests.core.test_agent_factory",
       "to": "core.agent_factory"
-    },
-    {
-      "from": "tests.core.test_agent_factory",
-      "to": "core.queue.task_router"
     },
     {
       "from": "tests.core.test_agent_supervisor_shutdown",
@@ -11804,6 +11780,14 @@
       "to": "services.hitl.engine"
     },
     {
+      "from": "tests.services.test_hitl_resume_token",
+      "to": "services.hitl.engine"
+    },
+    {
+      "from": "tests.services.test_hitl_resume_token",
+      "to": "services.hitl.resume_token"
+    },
+    {
       "from": "tests.services.test_integration_layer",
       "to": "core.integration_layer"
     },
@@ -12476,10 +12460,6 @@
       "to": "core.rate_limit_quota"
     },
     {
-      "from": "tests.unit_light.test_router",
-      "to": "core.router"
-    },
-    {
       "from": "tests.unit_light.test_rules_mutator",
       "to": "core"
     },
@@ -12969,10 +12949,6 @@
     },
     {
       "from": "tools.devops.on_premise_deployer",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "tools.ensemble_router",
       "to": "core.logging_config"
     },
     {
@@ -13596,7 +13572,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1960,
+  "module_count": 1956,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -13742,6 +13718,7 @@
     "api.routes.admin_dashboard.endpoints_metrics",
     "api.routes.admin_dashboard.endpoints_router_cfg",
     "api.routes.admin_dashboard.endpoints_security",
+    "api.routes.admin_dashboard.endpoints_security_memory",
     "api.routes.admin_dashboard.endpoints_users",
     "api.routes.admin_dashboard.endpoints_ws",
     "api.routes.admin_librarian",
@@ -14181,7 +14158,6 @@
     "core.llm.llm_gateway.routing",
     "core.llm.llm_gateway.spend_meter",
     "core.llm.llm_gateway.streaming",
-    "core.llm.llm_gateway_with_learning",
     "core.llm.provider_router",
     "core.llm.providers",
     "core.llm.providers.cloud_adapter",
@@ -14189,7 +14165,6 @@
     "core.llm.telemetry",
     "core.llm.token_budget",
     "core.llm.token_deductor",
-    "core.llm_router",
     "core.localization",
     "core.localization.bhasha_bot",
     "core.localization.voice_didi",
@@ -14301,7 +14276,6 @@
     "core.queue.task_contract",
     "core.queue.task_queue",
     "core.queue.task_queue_enhanced",
-    "core.queue.task_router",
     "core.rag",
     "core.rag.hybrid_retriever",
     "core.rag.sparse_bm25",
@@ -14321,7 +14295,6 @@
     "core.resilience.safety_rollback_manager",
     "core.retry_budget",
     "core.retry_handler",
-    "core.router",
     "core.routing.cloudflare_edge_pool",
     "core.rules_mutator",
     "core.scheduled_task_sweep",
@@ -14686,7 +14659,6 @@
     "scripts.load_seed_data",
     "scripts.migrate_embeddings",
     "scripts.migrate_files_to_db",
-    "scripts.migrate_llm_routers",
     "scripts.refactor_logging",
     "scripts.refactor_root_cause",
     "scripts.run_chaos_experiment",
@@ -14724,6 +14696,7 @@
     "services.hitl.dispatch",
     "services.hitl.engine",
     "services.hitl.hitl_ledger",
+    "services.hitl.resume_token",
     "services.ide_trio",
     "services.ide_trio.cline_checker",
     "services.ide_trio.gemini_writer",
@@ -14807,6 +14780,7 @@
     "tests.api.routes.commandcenter.test_secure",
     "tests.api.routes.commandcenter.test_system",
     "tests.api.routes.test_admin_routes_full",
+    "tests.api.routes.test_admin_security_telemetry",
     "tests.api.routes.test_browser_routes_full",
     "tests.api.routes.test_config_contract",
     "tests.api.routes.test_connections",
@@ -15254,6 +15228,7 @@
     "tests.services.test_health_monitor_routes",
     "tests.services.test_hitl_canonical_mirror",
     "tests.services.test_hitl_dispatch",
+    "tests.services.test_hitl_resume_token",
     "tests.services.test_integration_layer",
     "tests.services.test_intent_deciphering",
     "tests.services.test_intent_router",
@@ -15280,7 +15255,6 @@
     "tests.services.test_self_correction",
     "tests.services.test_services_internet_monitor",
     "tests.services.test_task_and_evolution_governance",
-    "tests.services.test_task_router",
     "tests.services.test_tool_forge",
     "tests.services.test_video_to_code_pipeline",
     "tests.test_adversarial_security",
@@ -15378,7 +15352,6 @@
     "tests.unit_light.test_ld_client",
     "tests.unit_light.test_messaging_models",
     "tests.unit_light.test_rate_limit_quota",
-    "tests.unit_light.test_router",
     "tests.unit_light.test_rules_mutator",
     "tests.unit_light.test_search",
     "tests.unit_light.test_security_api_key_limiter",
@@ -15457,7 +15430,6 @@
     "tools.devops.gcp_cloud_functions",
     "tools.devops.github_agent",
     "tools.devops.on_premise_deployer",
-    "tools.ensemble_router",
     "tools.ephemeral_synthesizer",
     "tools.freebuff_client",
     "tools.graph_service",

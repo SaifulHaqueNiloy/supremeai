@@ -4,7 +4,7 @@
 
 | metric | value |
 |---|---|
-| backend routes | 823 |
+| backend routes | 826 |
 | routes with frontend consumer | 263 |
 | unique frontend `/api/...` refs | 142 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
@@ -18,7 +18,7 @@
 | classification | count | meaning |
 |---|---|---|
 | `user-facing` | 161 | frontend consumer matched |
-| `admin-only` | 321 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `admin-only` | 324 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
@@ -257,6 +257,8 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/admin-api/security-scan` | `backend/api/routes/admin_dashboard/endpoints_security.py` | admin-only | NONE |
 | POST | `/admin-api/security-scan` | `backend/api/routes/admin_dashboard/endpoints_security.py` | admin-only | NONE |
 | GET | `/admin-api/security-scan/findings` | `backend/api/routes/admin_dashboard/endpoints_security.py` | admin-only | NONE |
+| GET | `/admin-api/security/memory` | `backend/api/routes/admin_dashboard/endpoints_security_memory.py` | admin-only | NONE |
+| GET | `/admin-api/security/tasks` | `backend/api/routes/admin_dashboard/endpoints_security_memory.py` | admin-only | NONE |
 | GET | `/admin-api/service-categories` | `backend/api/routes/service_topology.py` | admin-only | NONE |
 | GET | `/admin-api/service-topology` | `backend/api/routes/service_topology.py` | admin-only | NONE |
 | GET | `/admin-api/sessions` | `backend/api/routes/admin_dashboard/endpoints_crud.py` | admin-only | NONE |
@@ -756,6 +758,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/hitl/pending` | `backend/api/routes/hitl_admin.py` | admin-only | `frontend/src/data/hooks.ts` |
 | POST | `/api/v1/hitl/reject/:param` | `backend/api/routes/approval_manager.py` | admin-only | `frontend/src/data/hooks.ts` |
 | POST | `/api/v1/hitl/reject/:param` | `backend/api/routes/hitl_admin.py` | admin-only | `frontend/src/data/hooks.ts` |
+| GET | `/api/v1/hitl/resume/:param` | `backend/api/routes/hitl_admin.py` | admin-only | NONE |
 | POST | `/api/v1/integrations/discover` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/OneLinerMCPConnect.test.tsx`, `frontend/src/components/dashboard/OneLinerMCPConnect.tsx` |
 | GET | `/api/v1/integrations/github/callback` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
 | GET | `/api/v1/integrations/github/link` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |

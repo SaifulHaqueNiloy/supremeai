@@ -1295,6 +1295,15 @@
       "path": "backend/api/routes/admin_dashboard/endpoints_security.py"
     },
     {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_security_memory.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -2078,6 +2087,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "dispatch"
       ],
       "classification": "human_review",
@@ -5226,13 +5236,6 @@
       "path": "backend/core/llm/llm_gateway/streaming.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/llm/llm_gateway_with_learning.py"
-    },
-    {
       "capability_signals": [
         "health"
       ],
@@ -5289,13 +5292,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/llm/token_deductor.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/llm_router.py"
     },
     {
       "capability_signals": [],
@@ -6287,16 +6283,6 @@
       "path": "backend/core/queue/task_queue_enhanced.py"
     },
     {
-      "capability_signals": [
-        "dispatch",
-        "execute"
-      ],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/queue/task_router.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -6454,13 +6440,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/retry_handler.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/router.py"
     },
     {
       "capability_signals": [],
@@ -7409,7 +7388,9 @@
       "path": "backend/core/utils/__init__.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -9576,17 +9557,6 @@
       "path": "backend/scripts/migrate_files_to_db.py"
     },
     {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "canonical",
-      "entrypoints": [
-        "main"
-      ],
-      "kind": "py",
-      "path": "backend/scripts/migrate_llm_routers.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -9913,6 +9883,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/services/hitl/hitl_ledger.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/services/hitl/resume_token.py"
     },
     {
       "capability_signals": [],
@@ -10610,6 +10587,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/routes/test_admin_routes_full.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_admin_security_telemetry.py"
     },
     {
       "capability_signals": [
@@ -11827,7 +11813,6 @@
     },
     {
       "capability_signals": [
-        "dispatch",
         "execute"
       ],
       "classification": "test",
@@ -14563,6 +14548,15 @@
     },
     {
       "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/services/test_hitl_resume_token.py"
+    },
+    {
+      "capability_signals": [
         "health",
         "memory"
       ],
@@ -14782,13 +14776,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/services/test_task_and_evolution_governance.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/services/test_task_router.py"
     },
     {
       "capability_signals": [
@@ -15625,13 +15612,6 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/tests/unit_light/test_router.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/tests/unit_light/test_rules_mutator.py"
     },
     {
@@ -16254,13 +16234,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tools/devops/on_premise_deployer.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tools/ensemble_router.py"
     },
     {
       "capability_signals": [
@@ -21083,10 +21056,7 @@
       "path": "frontend/src/store/dashboardStore.test.ts"
     },
     {
-      "capability_signals": [
-        "browser",
-        "health"
-      ],
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
@@ -25835,5 +25805,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2965
+  "source_file_count": 2961
 }
