@@ -1448,7 +1448,7 @@ if __name__ == "__main__":
 
     uvicorn.run(
         "ecosystem.standalone_app:app",
-        host="0.0.0.0",
+        host=os.getenv("ECOSYSTEM_BIND_HOST", default="0.0.0.0"),
         port=int(os.getenv("PORT", "8000")),
         reload=False,
     )
