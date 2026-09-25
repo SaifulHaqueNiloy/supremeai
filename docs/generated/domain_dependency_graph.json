@@ -3652,7 +3652,7 @@
     {
       "evidence": [
         {
-          "line": 18,
+          "line": 20,
           "path": "backend/api/routes/browser/_render_proxy.py"
         }
       ],
@@ -4882,7 +4882,7 @@
     {
       "evidence": [
         {
-          "line": 11,
+          "line": 10,
           "path": "backend/core/security/origin_validator.py"
         }
       ],
