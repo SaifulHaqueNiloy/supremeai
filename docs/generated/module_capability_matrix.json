@@ -4438,13 +4438,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/error_bus.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/error_pattern_db.py"
     },
     {
@@ -25712,5 +25705,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2953
+  "source_file_count": 2952
 }
