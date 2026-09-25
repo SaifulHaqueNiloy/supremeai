@@ -762,7 +762,7 @@
     {
       "evidence": [
         {
-          "line": 35,
+          "line": 37,
           "path": "backend/services/llm/llm_router.py"
         }
       ],
@@ -772,18 +772,8 @@
     {
       "evidence": [
         {
-          "line": 36,
+          "line": 38,
           "path": "backend/services/llm/llm_router.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 19,
-          "path": "backend/services/llm/providers.py"
         }
       ],
       "source": "ai",
@@ -793,6 +783,16 @@
       "evidence": [
         {
           "line": 20,
+          "path": "backend/services/llm/providers.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 21,
           "path": "backend/services/llm/providers.py"
         }
       ],
@@ -982,7 +982,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 18,
           "path": "backend/api/routes/billing_api.py"
         }
       ],
@@ -992,7 +992,7 @@
     {
       "evidence": [
         {
-          "line": 18,
+          "line": 21,
           "path": "backend/api/routes/billing_api.py"
         }
       ],
@@ -1002,7 +1002,7 @@
     {
       "evidence": [
         {
-          "line": 22,
+          "line": 23,
           "path": "backend/api/routes/billing_api.py"
         }
       ],
@@ -1192,7 +1192,7 @@
     {
       "evidence": [
         {
-          "line": 21,
+          "line": 20,
           "path": "backend/api/routes/billing_api.py"
         }
       ],
@@ -1232,7 +1232,7 @@
     {
       "evidence": [
         {
-          "line": 20,
+          "line": 19,
           "path": "backend/api/routes/billing_api.py"
         }
       ],
@@ -2642,7 +2642,7 @@
     {
       "evidence": [
         {
-          "line": 10,
+          "line": 11,
           "path": "backend/tools/learning/agent_knowledge_store.py"
         }
       ],
@@ -3092,7 +3092,7 @@
     {
       "evidence": [
         {
-          "line": 11,
+          "line": 10,
           "path": "backend/tools/learning/agent_knowledge_store.py"
         }
       ],
@@ -4252,7 +4252,7 @@
     {
       "evidence": [
         {
-          "line": 18,
+          "line": 20,
           "path": "backend/core/security/api_key_middleware.py"
         }
       ],
