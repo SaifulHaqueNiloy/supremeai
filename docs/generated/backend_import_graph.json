@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3395,
+  "edge_count": 3396,
   "edges": [
     {
       "from": "adapters",
@@ -1717,15 +1717,7 @@
     },
     {
       "from": "api.routes.browser._surf_actions",
-      "to": "api.deps"
-    },
-    {
-      "from": "api.routes.browser._surf_actions",
       "to": "api.routes.browser"
-    },
-    {
-      "from": "api.routes.browser._surf_actions",
-      "to": "api.routes.browser._state"
     },
     {
       "from": "api.routes.browser._surf_controls",
@@ -9776,6 +9768,18 @@
       "to": "context_engine.engine"
     },
     {
+      "from": "tests.contracts.test_contract_baseline",
+      "to": "core.config"
+    },
+    {
+      "from": "tests.contracts.test_contract_baseline",
+      "to": "core.config_parsers"
+    },
+    {
+      "from": "tests.contracts.test_contract_baseline",
+      "to": "core.security.origin_validator"
+    },
+    {
       "from": "tests.core.automation.test_execution_recorder",
       "to": "core.automation.execution_recorder"
     },
@@ -13584,7 +13588,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1958,
+  "module_count": 1960,
   "modules": [
     "adapters",
     "adapters.base_adapter",
@@ -14810,6 +14814,7 @@
     "tests.api.routes.test_missions_boundaries",
     "tests.api.routes.test_session_stream",
     "tests.api.routes.test_slash_commands_full",
+    "tests.api.routes.test_surf_endpoints_retired",
     "tests.api.routes.test_tenant_admin_isolation",
     "tests.api.test_admin",
     "tests.api.test_admin_ramp",
@@ -14881,6 +14886,7 @@
     "tests.context.test_context_scopes",
     "tests.context_engine.test_budget_config",
     "tests.context_engine.test_context_engine",
+    "tests.contracts.test_contract_baseline",
     "tests.core.automation.test_execution_recorder",
     "tests.core.automation.test_execution_recorder_run_bridge",
     "tests.core.conftest",
