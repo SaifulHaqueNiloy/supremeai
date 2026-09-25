@@ -186,8 +186,9 @@ export function AdminShell() {
         try {
           const parsed = JSON.parse(payload) as { token?: string; delta?: string; content?: string; response?: string };
           token = parsed.token ?? parsed.delta ?? parsed.content ?? parsed.response ?? "";
-        } catch {
-          // Plain-text SSE payloads are valid fallbacks.
+        } catch (err) {
+          // Plain-text SSE payloads are valid fallbacks — still log why parsing skipped.
+          console.warn('[admin-shell] SSE payload JSON parse failed, using raw text:', err);
         }
         assistantContent += token;
         setAdminMessages((prev) =>

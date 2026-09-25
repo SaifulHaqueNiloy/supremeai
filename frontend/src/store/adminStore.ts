@@ -86,7 +86,8 @@ const getInitialAdminToken = (): string | null => {
     // Issue #521: tokenStorage read — sessionStorage first, legacy localStorage
     // entries are migrated (and removed) on first read.
     return getAdminToken();
-  } catch {
+  } catch (err) {
+    console.warn('[adminStore] initial admin token read failed, using fallback:', err);
     return null;
   }
 };

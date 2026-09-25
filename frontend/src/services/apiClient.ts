@@ -324,10 +324,11 @@ export const pathRequiresIdempotencyKey = (url: string): boolean => {
     const base = typeof window !== 'undefined' ? window.location.origin : 'https://api.internal';
     const { pathname } = new URL(url, base);
     return IDEMPOTENCY_REQUIRED_PREFIXES.some((p) => pathname.startsWith(p));
-  } catch {
+  } catch (err) {
     // Malformed URL — err on the side of NOT sending the header (it can only
     // cause a CORS preflight failure; the middleware only enforces the 5
     // prefixes above, and a malformed URL can never reach them).
+    console.warn('[api-client] URL parse failed, skipping idempotency header:', err);
     return false;
   }
 };

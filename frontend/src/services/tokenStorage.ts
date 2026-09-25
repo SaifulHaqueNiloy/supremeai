@@ -25,7 +25,8 @@ const hasStorage = (s: Storage | undefined): s is Storage => Boolean(s);
 const getSession = (): Storage | undefined => {
   try {
     return typeof window === 'undefined' ? undefined : window.sessionStorage;
-  } catch {
+  } catch (err) {
+    console.warn('[tokenStorage] sessionStorage unavailable, using fallback:', err);
     return undefined;
   }
 };
@@ -33,7 +34,8 @@ const getSession = (): Storage | undefined => {
 const getLocal = (): Storage | undefined => {
   try {
     return typeof window === 'undefined' ? undefined : window.localStorage;
-  } catch {
+  } catch (err) {
+    console.warn('[tokenStorage] localStorage unavailable, using fallback:', err);
     return undefined;
   }
 };
@@ -50,8 +52,9 @@ const readToken = (key: string): string | null => {
     try {
       const cached = session.getItem(key);
       if (cached) return cached;
-    } catch {
-      // sessionStorage unavailable (privacy mode / SSR) — নীরবে এগোনো।
+    } catch (err) {
+      // sessionStorage অপ্রাপ্য (privacy mode / SSR) — এখন অন্তত সতর্কবার্তা থাকছে।
+      console.warn('[tokenStorage] sessionStorage read failed:', err);
     }
   }
 
@@ -63,15 +66,17 @@ const readToken = (key: string): string | null => {
         if (hasStorage(session)) {
           try {
             session.setItem(key, legacy);
-          } catch {
+          } catch (err) {
             // Migration best-effort — টোকেন যেখানে আছে সেখানেই ব্যবহারযোগ্য।
+            console.warn('[tokenStorage] legacy token migration to sessionStorage failed:', err);
           }
         }
         local.removeItem(key);
         return legacy;
       }
-    } catch {
-      // localStorage unavailable — নীরবে এগোনো।
+    } catch (err) {
+      // localStorage unavailable — এখন অন্তত সতর্কবার্তা থাকছে।
+      console.warn('[tokenStorage] localStorage read failed:', err);
     }
   }
 
@@ -84,8 +89,9 @@ const writeToken = (key: string, token: string): void => {
   if (hasStorage(session)) {
     try {
       session.setItem(key, token);
-    } catch {
+    } catch (err) {
       // sessionStorage full/unavailable — টোকেন মেমোরিতে (updateTokenCache) থাকবে।
+      console.warn('[tokenStorage] sessionStorage write failed, token kept in memory only:', err);
     }
   }
 };
@@ -96,16 +102,16 @@ const clearToken = (key: string): void => {
   if (hasStorage(session)) {
     try {
       session.removeItem(key);
-    } catch {
-      // নীরবে এগোনো।
+    } catch (err) {
+      console.warn('[tokenStorage] sessionStorage removeItem failed:', err);
     }
   }
   const local = getLocal();
   if (hasStorage(local)) {
     try {
       local.removeItem(key);
-    } catch {
-      // নীরবে এগোনো।
+    } catch (err) {
+      console.warn('[tokenStorage] localStorage removeItem failed:', err);
     }
   }
 };
