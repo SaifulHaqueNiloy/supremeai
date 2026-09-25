@@ -5,6 +5,16 @@ SupremeAI Configuration Validator — Fail-Fast at Startup
 Validates ALL required environment variables at startup.
 Provides clear error messages for misconfiguration.
 
+Single source of truth (issue #1260, Wave 3.4): the canonical env-key
+vocabulary lives in ``core/config_classification.py::CONFIG_SPECS``.
+``CONFIG_SCHEMA`` below is a *derived view* of that registry — it declares
+WHICH classified keys this schema validates at startup (a validator-policy
+decision that cannot be filtered out of CONFIG_SPECS attributes, see the
+comment on ``_CONFIG_SCHEMA_ORDER``), then builds one ``VarDefinition`` per
+key, resolving names/aliases through the canonical registry. A key renamed
+or removed in CONFIG_SPECS fails loudly here at import time instead of
+silently drifting.
+
 Usage:
     from core.config_validator import validate_config, ConfigValidationResult
 
@@ -23,6 +33,8 @@ from enum import StrEnum
 from typing import Any
 
 # Issue #542 (BE-10): unify the JWT secret floor with the other validators.
+# Issue #1260 (Wave 3.4): CONFIG_SCHEMA derives from the canonical CONFIG_SPECS.
+from core.config_classification import get_config_spec
 from core.logging_config import logger
 from core.secret_policy import (
     JWT_SECRET_ENV,
@@ -109,55 +121,112 @@ class ConfigValidationResult:
 
 
 # ==========================================================================
-# CONFIGURATION SCHEMA — Define ALL environment variables here
+# CONFIGURATION SCHEMA — derived view over the canonical CONFIG_SPECS
 # ==========================================================================
+# Which classified keys this startup schema validates is validator POLICY, not
+# a classification property: e.g. 112 CONFIG_SPECS entries share the exact
+# (conditional, secret)/(env, vault)/(backend) signature of GEMINI_API_KEY but
+# are deliberately not startup-validated, so no attribute filter can reproduce
+# this subset. It is therefore an explicit ordered tuple, cross-checked against
+# CONFIG_SPECS at import time by _build_config_schema(): renaming/removing a
+# classified key breaks import here with a precise message instead of drifting.
+#
+# Validator-specific semantics (var_type / required / bounds / severity) live
+# in _CONFIG_SCHEMA_PROFILES. USER_CORS_ORIGINS is validated under its legacy
+# name but resolves through the canonical CORS_ORIGINS spec via the registry's
+# alias map — proof the derivation is alias-aware. Descriptions stay the
+# curated validator text: the CONFIG_SPECS descriptions for these keys are
+# still auto-classification placeholders — curate CONFIG_SPECS first, then
+# switch the builder over to spec.description.
+#
+# Keys NOT yet classified in CONFIG_SPECS stay as full definitions in
+# _CONFIG_SCHEMA_OVERRIDES (issue #1260 follow-up: adopt them into
+# CONFIG_SPECS, then move them into _CONFIG_SCHEMA_PROFILES).
 
-CONFIG_SCHEMA: list[VarDefinition] = [
+_CONFIG_SCHEMA_ORDER: tuple[str, ...] = (
     # --- Core ---
-    VarDefinition(
-        name="ENV",
+    "ENV",
+    "PORT",
+    "HOST",
+    # --- Backend URLs ---
+    "BACKEND_URL",
+    # --- CORS ---
+    "USER_CORS_ORIGINS",
+    "ADMIN_CORS_ORIGINS",
+    # --- Security ---
+    JWT_SECRET_ENV,
+    "ENFORCE_ANTI_HACKING",
+    # --- Database ---
+    "DATABASE_URL",
+    # --- LLM Providers ---
+    "GEMINI_API_KEY",
+    "GROQ_API_KEY",
+    "OPENROUTER_API_KEY",
+    # --- Rate Limits ---
+    "GEMINI_RPM_LIMIT",
+    "GROQ_RPM_LIMIT",
+    "OPENROUTER_RPM_LIMIT",
+    # --- Scraper Service ---
+    "SCRAPER_MAX_CONCURRENCY",
+    "SCRAPER_TIMEOUT_SECONDS",
+    # --- Feature Flags ---
+    "SELF_HEALING_ENABLED",
+    "COST_GUARD_ENABLED",
+)
+
+
+@dataclass(frozen=True)
+class _VarProfile:
+    """Startup-validator semantics for one classified key (see profiles map)."""
+
+    description: str = ""
+    var_type: VarType = VarType.STRING
+    required: bool = False
+    default: Any = None
+    pattern: str | None = None  # Regex pattern
+    min_value: int | float | None = None
+    max_value: int | float | None = None
+    allowed_values: tuple[str, ...] | None = None  # For ENUM type
+    severity: Severity = Severity.ERROR
+    examples: tuple[str, ...] = ()
+
+
+_CONFIG_SCHEMA_PROFILES: dict[str, _VarProfile] = {
+    "ENV": _VarProfile(
         var_type=VarType.ENUM,
         required=True,
-        allowed_values=["local", "development", "test", "staging", "production"],
+        allowed_values=("local", "development", "test", "staging", "production"),
         description="Application environment",
-        examples=["development", "production", "local", "test"],
+        examples=("development", "production", "local", "test"),
     ),
-    VarDefinition(
-        name="PORT",
+    "PORT": _VarProfile(
         var_type=VarType.INTEGER,
         default=8080,
         min_value=1024,
         max_value=65535,
         description="Server port",
     ),
-    VarDefinition(name="HOST", default="0.0.0.0", description="Server bind address"),
-    # --- Backend URLs ---
-    VarDefinition(
-        name="BACKEND_URL",
+    "HOST": _VarProfile(default="0.0.0.0", description="Server bind address"),
+    "BACKEND_URL": _VarProfile(
         var_type=VarType.URL,
         required=True,
         severity=Severity.WARNING,
         pattern=r"^https?://.+",
         description="Public backend URL",
-        examples=["https://api.example.com"],
+        examples=("https://api.example.com",),
     ),
-    # --- CORS ---
-    VarDefinition(
-        name="USER_CORS_ORIGINS",
+    "USER_CORS_ORIGINS": _VarProfile(
         var_type=VarType.LIST,
         default=[],
         description="Allowed CORS origins for user portal",
-        examples=['["https://supremeai.web.app"]'],
+        examples=('["https://supremeai.web.app"]',),
     ),
-    VarDefinition(
-        name="ADMIN_CORS_ORIGINS",
+    "ADMIN_CORS_ORIGINS": _VarProfile(
         var_type=VarType.LIST,
         default=[],
         description="Allowed CORS origins for admin portal",
     ),
-    # --- Security ---
-    VarDefinition(
-        name=JWT_SECRET_ENV,
+    JWT_SECRET_ENV: _VarProfile(
         var_type=VarType.STRING,
         required=True,
         severity=Severity.ERROR,
@@ -169,83 +238,129 @@ CONFIG_SCHEMA: list[VarDefinition] = [
         # as a deprecated alias in _validate_var with a deprecation warning.
         min_value=JWT_SECRET_MIN_LENGTH,
         description=f"JWT signing secret (min {JWT_SECRET_MIN_LENGTH} chars)",
-        examples=["your-super-secret-key-at-least-64-bytes-change-me-0123456789abcdef-abcdef"],
+        examples=("your-super-secret-key-at-least-64-bytes-change-me-0123456789abcdef-abcdef",),
     ),
-    VarDefinition(
-        name="ENFORCE_ANTI_HACKING",
+    "ENFORCE_ANTI_HACKING": _VarProfile(
         var_type=VarType.BOOLEAN,
         default=False,
         description="Enable anti-hacking measures",
     ),
-    # --- Database ---
-    VarDefinition(
-        name="DATABASE_URL",
-        var_type=VarType.URL,
-        severity=Severity.WARNING,
-        description="Database connection URL",
-    ),
-    # --- LLM Providers ---
-    VarDefinition(
-        name="GEMINI_API_KEY",
+    "GEMINI_API_KEY": _VarProfile(
         var_type=VarType.STRING,
         severity=Severity.INFO,
         description="Google Gemini API key",
     ),
-    VarDefinition(
-        name="GROQ_API_KEY",
+    "GROQ_API_KEY": _VarProfile(
         var_type=VarType.STRING,
         severity=Severity.INFO,
         description="Groq API key",
     ),
-    VarDefinition(
-        name="OPENROUTER_API_KEY",
+    "OPENROUTER_API_KEY": _VarProfile(
         var_type=VarType.STRING,
         severity=Severity.INFO,
         description="OpenRouter API key",
     ),
-    # --- Rate Limits ---
-    VarDefinition(
-        name="GEMINI_RPM_LIMIT", var_type=VarType.INTEGER, default=9, min_value=1, max_value=1000
+    "GEMINI_RPM_LIMIT": _VarProfile(
+        var_type=VarType.INTEGER, default=9, min_value=1, max_value=1000
     ),
-    VarDefinition(
-        name="GROQ_RPM_LIMIT", var_type=VarType.INTEGER, default=28, min_value=1, max_value=1000
+    "GROQ_RPM_LIMIT": _VarProfile(
+        var_type=VarType.INTEGER, default=28, min_value=1, max_value=1000
     ),
-    VarDefinition(
-        name="OPENROUTER_RPM_LIMIT",
+    "OPENROUTER_RPM_LIMIT": _VarProfile(
         var_type=VarType.INTEGER,
         default=19,
         min_value=1,
         max_value=1000,
     ),
-    # --- Scraper Service ---
-    VarDefinition(
+}
+
+_CONFIG_SCHEMA_OVERRIDES: dict[str, VarDefinition] = {
+    "DATABASE_URL": VarDefinition(
+        name="DATABASE_URL",
+        var_type=VarType.URL,
+        severity=Severity.WARNING,
+        description="Database connection URL",
+    ),
+    "SCRAPER_MAX_CONCURRENCY": VarDefinition(
         name="SCRAPER_MAX_CONCURRENCY",
         var_type=VarType.INTEGER,
         default=3,
         min_value=1,
         max_value=10,
     ),
-    VarDefinition(
+    "SCRAPER_TIMEOUT_SECONDS": VarDefinition(
         name="SCRAPER_TIMEOUT_SECONDS",
         var_type=VarType.INTEGER,
         default=45,
         min_value=10,
         max_value=300,
     ),
-    # --- Feature Flags ---
-    VarDefinition(
+    "SELF_HEALING_ENABLED": VarDefinition(
         name="SELF_HEALING_ENABLED",
         var_type=VarType.BOOLEAN,
         default=True,
         description="Enable self-healing mode",
     ),
-    VarDefinition(
+    "COST_GUARD_ENABLED": VarDefinition(
         name="COST_GUARD_ENABLED",
         var_type=VarType.BOOLEAN,
         default=True,
         description="Enable cost guard",
     ),
-]
+}
+
+
+def _build_config_schema() -> list[VarDefinition]:
+    """Derive CONFIG_SCHEMA from CONFIG_SPECS + startup-validator profiles.
+
+    Fails loudly when the startup-validation policy and the canonical registry
+    drift apart (unclassified key, missing profile, renamed spec).
+    """
+    schema: list[VarDefinition] = []
+    for name in _CONFIG_SCHEMA_ORDER:
+        override = _CONFIG_SCHEMA_OVERRIDES.get(name)
+        if override is not None:
+            schema.append(override)
+            continue
+        spec = get_config_spec(name)
+        if spec is None:
+            raise RuntimeError(
+                f"CONFIG_SCHEMA member {name!r} is not classified in "
+                "core/config_classification.py CONFIG_SPECS (issue #1260). "
+                "Classify it there (or add it to _CONFIG_SCHEMA_OVERRIDES with "
+                "a reason) before startup validation can use it."
+            )
+        try:
+            profile = _CONFIG_SCHEMA_PROFILES[name]
+        except KeyError as exc:
+            raise RuntimeError(
+                f"CONFIG_SCHEMA member {name!r} has no _CONFIG_SCHEMA_PROFILES "
+                "entry — declare its validation semantics (var_type/required/"
+                "bounds) in core/config_validator.py."
+            ) from exc
+        schema.append(
+            VarDefinition(
+                name=name,
+                var_type=profile.var_type,
+                required=profile.required,
+                default=profile.default,
+                # Curated validator text; spec.description is intentionally NOT
+                # used yet (auto-classified placeholders, see block comment).
+                description=profile.description,
+                pattern=profile.pattern,
+                min_value=profile.min_value,
+                max_value=profile.max_value,
+                allowed_values=list(profile.allowed_values)
+                if profile.allowed_values is not None
+                else None,
+                severity=profile.severity,
+                examples=list(profile.examples),
+            )
+        )
+    return schema
+
+
+CONFIG_SCHEMA: list[VarDefinition] = _build_config_schema()
 
 
 def _validate_var(var_def: VarDefinition, settings_obj: Any = None) -> ValidationError | None:

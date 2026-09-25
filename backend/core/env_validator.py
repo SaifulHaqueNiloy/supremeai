@@ -4,8 +4,17 @@ SupremeAI Environment Validator - 10/10 Production Readiness
 Validates all required environment variables at startup with clear error messages.
 Prevents silent failures from missing configuration.
 
+Single source of truth (issue #1260, Wave 3.4): the canonical env-key vocabulary
+lives in ``core/config_classification.py::CONFIG_SPECS``. ``ENV_REGISTRY`` below
+is a *derived view* of that registry — it declares WHICH classified keys this
+validator checks at boot (a startup-policy decision that cannot be filtered out
+of CONFIG_SPECS attributes, see the comment on ``_ENV_REGISTRY_ORDER``), then
+builds one ``EnvVarDefinition`` per key, resolving names/aliases through the
+canonical registry. A key renamed or removed in CONFIG_SPECS fails loudly here
+at import time instead of silently drifting.
+
 Author: SuperAI Enhancement Patch
-Version: 2.0.0
+Version: 2.1.0
 """
 
 import os
@@ -16,6 +25,8 @@ from typing import Any
 
 # Issue #542 (BE-10): unify the JWT secret floor with the other validators.
 # Issue #567 (BE-16): canonical JWT secret env-var name + deprecated alias.
+# Issue #1260 (Wave 3.4): ENV_REGISTRY derives from the canonical CONFIG_SPECS.
+from core.config_classification import get_config_spec
 from core.logging_config import logger
 from core.secret_policy import (
     JWT_SECRET_DEPRECATED_ENV,
@@ -48,185 +59,282 @@ class EnvVarDefinition:
     documentation_url: str | None = None
 
 
-# Complete environment variable registry based on .env.example
-ENV_REGISTRY: list[EnvVarDefinition] = [
+# ==========================================================================
+# ENV_REGISTRY — derived view over the canonical CONFIG_SPECS (issue #1260)
+# ==========================================================================
+# Boot-validation membership is a startup POLICY, not a classification
+# property: 112 CONFIG_SPECS entries share the exact
+# (conditional, secret)/(env, vault)/(backend) signature of e.g. GEMINI_API_KEY
+# but are deliberately NOT boot-checked, so no attribute filter can reproduce
+# this subset. It is therefore an explicit ordered tuple, cross-checked against
+# CONFIG_SPECS at import time by _build_env_registry(): renaming/removing a
+# classified key breaks import here with a precise message instead of drifting.
+#
+# Validator-specific semantics (severity / pattern / default / min_length) are
+# boot-validator policy and live in _ENV_PROFILES. Descriptions stay the
+# curated validator text: the CONFIG_SPECS descriptions for these keys are
+# still auto-classification placeholders ("needs manual review") — curate
+# CONFIG_SPECS first, then switch the builder over to spec.description.
+
+_ENV_REGISTRY_ORDER: tuple[str, ...] = (
     # ── Core ──────────────────────────────────────────────────────────────
-    EnvVarDefinition(
-        name="ENV",
+    "ENV",
+    "PORT",
+    "HOST",
+    # ── Secrets (CRITICAL in production) ─────────────────────────────────
+    JWT_SECRET_ENV,
+    "SUPREMEAI_ADMIN_PASSWORD_HASH",
+    "SUPREMEAI_ENCRYPTION_KEY",
+    "SUPREMEAI_API_TOKEN",
+    # ── Database (Supabase) ───────────────────────────────────────────────
+    "SUPABASE_URL",
+    "SUPABASE_KEY",
+    "SUPABASE_DATABASE_URL_POOLER",
+    # ── Redis (Upstash) ───────────────────────────────────────────────────
+    "REDIS_URL",
+    "UPSTASH_REDIS_REST_URL",
+    "UPSTASH_REDIS_REST_TOKEN",
+    # ── LLM API Keys (at least one required) ─────────────────────────────
+    "OPENROUTER_API_KEY",
+    "OPENAI_API_KEY",
+    "GEMINI_API_KEY",
+    "GROQ_API_KEY",
+    "NVIDIA_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "HF_API_KEY",
+    # ── Stripe ─────────────────────────────────────────────────────────────
+    "STRIPE_API_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    # ── Infisical (Secret Vault) ──────────────────────────────────────────
+    "INFISICAL_TOKEN",
+    "INFISICAL_CLIENT_ID",
+    "INFISICAL_CLIENT_SECRET",
+    # ── Observability ─────────────────────────────────────────────────────
+    "SENTRY_DSN",
+    "OTLP_ENDPOINT",
+    # ── Security ──────────────────────────────────────────────────────────
+    "ENFORCE_ANTI_HACKING",
+    "OTP_COOLDOWN_SECONDS",
+)
+
+
+@dataclass(frozen=True)
+class _EnvVarProfile:
+    """Boot-validator semantics for one classified key (see _ENV_PROFILES)."""
+
+    severity: EnvSeverity
+    description: str
+    default: str | None = None
+    pattern: str | None = None  # Regex pattern for validation
+    min_length: int | None = None  # Minimum value length (issue #542 / BE-10)
+    examples: tuple[str, ...] = ()
+    documentation_url: str | None = None
+
+
+_ENV_PROFILES: dict[str, _EnvVarProfile] = {
+    "ENV": _EnvVarProfile(
+        severity=EnvSeverity.CRITICAL,
         description="Environment mode (local, staging, production)",
-        severity=EnvSeverity.CRITICAL,
         default="local",
-        examples=["local", "staging", "production"],
+        examples=("local", "staging", "production"),
     ),
-    EnvVarDefinition(
-        name="PORT",
-        description="Server port number",
+    "PORT": _EnvVarProfile(
         severity=EnvSeverity.CRITICAL,
+        description="Server port number",
         default="8080",
         pattern=r"^\d{4,5}$",
     ),
-    EnvVarDefinition(
-        name="HOST",
-        description="Server bind address",
+    "HOST": _EnvVarProfile(
         severity=EnvSeverity.MEDIUM,
+        description="Server bind address",
         default="0.0.0.0",
     ),
-    # ── Secrets (CRITICAL in production) ─────────────────────────────────
-    EnvVarDefinition(
-        name=JWT_SECRET_ENV,
-        description="JWT signing secret (canonical; JWT_SECRET is a deprecated alias)",
+    JWT_SECRET_ENV: _EnvVarProfile(
         severity=EnvSeverity.CRITICAL,
+        description="JWT signing secret (canonical; JWT_SECRET is a deprecated alias)",
         # Issue #542 (BE-10): had no length check, so a too-short secret
         # passed boot validation and blew up mid-request when
         # settings.jwt_secret raised RuntimeError (>=64 floor).
         min_length=JWT_SECRET_MIN_LENGTH,
     ),
-    EnvVarDefinition(
-        name="SUPREMEAI_ADMIN_PASSWORD_HASH",
-        description="Bcrypt hash of admin password",
+    "SUPREMEAI_ADMIN_PASSWORD_HASH": _EnvVarProfile(
         severity=EnvSeverity.CRITICAL,
+        description="Bcrypt hash of admin password",
     ),
-    EnvVarDefinition(
+    "SUPABASE_URL": _EnvVarProfile(
+        severity=EnvSeverity.CRITICAL,
+        description="Supabase project URL",
+        pattern=r"^https://[a-z0-9-]+\.supabase\.co$",
+    ),
+    "SUPABASE_KEY": _EnvVarProfile(
+        severity=EnvSeverity.CRITICAL,
+        description="Supabase anon/public API key",
+        pattern=r"^eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+$",
+    ),
+    "SUPABASE_DATABASE_URL_POOLER": _EnvVarProfile(
+        severity=EnvSeverity.HIGH,
+        description="Supabase pooler connection string (postgresql://)",
+        pattern=r"^postgresql://[^:]+:[^@]+@[^:]+:\d+/.+$",
+    ),
+    "REDIS_URL": _EnvVarProfile(
+        severity=EnvSeverity.HIGH,
+        description="Redis connection URL (redis:// or rediss://)",
+        pattern=r"^red?iss?://[^:]+(:[^@]+)?@[^:]+:\d+/\d*$",
+    ),
+    "UPSTASH_REDIS_REST_TOKEN": _EnvVarProfile(
+        severity=EnvSeverity.MEDIUM,
+        description="Upstash Redis REST authentication token",
+    ),
+    "OPENROUTER_API_KEY": _EnvVarProfile(
+        severity=EnvSeverity.HIGH,
+        description="OpenRouter API key for multi-model access",
+        pattern=r"^sk-or-[a-zA-Z0-9_-]+$",
+    ),
+    "OPENAI_API_KEY": _EnvVarProfile(
+        severity=EnvSeverity.HIGH,
+        description="OpenAI API key (GPT-4, GPT-3.5)",
+        pattern=r"^sk-[a-zA-Z0-9]{48}$",
+    ),
+    "GEMINI_API_KEY": _EnvVarProfile(
+        severity=EnvSeverity.HIGH,
+        description="Google Gemini API key",
+        pattern=r"^AIza[a-zA-Z0-9_-]{35}$",
+    ),
+    "GROQ_API_KEY": _EnvVarProfile(
+        severity=EnvSeverity.LOW,
+        description="Groq API key for fast inference",
+        pattern=r"^gsk_[a-zA-Z0-9]{52}$",
+    ),
+    "NVIDIA_API_KEY": _EnvVarProfile(
+        severity=EnvSeverity.LOW,
+        description="NVIDIA API key for GPU-accelerated inference",
+    ),
+    "DEEPSEEK_API_KEY": _EnvVarProfile(
+        severity=EnvSeverity.LOW,
+        description="DeepSeek API key",
+    ),
+    "STRIPE_WEBHOOK_SECRET": _EnvVarProfile(
+        severity=EnvSeverity.MEDIUM,
+        description="Stripe webhook signature secret",
+        pattern=r"^whsec_[a-zA-Z0-9]+$",
+    ),
+    "INFISICAL_TOKEN": _EnvVarProfile(
+        severity=EnvSeverity.HIGH,
+        description="Infisical authentication token",
+    ),
+    "INFISICAL_CLIENT_ID": _EnvVarProfile(
+        severity=EnvSeverity.HIGH,
+        description="Infisical Machine Identity client ID",
+    ),
+    "INFISICAL_CLIENT_SECRET": _EnvVarProfile(
+        severity=EnvSeverity.HIGH,
+        description="Infisical Machine Identity client secret",
+    ),
+    "SENTRY_DSN": _EnvVarProfile(
+        severity=EnvSeverity.LOW,
+        description="Sentry DSN for error tracking",
+        pattern=r"^https://[a-f0-9]+@[a-z0-9-]+\.ingest\.sentry\.io/\d+$",
+    ),
+    "ENFORCE_ANTI_HACKING": _EnvVarProfile(
+        severity=EnvSeverity.LOW,
+        description="Enable anti-hacking protections",
+        default="false",
+    ),
+    "OTP_COOLDOWN_SECONDS": _EnvVarProfile(
+        severity=EnvSeverity.LOW,
+        description="OTP cooldown period in seconds",
+        default="60",
+    ),
+}
+
+# Boot-checked keys NOT yet classified in CONFIG_SPECS (issue #1260 follow-up:
+# adopt these into CONFIG_SPECS, then move their definitions into
+# _ENV_PROFILES and delete them from this override map). Kept as full
+# definitions so the validator behaviour is unchanged until adoption.
+_ENV_REGISTRY_OVERRIDES: dict[str, EnvVarDefinition] = {
+    "SUPREMEAI_ENCRYPTION_KEY": EnvVarDefinition(
         name="SUPREMEAI_ENCRYPTION_KEY",
         description="Fernet encryption key for sensitive data",
         severity=EnvSeverity.LOW,
     ),
-    EnvVarDefinition(
+    "SUPREMEAI_API_TOKEN": EnvVarDefinition(
         name="SUPREMEAI_API_TOKEN",
         description="Master API token for service-to-service auth",
         severity=EnvSeverity.LOW,
         pattern=r"^sk-[a-zA-Z0-9]{32,}$",
     ),
-    # ── Database (Supabase) ───────────────────────────────────────────────
-    EnvVarDefinition(
-        name="SUPABASE_URL",
-        description="Supabase project URL",
-        severity=EnvSeverity.CRITICAL,
-        pattern=r"^https://[a-z0-9-]+\.supabase\.co$",
-    ),
-    EnvVarDefinition(
-        name="SUPABASE_KEY",
-        description="Supabase anon/public API key",
-        severity=EnvSeverity.CRITICAL,
-        pattern=r"^eyJ[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+\.[a-zA-Z0-9_-]+$",
-    ),
-    EnvVarDefinition(
-        name="SUPABASE_DATABASE_URL_POOLER",
-        description="Supabase pooler connection string (postgresql://)",
-        severity=EnvSeverity.HIGH,
-        pattern=r"^postgresql://[^:]+:[^@]+@[^:]+:\d+/.+$",
-    ),
-    # ── Redis (Upstash) ───────────────────────────────────────────────────
-    EnvVarDefinition(
-        name="REDIS_URL",
-        description="Redis connection URL (redis:// or rediss://)",
-        severity=EnvSeverity.HIGH,
-        pattern=r"^red?iss?://[^:]+(:[^@]+)?@[^:]+:\d+/\d*$",
-    ),
-    EnvVarDefinition(
+    "UPSTASH_REDIS_REST_URL": EnvVarDefinition(
         name="UPSTASH_REDIS_REST_URL",
         description="Upstash Redis REST API endpoint",
         severity=EnvSeverity.MEDIUM,
     ),
-    EnvVarDefinition(
-        name="UPSTASH_REDIS_REST_TOKEN",
-        description="Upstash Redis REST authentication token",
-        severity=EnvSeverity.MEDIUM,
-    ),
-    # ── LLM API Keys (at least one required) ─────────────────────────────
-    EnvVarDefinition(
-        name="OPENROUTER_API_KEY",
-        description="OpenRouter API key for multi-model access",
-        severity=EnvSeverity.HIGH,
-        pattern=r"^sk-or-[a-zA-Z0-9_-]+$",
-    ),
-    EnvVarDefinition(
-        name="OPENAI_API_KEY",
-        description="OpenAI API key (GPT-4, GPT-3.5)",
-        severity=EnvSeverity.HIGH,
-        pattern=r"^sk-[a-zA-Z0-9]{48}$",
-    ),
-    EnvVarDefinition(
-        name="GEMINI_API_KEY",
-        description="Google Gemini API key",
-        severity=EnvSeverity.HIGH,
-        pattern=r"^AIza[a-zA-Z0-9_-]{35}$",
-    ),
-    EnvVarDefinition(
-        name="GROQ_API_KEY",
-        description="Groq API key for fast inference",
-        severity=EnvSeverity.LOW,
-        pattern=r"^gsk_[a-zA-Z0-9]{52}$",
-    ),
-    EnvVarDefinition(
-        name="NVIDIA_API_KEY",
-        description="NVIDIA API key for GPU-accelerated inference",
-        severity=EnvSeverity.LOW,
-    ),
-    EnvVarDefinition(
-        name="DEEPSEEK_API_KEY", description="DeepSeek API key", severity=EnvSeverity.LOW
-    ),
-    EnvVarDefinition(
+    "HF_API_KEY": EnvVarDefinition(
         name="HF_API_KEY",
         description="HuggingFace API key for model access",
         severity=EnvSeverity.LOW,
         pattern=r"^hf_[a-zA-Z0-9]{34}$",
     ),
-    # ── Stripe ─────────────────────────────────────────────────────────────
-    EnvVarDefinition(
+    "STRIPE_API_KEY": EnvVarDefinition(
         name="STRIPE_API_KEY",
         description="Stripe secret API key (sk_live_ or sk_test_)",
         severity=EnvSeverity.MEDIUM,
         pattern=r"^sk_(test|live)_[a-zA-Z0-9]+$",
     ),
-    EnvVarDefinition(
-        name="STRIPE_WEBHOOK_SECRET",
-        description="Stripe webhook signature secret",
-        severity=EnvSeverity.MEDIUM,
-        pattern=r"^whsec_[a-zA-Z0-9]+$",
-    ),
-    # ── Infisical (Secret Vault) ──────────────────────────────────────────
-    EnvVarDefinition(
-        name="INFISICAL_TOKEN",
-        description="Infisical authentication token",
-        severity=EnvSeverity.HIGH,
-    ),
-    EnvVarDefinition(
-        name="INFISICAL_CLIENT_ID",
-        description="Infisical Machine Identity client ID",
-        severity=EnvSeverity.HIGH,
-    ),
-    EnvVarDefinition(
-        name="INFISICAL_CLIENT_SECRET",
-        description="Infisical Machine Identity client secret",
-        severity=EnvSeverity.HIGH,
-    ),
-    # ── Observability ─────────────────────────────────────────────────────
-    EnvVarDefinition(
-        name="SENTRY_DSN",
-        description="Sentry DSN for error tracking",
-        severity=EnvSeverity.LOW,
-        pattern=r"^https://[a-f0-9]+@[a-z0-9-]+\.ingest\.sentry\.io/\d+$",
-    ),
-    EnvVarDefinition(
+    "OTLP_ENDPOINT": EnvVarDefinition(
         name="OTLP_ENDPOINT",
         description="OpenTelemetry collector endpoint",
         severity=EnvSeverity.LOW,
     ),
-    # ── Security ──────────────────────────────────────────────────────────
-    EnvVarDefinition(
-        name="ENFORCE_ANTI_HACKING",
-        description="Enable anti-hacking protections",
-        severity=EnvSeverity.LOW,
-        default="false",
-    ),
-    EnvVarDefinition(
-        name="OTP_COOLDOWN_SECONDS",
-        description="OTP cooldown period in seconds",
-        severity=EnvSeverity.LOW,
-        default="60",
-    ),
-]
+}
+
+
+def _build_env_registry() -> list[EnvVarDefinition]:
+    """Derive ENV_REGISTRY from CONFIG_SPECS + boot-validator profiles.
+
+    Fails loudly when the boot-validation policy and the canonical registry
+    drift apart (unclassified key, missing profile, renamed spec).
+    """
+    registry: list[EnvVarDefinition] = []
+    for name in _ENV_REGISTRY_ORDER:
+        override = _ENV_REGISTRY_OVERRIDES.get(name)
+        if override is not None:
+            registry.append(override)
+            continue
+        spec = get_config_spec(name)
+        if spec is None:
+            raise RuntimeError(
+                f"ENV_REGISTRY member {name!r} is not classified in "
+                "core/config_classification.py CONFIG_SPECS (issue #1260). "
+                "Classify it there (or add it to _ENV_REGISTRY_OVERRIDES with "
+                "a reason) before boot validation can use it."
+            )
+        try:
+            profile = _ENV_PROFILES[name]
+        except KeyError as exc:
+            raise RuntimeError(
+                f"ENV_REGISTRY member {name!r} has no _ENV_PROFILES entry — "
+                "declare its boot-validation semantics (severity/pattern/"
+                "default) in core/env_validator.py."
+            ) from exc
+        registry.append(
+            EnvVarDefinition(
+                name=name,
+                # Curated validator text; spec.description is intentionally NOT
+                # used yet (auto-classified placeholders, see block comment).
+                description=profile.description,
+                severity=profile.severity,
+                default=profile.default,
+                pattern=profile.pattern,
+                min_length=profile.min_length,
+                examples=list(profile.examples),
+                documentation_url=profile.documentation_url,
+            )
+        )
+    return registry
+
+
+# Complete environment variable registry (derived — see block comment above).
+ENV_REGISTRY: list[EnvVarDefinition] = _build_env_registry()
 
 
 @dataclass
