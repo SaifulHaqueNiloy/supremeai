@@ -332,6 +332,48 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/_archive/batch-5/billing_plans.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/cloud_storage.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/cors_policy.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/db_repository.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/email_service.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-5/rate_limiter.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/adapters/__init__.py"
     },
     {
@@ -3944,13 +3986,6 @@
       "path": "backend/core/behavioral_intelligence/strategy_router.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/billing_plans.py"
-    },
-    {
       "capability_signals": [
         "browser"
       ],
@@ -4367,13 +4402,6 @@
       "path": "backend/core/clients/render_api.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/cloud_storage.py"
-    },
-    {
       "capability_signals": [
         "memory"
       ],
@@ -4639,13 +4667,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/cors_policy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/cost_guard.py"
     },
     {
@@ -4668,13 +4689,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/db.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/db_repository.py"
     },
     {
       "capability_signals": [
@@ -4737,13 +4751,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/effective_policy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/email_service.py"
     },
     {
       "capability_signals": [
@@ -6587,13 +6594,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/rate_limit_quota.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/rate_limiter.py"
     },
     {
       "capability_signals": [

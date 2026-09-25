@@ -14,9 +14,6 @@ import pytest
 
 # (module import path, an attribute name we access to trigger delegation)
 _SHIMS = [
-    ("core.cors_policy", "SomeExport"),
-    ("core.billing_plans", "SomeExport"),
-    ("core.cloud_storage", "SomeExport"),
     ("core.idempotency_middleware", "SomeExport"),
     ("core.tenant_db", "SomeExport"),
     ("core.gcp_firestore", "SomeExport"),
@@ -26,8 +23,6 @@ _SHIMS = [
     ("core.error_pattern_db", "SomeExport"),
     ("core.metrics_collector", "SomeExport"),
     ("core.metrics", "SomeExport"),
-    ("core.email_service", "SomeExport"),
-    ("core.db_repository", "SomeExport"),
     ("core.pgbouncer_pool", "SomeExport"),
 ]
 

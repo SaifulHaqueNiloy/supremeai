@@ -107,3 +107,25 @@ evidence from canonical auditor `scripts/audit/find_duplicates.py`.
 | backend/ecosystem/task_engine.py | 30 | `adaptive_engine/task_engine.py` (`__init__`, api/routes/chat, api/routes/ecosystem_admin, core/orchestration/capability_adapters redirected) |
 
 Total: 10 files, ~242 lines.
+
+## batch-5 — archived 2026-09-26 (issue #1374)
+
+Verification date: 2026-09-26 · Scheduled delete-after review: 2026-10-09
+Phase 2 (Duplicate Consolidation) batch 3 — the 6 zero-importer `core/` shims
+resolved per plan §3 method. All 6 were pure lazy re-export bridges (~150 lines
+total) with **zero importers** (canonical auditors `find_duplicates.py` +
+`find_dead_modules.py` + manual grep across tests/workflows/docker/docs);
+unlike batches 1–4 no importer redirects were needed. The 5 shim-contract test
+entries were removed from `backend/tests/unit_light/test_deprecated_shims.py`
+(rate_limiter was never listed there).
+
+| Original path | Lines | Canonical replacement |
+|---|---|---|
+| backend/core/billing_plans.py | 30 | `services/billing/billing_plans.py` |
+| backend/core/cloud_storage.py | 24 | `services/storage/cloud_storage.py` |
+| backend/core/cors_policy.py | 25 | `middleware/cors_policy.py` |
+| backend/core/db_repository.py | 30 | `database/db_repository.py` |
+| backend/core/email_service.py | 32 | `services/email/email_service.py` |
+| backend/core/rate_limiter.py | 9 | `middleware/rate_limiter.py` |
+
+Total: 6 files, ~150 lines.

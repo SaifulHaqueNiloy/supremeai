@@ -1,5 +1,5 @@
 """
-Tests for core/email_service.py — EmailService
+Tests for services/email/email_service.py — EmailService
 """
 
 from __future__ import annotations
