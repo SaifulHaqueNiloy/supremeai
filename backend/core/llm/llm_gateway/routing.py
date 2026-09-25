@@ -90,7 +90,9 @@ class RoutingMixin:
         try:
             if os.path.exists(_POLICY_PATH):
                 with open(_POLICY_PATH, encoding="utf-8") as f:
-                    return json.load(f)
+                    policy = json.load(f)
+                self._warn_retired_policy_models(policy)
+                return policy
             logger.warning(
                 f"[LLMGateway] Routing policy not found at '{_POLICY_PATH}'. Using default fallback config."
             )
@@ -110,6 +112,42 @@ class RoutingMixin:
             "complexity_rules": {},
             "fallback_chain": list(_DEFAULT_FALLBACK_MODELS),
         }
+
+    # Issue #1442: routing_policy.json is the documented source of truth for
+    # routing, but registry._RETIRED_MODELS silently skips retired models at
+    # request time — a stale entry made the *configured* chain head differ
+    # from the *effective* one ("easy" effectively had no working head).
+    # Validate at load time and warn loudly instead of failing silently.
+    _POLICY_MODEL_KEYS = ("complexity_rules", "task_overrides", "fallback_chain")
+
+    def _warn_retired_policy_models(self, policy: dict[str, Any]) -> None:
+        """Warn when routing_policy.json references models retired at their provider."""
+        try:
+            from core.llm.llm_gateway.registry import _RETIRED_MODELS
+        except Exception:  # pragma: no cover — registry import must never break boot
+            return
+        retired: list[str] = []
+
+        def _scan(path: str, value: Any) -> None:
+            if isinstance(value, str):
+                if value.lower() in _RETIRED_MODELS:
+                    retired.append(f"{path}={value}")
+            elif isinstance(value, list):
+                for i, item in enumerate(value):
+                    _scan(f"{path}[{i}]", item)
+            elif isinstance(value, dict):
+                for k, v in value.items():
+                    _scan(f"{path}.{k}", v)
+
+        for key in self._POLICY_MODEL_KEYS:
+            if key in policy:
+                _scan(key, policy[key])
+        if retired:
+            logger.warning(
+                "[LLMGateway] routing_policy.json references RETIRED models "
+                f"(skipped at request time by registry._RETIRED_MODELS): {', '.join(retired)}. "
+                "Update backend/config/routing_policy.json to served equivalents."
+            )
 
     def _build_call_chain(
         self,

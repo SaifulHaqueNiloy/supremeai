@@ -46,7 +46,7 @@ def _vision_model() -> str:
     model = str(raw).strip()
     if "/" in model:
         model = model.split("/", 1)[1]
-    return model or "gemini-2.0-flash"
+    return model or "gemini-2.5-flash"
 
 
 class VisionService:
