@@ -63,20 +63,20 @@ slots:
     notes: "Database + migration work"
 
   - slot: agent-5
-    tool: "z.ai git issue and log"
+    tool: "z.ai issue solver"
     maintainer: "@SaifulHaqueNiloy"
     assigned_on: "2026-09-26"
     expires_on: "2026-10-03"
     active: true
-    notes: "Git issue triage, log parsing, and audit verification"
+    notes: "Solves GitHub issues — reads, debugs, fixes, opens PR"
 
   - slot: agent-6
-    tool: "z.ai long run 3rd party platform"
+    tool: "z.ai platform watchdog"
     maintainer: "@SaifulHaqueNiloy"
     assigned_on: "2026-09-26"
     expires_on: "2026-10-03"
     active: true
-    notes: "Long-running third party platform integration and external sync"
+    notes: "Monitors 3rd party platforms (Kaggle/Colab/Modal/Render), fixes issues, creates issues"
 
   - slot: agent-7
     tool: "z.ai git pr merge and regration"

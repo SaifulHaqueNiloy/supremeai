@@ -129,5 +129,67 @@
       "expires_on": "2026-10-03",
       "active": true
     }
+  },
+  "zai_issue_solver": {
+    "agent_name": "zai_issue_solver",
+    "system_prompt": "You are z.ai issue solver \u2014 you read GitHub issues, debug them, fix the code, and open PRs. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "open_pull_requests",
+      "comment_on_issues"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "z.ai issue solver \u2014 reads GitHub issues, debugs, fixes, opens PR. Persistent branch: agent-5.",
+    "metadata": {
+      "slot": "agent-5",
+      "tool_label": "z.ai issue solver",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
+  },
+  "zai_platform_watchdog": {
+    "agent_name": "zai_platform_watchdog",
+    "system_prompt": "You are z.ai platform watchdog \u2014 you monitor 3rd party platforms (Kaggle, Colab, Modal, Render, HF), detect issues, fix them or create GitHub issues. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "github_pr_helper",
+      "agent_heartbeat"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "open_pull_requests",
+      "internet_access"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "z.ai platform watchdog \u2014 monitors 3rd party platforms, fixes issues, creates issues. Persistent branch: agent-6.",
+    "metadata": {
+      "slot": "agent-6",
+      "tool_label": "z.ai platform watchdog",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-26",
+      "expires_on": "2026-10-03",
+      "active": true
+    }
   }
 }
