@@ -4,6 +4,24 @@ Phases 2-14 (ROADMAP §1-§57). Each module is self-contained and idempotent.
 All persistence uses the shared SQLite store from ecosystem._store.
 """
 
+from adaptive_engine.capability_registry import (
+    Capability,
+    CapabilityExistsError,
+    CapabilityLifecycleState,
+    CapabilityRegistry,
+    CapabilityRuntimeTier,
+    CapabilityStateError,
+    get_capability_registry,
+)
+from adaptive_engine.source_governance import (
+    LearnedItem,
+    SourceCategory,
+    SourceGovernance,
+    SourcePolicy,
+    SourceState,
+    SourceStateError,
+    get_source_governance,
+)
 from ecosystem._store import (
     ensure_columns,
     get_conn,
@@ -21,15 +39,6 @@ from ecosystem.approval_workflow import (
     ProposalState,
     ProposalStateError,
     get_approval_workflow,
-)
-from ecosystem.capability_registry import (
-    Capability,
-    CapabilityExistsError,
-    CapabilityLifecycleState,
-    CapabilityRegistry,
-    CapabilityRuntimeTier,
-    CapabilityStateError,
-    get_capability_registry,
 )
 from ecosystem.correlation import (
     CorrelationContext,
@@ -85,15 +94,6 @@ from ecosystem.resource_registry import (
     ResourceRegistry,
     ResourceState,
     get_resource_registry,
-)
-from ecosystem.source_governance import (
-    LearnedItem,
-    SourceCategory,
-    SourceGovernance,
-    SourcePolicy,
-    SourceState,
-    SourceStateError,
-    get_source_governance,
 )
 from ecosystem.task_engine import (
     TaskEngine,

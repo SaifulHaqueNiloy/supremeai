@@ -101,7 +101,7 @@ class TestErrorRemediation:
 
     def test_error_remediation_initialization(self):
         """Test ErrorRemediation initializes."""
-        from backend.core.error_remediation import ErrorRemediation
+        from backend.core.errors.error_remediation import ErrorRemediation
 
         remediation = ErrorRemediation()
         assert remediation is not None
@@ -109,7 +109,7 @@ class TestErrorRemediation:
     @pytest.mark.asyncio
     async def test_lookup_fix(self):
         """Test looking up error fix."""
-        from backend.core.error_remediation import ErrorRemediation
+        from backend.core.errors.error_remediation import ErrorRemediation
 
         remediation = ErrorRemediation()
 
@@ -122,7 +122,7 @@ class TestErrorRemediation:
     @pytest.mark.asyncio
     async def test_backoff_retry(self):
         """Test exponential backoff retry mechanism."""
-        from backend.core.error_remediation import ErrorRemediation
+        from backend.core.errors.error_remediation import ErrorRemediation
 
         remediation = ErrorRemediation()
 
