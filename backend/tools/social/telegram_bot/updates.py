@@ -286,6 +286,15 @@ class UpdatesMixin:
             return
 
         if command in ("/status", "/sys_status"):
+                await self._handle_status(chat_id)
+            elif command == "/ai_list":
+                await self._handle_ai_list(chat_id)
+            elif command == "/ai_surfaces":
+                await self._handle_ai_surfaces(chat_id)
+            elif command == "/ai_assign":
+                args = text.split()[1:] if text.split()[1:] else []
+                await self._handle_ai_assign(chat_id, args)
+            elif False:  # placeholder to preserve original flow
             if not self.is_admin(chat_id, user_id):
                 await self.send_message(chat_id, "🔒 <i>Admin operation restricted.</i>")
             else:
