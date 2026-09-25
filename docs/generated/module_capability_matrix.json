@@ -213,6 +213,43 @@
       "path": "backend/_archive/batch-2/backend/scripts/seed_ecosystem.py"
     },
     {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-3/capability_registry.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-3/error_remediation.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-3/intelligent_cache.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-3/orchestrator.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-3/source_governance.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -4660,13 +4697,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/core/error_remediation.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/core/errors/__init__.py"
     },
     {
@@ -6020,13 +6050,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/orchestration/master_cognitive_orchestrator.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/orchestration/orchestrator.py"
     },
     {
       "capability_signals": [
@@ -7697,15 +7720,6 @@
     },
     {
       "capability_signals": [
-        "capability"
-      ],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/ecosystem/capability_registry.py"
-    },
-    {
-      "capability_signals": [
         "capability",
         "memory",
         "register"
@@ -7815,13 +7829,6 @@
       ],
       "kind": "py",
       "path": "backend/ecosystem/seed_ecosystem.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/ecosystem/source_governance.py"
     },
     {
       "capability_signals": [
@@ -9944,13 +9951,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/services/integration_discovery.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/services/intelligent_cache.py"
     },
     {
       "capability_signals": [
@@ -15519,13 +15519,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/unit_light/services/scraper/test_web_scraper.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/unit_light/services/test_intelligent_cache_shim.py"
     },
     {
       "capability_signals": [
@@ -23059,6 +23052,15 @@
       "path": "scripts/audit/find_dead_modules.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/audit/find_duplicates.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "health",
@@ -23091,7 +23093,9 @@
       "path": "scripts/audit/system_defect_scan_2026_09_16.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "mcp"
+      ],
       "classification": "human_review",
       "entrypoints": [
         "main"

@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3392,
+  "edge_count": 3385,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -122,6 +122,18 @@
     {
       "from": "_archive.batch-2.backend.scripts.seed_ecosystem",
       "to": "ecosystem"
+    },
+    {
+      "from": "_archive.batch-3.capability_registry",
+      "to": "adaptive_engine.capability_registry"
+    },
+    {
+      "from": "_archive.batch-3.orchestrator",
+      "to": "core.orchestration.periodic_task_scheduler"
+    },
+    {
+      "from": "_archive.batch-3.source_governance",
+      "to": "adaptive_engine.source_governance"
     },
     {
       "from": "adapters",
@@ -4141,10 +4153,6 @@
     },
     {
       "from": "core.autonoguard_engine",
-      "to": "core.error_remediation"
-    },
-    {
-      "from": "core.autonoguard_engine",
       "to": "core.failure_fingerprint"
     },
     {
@@ -5157,10 +5165,6 @@
     },
     {
       "from": "core.lifespan",
-      "to": "core.orchestration.orchestrator"
-    },
-    {
-      "from": "core.lifespan",
       "to": "core.reliability_controller"
     },
     {
@@ -5786,10 +5790,6 @@
     {
       "from": "core.orchestration.master_cognitive_orchestrator",
       "to": "core.orchestration.cognitive_pipeline_dispatcher"
-    },
-    {
-      "from": "core.orchestration.orchestrator",
-      "to": "core.orchestration.periodic_task_scheduler"
     },
     {
       "from": "core.orchestration.periodic_task_scheduler",
@@ -7149,10 +7149,6 @@
     },
     {
       "from": "ecosystem",
-      "to": "ecosystem.capability_registry"
-    },
-    {
-      "from": "ecosystem",
       "to": "ecosystem.correlation"
     },
     {
@@ -7181,10 +7177,6 @@
     },
     {
       "from": "ecosystem",
-      "to": "ecosystem.source_governance"
-    },
-    {
-      "from": "ecosystem",
       "to": "ecosystem.task_engine"
     },
     {
@@ -7194,10 +7186,6 @@
     {
       "from": "ecosystem.approval_workflow",
       "to": "adaptive_engine.approval_workflow"
-    },
-    {
-      "from": "ecosystem.capability_registry",
-      "to": "adaptive_engine.capability_registry"
     },
     {
       "from": "ecosystem.correlation",
@@ -7258,10 +7246,6 @@
     {
       "from": "ecosystem.seed_ecosystem",
       "to": "ecosystem.learning_loop"
-    },
-    {
-      "from": "ecosystem.source_governance",
-      "to": "adaptive_engine.source_governance"
     },
     {
       "from": "ecosystem.standalone_app",
@@ -10424,10 +10408,6 @@
       "to": "core.error_pattern_db"
     },
     {
-      "from": "tests.core.test_error_remediation",
-      "to": "core.error_remediation"
-    },
-    {
       "from": "tests.core.test_evolution_engine",
       "to": "core.self_evolution.evolution_engine"
     },
@@ -10962,10 +10942,6 @@
     {
       "from": "tests.core.test_skill_execution_pipeline",
       "to": "core.base"
-    },
-    {
-      "from": "tests.core.test_skill_execution_pipeline",
-      "to": "core.orchestration.orchestrator"
     },
     {
       "from": "tests.core.test_skill_execution_pipeline",
@@ -12392,10 +12368,6 @@
       "to": "services.scraper.web_scraper"
     },
     {
-      "from": "tests.unit_light.services.test_intelligent_cache_shim",
-      "to": "services.intelligent_cache"
-    },
-    {
       "from": "tests.unit_light.test_async_rate_limiter_lua",
       "to": "middleware.rate_limiter"
     },
@@ -13572,7 +13544,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1957,
+  "module_count": 1956,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13597,6 +13569,11 @@
     "_archive.batch-2.backend.core.test_retry_handler",
     "_archive.batch-2.backend.core.utils.firestore_helpers",
     "_archive.batch-2.backend.scripts.seed_ecosystem",
+    "_archive.batch-3.capability_registry",
+    "_archive.batch-3.error_remediation",
+    "_archive.batch-3.intelligent_cache",
+    "_archive.batch-3.orchestrator",
+    "_archive.batch-3.source_governance",
     "adapters",
     "adapters.base_adapter",
     "adapters.business_adapter",
@@ -14090,7 +14067,6 @@
     "core.enum_guard",
     "core.env_validator",
     "core.error_pattern_db",
-    "core.error_remediation",
     "core.errors",
     "core.errors.error_bus",
     "core.errors.error_handler",
@@ -14247,7 +14223,6 @@
     "core.orchestration.conversation_orchestrator",
     "core.orchestration.crew_departments",
     "core.orchestration.master_cognitive_orchestrator",
-    "core.orchestration.orchestrator",
     "core.orchestration.periodic_task_scheduler",
     "core.orchestration.swarm_agent_roles",
     "core.orchestration.swarm_orchestrator",
@@ -14435,7 +14410,6 @@
     "ecosystem",
     "ecosystem._store",
     "ecosystem.approval_workflow",
-    "ecosystem.capability_registry",
     "ecosystem.citizen",
     "ecosystem.correlation",
     "ecosystem.deployment_tracker",
@@ -14448,7 +14422,6 @@
     "ecosystem.resource_registry",
     "ecosystem.runtime_selector",
     "ecosystem.seed_ecosystem",
-    "ecosystem.source_governance",
     "ecosystem.standalone_app",
     "ecosystem.task_engine",
     "ecosystem.users",
@@ -14704,7 +14677,6 @@
     "services.ide_trio.kilo_reviewer",
     "services.ingestion",
     "services.integration_discovery",
-    "services.intelligent_cache",
     "services.intent_deciphering",
     "services.internet_monitor_service",
     "services.knowledge_qa",
@@ -15341,7 +15313,6 @@
     "tests.unit_light.conftest",
     "tests.unit_light.services.scraper.test_security",
     "tests.unit_light.services.scraper.test_web_scraper",
-    "tests.unit_light.services.test_intelligent_cache_shim",
     "tests.unit_light.test_async_rate_limiter_lua",
     "tests.unit_light.test_config_parsers",
     "tests.unit_light.test_core_skills",
