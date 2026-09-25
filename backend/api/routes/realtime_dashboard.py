@@ -18,7 +18,7 @@ import os
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect, status
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from core.security import verify_token_async  # noqa: F401 — kept for other callers in module
 from core.security.ws_auth import authenticate_websocket

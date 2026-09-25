@@ -21,7 +21,7 @@ except ImportError:
 
 
 from api.dependencies import get_current_user_token
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.messaging.pubsub import global_pubsub
 from database.session import get_db_session
 from tools.devops.github_agent import get_user_github_token

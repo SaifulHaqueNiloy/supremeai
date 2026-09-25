@@ -22,7 +22,7 @@ from typing import Any
 
 from core.cache import get_cache
 from core.config_cache import config_cache
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from services.llm.llm_router import LLMRouter
 

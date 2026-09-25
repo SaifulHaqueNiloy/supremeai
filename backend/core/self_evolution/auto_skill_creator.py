@@ -13,7 +13,7 @@ import time
 from datetime import UTC, datetime
 from typing import Any
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.messaging.event_bus import ErrorContext
 
 # বাংলা মন্তব্য: রুটের 'skills' মডিউল লোড করার জন্য রিপোজিটরি রুট ডিরেক্টরি sys.path-এ যোগ করা হচ্ছে (Zero Breakage নীতি)।

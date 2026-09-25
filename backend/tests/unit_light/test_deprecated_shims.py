@@ -27,7 +27,6 @@ _SHIMS = [
     ("core.error_remediation", "SomeExport"),
     ("core.error_pattern_db", "SomeExport"),
     ("core.error_handler", "SomeExport"),
-    ("core.error_bus", "SomeExport"),
     ("core.metrics_collector", "SomeExport"),
     ("core.metrics", "SomeExport"),
     ("core.email_service", "SomeExport"),
