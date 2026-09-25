@@ -23,6 +23,7 @@ async def sec_env():
 
     app = FastAPI()
     app.include_router(router)
+
     # Admin router is guarded by require_admin_token + admin_rate_limit; bypass
     # with a deterministic admin payload (same pattern as test_admin_routes_full).
     async def _admin_ok():
