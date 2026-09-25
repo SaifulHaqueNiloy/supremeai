@@ -9,6 +9,7 @@ from typing import Any
 
 from pydantic import PrivateAttr, SecretStr, model_serializer
 
+from core.config_parsers import parse_origin_list
 from core.logging_config import logger
 
 # Issue #542 (BE-10): single shared floor for the JWT secret minimum length.
@@ -726,16 +727,9 @@ class SettingsSecretsMixin:
         """
         env_origins = os.getenv("CORS_ORIGINS")
         if env_origins:
-            env_origins = env_origins.strip()
-            try:
-                parsed = json.loads(env_origins)
-                origins = (
-                    [str(o).strip() for o in parsed if str(o).strip()]
-                    if isinstance(parsed, list)
-                    else []
-                )
-            except json.JSONDecodeError:
-                origins = [o.strip() for o in env_origins.split(",") if o.strip()]
+            # Roadmap 1.4 (issue #1173): hand-rolled JSON/comma কপি — canonical
+            # parser-এ সরানো হলো (JSON-array ও comma দুই ফরম্যাটই সাপোর্টেড)।
+            origins = parse_origin_list(env_origins)
         else:
             origins = [
                 "http://localhost:3000",  # is_local()

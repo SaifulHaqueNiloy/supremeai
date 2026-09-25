@@ -14,6 +14,8 @@ from urllib.parse import urlparse
 
 from fastapi import HTTPException, Response
 
+from core.config_parsers import parse_origin_list
+
 from api.routes.browser import router
 from core.logging_config import logger
 
@@ -64,10 +66,10 @@ def _frame_ancestors_sources() -> str:
     origin (``ALLOWED_ORIGINS``) may frame it. Never ``*``.
     """
     sources = ["'self'"]
-    for raw in os.getenv("ALLOWED_ORIGINS", "").split(","):
-        origin = raw.strip()
-        if origin:
-            sources.append(origin)
+    # Roadmap 1.4 (issue #1173): canonical parser — comma ছাড়াও JSON-array
+    # ফরম্যাটে সেট করা ALLOWED_ORIGINS-ও সঠিকভাবে পার্স হয়।
+    for origin in parse_origin_list(os.getenv("ALLOWED_ORIGINS", "")):
+        sources.append(origin)
     return " ".join(sources)
 
 

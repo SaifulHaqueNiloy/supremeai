@@ -86,6 +86,7 @@ app = FastAPI(
 #   * একই resolver app_builder.py ও /config/validation-report-ও ব্যবহার করে।
 import os as _os
 
+from core.config_parsers import parse_origin_list
 from middleware.cors_policy import (
     resolve_admin_cors_origins as _resolve_admin_cors_origins,
 )
@@ -107,9 +108,9 @@ _prod_origins_env = (
     or _os.getenv("CORS_ORIGINS")
     or _os.getenv("ALLOWED_ORIGINS", "")
 )
-_prod_origins = [o.strip() for o in _prod_origins_env.split(",") if o.strip()]
+_prod_origins = parse_origin_list(_prod_origins_env)  # roadmap 1.4 (#1173): JSON-array ও comma — দুটোই কাজ করে
 _configured_origins = _dev_origins + _prod_origins
-_admin_raw = [o.strip() for o in _os.getenv("ADMIN_CORS_ORIGINS", "").split(",") if o.strip()]
+_admin_raw = parse_origin_list(_os.getenv("ADMIN_CORS_ORIGINS", ""))
 _allowed_origins = sorted(
     set(_resolve_user_cors_origins(_configured_origins))
     | set(_resolve_admin_cors_origins(_admin_raw))

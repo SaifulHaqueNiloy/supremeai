@@ -1,6 +1,5 @@
 # বাংলা কমেন্ট: সুপ্রিম-এআই এর ট্রাস্টেড অরিজিন ভ্যালিডেশন মিডলওয়্যার।
 # এটি ওয়াইল্ডকার্ড CORS বাইপাস রোধ করে এবং শুধুমাত্র অনুমোদিত ডোমেইন থেকে এপিআই অ্যাক্সেস নিশ্চিত করে।
-import json
 import os
 
 from fastapi import Request, status
@@ -9,6 +8,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from core.config import settings
 from core.logging_config import logger
+from core.config_parsers import parse_origin_list
 from middleware.cors_policy import (
     ADMIN_ORIGIN_DENYLIST,
     USER_ORIGIN_DENYLIST,
@@ -18,14 +18,12 @@ from middleware.cors_policy import (
 
 
 def _load_origins(env_var: str, default: frozenset[str]) -> frozenset[str]:
+    # Roadmap 1.4 (issue #1173): canonical single parser — আগের হাতে-লেখা
+    # JSON/comma কপির strip/cast drift দূর হলো (JSON array-র ভুয়া স্পেস/খালি
+    # এন্ট্রিও এখন canonical ভাবে পরিষ্কার হয়)।
     val = os.getenv(env_var)
     if val:
-        try:
-            parsed = json.loads(val)
-            if isinstance(parsed, list):
-                return frozenset(parsed)
-        except json.JSONDecodeError:
-            return frozenset([x.strip() for x in val.split(",") if x.strip()])
+        return frozenset(parse_origin_list(val))
     return default
 
 
