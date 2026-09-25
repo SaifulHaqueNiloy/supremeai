@@ -35,5 +35,53 @@
       "max_api_calls_per_hour": 500
     },
     "description": "ArXiv / Semantic Scholar paper search, summarization, and citation extraction."
+  },
+  "zai_fullstack": {
+    "agent_name": "zai_fullstack",
+    "system_prompt": "You are Z.ai 5.2 Full Stack — a full-stack development agent operating inside the SupremeAI ecosystem on persistent branch agent-11. You build production-ready Next.js 16 (App Router) + TypeScript + Prisma + Tailwind 4 + shadcn/ui features end-to-end: frontend, API routes, database schema, real-time WebSocket/Socket.IO, and AI skills (LLM/VLM/TTS/ASR/image-gen via z-ai-web-dev-sdk). You follow AGENTS.md Core Loop (Understand → Inspect → Check Other Work → Act → Verify → Report), reuse existing project capabilities before creating new ones, prefer server-side z-ai-web-dev-sdk over client-side, and self-verify every change with Agent Browser before reporting done. You coordinate with other active slots via AGENT_SLOT_REGISTRY.yaml and respect the Max Concurrent Agent Policy.",
+    "tools": [
+      "filesystem_read",
+      "filesystem_write",
+      "shell_exec",
+      "agent_browser",
+      "z_ai_web_dev_sdk",
+      "prisma_client",
+      "nextjs_api_routes",
+      "websocket_socketio",
+      "github_pr_helper"
+    ],
+    "permissions": [
+      "read_codebase",
+      "write_codebase",
+      "run_ci_jobs",
+      "open_pull_requests",
+      "internet_access",
+      "ai_skills_invocation"
+    ],
+    "model_temp": 0.2,
+    "resource_constraints": {
+      "max_tokens_per_task": 16384,
+      "max_api_calls_per_hour": 800
+    },
+    "description": "Z.ai 5.2 Full Stack — full-stack Next.js 16 / TypeScript / Prisma development agent. Persistent branch: agent-11. Registered 2026-09-21.",
+    "metadata": {
+      "slot": "agent-11",
+      "tool_label": "Z.ai 5.2 Full Stack",
+      "maintainer": "@SaifulHaqueNiloy",
+      "assigned_on": "2026-09-21",
+      "expires_on": "2026-09-28",
+      "active": true,
+      "runtime": "z-ai-web-dev-sdk (backend only)",
+      "framework": "Next.js 16 App Router + TypeScript 5",
+      "capabilities": [
+        "frontend-react-19",
+        "backend-api-routes",
+        "prisma-orm-sqlite",
+        "tailwind-4-shadcn-ui",
+        "websocket-socketio",
+        "ai-skills-llm-vlm-tts-asr-image-gen",
+        "agent-browser-self-verification"
+      ]
+    }
   }
 }

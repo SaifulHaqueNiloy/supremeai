@@ -21,9 +21,10 @@
 version: "1.0"
 
 # Agent slot assignments — per OPS-06 §5 (Polymorphic Agent Assignment)
-# 10 slots defined; maintainer activates/deactivates as needed.
+# 11 slots defined; maintainer activates/deactivates as needed.
 # Note: OPS-06 Safeguard 5 (Max Concurrent Agent Policy) currently caps active
-# slots at 5 for rate-budget reasons. If >5 slots are activated simultaneously,
+# slots at 6 for rate-budget reasons (raised from 5 on 2026-09-21 to accommodate
+# agent-11 = Z.ai 5.2 Full Stack). If >6 slots are activated simultaneously,
 # update Safeguard 5's policy threshold accordingly.
 slots:
   - slot: agent-1
@@ -106,6 +107,14 @@ slots:
     active: true
     notes: "Self-development mode (reserved per OPS-08 §5)"
 
+  - slot: agent-11
+    tool: "Z.ai 5.2 Full Stack"
+    maintainer: "@SaifulHaqueNiloy"
+    assigned_on: "2026-09-21"
+    expires_on: "2026-09-28"
+    active: true
+    notes: "Full-stack Next.js 16 / TypeScript / Prisma development agent. Connected via Z.ai Code CLI. Branch: agent-11. Capable of: frontend (React 19, shadcn/ui, Tailwind 4), backend (API routes, Prisma ORM), real-time (WebSocket/Socket.IO), AI skills (LLM/VLM/TTS/ASR/image-gen), and self-verification via Agent Browser."
+
 # Validation rules
 validation_rules:
   - "slot MUST match pattern: agent-[0-9]+"
@@ -113,7 +122,7 @@ validation_rules:
   - "maintainer MUST be a GitHub username (starts with @)"
   - "expires_on MUST be <= 7 days from assigned_on"
   - "Only one active assignment per slot at a time"
-  - "Active slots MUST be <= 5 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)"
+  - "Active slots MUST be <= 6 (Max Concurrent Agent Policy — OPS-06 Safeguard 5, raised 2026-09-21)"
   - "Auto-expiry: assignments past expires_on are auto-deactivated"
 
 # How to claim/update a slot

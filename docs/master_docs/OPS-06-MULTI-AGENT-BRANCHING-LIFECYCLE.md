@@ -109,11 +109,12 @@ flowchart TD
 
 > GAP-04: monitoring half (`rate-limit-monitor.yml` — hourly check, <500 warn, <100 critical) আগেই হয়েছে; **policy half** এখানে।
 
-* **পলিসি:** একসাথে সর্বোচ্চ **৫টি active agent slot** — `AGENT_SLOT_REGISTRY.yaml`-এ `active: true` এন্ট্রির সংখ্যা ≤ ৫।
+* **পলিসি:** একসাথে সর্বোচ্চ **৬টি active agent slot** — `AGENT_SLOT_REGISTRY.yaml`-এ `active: true` এন্ট্রির সংখ্যা ≤ ৬।
+  * *History:* 2026-09-20 পর্যন্ত সীমা ছিল ৫। 2026-09-21 তারিখে agent-11 (Z.ai 5.2 Full Stack) যুক্ত করার সময় সীমা ৬-এ উন্নীত করা হয় — rate-budget মার্জিন (নিচের হিসাব) এখনও নিরাপদ।
 * **Enforcement:** নতুন slot activate করার আগে active count যাচাই করতে হবে:
   ```bash
   ACTIVE=$(python3 -c "import yaml; print(sum(1 for s in (yaml.safe_load(open('docs/master_docs/AGENT_SLOT_REGISTRY.yaml')).get('slots') or []) if s.get('active')))")
-  [ "$ACTIVE" -lt 5 ] || echo "❌ Max Concurrent Agent Policy: ৫টি active slot বিদ্যমান — নতুন slot নিষেধ (আগে একটি deactivate করুন)"
+  [ "$ACTIVE" -lt 6 ] || echo "❌ Max Concurrent Agent Policy: ৬টি active slot বিদ্যমান — নতুন slot নিষেধ (আগে একটি deactivate করুন)"
   ```
 * **Rate budget (শেয়ার্ড 5,000 calls/hour token):**
 
@@ -124,7 +125,7 @@ flowchart TD
 | CI pipeline (per run) | ~50 |
 | rate-limit-monitor | 1/hour |
 
-  * **Worst case হিসাব:** ৫ agents + ৩ open PR-এ PR Helper + ২ CI run/ঘণ্টা ≈ ৫×১০ + ৩×২০ + ২×৫০ + ১ = **২৩১ calls/ঘণ্টা** — বাজেটের মাত্র ৪.৬%। ১০× burst-এও <500 warn threshold পৌঁছায় না — ৫-slot সীমা নিরাপদ মার্জিন দেয়।
+  * **Worst case হিসাব (৬-slot, 2026-09-21 আপডেট):** ৬ agents + ৩ open PR-এ PR Helper + ২ CI run/ঘণ্টা ≈ ৬×১০ + ৩×২০ + ২×৫০ + ১ = **২৪১ calls/ঘণ্টা** — বাজেটের মাত্র ৪.৮%। ১০× burst-এও <500 warn threshold পৌঁছায় না — ৬-slot সীমা নিরাপদ মার্জিন দেয়।
 * **মিউটেক্সের সাথে সম্পর্ক:** slot activation শুধু maintainer করবেন (`dev_mode_trigger.sh` — OPS-08 §5.1); এই সেফগার্ডের count check সেই flow-র অংশ।
 
 ## 📋 ৩. এজেন্টদের কর্মপদ্ধতি চেকলিস্ট (Agent Execution Protocol)
