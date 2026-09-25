@@ -1,5 +1,14 @@
 """Drop dead performance_metrics table (R9 reconciliation)
 
+SUPERSEDED (issue #1177, 2026-09-25): the R9 "zero writers/readers" finding
+was stale — core/self_evolution/performance_oracle.py INSERTs and SELECTs
+this table, and live admin routes in api/routes/agent_breeding.py
+(POST /metrics, GET /metrics/{agent}, /weakest-links, /top-performers) call
+the oracle directly. The subsequent migration t7u8v9w0x1y2 recreates the
+table idempotently, so applying both in order is safe (drop → recreate).
+This file is kept unmodified for chain integrity — do not apply standalone
+against a database that still needs the table.
+
 The performance_metrics table (created by j9k0l1m2n3o4) has zero writers
 and zero readers in production. Live code writes to learning_events instead.
 This migration removes the dead schema.
