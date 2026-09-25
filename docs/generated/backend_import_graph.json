@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3393,
+  "edge_count": 3392,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -90,6 +90,38 @@
     {
       "from": "_archive.batch-1.backend.seed_db_configs",
       "to": "utils.branding"
+    },
+    {
+      "from": "_archive.batch-2.backend.core.context_manager",
+      "to": "core.cache"
+    },
+    {
+      "from": "_archive.batch-2.backend.core.context_manager",
+      "to": "core.config"
+    },
+    {
+      "from": "_archive.batch-2.backend.core.context_manager",
+      "to": "core.logging"
+    },
+    {
+      "from": "_archive.batch-2.backend.core.test_retry_handler",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "_archive.batch-2.backend.core.utils.firestore_helpers",
+      "to": "core.degraded_mode"
+    },
+    {
+      "from": "_archive.batch-2.backend.core.utils.firestore_helpers",
+      "to": "core.errors.error_bus"
+    },
+    {
+      "from": "_archive.batch-2.backend.core.utils.firestore_helpers",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "_archive.batch-2.backend.scripts.seed_ecosystem",
+      "to": "ecosystem"
     },
     {
       "from": "adapters",
@@ -4632,18 +4664,6 @@
       "to": "core.messaging.event_bus"
     },
     {
-      "from": "core.context_manager",
-      "to": "core.cache"
-    },
-    {
-      "from": "core.context_manager",
-      "to": "core.config"
-    },
-    {
-      "from": "core.context_manager",
-      "to": "core.logging"
-    },
-    {
       "from": "core.contracts.adapters",
       "to": "core.contracts.canonical"
     },
@@ -6852,14 +6872,6 @@
       "to": "core.swarm_pubsub"
     },
     {
-      "from": "core.test_retry_handler",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.test_retry_handler",
-      "to": "core.retry_handler"
-    },
-    {
       "from": "core.testing.qa_suite",
       "to": "core.logging_config"
     },
@@ -7037,18 +7049,6 @@
     },
     {
       "from": "core.user_profiler",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.utils.firestore_helpers",
-      "to": "core.degraded_mode"
-    },
-    {
-      "from": "core.utils.firestore_helpers",
-      "to": "core.errors.error_bus"
-    },
-    {
-      "from": "core.utils.firestore_helpers",
       "to": "core.logging_config"
     },
     {
@@ -8602,10 +8602,6 @@
     {
       "from": "scripts.run_dependency_check",
       "to": "tools.code.dependency_manager_agent"
-    },
-    {
-      "from": "scripts.seed_ecosystem",
-      "to": "ecosystem"
     },
     {
       "from": "scripts.seed_tools_registry",
@@ -13596,6 +13592,11 @@
     "_archive.batch-1.backend.scripts.self_test_and_improve",
     "_archive.batch-1.backend.seed_db_configs",
     "_archive.batch-1.backend.update_md",
+    "_archive.batch-2.backend.core.context_manager",
+    "_archive.batch-2.backend.core.models.shared_workspace",
+    "_archive.batch-2.backend.core.test_retry_handler",
+    "_archive.batch-2.backend.core.utils.firestore_helpers",
+    "_archive.batch-2.backend.scripts.seed_ecosystem",
     "adapters",
     "adapters.base_adapter",
     "adapters.business_adapter",
@@ -14060,7 +14061,6 @@
     "core.connection_registry",
     "core.constants",
     "core.container_auditor",
-    "core.context_manager",
     "core.contracts.adapters",
     "core.contracts.canonical",
     "core.contracts.control_plane",
@@ -14222,7 +14222,6 @@
     "core.middleware.query_timing",
     "core.middleware.security",
     "core.models",
-    "core.models.shared_workspace",
     "core.monitoring",
     "core.neon_repository",
     "core.observability",
@@ -14401,7 +14400,6 @@
     "core.telemetry",
     "core.telemetry.system_telemetry",
     "core.tenant_db",
-    "core.test_retry_handler",
     "core.testing.qa_suite",
     "core.tier8",
     "core.tier8.agent_evolution_engine",
@@ -14420,7 +14418,6 @@
     "core.user_profiler",
     "core.utils",
     "core.utils.background_tasks",
-    "core.utils.firestore_helpers",
     "core.utils.lazy_loader",
     "core.utils.time_utils",
     "core.zero_cost_architecture",
@@ -14671,7 +14668,6 @@
     "scripts.migrate_embeddings",
     "scripts.migrate_files_to_db",
     "scripts.run_dependency_check",
-    "scripts.seed_ecosystem",
     "scripts.seed_tools_registry",
     "scripts.store_ci_roadmap_to_memory",
     "scripts.superai_free_tier_monitor",
