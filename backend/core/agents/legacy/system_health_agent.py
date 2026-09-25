@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from datetime import UTC, datetime
 from typing import Any
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 
 try:

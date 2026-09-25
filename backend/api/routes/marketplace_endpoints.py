@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
 
 from core.degraded_mode import sqlite_fallback_allowed
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from database.supabase_client import db
 from tools.resource_catalog import ResourceCatalog

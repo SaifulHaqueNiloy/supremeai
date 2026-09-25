@@ -29,7 +29,7 @@ from typing import Any
 
 import httpx
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 
 # Lazy HTTP client — initialized on first use
 _http_client: httpx.AsyncClient | None = None

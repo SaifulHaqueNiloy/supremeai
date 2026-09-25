@@ -61,7 +61,7 @@ from core.browser_session_manager import session_manager  # noqa: F401  (module-
 from core.cache.redis_manager import MultiLevelCache  # noqa: F401  (module-attr parity)
 from core.config import settings  # noqa: F401  (module-attr parity with pre-split module)
 from core.effective_policy import get_effective_policy, policy_store  # noqa: F401  (parity)
-from core.error_bus import with_error_bus  # noqa: F401  (module-attr parity)
+from core.errors.error_bus import with_error_bus  # noqa: F401  (module-attr parity)
 from core.logging_config import logger  # noqa: F401  (module-attr parity)
 from core.neon_repository import (  # noqa: F401  (module-attr parity)
     create_task as create_neon_task,

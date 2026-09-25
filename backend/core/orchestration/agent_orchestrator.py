@@ -6,7 +6,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from core.config import settings
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext
 

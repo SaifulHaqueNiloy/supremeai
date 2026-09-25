@@ -32,7 +32,7 @@ from core.degraded_mode import (
     SQLiteFallbackDisabledError,
     require_sqlite_allowed,
 )
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 
 # Lazy import for Google Cloud libraries

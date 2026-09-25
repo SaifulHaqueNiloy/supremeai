@@ -45,7 +45,7 @@ from api.dependencies import (
 )
 from api.routes.admin_auth import admin_rate_limit, require_admin_token
 from core.config import settings  # noqa: F401  (module-attr parity with pre-split module)
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from core.utils.time_utils import utc_now
 from models.ci_report import CIReportPayload, create_ci_report  # noqa: F401  (module-attr parity)

@@ -4,7 +4,7 @@ import re
 from email.header import decode_header
 from typing import Any
 
-from core.error_bus import with_error_bus
+from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from core.security.secure_credential_store import SecureCredentialStore
 
