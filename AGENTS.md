@@ -48,6 +48,36 @@ If likely overlap exists, **do not start editing blindly**. Record the dependenc
 
 Different Issues do **not** automatically mean independent changes.
 
+### Progress Over Perfection
+
+Agents should prioritize **meaningful, safe, verified progress** over theoretical perfection.
+
+When a change is clearly better than the current state and does not introduce a real blocker:
+
+**improve → verify → move forward**
+
+Do not delay useful work only because:
+
+* a more elegant solution might exist;
+* the change could be polished further;
+* an edge case is theoretical and does not affect the current task;
+* the implementation is not the absolute best possible version.
+
+A possible improvement is **not automatically a reason to stop**.
+
+Real blockers remain blockers, including:
+
+* security or safety risk;
+* data loss or corruption;
+* broken required behavior;
+* incorrect requirements or unacceptable compatibility impact;
+* unresolved ownership or cross-task conflict;
+* failed required verification.
+
+When no real blocker exists, complete the useful change and record worthwhile follow-up improvements for a later task rather than expanding the current task indefinitely.
+
+**Goal: leave the project materially better, safe, and verified — not theoretically perfect.**
+
 ## 3. Issue-First & Single Ownership
 
 ### Rule
