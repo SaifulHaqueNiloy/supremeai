@@ -97,9 +97,10 @@ def compute_payload_hash(payload: dict) -> str:
 
 
 def _get_conn():
-    # P0 (Task 9-c2): SQLite-only-by-design. In production without
-    # SUPABASE_ALLOW_DB_DEGRADATION=true the ephemeral pending_tasks.db file is
-    # REFUSED (CRITICAL logged once by core.degraded_mode). The module must not
+    # P0 (Task 9-c2 + Wave 0.1): SQLite-only-by-design. In production the
+    # ephemeral pending_tasks.db file is REFUSED unconditionally (the
+    # degradation flag no longer permits SQLite fallback; CRITICAL logged once
+    # by core.degraded_mode). The module must not
     # 500-crash its callers (approval routes, ecosystem workflow, tests), so the
     # degraded mode hands out a fresh IN-MEMORY connection per call: the schema
     # still auto-creates, reads return empty lists and writes are per-process

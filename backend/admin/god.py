@@ -43,8 +43,8 @@ class AdminGodLayer:
         if self._sqlite_refused:
             logger.warning(
                 "[P0] AdminGodLayer running WITHOUT local SQLite rules store — rules "
-                "resolve to safe defaults (deny). Set SUPABASE_ALLOW_DB_DEGRADATION=true "
-                "to accept the ephemeral fallback, or provision Firestore."
+                "resolve to safe defaults (deny). The degradation flag no longer permits "
+                "SQLite fallback; provision Firestore."
             )
             self.sqlite_lock = threading.Lock()
 

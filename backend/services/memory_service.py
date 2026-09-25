@@ -139,8 +139,8 @@ class CascadeMemoryService:
                     "[P0] CascadeMemoryService degraded IN-PROCESS ONLY: SQLite fallback "
                     "refused in production and Postgres unavailable — memories are kept in "
                     "a bounded buffer mirrored to Redis state store (issue #451); rows "
-                    "written before this fix are still lost. Set "
-                    "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite fallback."
+                    "written before this fix are still lost. The degradation flag no "
+                    "longer permits SQLite fallback; provision a durable backend."
                 )
             else:
                 self.db_path = db_path or "data/memory.db"

@@ -111,10 +111,42 @@ def test_sqlite_fallback_production_no_gate_refused_and_warns_once(monkeypatch):
     assert "SUPABASE_ALLOW_DB_DEGRADATION" in criticals[0]
 
 
-def test_sqlite_fallback_production_with_gate_allowed(monkeypatch):
+def test_sqlite_fallback_production_gate_ignored_hard_fail(monkeypatch):
+    """Wave 0.1 (issue #1224): the degradation flag no longer opens the SQLite
+    escape hatch in production — the fallback stays refused + loudly warned,
+    even when both the canonical flag and the legacy alias are set."""
     _production_env(monkeypatch)
     monkeypatch.setenv("SUPABASE_ALLOW_DB_DEGRADATION", "true")
-    assert sqlite_fallback_allowed("regression_feature_gate") is True
+    monkeypatch.setenv("ALLOW_DB_DEGRADATION", "true")  # legacy alias too
+
+    calls: list[str] = []
+
+    class _FakeLogger:
+        def critical(self, msg, *args, **kwargs):
+            calls.append(str(msg))
+
+        def warning(self, msg, *args, **kwargs):
+            pass
+
+        def error(self, msg, *args, **kwargs):
+            pass
+
+        def info(self, msg, *args, **kwargs):
+            pass
+
+    monkeypatch.setattr(degraded_mode, "logger", _FakeLogger())
+
+    assert sqlite_fallback_allowed("regression_feature_gate") is False
+    # A different feature in the same production context is refused too.
+    assert sqlite_fallback_allowed("regression_feature_gate_second") is False
+    criticals = [c for c in calls if "P0" in c]
+    assert criticals, "production refusal must fire the CRITICAL P0 warning"
+    assert any("no longer permits SQLite fallback" in c for c in criticals)
+    # The fail-closed variant must raise even with the flag set.
+    from core.degraded_mode import SQLiteFallbackDisabledError, require_sqlite_allowed
+
+    with pytest.raises(SQLiteFallbackDisabledError):
+        require_sqlite_allowed("regression_feature_gate_raise")
 
 
 def test_sqlite_fallback_dev_allowed(monkeypatch):

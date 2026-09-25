@@ -80,9 +80,8 @@ class GCPFirestoreVerificationQueue:
                 self._memory_rows = InMemoryRing()
                 logger.warning(
                     "[P0] GCPFirestoreVerificationQueue degraded to a bounded IN-PROCESS "
-                    "queue — queued verifications are LOST on restart. Set "
-                    "SUPABASE_ALLOW_DB_DEGRADATION=true to accept the ephemeral SQLite "
-                    "fallback, or provision GCP Firestore."
+                    "queue — queued verifications are LOST on restart. The degradation "
+                    "flag no longer permits SQLite fallback — provision GCP Firestore."
                 )
                 return
             if not self.db_path:

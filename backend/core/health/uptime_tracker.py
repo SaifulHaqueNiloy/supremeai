@@ -8,11 +8,11 @@ Uses a small local SQLite file so it works out of the box on Render's free
 tier without needing a Postgres migration. Safe for concurrent async access
 because each call opens/closes its own short-lived connection.
 
-P0 (Task 9-c2): this module is SQLite-only by design. In production without
-``SUPABASE_ALLOW_DB_DEGRADATION=true`` the uptime history is DISABLED loudly
-(CRITICAL logged once via core.degraded_mode): ``record_check`` becomes a
-no-op, and read helpers return "no data" (None / []) instead of ever touching
-an ephemeral file. Dev/test behaviour is unchanged.
+P0 (Task 9-c2 + Wave 0.1): this module is SQLite-only by design. In
+production the uptime history is DISABLED loudly (the degradation flag no
+longer permits SQLite fallback; CRITICAL logged once via core.degraded_mode):
+``record_check`` becomes a no-op, and read helpers return "no data" (None / [])
+instead of ever touching an ephemeral file. Dev/test behaviour is unchanged.
 """
 
 from __future__ import annotations
