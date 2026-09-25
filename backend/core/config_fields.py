@@ -1,42 +1,18 @@
 """Pydantic field declarations for SupremeAI settings."""
 
-import json
 from typing import Annotated, Any, ClassVar
 
 from pydantic import AliasChoices, Field, SecretStr
 from pydantic_settings import NoDecode
 
+# Roadmap 1.4 (issue #1173): the single origin/list parser now lives in the
+# dependency-free leaf module `core.config_parsers`; re-exported here so the
+# historical `from core.config_fields import parse_origin_list` path keeps
+# working. Middleware (cors_policy) imports the leaf directly — it must stay
+# pydantic-free, and this module deliberately pulls in pydantic.
+from core.config_parsers import parse_origin_list  # re-export (do not remove)
 
-def parse_origin_list(value: Any) -> Any:
-    """Single shared parser for CORS-origin-style list settings (issue #684 DRY).
-
-    Accepts a JSON array string, a comma-separated string, or an existing
-    list/tuple and returns the stripped, empty-entry-free ``list[str]``.
-    Values of any other type are returned untouched so pydantic's own field
-    validation keeps failing loudly on genuinely invalid config instead of
-    the parser silently swallowing it.
-
-    This is the ONE copy of the origin/list parsing routine — previously the
-    JSON-then-comma-split logic was duplicated between ``config_fields.py``
-    and ``config_validation.py`` (with drifted edge behaviour). Both mixins
-    import from this module, keeping the dependency direction leaf-ward and
-    core-internal (config_validation -> config_fields -> pydantic only).
-    """
-    if isinstance(value, str):
-        value = value.strip()
-        if not value:
-            return []
-        if value.startswith("["):
-            try:
-                parsed = json.loads(value)
-            except (json.JSONDecodeError, ValueError):
-                parsed = None
-            if isinstance(parsed, list):
-                return [str(item).strip() for item in parsed if str(item).strip()]
-        return [item.strip() for item in value.split(",") if item.strip()]
-    if isinstance(value, (list, tuple)):
-        return [str(item).strip() for item in value if str(item).strip()]
-    return value
+__all__ = ["SettingsFieldsMixin", "parse_origin_list"]
 
 
 class SettingsFieldsMixin:

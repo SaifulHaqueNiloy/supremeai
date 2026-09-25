@@ -15,6 +15,7 @@ from pydantic import (
     model_validator,
 )
 
+from core.config_parsers import parse_origin_list
 from core.logging_config import logger
 from core.secret_policy import JWT_SECRET_DEPRECATED_ENV, JWT_SECRET_ENV
 
@@ -670,7 +671,7 @@ def build_config_validation_report(env: str | None = None) -> ConfigValidationRe
     try:
         from middleware.cors_policy import resolve_admin_cors_origins, resolve_user_cors_origins
 
-        raw_user = [o.strip() for o in os.getenv("ALLOWED_ORIGINS", "").split(",") if o.strip()]
+        raw_user = parse_origin_list(os.getenv("ALLOWED_ORIGINS", ""))  # roadmap 1.4 (#1173)
         if not raw_user:
             # বাংলা মন্তব্য: localhost fallback শুধুমাত্র local env-এ — production/staging-এ
             # ALLOWED_ORIGINS অনুপস্থিত থাকলে silently localhost-এ ফলব্যাক করা উচিত নয়
@@ -680,7 +681,7 @@ def build_config_validation_report(env: str | None = None) -> ConfigValidationRe
 
             if settings.is_local():
                 raw_user = ["http://localhost:3000"]  # is_local() guarded dev default
-        raw_admin = [o.strip() for o in os.getenv("ADMIN_CORS_ORIGINS", "").split(",") if o.strip()]
+        raw_admin = parse_origin_list(os.getenv("ADMIN_CORS_ORIGINS", ""))
         resolved = set(resolve_user_cors_origins(raw_user)) | set(
             resolve_admin_cors_origins(raw_admin)
         )

@@ -13,20 +13,20 @@
 
 from __future__ import annotations
 
-import json
 import os
 from collections.abc import Iterable
 
+from core.config_parsers import parse_origin_list
+
 
 def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
+    # Roadmap 1.4 (issue #1173): canonical single parser — JSON-array বা
+    # comma-separated যেভাবেই operator লিখুক, একই stripped/filtered ফলাফল।
+    # core.config_parsers শুধু json/typing import করে, তাই এই মডিউলের
+    # "dependency-free (no pydantic)" নীতি অটুট।
     val = os.getenv(env_var)
     if val:
-        try:
-            parsed = json.loads(val)
-            if isinstance(parsed, list):
-                return tuple(parsed)
-        except json.JSONDecodeError:
-            return tuple([x.strip() for x in val.split(",") if x.strip()])
+        return tuple(parse_origin_list(val))
     return default
 
 
