@@ -24100,6 +24100,7 @@
     {
       "capability_signals": [
         "execute",
+        "mcp",
         "register"
       ],
       "classification": "canonical",
@@ -25758,6 +25759,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "health",
         "mcp"
       ],
