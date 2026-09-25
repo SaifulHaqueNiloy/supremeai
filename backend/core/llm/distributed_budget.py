@@ -9,7 +9,7 @@ from __future__ import annotations
 import time
 
 from core.cache.redis_manager import redis_manager
-from core.logging import get_logger
+from monitoring.logging import get_logger
 
 logger = get_logger(__name__)
 

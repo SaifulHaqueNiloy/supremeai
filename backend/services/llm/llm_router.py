@@ -32,10 +32,10 @@ from core.config import settings
 from core.exceptions import LLMProviderError, QuotaExceededError
 from core.llm.free_tier_tracker import get_tracker
 from core.llm.llm_gateway import get_llm_gateway
-from core.logging import get_logger
-from core.metrics import counter, timed
 from core.resilience.circuit_breaker import CircuitBreaker as circuit_breaker
 from core.resilience.circuit_breaker_manager import get_shared_circuit_breaker
+from monitoring.logging import get_logger
+from monitoring.metrics import counter, timed
 from services.dynamic_ai.orchestrator import get_ai_orchestrator
 from services.llm.providers import (
     BAIProvider,

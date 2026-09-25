@@ -28,7 +28,7 @@ class RLHFPipeline:
 
         # Firestore sync if available
         try:
-            from core.gcp_firestore import GCPFirestoreVerificationQueue
+            from services.storage.gcp_firestore import GCPFirestoreVerificationQueue
 
             queue = GCPFirestoreVerificationQueue(collection_name="ai_rlhf_preferences")
             if queue.mode == "firestore" and queue.client:
@@ -66,7 +66,7 @@ class RLHFPipeline:
 
         # Save automatically to Firestore database for continuous cross-platform persistence
         try:
-            from core.gcp_firestore import GCPFirestoreVerificationQueue
+            from services.storage.gcp_firestore import GCPFirestoreVerificationQueue
 
             queue = GCPFirestoreVerificationQueue(collection_name="ai_rlhf_preferences")
             if queue.mode == "firestore" and queue.client:

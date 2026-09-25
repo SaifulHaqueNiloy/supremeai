@@ -23,7 +23,7 @@ if repo_root not in sys.path:
 
 from core.logging_config import logger
 from core.self_evolution.fitness_engine import FitnessEngine
-from core.tenant_db import TenantAwareFirestore
+from database.tenant_db import TenantAwareFirestore
 
 try:
     try:
@@ -110,7 +110,7 @@ def _resolve_firestore_client():
     strategy (``monkeypatch.setattr(auto_skill_creator, "_resolve_firestore_client", ...)``).
     """
     try:
-        from core.gcp_firestore import get_firestore_client
+        from services.storage.gcp_firestore import get_firestore_client
 
         return get_firestore_client()
     except Exception as e:

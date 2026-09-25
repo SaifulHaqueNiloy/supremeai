@@ -129,3 +129,29 @@ entries were removed from `backend/tests/unit_light/test_deprecated_shims.py`
 | backend/core/rate_limiter.py | 9 | `middleware/rate_limiter.py` |
 
 Total: 6 files, ~150 lines.
+
+## batch-6 — archived 2026-09-26 (issue #1396)
+
+Verification date: 2026-09-26 · Scheduled delete-after review: 2026-10-09
+Phase 2 (Duplicate Consolidation) batch 4 — the 9 low-importer `core/` shims
+resolved per plan §3 method: every live importer redirected name-for-name to
+the canonical module, then the stale shim archived. Covers 76 replacement
+sites across 44 files (incl. 2 root dev scripts, 1 generated-template line in
+scripts/testing/_gen_services.py, and the `patch("core.pgbouncer_pool.get_db_pool")`
+target in tests/api/test_api_keys.py — shim-path patches are silent no-ops).
+`core/logging_config.py` (646 importers) intentionally excluded — dedicated
+batch next. The shim-contract suite now parametrizes over that single shim.
+
+| Original path | Lines | Canonical replacement |
+|---|---|---|
+| backend/core/log_batcher.py | 24 | `monitoring/log_batcher.py` |
+| backend/core/idempotency_middleware.py | 30 | `middleware/idempotency_middleware.py` |
+| backend/core/metrics.py | 30 | `monitoring/metrics.py` |
+| backend/core/logging.py | 24 | `monitoring/logging.py` |
+| backend/core/error_pattern_db.py | 24 | `core/errors/error_pattern_db.py` |
+| backend/core/metrics_collector.py | 24 | `monitoring/metrics_collector.py` |
+| backend/core/tenant_db.py | 21 | `database/tenant_db.py` |
+| backend/core/pgbouncer_pool.py | 24 | `database/pgbouncer_pool.py` |
+| backend/core/gcp_firestore.py | 24 | `services/storage/gcp_firestore.py` |
+
+Total: 9 files, ~225 lines.

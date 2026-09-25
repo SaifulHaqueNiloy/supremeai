@@ -11,12 +11,12 @@ import os
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from core.logging import get_logger
 from qdrant_client import QdrantClient
 from qdrant_client.http import models
 
 from core.cache import get_redis_client
 from core.config import settings
-from core.logging import get_logger
 
 
 @dataclass

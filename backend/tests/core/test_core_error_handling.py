@@ -9,21 +9,21 @@ class TestErrorPatternDB:
 
     def test_error_pattern_db_initialization(self):
         """Test ErrorPatternDB initializes with default path."""
-        from backend.core.error_pattern_db import ErrorPatternDB
+        from backend.core.errors.error_pattern_db import ErrorPatternDB
 
         db = ErrorPatternDB()
         assert db is not None
 
     def test_error_pattern_db_custom_path(self):
         """Test ErrorPatternDB with custom path."""
-        from backend.core.error_pattern_db import ErrorPatternDB
+        from backend.core.errors.error_pattern_db import ErrorPatternDB
 
         db = ErrorPatternDB(db_path=":memory:")
         assert db is not None
 
     def test_log_error(self):
         """Test logging an error pattern."""
-        from backend.core.error_pattern_db import ErrorPatternDB
+        from backend.core.errors.error_pattern_db import ErrorPatternDB
 
         db = ErrorPatternDB(db_path=":memory:")
 
@@ -50,7 +50,7 @@ class TestErrorPatternDB:
 
     def test_log_ai_mistake(self):
         """Test logging AI mistake."""
-        from backend.core.error_pattern_db import ErrorPatternDB
+        from backend.core.errors.error_pattern_db import ErrorPatternDB
 
         db = ErrorPatternDB(db_path=":memory:")
 
@@ -76,7 +76,7 @@ class TestErrorPatternDB:
 
     def test_get_prevention_strategy(self):
         """Test getting prevention strategy."""
-        from backend.core.error_pattern_db import ErrorPatternDB
+        from backend.core.errors.error_pattern_db import ErrorPatternDB
 
         db = ErrorPatternDB(db_path=":memory:")
 
@@ -87,7 +87,7 @@ class TestErrorPatternDB:
 
     def test_check_pattern(self):
         """Test pattern checking."""
-        from backend.core.error_pattern_db import ErrorPatternDB
+        from backend.core.errors.error_pattern_db import ErrorPatternDB
 
         db = ErrorPatternDB(db_path=":memory:")
 

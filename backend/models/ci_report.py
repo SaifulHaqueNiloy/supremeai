@@ -12,7 +12,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
-from core.pgbouncer_pool import get_db_pool
+from database.pgbouncer_pool import get_db_pool
 
 
 def now_epoch() -> int:

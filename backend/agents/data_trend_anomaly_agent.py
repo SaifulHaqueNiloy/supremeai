@@ -14,7 +14,7 @@ Key Components:
 
 Dependencies:
 - `core.config`: For settings, API keys, and environment config.
-- `core.tenant_db`: For tenant-aware Firestore access.
+- `database.tenant_db`: For tenant-aware Firestore access.
 - `core.cache`: For caching computed analytics.
 - `core.llm_router`: For zero-cost LLM routing (Kimi Primary → DeepSeek Fallback).
 """
@@ -33,7 +33,7 @@ from typing import Any, TypeVar
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.logging_config import logger
-from core.tenant_db import TenantAwareFirestore
+from database.tenant_db import TenantAwareFirestore
 from services.llm.llm_router import LLMRouter
 
 T = TypeVar("T", bound="DataTrendAnomalyAgent")

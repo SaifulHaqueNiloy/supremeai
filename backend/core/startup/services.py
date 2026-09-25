@@ -7,9 +7,9 @@ from core.config_cache import config_cache
 from core.logging_config import logger
 from core.maintenance_pipeline import maintenance_pipeline
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
-from core.pgbouncer_pool import PgBouncerConnectionPool, get_db_pool, init_db_pool
 from core.reliability_controller import ReliabilityController
 from core.startup.api_key_tables import ensure_api_key_tables as _ensure_api_key_tables
+from database.pgbouncer_pool import PgBouncerConnectionPool, get_db_pool, init_db_pool
 
 
 async def initialize_independent_services(app):
