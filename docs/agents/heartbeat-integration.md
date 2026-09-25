@@ -1,155 +1,170 @@
-# Agent Heartbeat Integration — real-time online status (issue #1402)
+# Agent Heartbeat Integration Guide
 
-> **Goal:** the agent dashboard must distinguish *"tool assigned but IDE
-> closed"* from *"tool assigned AND actively running"*. The policy registry
-> (`AGENT_SLOT_REGISTRY.yaml`) answers *who may run*; heartbeats answer
-> *who is running right now*.
->
-> Introduced by PR #1397 (agent-11 registration + heartbeat infrastructure).
-> Reference clients live in [`tools/agent_heartbeat/`](../../tools/agent_heartbeat/).
+> **Issue:** [#1402 — feat(agents): instrument all agent tools to POST heartbeat → real-time online status](https://github.com/SaifulHaqueNiloy/supremeai/issues/1402)
+> **Related:** PR #1397 (agent-11 registration), AGENT_SLOT_REGISTRY.yaml, OPS-06 §5
 
-## 1. State model (6 states)
+Every agent slot can now report **real-time liveness** while its tool is
+actually running. The dashboard (`/api/agents` on the Z.ai preview) merges
+two sources:
+
+| State | Meaning | Source |
+|---|---|---|
+| 🟢 **online** | heartbeat written within 90s | runtime signal (this guide) |
+| 🟡 **stale** | heartbeat 90–300s old | runtime signal (tool idle or degraded) |
+| 🔵 **assigned** | slot allocated in `AGENT_SLOT_REGISTRY.yaml`, no live heartbeat | policy |
+| ⚪ **standby** | slot inactive (`active: false`) | policy |
+
+## The contract
+
+All writers produce the same Redis record (TTL 300s):
 
 ```
-standby → assigned → connected → idle ↔ working → stale → assigned
-                                       ↑___________________|
+Key    supremeai:agent-heartbeat:agent-N
+Value  {"slot":"agent-N","agentId":"Tool Name","source":"mcp-tower|backend|dashboard|cli",
+        "clientId":"optional-audit-id","updatedAtMs":1758857500000,"updatedAt":"…Z"}
+TTL    300 seconds   (a missed ping does NOT immediately drop the slot)
 ```
 
-| State | Color | Meaning | Shown when |
-|---|---|---|---|
-| ⚪ `standby` | slate | Slot inactive | `active: false` in registry YAML |
-| 🔵 `assigned` | cyan | Slot allocated, no heartbeat | Tool closed / never pinged |
-| 🟢 `connected` | teal (pulse) | First heartbeat received | < 10 s after first ping |
-| 🟢 `idle` | emerald | Heartbeat live, no active task | Default running state |
-| 🟣 `working` | violet (pulse) | Executing a task | `status:"working"` + `task:"…"` |
-| 🟡 `stale` | amber | Heartbeat age 90 s–300 s | Degraded — tool may have crashed |
+Readers derive the state from `updatedAtMs`: **≤90s → online**, **90–300s →
+stale**, **key gone → assigned/standby**.
 
-Derived server-side from the Redis hash `agent:status:{slot}`
-(`lastSeen`, `agentId`, `status`, `task`, `updatedAt`; key TTL 300 s).
+### Multi-account failover (important)
 
-## 2. Endpoint contract
+The canonical Upstash PRIMARY repeatedly hits its 500k/day command ceiling.
+Every heartbeat writer therefore walks the account chain
+**primary → secondary → tertiary → quaternary → quinary** until one accepts
+the write, and readers **merge across accounts keeping the freshest record
+per slot**. Configure any subset of:
 
-```json
-POST /api/agents/heartbeat
-Content-Type: application/json
-
-{
-  "slot": "agent-4",              // required, must match /^agent-\d+$/
-  "agentId": "Cline",             // optional human-readable label
-  "status": "working",            // connected | idle | working (default idle)
-  "task": "database migration 7"  // optional, shown in "Current task" column
-}
+```
+UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN                 # primary
+UPSTASH_REDIS_SECONDARY_REST_URL / UPSTASH_REDIS_SECONDARY_REST_TOKEN
+UPSTASH_REDIS_TERTIARY_REST_URL / UPSTASH_REDIS_TERTIARY_REST_TOKEN
+UPSTASH_REDIS_QUATERNARY_REST_URL / UPSTASH_REDIS_QUATERNARY_REST_TOKEN
+UPSTASH_REDIS_QUINARY_REST_URL / UPSTASH_REDIS_QUINARY_REST_TOKEN
 ```
 
-- **Cadence:** keep-alive ping every **45 s**; status transitions on events.
-- **TTL:** 300 s — a missed ping does not immediately drop the slot.
-- **Where it lives:** preview dashboard route
-  `src/app/api/agents/heartbeat/route.ts` (Upstash Redis, 5-account fallback
-  chain). Production target: the same route on the **MCP control tower** so
-  MCP-connected agents can ping with the existing protocol (tracked in #1402).
+## Three ways to ping
 
-## 3. Lifecycle a tool should emit
+### 1. MCP tool (recommended for MCP-connected tools — zero setup)
 
-| Event | POST |
-|---|---|
-| Startup | `{"status":"connected"}` (one-time) |
-| 3 s later, no task | `{"status":"idle"}` |
-| Task starts | `{"status":"working","task":"<description>"}` |
-| Task completes | `{"status":"idle"}` |
-| Every 45 s | `{"status":"idle"}` (or current status) |
-| Shutdown | stop pinging → key expires in ≤ 300 s → slot reverts to `assigned` |
+The control tower (`supremeai-mcp-tower.onrender.com`) exposes:
 
-## 4. Reference clients (this repo)
+- **`agent_heartbeat`** — args: `slot` (required, `agent-N`), `agentId`
+  (optional label). Ping it every 45s while your session runs.
+- **`agent_status`** — lists all live heartbeats with derived state.
 
-`tools/agent_heartbeat/` — shared, zero-dependency:
+```jsonc
+// tools/call
+{ "name": "agent_heartbeat", "arguments": { "slot": "agent-4", "agentId": "Cline" } }
+```
+
+### 2. Universal pinger scripts (for tools that can run a subprocess)
 
 ```bash
-export HEARTBEAT_URL="https://<dashboard-host>/api/agents/heartbeat"
+# Loop while the tool runs (45s cadence):
+python3 scripts/agents/heartbeat_ping.py --slot agent-1 --agent-id Antigravity
 
-# keep-alive for the whole session (any slot)
-AGENT_SLOT=agent-2 AGENT_ID="Claude Code" tools/agent_heartbeat/heartbeat.sh &
+# Single ping (cron / CI / session-start hook):
+python3 scripts/agents/heartbeat_ping.py --slot agent-8 --agent-id Aider --once
 
-# task transitions from wrapper scripts / CI steps
-tools/agent_heartbeat/heartbeat.py working "archiving shim batch 5"
-tools/agent_heartbeat/heartbeat.py stop
+# Shell-only environments (curl + python3):
+scripts/agents/heartbeat_ping.sh agent-1 Antigravity      # loop
+scripts/agents/heartbeat_ping.sh agent-8 Aider once       # single ping
+
+# Already MCP-connected but no Redis creds? Ping via the tower:
+python3 scripts/agents/heartbeat_ping.py --slot agent-2 --agent-id "Claude Code" \
+    --mode mcp --once    # uses MCP_URL + MCP_API_KEY
 ```
 
-Fail-soft guarantee: heartbeat failures never crash the host tool (exit 0,
-stderr warning only). If `HEARTBEAT_URL` is unset the clients are no-ops.
+### 3. Raw Upstash REST (single curl, for locked-down environments)
 
-## 5. Per-tool integration
+```bash
+curl -X POST "$UPSTASH_REDIS_REST_URL" \
+  -H "Authorization: Bearer $UPSTASH_REDIS_REST_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '["SET","supremeai:agent-heartbeat:agent-N","{\"slot\":\"agent-N\",\"agentId\":\"Tool\",\"source\":\"cli\",\"updatedAtMs":0,\"updatedAt\":\"…\"}","EX","300"]'
+```
+
+(Prefer the scripts — they build the payload and timestamps correctly.)
+
+## Cadence & lifecycle rules
+
+- **Ping every 45s** while the tool is running (`AGENT_HEARTBEAT_INTERVAL` for
+  the backend loop; `--interval` / `HEARTBEAT_INTERVAL` for the scripts).
+- Start pinging on session/tool start; stop when the tool exits.
+- A stopped tool degrades 🟢→🟡 within 90s and 🔵 within 300s — automatic.
+- **Only ping your own assigned slot** from `AGENT_SLOT_REGISTRY.yaml`. Pings
+  are attributed with the authenticated MCP client id for auditability.
+
+## Per-tool integration status
 
 ### agent-1: Antigravity
-Startup hook running the shared pinger on a 45 s timer, or a Python sidecar
-(`heartbeat.py` + `HeartbeatClient().start()`) launched beside the Antigravity
-process.
+- ✅ Documented: run the pinger loop alongside the IDE process
+  (`heartbeat_ping.py --slot agent-1 --agent-id Antigravity`) as a startup
+  task, or wire the shell pinger into your launcher script.
 
-### agent-2: Claude Code ✅ (reference implementation in this repo)
-1. `mkdir -p ~/.claude/hooks`
-2. `cp tools/agent_heartbeat/claude-code/heartbeat-hook.sh ~/.claude/hooks/heartbeat.sh && chmod +x ~/.claude/hooks/heartbeat.sh`
-3. Merge `tools/agent_heartbeat/claude-code/settings-snippet.json` into
-   `~/.claude/settings.json` (registers the `SessionStart` hook + env vars).
-4. On every session start: `connected` → background keep-alive (`idle`, 45 s);
-   the pidfile guard kills a previous session's pinger so one session == one
-   pinger.
+### agent-2: Claude Code
+- ✅ Documented: add a `SessionStart` hook (`~/.claude/settings.json`) that
+  launches the pinger loop with `--slot agent-2 --agent-id "Claude Code"`;
+  kill it in the `SessionEnd` hook. MCP-connected sessions can instead call
+  the `agent_heartbeat` tool directly.
 
 ### agent-3: Cursor
-Extension `cursor-heartbeat`: ping on `activation` + every 45 s via
-`setInterval`; stop on dispose. Publish to the marketplace or install locally.
+- ✅ Documented: a minimal VSCode-style extension (works in Cursor) whose
+  `activate()` starts a 45s `setInterval` REST ping and `deactivate()` clears
+  it. Publish or install locally; see the contract above.
 
 ### agent-4: Cline
-VSCode extension `cline-heartbeat`: activate on `onStartupFinished`, ping
-every 45 s while the extension host is alive, stop on `deactivate`. Package
-as `.vsix`. Alternative: add the ping directly to the Cline fork's core.
+- ✅ Documented: same extension approach as agent-3 (`onStartupFinished` +
+  45s `setInterval`, stop on `deactivate`), packaged as `.vsix`.
 
 ### agent-5: Windsurf
-Same VSCode-extension approach as Cursor; only ping while the slot is
-`active: true` in the registry.
+- ✅ Documented: identical to agent-3/4 (VSCode-compatible).
 
 ### agent-6: Devin
-Server-side: ping from Devin's session manager / startup script using
-`heartbeat.py working "<session goal>"` at session start, `idle` keep-alive
-during, `stop` at session end.
+- ✅ Documented: add `heartbeat_ping.py --slot agent-6 --agent-id Devin --once`
+  to the session-manager startup script + a 45s scheduler (cron/systemd timer).
 
 ### agent-7: GitHub Copilot Workspace
-GitHub Action workflow that pings `connected` when a Copilot Workspace session
-starts, plus a `working` ping per task step (via `workflow_dispatch` or the
-workspace startup hook).
+- ✅ Documented: a repository GitHub Action triggered on session start that
+  runs a single `--once` ping; re-run per session.
 
 ### agent-8: Aider
-`--heartbeat` flag on the CLI that starts a `HeartbeatClient` background
-thread (`heartbeat.py`), or wire into Aider's existing hook system if
-available.
+- ✅ Documented: wrap launches with `heartbeat_ping.sh agent-8 Aider &` in the
+  shell profile / wrapper script; stop the process on exit.
 
 ### agent-9: Continue
-VSCode/JetBrains extension — same pattern as Cline (activation ping + 45 s
-keep-alive + deactivate stop).
+- ✅ Documented: VSCode/JetBrains extension approach (agent-3 pattern).
 
-### agent-10: SupremeAI (self-development mode)
-Ping from the backend's own startup sequence (`backend/core/startup/`):
-`connected` at boot, `idle` keep-alive thread, `working` around long
-self-maintenance jobs. Reuse `tools/agent_heartbeat/heartbeat.py` (stdlib
-only — no new dependency for the backend).
+### agent-10: SupremeAI backend ✅ IMPLEMENTED IN REPO
+- `backend/core/agent_heartbeat.py` — supervisor-managed loop (45s cadence),
+  started in `backend/core/startup/agents.py` ("Agent 5: Self-Heartbeat").
+  Kill switch: `ENABLE_AGENT_HEARTBEAT=false`. Interval: `AGENT_HEARTBEAT_INTERVAL`.
 
-### agent-11: Z.ai 5.2 Full Stack ✅ DONE
-Already pings every 45 s from the preview dashboard
-(`src/app/page.tsx` → `postHeartbeat()`); demonstrates the full 6-state
-lifecycle live (`connected` → `idle` after 3 s → `working` on refresh click).
+### agent-11: Z.ai 5.2 Full Stack ✅ ALREADY PINGING
+- The preview dashboard pings its own slot every 45s from
+  `src/app/page.tsx → postHeartbeat()` (reference implementation for HTTP
+  transports). It also exposes `POST/GET /api/agents/heartbeat` and
+  `GET /api/agents` for the whole fleet.
 
-## 6. Acceptance criteria (issue #1402)
+## Dashboard endpoints (Z.ai preview)
 
-- [x] Every tool (agent-1 … agent-10) has a documented integration path (this doc + shared clients)
-- [x] Reference clients committed: `tools/agent_heartbeat/{heartbeat.sh,heartbeat.py,claude-code/}`
-- [ ] Each tool actually installed & showing 🟢 when running (per-tool rollout above)
-- [ ] Slot degrades to 🔵 `assigned` within 90 s of tool close (dashboard TTL behaviour, agent-11)
-- [ ] CI test: heartbeat endpoint responds 200 for valid slot names (dashboard repo)
-- [ ] Endpoint deployed to production (MCP tower route — tracked in #1402)
+```
+POST /api/agents/heartbeat      {"slot":"agent-N","agentId":"Tool"}   → ping
+GET  /api/agents/heartbeat      → live heartbeat records + state
+GET  /api/agents                → full merged view (YAML policy × runtime)
+```
 
-## 7. Notes for maintainers
+The production state store is the shared Upstash chain — the dashboard and
+the tower read the same records, so an MCP ping shows up in the dashboard
+within one poll cycle.
 
-- Heartbeat is **observability, not auth** — never gate work on it; the
-  registry YAML remains the policy source of truth.
-- Ping bodies are tiny JSON; a 45 s cadence is ~2 k requests/day/slot —
-  watch the Upstash account limits (primary hit 500 k/day once; the
-  5-account fallback chain exists for this reason).
-- Keep pingers fail-soft. A dashboard outage must not take down an agent.
+## Testing
+
+- Tower contract tests: `npm run test:heartbeat` (in
+  `infrastructure/mcp-control-plane`, wired into `test:unit`) — slot
+  validation, state derivation, key layout, chain assembly, fail-loud when
+  Redis is unconfigured.
+- Live check: call `agent_status` on the tower, or `curl GET /api/agents`
+  on the dashboard.

@@ -20,10 +20,14 @@
 
 version: "1.0"
 
+# Real-time liveness: assigned slots show 🟢 online on the /api/agents
+# dashboard when their tool pings the shared heartbeat store. Integration
+# guide per tool: docs/agents/heartbeat-integration.md (issue #1402).
+
 # Agent slot assignments — per OPS-06 §5 (Polymorphic Agent Assignment)
 # 10 slots defined; maintainer activates/deactivates as needed.
 # Note: OPS-06 Safeguard 5 (Max Concurrent Agent Policy) currently caps active
-# slots at 5 for rate-budget reasons. If >5 slots are activated simultaneously,
+# slots at 9 for rate-budget reasons. If >9 slots are activated simultaneously,
 # update Safeguard 5's policy threshold accordingly.
 slots:
   - slot: agent-1
@@ -59,50 +63,50 @@ slots:
     notes: "Database + migration work"
 
   - slot: agent-5
-    tool: "Windsurf"
+    tool: "z.ai git issue and log"
     maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: false
-    notes: "Standby — documentation + agent governance (activatable on demand)"
+    assigned_on: "2026-09-26"
+    expires_on: "2026-10-03"
+    active: true
+    notes: "Git issue triage, log parsing, and audit verification"
 
   - slot: agent-6
-    tool: "Devin"
+    tool: "z.ai long run 3rd party platform"
     maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: false
-    notes: "Standby — long-running refactoring tasks (activatable on demand)"
+    assigned_on: "2026-09-26"
+    expires_on: "2026-10-03"
+    active: true
+    notes: "Long-running third party platform integration and external sync"
 
   - slot: agent-7
-    tool: "GitHub Copilot Workspace"
+    tool: "z.ai git pr merge and regration"
     maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: false
-    notes: "Standby — small issue triage + label maintenance"
+    assigned_on: "2026-09-26"
+    expires_on: "2026-10-03"
+    active: true
+    notes: "PR review, merge orchestration, and regression prevention"
 
   - slot: agent-8
-    tool: "Aider"
+    tool: "z.ai 5.4 flash. full stack+longrun"
     maintainer: "@SaifulHaqueNiloy"
-    assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
-    active: false
-    notes: "Standby — security audit + dependency upgrades"
+    assigned_on: "2026-09-26"
+    expires_on: "2026-10-03"
+    active: true
+    notes: "Full-stack development and long-running autonomous execution"
 
   - slot: agent-9
     tool: "Continue"
     maintainer: "@SaifulHaqueNiloy"
     assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
+    expires_on: "2026-10-03"
     active: false
-    notes: "Standby — observability + metrics dashboards"
+    notes: "Standby — observability + metrics dashboards (activatable on demand)"
 
   - slot: agent-10
     tool: "SupremeAI"
     maintainer: "@SaifulHaqueNiloy"
     assigned_on: "2026-09-20"
-    expires_on: "2026-09-27"
+    expires_on: "2026-10-03"
     active: true
     notes: "Self-development mode (reserved per OPS-08 §5)"
 
@@ -113,7 +117,7 @@ validation_rules:
   - "maintainer MUST be a GitHub username (starts with @)"
   - "expires_on MUST be <= 7 days from assigned_on"
   - "Only one active assignment per slot at a time"
-  - "Active slots MUST be <= 5 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)"
+  - "Active slots MUST be <= 9 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)"
   - "Auto-expiry: assignments past expires_on are auto-deactivated"
 
 # How to claim/update a slot
