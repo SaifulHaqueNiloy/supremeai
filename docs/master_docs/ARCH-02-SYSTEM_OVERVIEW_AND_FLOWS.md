@@ -5220,7 +5220,7 @@ a 3-line script, catches the #1 event-loop killer class.
 
 ### RLP-14: Secrets in logs (P1)
 **Reality:** several modules log settings-derived values at DEBUG; logfox like
-`sync_render_secrets.py` handles secrets properly, but one bad `logger.info(f"{settings}")`
+The removed orphan `sync_render_secrets.py` (see `docs/SECRETS_OPERATIONS.md`) handled secrets properly, but one bad `logger.info(f"{settings}")`
 in a dependency prints everything.
 
 **Smart trick:** a startup log-filter that redacts known secret-shaped keys
@@ -11390,7 +11390,7 @@ class LLMRouterAdapter(SupremeNode):
 | # | Error Pattern | কেন হয় | Status | কোথায় Check |
 |---|---|---|---|---|
 | 7.1 | **Uncommitted WIP** — local changes push না করে ভুলে থাকা | Context switch করার সময় | ❌ **NOT TRACKED** | **Pre-push hook বা scheduled dirty-tree check add করতে হবে** |
-| 7.2 | **Render env var missing** — production-এ নতুন env var sync না করা | Local `.env`-এ add করে Infisical/Render sync ভুলে যাওয়া | 🔧 **MANUAL** | `maintenance.yml` → env sync task; `scripts/sync_render_secrets.py` |
+| 7.2 | **Render env var missing** — production-এ নতুন env var sync না করা | Local `.env`-এ add করে Infisical/Render sync ভুলে যাওয়া | 🔧 **MANUAL** | `maintenance.yml` → env sync task; manual runbook `docs/SECRETS_OPERATIONS.md` |
 | 7.3 | **Coverage gate too low** — 9% বা 35%-এ gate রাখলে regression protect করে না | Quick fix করতে গিয়ে gate নামিয়ে দেওয়া | ✅ **CI-GATED** | `ci.yml` → fail-under enforced (30%/16%) |
 | 7.4 | **Free-tier limit breach** — Render/Supabase/Redis free tier অতিক্রম | Resource monitoring না থাকা | 🕐 **SCHEDULED** | `scripts/free-tier-health-check.sh` (nightly বা manual) |
 | 7.5 | **GitHub Actions supply chain** — action SHA pin না থাকলে hijack risk | `uses: actions/checkout@v4` style → SHA pin mandatory | ✅ **CI-GATED** | `ci.yml` → actionlint (SHA check) |

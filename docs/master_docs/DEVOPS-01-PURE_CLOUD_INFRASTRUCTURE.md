@@ -74,7 +74,7 @@ python scripts/deploy/disaster_recovery_test.py
 python scripts/deploy/infrastructure_as_code_validator.py
 ```
 
-Frontend deploy: `pnpm deploy:frontend` (= `generate_firebase_config.py && firebase deploy --only hosting`) or push to `main` (auto). Secrets sync: `python scripts/sync_render_secrets.py`, `python scripts/deploy/update_infisical_render.py`.
+Frontend deploy: `pnpm deploy:frontend` (= `generate_firebase_config.py && firebase deploy --only hosting`) or push to `main` (auto). Secrets sync: manual runbook `docs/SECRETS_OPERATIONS.md` (the old `sync_render_secrets.py` was removed as orphaned, issue #1195; `scripts/deploy/update_infisical_render.py` remains but is also currently unwired — see follow-up).
 
 ## Free-Tier Engineering (the defining constraint)
 
