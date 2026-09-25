@@ -361,7 +361,7 @@ class TelegramBotCore:
         )
 
 
-class TelegramBotHandler(
+class TelegramBotHandler(, AIAssignmentHandlerMixin):
     TelegramBotCore,
     KeyboardsMixin,
     UpdatesMixin,
