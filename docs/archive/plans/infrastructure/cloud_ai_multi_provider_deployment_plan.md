@@ -7,6 +7,10 @@ document_role: implementation
 planning_authority: Architecture Governance / Planning Circle
 status: historical
 
+superseded_by: ["CP02"]
+archive_reason: "Fabricated GCP Cloud Run URLs (no code backing). CP02 requires real endpoints."
+disposition: archive-dry-branch
+archived_date: "2026-09-25"
 ---
 
 # 🌐 SupremeAI Cloud AI Deployment Plan

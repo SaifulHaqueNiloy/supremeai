@@ -7,6 +7,10 @@ document_role: implementation
 planning_authority: Architecture Governance / Planning Circle
 status: historical
 
+superseded_by: ["CP07"]
+archive_reason: "Istio/Kong/NATS impossible on 512MB Render free-tier. Fantasy engineering."
+disposition: archive-dry-branch
+archived_date: "2026-09-25"
 ---
 
 # 🚀 SupremeAI Production Upgrade Implementation Plan

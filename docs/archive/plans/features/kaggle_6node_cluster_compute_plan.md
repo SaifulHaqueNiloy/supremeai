@@ -7,6 +7,10 @@ document_role: implementation
 planning_authority: Architecture Governance / Planning Circle
 status: historical
 
+superseded_by: ["CP07"]
+archive_reason: "Fake Kaggle accounts + headless bots — ToS violation. CP07 requires honest federation."
+disposition: archive-dry-branch
+archived_date: "2026-09-25"
 ---
 
 # Implementation Plan: Supreme-Kaggle 6-Node Cluster (180 GPU Hours/Week)
