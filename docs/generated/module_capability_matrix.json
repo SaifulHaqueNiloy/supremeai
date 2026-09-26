@@ -23433,6 +23433,15 @@
       "path": "scripts/agents/create_blocker_issue.py"
     },
     {
+      "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/agents/create_discovery_issue.py"
+    },
+    {
       "capability_signals": [
         "dispatch",
         "execute",
@@ -25530,6 +25539,13 @@
     },
     {
       "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/git/push_as_agent.py"
+    },
+    {
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
         "main"
@@ -26503,5 +26519,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3031
+  "source_file_count": 3033
 }
