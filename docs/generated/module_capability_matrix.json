@@ -15611,6 +15611,17 @@
       "path": "backend/tests/unit_light/test_ld_client.py"
     },
     {
+      "capability_signals": [
+        "mcp",
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/unit_light/test_memory_sidecar_launch.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -15623,6 +15634,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/unit_light/test_rate_limit_quota.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/unit_light/test_routing_policy_live_models.py"
     },
     {
       "capability_signals": [],
@@ -25917,5 +25935,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2972
+  "source_file_count": 2974
 }
