@@ -179,20 +179,10 @@ async def command_events(limit: int = 50):
         logger.warning(f"[commandcenter] events fetch failed: {exc}")
         return {"count": 0, "events": [], "error": str(exc)[:100]}
 
-
-# Sub-routers inclusion
-from .build import router as build_router
-from .money import router as money_router
-from .observe import router as observe_router
-from .operate import router as operate_router
-from .overview import router as overview_router
-from .secure import router as secure_router
-from .system import router as system_router
-
-router.include_router(overview_router)
-router.include_router(build_router)
-router.include_router(secure_router)
-router.include_router(money_router)
-router.include_router(operate_router)
-router.include_router(observe_router)
-router.include_router(system_router)
+# FIX (CI red 36219425476): the sub-router inclusion block that used to sit
+# here duplicated the mounts at the top of this file (#1499, issue #1495).
+# include_router on the same router twice registers every /admin-api/
+# commandcenter/{build,money,observe,operate,overview,secure,system}/* route
+# ×2 — test_router_mount_hygiene::test_no_route_registered_more_than_once
+# caught 41 duplicated triples. The top-of-file block (with its issue #1495
+# rationale) is the single mount point now; nothing else changed.

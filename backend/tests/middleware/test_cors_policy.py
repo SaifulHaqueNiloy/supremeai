@@ -56,16 +56,32 @@ def test_origin_denylist_is_applied(monkeypatch):
 # in the API test suite and require the backend runtime dependencies.
 
 
-def test_production_frontend_origins_are_safe_defaults():
+def test_production_frontend_origins_are_safe_defaults(monkeypatch):
     """Issues #1483/#1484/#1455 regression guard: the deployed user portal
     (https://supremeai-a.web.app) and admin console (https://supremeai-admin.web.app)
     must be preflight-able even when USER_CORS_ORIGINS / ADMIN_CORS_ORIGINS fail to
-    sync to the host. The module-level defaults are the last line of defense."""
+    sync to the host. The module-level defaults are the last line of defense.
+
+    FIX (CI red 36219425476): the CI Pipeline exports USER_CORS_ORIGINS /
+    ADMIN_CORS_ORIGINS (localhost values) as process env — env always wins by
+    design, so asserting the module-level EFFECTIVE constants here made the
+    guard depend on runner env. The fallback contract is now asserted through
+    the same loader the module uses, with env explicitly cleared.
+    """
+    monkeypatch.delenv("USER_CORS_ORIGINS", raising=False)
+    monkeypatch.delenv("CORS_ORIGINS", raising=False)
+    monkeypatch.delenv("ADMIN_CORS_ORIGINS", raising=False)
     assert "https://supremeai-a.web.app" in cors_policy.DEFAULT_USER_ALLOWED_ORIGINS
     assert "https://supremeai-admin.web.app" in cors_policy.DEFAULT_ADMIN_ALLOWED_ORIGINS
-    # The effective module constants must never be empty in a clean environment —
-    # they fall back to the production defaults when no env var is set.
-    assert cors_policy.USER_ALLOWED_ORIGINS, "USER_ALLOWED_ORIGINS must not be empty"
-    assert cors_policy.ADMIN_ALLOWED_ORIGINS, "ADMIN_ALLOWED_ORIGINS must not be empty"
-    assert "https://supremeai-a.web.app" in cors_policy.USER_ALLOWED_ORIGINS
-    assert "https://supremeai-admin.web.app" in cors_policy.ADMIN_ALLOWED_ORIGINS
+    # The loader (env → vault-cache → default) must land on the production
+    # defaults in a clean environment — this is the last-line-of-defense path.
+    user_resolved = cors_policy._load_origins(
+        "CORS_ORIGINS", cors_policy.DEFAULT_USER_ALLOWED_ORIGINS
+    )
+    admin_resolved = cors_policy._load_origins(
+        "ADMIN_CORS_ORIGINS", cors_policy.DEFAULT_ADMIN_ALLOWED_ORIGINS
+    )
+    assert user_resolved, "user fallback must not be empty"
+    assert admin_resolved, "admin fallback must not be empty"
+    assert "https://supremeai-a.web.app" in user_resolved
+    assert "https://supremeai-admin.web.app" in admin_resolved
