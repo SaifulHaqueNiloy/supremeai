@@ -2,6 +2,7 @@
 # বাংলা মন্তব্য: মাল্টি-এজেন্ট সিকোয়েন্সিয়াল সোয়ার্ম কোঅর্ডিনেটর ও টাস্ক রানার।
 
 import asyncio
+import os
 import uuid
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -39,6 +40,14 @@ from core.skills.integrations import (
     SlackIntegrationSkill,
 )
 from models.shared_workspace import SharedWorkspace
+
+# AUDIT-FIX (#1691 HIGH): আগে agent.run(...) কোনো timeout ছাড়াই await হতো —
+# একটা LLM call যদি কখনো respond না করে, সেই agent forever block করত। এখন
+# প্রতিটি agent call-এ per-agent timeout wrap করা হয়েছে।
+# Env var দিয়ে override করা যায় — ডিফল্ট 60s (audit recommendation)।
+SWARM_PER_AGENT_TIMEOUT_SECONDS: float = float(
+    os.environ.get("SWARM_PER_AGENT_TIMEOUT_SECONDS", "60")
+)
 
 
 class ExecutionResult(BaseModel):
@@ -283,7 +292,19 @@ class SwarmOrchestrator:
                     )
 
                 coros = [self.agents[task].run(workspace, user_id) for task in runnable]
-                results = await asyncio.gather(*coros, return_exceptions=True)
+                # AUDIT-FIX (#1691 HIGH): আগে সরাসরি asyncio.gather কল হতো — কোনো
+                # timeout ছাড়াই। একটা agent যদি LLM থেকে কখনো respond না পায়,
+                # সম্পূর্ণ DAG forever hang করত। এখন প্রতিটি coroutine আলাদাভাবে
+                # asyncio.wait_for দিয়ে wrap করা হয় — সর্বোচ্চ per_agent_timeout
+                # পার হলে TimeoutError ফেরত দেয়, যা নিচের failures detection-এ
+                # ধরা যায় (যেহেতু return_exceptions=True)।
+                results = await asyncio.gather(
+                    *(
+                        asyncio.wait_for(coro, timeout=SWARM_PER_AGENT_TIMEOUT_SECONDS)
+                        for coro in coros
+                    ),
+                    return_exceptions=True,
+                )
 
                 # AUDIT-FIX (#1690 HIGH): graceful degradation. আগে যেকোনো
                 # single failure পুরো pipeline কে কিল করত — এখন partial
@@ -301,8 +322,19 @@ class SwarmOrchestrator:
 
                 if failures:
                     failed_names = ", ".join(
-                        f"{t}: {type(e).__name__}: {e}" for t, e in failures
+                        f"{t}: {type(e).__name__}: {e}"
+                        if not isinstance(e, asyncio.TimeoutError)
+                        else f"{t}: TIMEOUT after {SWARM_PER_AGENT_TIMEOUT_SECONDS}s"
+                        for t, e in failures
                     )
+                    # AUDIT-FIX (#1691): টাইমআউট হলে স্পষ্টভাবে log করি — অন্যথায় silent hang
+                    if any(isinstance(e, asyncio.TimeoutError) for _, e in failures):
+                        logger.error(
+                            "[SwarmOrchestrator] %d agent(s) timed out after %ss: %s",
+                            sum(1 for _, e in failures if isinstance(e, asyncio.TimeoutError)),
+                            SWARM_PER_AGENT_TIMEOUT_SECONDS,
+                            [t for t, e in failures if isinstance(e, asyncio.TimeoutError)],
+                        )
                     # AUDIT-FIX (#1690): শুধু সব (ALL) agents fail হলেই raise।
                     # কিছু succeed করলে warning দিয়ে continue করি — partial results
                     # workspace-এ থাকে, pipeline পরের batch-এ যেতে পারে।
@@ -319,7 +351,10 @@ class SwarmOrchestrator:
                     logger.warning(
                         "SwarmOrchestrator: PARTIAL failure in batch — %d/%d succeeded, "
                         "%d failed: %s. Continuing with partial results (AUDIT-FIX #1690).",
-                        len(succeeded), len(runnable), len(failures), failed_names,
+                        len(succeeded),
+                        len(runnable),
+                        len(failures),
+                        failed_names,
                     )
                     workspace.log(
                         f"SwarmOrchestrator: Partial batch result — {len(succeeded)}/{len(runnable)} "
@@ -327,14 +362,16 @@ class SwarmOrchestrator:
                     )
                     # Record partial failures in work_product for downstream observability
                     partial_failures = workspace.work_product.setdefault("partial_failures", [])
-                    partial_failures.extend([
-                        {
-                            "agent": task,
-                            "error_type": type(e).__name__,
-                            "error_message": str(e)[:500],
-                        }
-                        for task, e in failures
-                    ])
+                    partial_failures.extend(
+                        [
+                            {
+                                "agent": task,
+                                "error_type": type(e).__name__,
+                                "error_message": str(e)[:500],
+                            }
+                            for task, e in failures
+                        ]
+                    )
 
                 completed_tasks.update(succeeded)  # শুধু successful গুলো mark করি
                 # failed tasks কে আবার next iteration-এ ready হিসেবে না দিয়ে,
@@ -359,7 +396,29 @@ class SwarmOrchestrator:
                         )
 
                         # Guardian validation
-                        is_approved, feedback = await guardian_agent.validate(workspace, user_id)
+                        # AUDIT-FIX (#1691): per-agent timeout wrap
+                        try:
+                            is_approved, feedback = await asyncio.wait_for(
+                                guardian_agent.validate(workspace, user_id),
+                                timeout=SWARM_PER_AGENT_TIMEOUT_SECONDS,
+                            )
+                        except TimeoutError:
+                            workspace.log(
+                                f"SwarmOrchestrator: Guardian validate TIMEOUT after "
+                                f"{SWARM_PER_AGENT_TIMEOUT_SECONDS}s in iteration {i + 1}. "
+                                "Treating as failed validation — triggering refinement."
+                            )
+                            logger.error(
+                                "[SwarmOrchestrator] Guardian validate timed out in iteration %d/%d",
+                                i + 1,
+                                max_refinements,
+                            )
+                            is_approved, feedback = (
+                                False,
+                                (
+                                    f"Guardian validation timed out after {SWARM_PER_AGENT_TIMEOUT_SECONDS}s"
+                                ),
+                            )
 
                         if is_approved:
                             workspace.log(
@@ -372,7 +431,23 @@ class SwarmOrchestrator:
                         )
 
                         # Refinement by CodeGeneratorAgent
-                        await coder_agent.refine(workspace, feedback, user_id)
+                        # AUDIT-FIX (#1691): per-agent timeout wrap
+                        try:
+                            await asyncio.wait_for(
+                                coder_agent.refine(workspace, feedback, user_id),
+                                timeout=SWARM_PER_AGENT_TIMEOUT_SECONDS,
+                            )
+                        except TimeoutError:
+                            workspace.log(
+                                f"SwarmOrchestrator: Coder refine TIMEOUT after "
+                                f"{SWARM_PER_AGENT_TIMEOUT_SECONDS}s in iteration {i + 1}. "
+                                "Refinement skipped — proceeding with current code."
+                            )
+                            logger.error(
+                                "[SwarmOrchestrator] Coder refine timed out in iteration %d/%d",
+                                i + 1,
+                                max_refinements,
+                            )
                     else:  # This else belongs to the for loop, executes if loop finishes without break
                         workspace.log(
                             "SwarmOrchestrator: Max refinement attempts reached. Proceeding with current code."
@@ -381,7 +456,18 @@ class SwarmOrchestrator:
             # Final reflection step for all intents
             reflection_agent = self.agents.get("reflection")
             if reflection_agent:
-                await reflection_agent.run(workspace, user_id)
+                # AUDIT-FIX (#1691): per-agent timeout wrap
+                try:
+                    await asyncio.wait_for(
+                        reflection_agent.run(workspace, user_id),
+                        timeout=SWARM_PER_AGENT_TIMEOUT_SECONDS,
+                    )
+                except TimeoutError:
+                    workspace.log(
+                        f"SwarmOrchestrator: Reflection agent TIMEOUT after "
+                        f"{SWARM_PER_AGENT_TIMEOUT_SECONDS}s. Skipping reflection."
+                    )
+                    logger.error("[SwarmOrchestrator] Reflection agent timed out")
 
         try:
             from core.observability.telemetry import trace_span

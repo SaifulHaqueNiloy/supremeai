@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-26 18:50 UTC
+- **Date:** 2026-09-26 19:22 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,13 +10,16 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/workflows/cross-pr-collision-guard.yml`
-  - `.github/workflows/merge-train-rollup.yml`
-  - `tests/test_merge_train_rollup.py`
-  - `CHECKPOINT.md`
-  - `.github/workflows/pr-pipeline.yml`
-  - `scripts/ci/merge_train_rollup.py`
   - `.github/workflows/branch-naming-guard.yml`
+  - `backend/api/routes/cognitive.py`
+  - `backend/core/orchestration/swarm_orchestrator.py`
+  - `.github/workflows/cross-pr-collision-guard.yml`
+  - `backend/api/routes/evolution.py`
+  - `backend/api/routes/zero_cost.py`
+  - `backend/core/llm/advanced_model_router.py`
+  - `CHECKPOINT.md`
+  - `docs/generated/backend_import_graph.json`
+  - `.github/workflows/pr-pipeline.yml`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
