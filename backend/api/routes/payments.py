@@ -1,7 +1,8 @@
 import os
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
+from api.deps import get_current_user_token
 from core.logging_config import logger
 
 try:
@@ -29,23 +30,20 @@ from services.billing.billing_plans import CheckoutRequest
 
 
 @router.post("/checkout")
-async def create_checkout_session(request: Request, payload: CheckoutRequest):
-    token = None
-    auth_header = request.headers.get("authorization", "")
-    if auth_header.startswith("Bearer "):
-        token = auth_header[7:]
-    if not token:
-        raise HTTPException(status_code=401, detail="Missing authorization token")
+async def create_checkout_session(
+    payload: CheckoutRequest,
+    user: dict = Depends(get_current_user_token),
+):
+    # Issue #1594: manual Authorization-header extraction + duplicate jwt.decode
+    # removed. Identity now comes exclusively from the centralized dependency
+    # (AuthMiddleware -> api.deps.get_current_user_token), so this endpoint can
+    # no longer drift from app-wide auth semantics (revocation checks, algorithm
+    # allow-list, secret rotation, test-bypass gating).
+    authenticated_user = user.get("sub") or user.get("user_id")
+    if not authenticated_user:
+        raise HTTPException(status_code=401, detail="Invalid token. Please re-authenticate.")
 
-    import jwt
-
-    try:
-        decoded = jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
-    except Exception as e:
-        # বাংলা মন্তব্য: সিকিউরিটি ইনফরমেশন লিক এড়াতে জেনেরিক এরর মেসেজ রিটার্ন করা হচ্ছে।
-        raise HTTPException(status_code=401, detail="Invalid token. Please re-authenticate.") from e
-
-    if decoded.get("user_id") != payload.user_id and decoded.get("sub") != payload.user_id:
+    if authenticated_user != payload.user_id:
         raise HTTPException(status_code=403, detail="User mismatch")
 
     try:

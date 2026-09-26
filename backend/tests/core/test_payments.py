@@ -10,8 +10,20 @@ from core.config import settings
 
 client = TestClient(app)
 
+# Issue #1594: /checkout resolves identity via the centralized dependency
+# (api.deps.get_current_user_token). Tests override that dependency directly
+# for deterministic identity instead of depending on middleware/bypass env.
+from api.deps import get_current_user_token  # noqa: E402
+
+app.dependency_overrides[get_current_user_token] = lambda: {
+    "sub": "test-user-id",
+    "role": "user",
+}
+
 mock_token = jwt.encode(
-    {"user_id": "test-user-id", "role": "admin"}, settings.jwt_secret, algorithm="HS256"
+    {"sub": "test-user-id", "user_id": "test-user-id", "role": "admin"},
+    settings.jwt_secret,
+    algorithm="HS256",
 )
 auth_headers = {"Authorization": f"Bearer {mock_token}"}
 
@@ -56,6 +68,32 @@ def test_create_checkout_session_mock():
     assert data["status"] == "success"
     assert data["session_id"] == "cs_test_123"
     assert "https://stripe.com/test" in data["url"]
+
+
+def test_checkout_rejects_user_mismatch():
+    # Issue #1594 regression: identity comes from the centralized dependency;
+    # a token for user A must never open a checkout for user B (403).
+    original = app.dependency_overrides[get_current_user_token]
+    app.dependency_overrides[get_current_user_token] = lambda: {
+        "sub": "attacker-id",
+        "role": "user",
+    }
+    try:
+        with patch.dict(os.environ, {"STRIPE_API_KEY": "sk_test_dummy_key"}):
+            resp = client.post(
+                "/payments/checkout",
+                json={
+                    "price_id": "price_basic_monthly",
+                    "success_url": "http://localhost/success",
+                    "cancel_url": "http://localhost/cancel",
+                    "user_id": "test-user-id",
+                },
+                headers=auth_headers,
+            )
+        assert resp.status_code == 403
+        assert resp.json()["detail"] == "User mismatch"
+    finally:
+        app.dependency_overrides[get_current_user_token] = original
 
 
 def test_webhook_ignored_if_missing_config():
