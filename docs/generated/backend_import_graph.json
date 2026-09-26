@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3513,
+  "edge_count": 3516,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -2898,6 +2898,14 @@
     {
       "from": "api.routes.memory_mcp_http",
       "to": "core.logging_config"
+    },
+    {
+      "from": "api.routes.merge_learning",
+      "to": "core.config"
+    },
+    {
+      "from": "api.routes.merge_learning",
+      "to": "models.merge_learning_report"
     },
     {
       "from": "api.routes.mesh",
@@ -8178,6 +8186,10 @@
     {
       "from": "models.mcp_gateway",
       "to": "models.base"
+    },
+    {
+      "from": "models.merge_learning_report",
+      "to": "database.pgbouncer_pool"
     },
     {
       "from": "models.meta_ai",
@@ -14056,7 +14068,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2010,
+  "module_count": 2013,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14207,6 +14219,7 @@
     "alembic_migrations.versions.2026_09_15_020000_create_task_records",
     "alembic_migrations.versions.2026_09_15_120000_create_canonical_run_tables",
     "alembic_migrations.versions.2026_09_15_130000_add_context_metadata_to_chat_attachments",
+    "alembic_migrations.versions.2026_09_27_193000_merge_learning_reports",
     "alembic_migrations.versions.2f7b3c5f620e_add_missing_indexes",
     "alembic_migrations.versions.358bcbe79a4a_add_idempotency",
     "alembic_migrations.versions.6250e2a31d38_m0_merge_alembic_heads_into_single_",
@@ -14367,6 +14380,7 @@
     "api.routes.media",
     "api.routes.memory",
     "api.routes.memory_mcp_http",
+    "api.routes.merge_learning",
     "api.routes.mesh",
     "api.routes.mesh_mailbox",
     "api.routes.mesh_tasks",
@@ -15068,6 +15082,7 @@
     "models.localization",
     "models.mcp_audit_event",
     "models.mcp_gateway",
+    "models.merge_learning_report",
     "models.meta_ai",
     "models.morphic",
     "models.patch_telemetry",
