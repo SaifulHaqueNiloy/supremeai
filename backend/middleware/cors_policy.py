@@ -54,12 +54,34 @@ def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
 
 # USER_CORS_ORIGINS is the explicit portal-specific setting. Keep CORS_ORIGINS
 # as the backwards-compatible fallback for older deployments.
-USER_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
-    "USER_CORS_ORIGINS",
-    _load_origins("CORS_ORIGINS", ()),
+#
+# Issues #1483/#1455 (CRITICAL): the deployed user portal lives at
+# https://supremeai-a.web.app (Firebase Hosting) and was rejected by every
+# preflight because the historical default here was an empty tuple — if the
+# env var was missing/stale on the host, the frontend got zero CORS headers
+# (login/chat 100% broken). The known production browser origins are now
+# safe code-level defaults; explicit env vars still win when present.
+DEFAULT_USER_ALLOWED_ORIGINS: tuple[str, ...] = (
+    "https://supremeai-a.web.app",  # Firebase Hosting user portal (production)
+    "https://supremeai-lac.vercel.app",  # Vercel portal
+    "https://supremeai-studio.vercel.app",  # Vercel studio
 )
 
-ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins("ADMIN_CORS_ORIGINS", ())
+# Issue #1484 (CRITICAL): same story for the admin console —
+# https://supremeai-admin.web.app must stay preflight-able even when
+# ADMIN_CORS_ORIGINS fails to sync to the host.
+DEFAULT_ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = (
+    "https://supremeai-admin.web.app",  # Firebase Hosting admin console
+)
+
+USER_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
+    "USER_CORS_ORIGINS",
+    _load_origins("CORS_ORIGINS", DEFAULT_USER_ALLOWED_ORIGINS),
+)
+
+ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
+    "ADMIN_CORS_ORIGINS", DEFAULT_ADMIN_ALLOWED_ORIGINS
+)
 
 # বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
 USER_ORIGIN_DENYLIST: frozenset[str] = frozenset()
@@ -112,6 +134,8 @@ def resolve_admin_cors_origins(configured: Iterable[str] | None) -> list[str]:
 
 __all__ = [
     "ADMIN_ALLOWED_ORIGINS",
+    "DEFAULT_ADMIN_ALLOWED_ORIGINS",
+    "DEFAULT_USER_ALLOWED_ORIGINS",
     "ADMIN_ORIGIN_DENYLIST",
     "USER_ALLOWED_ORIGINS",
     "USER_ORIGIN_DENYLIST",

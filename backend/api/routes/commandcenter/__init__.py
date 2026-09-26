@@ -26,6 +26,28 @@ router = APIRouter(
     dependencies=[Depends(get_current_admin)],
 )
 
+# Issue #1495 (HIGH): the 7 Command Center sub-modules below each define their
+# own APIRouter with an empty prefix, but they were never included anywhere —
+# every /admin-api/commandcenter/{build,money,observe,operate,overview,secure,
+# system}/* route answered 404 and the modules were dead code. Mount them on
+# the package router so ALL_ROUTERS (which registers this package's `router`
+# only) picks them all up under the same admin-auth dependency.
+from api.routes.commandcenter.build import router as _build_router  # noqa: E402
+from api.routes.commandcenter.money import router as _money_router  # noqa: E402
+from api.routes.commandcenter.observe import router as _observe_router  # noqa: E402
+from api.routes.commandcenter.operate import router as _operate_router  # noqa: E402
+from api.routes.commandcenter.overview import router as _overview_router  # noqa: E402
+from api.routes.commandcenter.secure import router as _secure_router  # noqa: E402
+from api.routes.commandcenter.system import router as _system_router  # noqa: E402
+
+router.include_router(_build_router)
+router.include_router(_money_router)
+router.include_router(_observe_router)
+router.include_router(_operate_router)
+router.include_router(_overview_router)
+router.include_router(_secure_router)
+router.include_router(_system_router)
+
 # Track app start time for uptime calculation
 _app_start_time = time.time()
 
