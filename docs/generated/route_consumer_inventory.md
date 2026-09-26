@@ -5,11 +5,11 @@
 | metric | value |
 |---|---|
 | backend routes | 859 |
-| routes with frontend consumer | 297 |
+| routes with frontend consumer | 296 |
 | unique frontend `/api/...` refs | 147 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
-| orphan routes (unclassified) | 0 |
-| orphan families | 0 |
+| orphan routes (unclassified) | 1 |
+| orphan families | 1 |
 | api-only routes (allowlisted) | 304 |
 | api-only families | 158 |
 
@@ -18,15 +18,17 @@
 | classification | count | meaning |
 |---|---|---|
 | `user-facing` | 166 | frontend consumer matched |
-| `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `admin-only` | 346 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 304 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
-| `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
+| `orphaned` | 1 | no consumer and no classification — CI fails on NEW orphans |
 
-## Orphan families
+## Orphan families (actionable — wire, classify or deprecate)
 
-None — every route is classified or allowlisted. New orphans fail `tests/test_route_consumer_contract.py`.
+| family | orphan routes |
+|---|---|
+| `/render-ticket` | 1 |
 
 ## Intentionally API-only families (allowlisted — owner to prune as wiring lands)
 
@@ -674,7 +676,6 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/v1/agent/learn` | `backend/api/routes/agent_workspace.py` | user-facing | `frontend/src/services/apiClient.ts` |
 | POST | `/api/v1/agent_review_workflow/execute` | `backend/api/routes/ide_trio.py` | api-only | NONE |
 | GET | `/api/v1/agent_review_workflow/status` | `backend/api/routes/ide_trio.py` | api-only | NONE |
-| GET | `/api/v1/agents` | `backend/api/routes/admin_v1.py` | admin-only | `frontend/src/services/agentService.ts` |
 | GET | `/api/v1/agents` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
 | POST | `/api/v1/agents` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
 | DELETE | `/api/v1/agents/:param` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
@@ -1014,6 +1015,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/payments/checkout` | `backend/api/routes/payments.py` | api-only | NONE |
 | GET | `/payments/plans` | `backend/api/routes/payments.py` | api-only | NONE |
 | POST | `/payments/webhook` | `backend/api/routes/payments.py` | internal | NONE |
+| POST | `/render-ticket` | `backend/api/routes/browser/_render_proxy.py` | orphaned | NONE |
 | GET | `/repos` | `backend/api/routes/repos.py` | api-only | NONE |
 | POST | `/repos` | `backend/api/routes/repos.py` | api-only | NONE |
 | DELETE | `/repos/:param` | `backend/api/routes/repos.py` | api-only | NONE |

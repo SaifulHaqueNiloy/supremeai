@@ -20,6 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 
 from api.dependencies import get_current_admin
 from api.routes.admin_auth import admin_rate_limit, require_admin_token
+from core.agent_registry import get_agent_registry
 
 router = APIRouter(
     prefix="/api/v1",
@@ -28,10 +29,15 @@ router = APIRouter(
 )
 
 
-@router.get("/agents")
-async def list_agents_v1(admin: dict = Depends(get_current_admin)):
-    """Alias of /admin-api/agents for the deployed frontend build."""
-    return []
+# Red-CI fix (#1753 follow-through): this module previously ALSO registered
+# GET /api/v1/agents as a stub returning [] — "alias of /admin-api/agents for
+# the deployed frontend build". #1562 later mounted the real agent-registry
+# router on the same path/method, creating a first-match shadow caught by the
+# M17 P-A ratchet (test_hitl_route_ownership). Ownership decision: the
+# registry owns GET /api/v1/agents (it serves the actual records the
+# dashboard dropdown reads — a stub returning [] was lying about an empty
+# registry). The /admin/agents alias below keeps the #1475 contract alive by
+# delegating to the registry instead.
 
 
 @router.get("/admin/users")
@@ -308,4 +314,4 @@ async def admin_deployments_v1(admin: dict = Depends(get_current_admin)) -> dict
 @router.get("/admin/agents")
 async def admin_agents_v1(admin: dict = Depends(get_current_admin)) -> list[dict[str, Any]]:
     """Alias of /api/v1/agents for the /api/v1/admin/* contract (issue #1475)."""
-    return await list_agents_v1(admin=admin)
+    return [record.model_dump(mode="json") for record in get_agent_registry().list_agents()]
