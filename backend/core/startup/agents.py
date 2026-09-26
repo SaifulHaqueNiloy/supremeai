@@ -5,10 +5,92 @@ from core.agent_supervisor import agent_supervisor
 from core.logging_config import logger
 
 
+def _build_orchestrator_tick_loop(orchestrator):
+    """Build the periodic tick loop for the core Orchestrator (issue #1817).
+
+    Contract:
+    - Runs ``orchestrator.tick()`` immediately, then every ``interval`` seconds
+      (the Orchestrator's own cadence drives fitness scoring, the self-evolution
+      tick, and the budget-guardian subprocess).
+    - A budget-guardian HALT (RuntimeError containing "Halting orchestrator")
+      returns CLEANLY — the supervisor treats a normal return as a permanent
+      stop, so fail-closed financial-bleed protection is never defeated by an
+      auto-restart into the same halt.
+    - Any other exception propagates so the supervisor's exponential-backoff
+      restart can self-heal transient failures (Redis/DB blips, cold starts).
+    - ``_running`` mirrors the loop lifecycle so ``GET /orchestrator/status``
+      (and the supervisor health map) reflect reality.
+    """
+
+    async def _orchestrator_tick_loop() -> None:
+        orchestrator._running = True
+        try:
+            while True:
+                try:
+                    await orchestrator.tick()
+                except RuntimeError as exc:
+                    if "Halting orchestrator" in str(exc):
+                        logger.critical(
+                            f"🛑 Orchestrator tick loop HALTED (fail-closed): {exc} "
+                            "Restart the process to re-enable after remediation."
+                        )
+                        return
+                    raise
+                await asyncio.sleep(orchestrator.interval)
+        finally:
+            orchestrator._running = False
+
+    return _orchestrator_tick_loop
+
+
 async def start_background_services(app):
     # ── Start background agents via centralized Supervisor ────────────────────
     from core.cache.multi_layer_cache import start_swarm_cache_invalidator
     from core.sentinel_agent import sentinel
+
+    # Agent 0: Orchestrator Tick (issue #1817) — the ONE trigger path that
+    # drives fitness scoring, the self-evolution tick, and the budget guardian
+    # subprocess on a fixed cadence. Before #1817 the Orchestrator was built at
+    # boot (core/lifespan.py) but `tick()` had zero callers in any deployed
+    # environment — the intended `POST /orchestrator/tick` webhook router was
+    # never registered, so the entire core loop was inert.
+    #
+    # Fail-closed contract (financial-bleed protection): when the budget
+    # guardian halts (RuntimeError "Halting orchestrator..."), the loop returns
+    # CLEANLY so the supervisor stops it permanently instead of restarting it
+    # into the same halt. Transient (non-halt) errors still propagate so the
+    # supervisor's exponential-backoff restart can self-heal them.
+    # Zero LLM cost: fitness scoring + evolution tick are in-process reads,
+    # the budget guardian is a local subprocess. Kill switch:
+    # ENABLE_ORCHESTRATOR_TICK=false.
+    try:
+        import os
+
+        if os.getenv("ENABLE_ORCHESTRATOR_TICK", "true").lower() == "true":
+            orchestrator = getattr(app.state, "orchestrator", None)
+            if orchestrator is not None:
+                _tick_loop = _build_orchestrator_tick_loop(orchestrator)
+                await agent_supervisor.start_agent(
+                    "orchestrator-tick",
+                    _tick_loop,
+                    health_check_interval=300,
+                    max_restarts=5,
+                    restart_delay=10.0,
+                )
+                logger.info(
+                    f"✅ Orchestrator tick loop started "
+                    f"(interval={getattr(orchestrator, 'interval', '?')}s; "
+                    "drives fitness scoring + self-evolution + budget guardian)."
+                )
+            else:
+                logger.warning(
+                    "⚠️ Orchestrator not initialized at boot — tick loop NOT started "
+                    "(check ORCHESTRATOR_INIT_FAILED entries in boot logs)."
+                )
+        else:
+            logger.info("ℹ️ Orchestrator tick loop disabled via environment variable.")
+    except Exception as exc:
+        logger.warning(f"⚠️ Orchestrator tick agent failed to start: {exc}")
 
     # Agent 1: Sentinel Agent (periodic endpoint monitoring & dependency audit)
     try:
