@@ -3,11 +3,10 @@ import os
 import sqlite3
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
-
-from api.deps import get_current_user_token
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 
+from api.deps import get_current_user_token
 from core.degraded_mode import sqlite_fallback_allowed
 from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
