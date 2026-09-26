@@ -77,6 +77,8 @@ class SelfEvolutionAgent:
         self._consecutive_penalties: dict[str, int] = {}
         self._pending_demands: asyncio.Queue = asyncio.Queue()
         self.scanner = ImmuneSystemScanner()
+        self._redis = None  # cached client — issue #1685 (avoid per-tick client leak)
+        self._instance_id = uuid.uuid4().hex[:12]
 
     async def start(self) -> None:
         if self._running:
@@ -120,14 +122,15 @@ class SelfEvolutionAgent:
             except asyncio.CancelledError:
                 break
 
-    async def _acquire_lock(self) -> bool:
-        """Acquire a Redis distributed lock to prevent concurrent executions."""
-        try:
+    async def _get_redis(self):
+        """Cached Redis client (issue #1685: আগে প্রতি tick-এ নতুন ক্লায়েন্ট
+        বানাত — connection leak)। Unconfigured URL-এ সৎ RuntimeError।"""
+        if not self._redis:
+            import os
+
             import redis.asyncio as aioredis
 
             try:
-                import os
-
                 from core.config import settings
 
                 redis_url = getattr(settings, "redis_url", None) or os.environ.get(
@@ -137,19 +140,63 @@ class SelfEvolutionAgent:
                 import os
 
                 redis_url = os.environ.get("REDIS_URL", None)
-            redis = aioredis.from_url(redis_url, decode_responses=True)
-            lock_key = "lock:self_evolution_agent"
+            if not redis_url or "<your-redis-url>" in str(redis_url):
+                raise RuntimeError("Redis URL not configured — self-evolution lock UNAVAILABLE")
+            self._redis = aioredis.from_url(redis_url, decode_responses=True)
+        return self._redis
+
+    async def _acquire_lock(self) -> bool:
+        """Acquire a Redis distributed lock to prevent concurrent executions.
+
+        Issue #1685 (CRITICAL): আগে Redis অনুপলব্ধ হলে `return True  # fail
+        open` ছিল — মানে Redis-down = সব instance একসাথে evolve (race on
+        code writes → corrupted production deploy)। এখন fail-CLOSED:
+        lock যাচাই করা না গেলে কোনো instance-ই evolve করবে না (নিরাপদ
+        কারণ evolution skip ক্ষতিকর নয়, duplicate/corrupt deploy ক্ষতিকর)।
+        Stale-lock breaker: orphan key-র (TTL -1, অর্থাৎ expiry-বিহীন) ক্ষেত্রে
+        তা ভেঙে পুনরায় চেষ্টা করা হয় — deadlock এড়াতে।
+        """
+        lock_key = "lock:self_evolution_agent"
+        try:
+            redis = await self._get_redis()
             # Lock expires slightly after the interval to prevent deadlock if instance dies
-            acquired = await redis.set(lock_key, "locked", nx=True, ex=self.interval_seconds + 30)
+            acquired = await redis.set(
+                lock_key,
+                f"{self._instance_id}:{time.time()}",
+                nx=True,
+                ex=self.interval_seconds + 30,
+            )
             if acquired:
                 logger.debug("SelfEvolutionAgent acquired distributed lock.")
                 return True
-            else:
-                logger.debug("SelfEvolutionAgent skipping tick (locked by another instance).")
-                return False
+
+            # Stale-lock breaker: key exists WITHOUT any expiry (orphan —
+            # cannot happen via our SET NX EX path) → break it and retry once.
+            ttl = await redis.ttl(lock_key)
+            if ttl == -1:
+                logger.warning(
+                    "SelfEvolutionAgent found ORPHAN lock (no expiry) — breaking stale lock"
+                )
+                await redis.delete(lock_key)
+                acquired = await redis.set(
+                    lock_key,
+                    f"{self._instance_id}:{time.time()}",
+                    nx=True,
+                    ex=self.interval_seconds + 30,
+                )
+                if acquired:
+                    return True
+            logger.debug("SelfEvolutionAgent skipping tick (locked by another instance).")
+            return False
         except Exception as e:
-            logger.warning(f"Failed to acquire Redis lock for SelfEvolutionAgent: {e}")
-            return True  # Fail open if Redis is unreachable
+            # Issue #1685: fail-CLOSED — a verified-distribution lock is the
+            # only safe precondition for mutating production code.
+            logger.critical(
+                "SelfEvolutionAgent lock UNAVAILABLE (Redis unreachable) — "
+                "evolution SKIPPED this tick (fail-closed, issue #1685): "
+                f"{type(e).__name__}: {e}"
+            )
+            return False
 
     async def _tick(self) -> None:
         metrics = self.fitness_engine.metrics
