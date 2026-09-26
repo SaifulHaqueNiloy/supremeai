@@ -1765,7 +1765,8 @@
     {
       "capability_signals": [
         "health",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -24479,6 +24480,7 @@
     {
       "capability_signals": [
         "dispatch",
+        "mcp",
         "memory"
       ],
       "classification": "human_review",
