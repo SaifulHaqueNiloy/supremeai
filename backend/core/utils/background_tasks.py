@@ -123,7 +123,9 @@ def security_memory_snapshot() -> dict:
             heap_used = f"{current / 1024 / 1024:.1f} MB"
             heap_total = f"{peak / 1024 / 1024:.1f} MB (peak)"
     except Exception:
-        pass
+        # #1409: stats are best-effort, but failures must be visible — a silent
+        # pass here hid runtime diagnostics from production logs.
+        logger.exception("Failed to collect tracemalloc heap stats")
 
     return {
         "trackedTasks": len(tracked_live),
