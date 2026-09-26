@@ -512,7 +512,7 @@
     {
       "evidence": [
         {
-          "line": 24,
+          "line": 25,
           "path": "backend/core/llm/token_budget.py"
         }
       ],
