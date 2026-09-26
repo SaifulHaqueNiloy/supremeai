@@ -2235,7 +2235,8 @@
     {
       "capability_signals": [
         "health",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -4570,6 +4571,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "memory"
       ],
       "classification": "human_review",
@@ -8385,7 +8387,9 @@
       "path": "backend/middleware/chaos_injector.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "browser"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
