@@ -1,8 +1,20 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, NodeProps, Position, type Node } from '@xyflow/react';
 import { Bot, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const AgentNode = ({ data }) => {
+/** Shape of the data payload attached to every agent node in the SwarmMap (#1597). */
+export interface AgentNodeData {
+  label: string;
+  health?: {
+    status?: string;
+    latency?: number;
+  };
+  [key: string]: unknown;
+}
+
+export type AgentFlowNode = Node<AgentNodeData, 'agent'>;
+
+export const AgentNode = ({ data }: NodeProps<AgentFlowNode>) => {
   // হেলথ স্ট্যাটাস এক্সট্র্যাক্ট করা
   const isAlive = data.health?.status === 'active';
   const latency = data.health?.latency || 0;

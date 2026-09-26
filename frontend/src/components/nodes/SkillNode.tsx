@@ -1,8 +1,16 @@
-import { Handle, Position } from '@xyflow/react';
+import { Handle, NodeProps, Position, type Node } from '@xyflow/react';
 import { Zap } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-export const SkillNode = ({ data }) => {
+/** Shape of the data payload attached to every skill node in the SwarmMap (#1597). */
+export interface SkillNodeData {
+  label: string;
+  [key: string]: unknown;
+}
+
+export type SkillFlowNode = Node<SkillNodeData, 'skill'>;
+
+export const SkillNode = ({ data }: NodeProps<SkillFlowNode>) => {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.5 }}
