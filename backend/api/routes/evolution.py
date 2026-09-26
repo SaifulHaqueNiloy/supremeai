@@ -8,6 +8,8 @@ from typing import Any
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
+
+from api.deps import get_current_user_token
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -266,8 +268,17 @@ class EvolutionRequest(BaseModel):
 
 @router.post("/forge")
 async def forge_dynamic_skill(
-    payload: EvolutionRequest, db: TenantAwareFirestore = Depends(get_tenant_db)
+    payload: EvolutionRequest,
+    db: TenantAwareFirestore = Depends(get_tenant_db),
+    user: dict = Depends(get_current_user_token),
 ):
+    """On-the-fly AI Skill Generation and Sandbox Deployed Gate.
+
+    Issue #1651: identity is now bound INSIDE the route (not only via the
+    mount-time is_admin flag) so the guard survives re-mounting. Admin-only
+    would break the user-facing EvolutionForge feature — the deploy path is
+    sandbox-verified upstream (banned-keyword scan + sandbox gate).
+    """
     """
     On-the-fly AI Skill Generation and Sandbox Deployed Gate.
     """
@@ -287,7 +298,7 @@ class QuarantineRequest(BaseModel):
 
 
 @router.get("/swarm-graph")
-async def get_swarm_graph():
+async def get_swarm_graph(user: dict = Depends(get_current_user_token)):
     """Real swarm topology (issue #446 honest-telemetry fix).
 
     Nodes come from the live agent_supervisor health map (same truth-source as
