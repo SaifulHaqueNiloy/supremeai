@@ -299,16 +299,24 @@ GRANT  EXECUTE ON FUNCTION fn_ai_memory_retention_cleanup(int) TO service_role;
 --          audit §1.3: three drift bugs made recall paths silently fail
 -- ───────────────────────────────────────────────────────────────────────────────
 
--- 9a. `match_memories` — called by AutoRAG (core/ai_memory/vector_store.py:101,
+-- 9a. `match_memories` — called by AutoRAG (core/ai_memory/vector_store.py,
 --     params: query_embedding / match_threshold / match_count / p_user_id) and
---     memory/long_term_memory.py:67 — but DEFINED nowhere until now.
+--     memory/long_term_memory.py — but DEFINED nowhere until now.
 --     `content` falls back through metadata → content column → summary so both
 --     the AutoRAG payload layout and cascade rows resolve.
+--     ISSUE #1689 (CRITICAL, tenant isolation): p_user_id এখন MANDATORY —
+--     আগে `p_user_id text DEFAULT NULL` + `(p_user_id IS NULL OR …)` ছিল,
+--     ফলে NULL দিলে সব ইউজারের মেমরি ফেরত যেত (cross-tenant leak)। এখন:
+--     · DEFAULT NULL নেই — PostgREST named-arg ছাড়া কল ব্যর্থ হবে
+--     · কঠোর equality `m.user_id = p_user_id`
+--     · একটি মাত্র স্পষ্ট agent-scope sentinel (`__agent_internal__`) শুধু
+--       user_id IS NULL (agent-own learning) rows পায়
+--     · GRANT থেকে anon বাদ (tenant-বিহীন caller নীতিগতভাবেই অগ্রাহ্য)
 CREATE OR REPLACE FUNCTION match_memories(
     query_embedding vector(384),
     match_threshold float DEFAULT 0.7,
     match_count     int   DEFAULT 5,
-    p_user_id       text  DEFAULT NULL
+    p_user_id       text
 )
 RETURNS TABLE (
     id         uuid,
@@ -326,13 +334,16 @@ AS $$
            1 - (m.embedding <=> query_embedding) AS similarity
       FROM ai_memory m
      WHERE m.embedding IS NOT NULL
-       AND (p_user_id IS NULL OR m.user_id = p_user_id)
+       AND (
+             m.user_id = p_user_id
+             OR (p_user_id = '__agent_internal__' AND m.user_id IS NULL)
+           )
        AND 1 - (m.embedding <=> query_embedding) > match_threshold
      ORDER BY m.embedding <=> query_embedding
      LIMIT match_count;
 $$;
 
-GRANT EXECUTE ON FUNCTION match_memories(vector, float, int, text) TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION match_memories(vector, float, int, text) TO authenticated, service_role;
 
 -- 9b. `match_ai_memory` with **p_user_id** — services/memory_service.py:825-833
 --     calls the 4-arg RPC with a `p_user_id` named argument, but Alembic
