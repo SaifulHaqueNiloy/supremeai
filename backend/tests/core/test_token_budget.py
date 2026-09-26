@@ -165,9 +165,10 @@ class TestManagerContracts:
         assert set(mgr.get_stats().keys()) == {"default"}
 
     async def test_check_user_budget_env_aware_failure_policy(self):
-        """B-V2-03 (audit V3): Redis ভাঙলে সিদ্ধান্ত env-অনুযায়ী হওয়া চাই —
-        production/staging-এ fail-CLOSED, dev/test-এ fail-open + loud log।
-        আগে সব env-এ নীরব fail-open ছিল (unlimited-spend ঝুঁকি)।"""
+        """B-V2-03 (audit V3) + issue #1687: Redis ভাঙলে সিদ্ধান্ত env-অনুযায়ী —
+        production/staging-এ conservative LOCAL fallback (cap ছাড়িয়ে গেলে
+        fail-CLOSED), dev/test-এ fail-open + loud log। পুরনো নীরব fail-open
+        (unlimited spend) এখনো প্রত্যাখ্যাত।"""
         mgr = self._mgr()
 
         async def broken_redis():
@@ -178,14 +179,19 @@ class TestManagerContracts:
         # dev/test (ডিফল্ট) → fail-open
         assert await mgr.check_user_budget("user-1") is True
 
-        # production → fail-closed
+        # production → local fallback active; cap ছাড়ালে fail-closed
         with patch("core.config.settings") as mock_settings:
             mock_settings.env = "production"
+            # cap পার করাই (10% of 100000 = 10000)
+            for _ in range(11):
+                await mgr.record_user_usage("user-2", tokens=1000)
             assert await mgr.check_user_budget("user-2") is False
 
-        # staging → fail-closed
+        # staging → cap পার হলে fail-closed
         with patch("core.config.settings") as mock_settings:
             mock_settings.env = "staging"
+            for _ in range(11):
+                await mgr.record_user_usage("user-3", tokens=1000)
             assert await mgr.check_user_budget("user-3") is False
 
     async def test_check_user_budget_unconfigured_redis_honest_error(self):
@@ -235,6 +241,112 @@ class TestManagerContracts:
         await mgr.record_user_usage("user-5", tokens=0)
         await mgr.record_user_usage("user-5", tokens=-5)
         redis.incrby.assert_not_awaited()  # nothing recorded for tokens <= 0
+
+
+class TestLocalFallbackBudgetTracker:
+    """Issue #1687: Redis-down degraded mode — conservative local fallback.
+    পুরনো আচরণ: prod-এ Redis down = সব deny (outage) / মূল বাগ: সব allow
+    (unlimited spend)। নতুন: local cap-এর ভেতরে allow, cap-এ deny।"""
+
+    def _mgr(self) -> TokenBudgetManager:
+        return TokenBudgetManager(
+            custom_budgets={"default": {"max_input_tokens": 500, "max_output_tokens": 100}}
+        )
+
+    def test_fallback_limit_is_conservative(self):
+        from core.llm.token_budget import (
+            _LOCAL_FALLBACK_MIN,
+            _LOCAL_FALLBACK_RATIO,
+            _LocalBudgetTracker,
+        )
+
+        t = _LocalBudgetTracker()
+        assert _LOCAL_FALLBACK_RATIO == 0.1
+        assert t.fallback_limit(100_000) == 10_000
+        assert t.fallback_limit(10_000) == 1_000
+        assert t.fallback_limit(100) == _LOCAL_FALLBACK_MIN  # floor 1000
+
+    def test_record_and_get_today_increments(self):
+        from core.llm.token_budget import _LocalBudgetTracker
+
+        t = _LocalBudgetTracker()
+        t.record("u", 100)
+        t.record("u", 50)
+        assert t.get_today("u") == 150
+        t.record("u", 0)
+        t.record("u", -5)
+        assert t.get_today("u") == 150  # non-positive ignored
+        assert t.get_today("unknown-user") == 0
+
+    def test_record_is_thread_safe(self):
+        from concurrent.futures import ThreadPoolExecutor
+
+        from core.llm.token_budget import _LocalBudgetTracker
+
+        t = _LocalBudgetTracker()
+        with ThreadPoolExecutor(max_workers=8) as ex:
+            list(ex.map(lambda _: t.record("u", 10), range(200)))
+        assert t.get_today("u") == 2000
+
+    async def test_redis_down_prod_allows_within_then_denies_over_cap(self):
+        mgr = self._mgr()
+
+        async def broken_redis():
+            raise RuntimeError("redis down")
+
+        mgr._get_redis = broken_redis
+        with patch("core.config.settings") as mock_settings:
+            mock_settings.env = "production"
+            # Fresh user, no local usage → degraded-mode allow (not outage)
+            assert await mgr.check_user_budget("u-fb-1", daily_limit=100_000) is True
+            # Accumulate 10,000 tokens (= cap) → next check denies
+            await mgr.record_user_usage("u-fb-1", tokens=10_000)
+            assert await mgr.check_user_budget("u-fb-1", daily_limit=100_000) is False
+
+    async def test_redis_down_dev_ignores_local_cap(self):
+        mgr = self._mgr()
+
+        async def broken_redis():
+            raise RuntimeError("redis down")
+
+        mgr._get_redis = broken_redis
+        await mgr.record_user_usage("u-fb-2", tokens=500_000)
+        # dev/test এখনো fail-open (cap শুধু prod/staging-এ)
+        assert await mgr.check_user_budget("u-fb-2", daily_limit=100_000) is True
+
+    async def test_local_mirror_kept_when_redis_ok(self):
+        mgr = self._mgr()
+        redis = MagicMock()
+        redis.incrby = AsyncMock(return_value=100)
+        redis.expire = AsyncMock(return_value=True)
+        mgr._redis = redis
+        await mgr.record_user_usage("u-fb-3", tokens=100)
+        redis.incrby.assert_awaited_once()
+        # মিররও আপডেট হয়েছে — Redis মাঝপথে মরলে fallback এটা দেখবে
+        assert mgr._local.get_today("u-fb-3") == 100
+
+    async def test_redis_recovery_prefers_redis_truth(self):
+        """Redis ফিরে এলে Redis-ই truth — local cap ভাঙলেও Redis-এর সিদ্ধান্ত
+        প্রাধান্য পায় (মিরর শুধু degraded-mode fallback)।"""
+        mgr = self._mgr()
+        redis = MagicMock()
+        redis.get = AsyncMock(return_value="100001")  # Redis: over daily limit
+        mgr._redis = redis
+        assert await mgr.check_user_budget("u-fb-4", daily_limit=100_000) is False
+
+    async def test_other_users_unaffected_by_one_users_local_burst(self):
+        mgr = self._mgr()
+
+        async def broken_redis():
+            raise RuntimeError("redis down")
+
+        mgr._get_redis = broken_redis
+        await mgr.record_user_usage("u-fb-5", tokens=999_999)
+        with patch("core.config.settings") as mock_settings:
+            mock_settings.env = "production"
+            assert await mgr.check_user_budget("u-fb-5", daily_limit=100_000) is False
+            # ভিন্ন ইউজারের কাউন্ট আলাদা → allow
+            assert await mgr.check_user_budget("u-fb-6", daily_limit=100_000) is True
 
 
 class TestManagerFactory:
