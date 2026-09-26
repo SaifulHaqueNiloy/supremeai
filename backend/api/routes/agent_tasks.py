@@ -62,26 +62,25 @@ async def execute_swarm(request: Request, body: SwarmExecuteRequest):
         session_id,
         _correlation_id(request),
     )
-    orchestrator = ZeroCostSwarmOrchestrator(
-        user_id=body.user_id, session_id=session_id, task_prompt=body.task
-    )  # type: ignore
-
-    # We await the orchestrator execution.
-    # In a real heavy system this might be a background task,
-    # but since it's zero-cost lean, we keep it simple or run it directly.
-
-    # Run the swarm as a background task to not block the request immediately,
-    # or just await it if we want the HTTP response to contain the final output.
-    # For now, we await it directly as requested by the plan.
-    workspace = await orchestrator.execute(max_retries=2)
+    # Issue #1816: the ZeroCost wrapper's real contract is
+    # ZeroCostSwarmOrchestrator(config) + execute_task(prompt, user_id) ->
+    # ExecutionResult. The previous call used nonexistent constructor kwargs
+    # (user_id/session_id/task_prompt) and a nonexistent execute() method, so
+    # this endpoint raised TypeError before doing anything.
+    orchestrator = ZeroCostSwarmOrchestrator()
+    result = await orchestrator.execute_task(body.task, body.user_id)
+    workspace = result.workspace
 
     return {
         "status": "completed",
         "session_id": session_id,
+        "task_id": result.task_id,
         "results": {
             "passed_qa": workspace.test_results.get("passed", False),
             "feedback": workspace.test_results.get("feedback", ""),
-            "generated_code": workspace.generated_code,
-            "architecture": workspace.architecture_design,
+            # SharedWorkspace is domain-agnostic: the work product carries the
+            # generated code / document / analysis under well-known keys.
+            "work_product": workspace.work_product,
+            "errors": workspace.errors,
         },
     }
