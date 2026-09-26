@@ -5,23 +5,23 @@
 | metric | value |
 |---|---|
 | backend routes | 859 |
-| routes with frontend consumer | 296 |
-| unique frontend `/api/...` refs | 147 |
+| routes with frontend consumer | 297 |
+| unique frontend `/api/...` refs | 148 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 1 |
 | orphan families | 1 |
-| api-only routes (allowlisted) | 304 |
+| api-only routes (allowlisted) | 303 |
 | api-only families | 158 |
 
 ## Classification legend
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 166 | frontend consumer matched |
+| `user-facing` | 167 | frontend consumer matched |
 | `admin-only` | 346 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 304 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 1 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families (actionable — wire, classify or deprecate)
@@ -125,7 +125,7 @@
 | `/api/tts/voices` | 1 |
 | `/api/v1/agent_review_workflow` | 2 |
 | `/api/v1/analytics` | 3 |
-| `/api/v1/auth` | 5 |
+| `/api/v1/auth` | 4 |
 | `/api/v1/browse` | 1 |
 | `/api/v1/cache` | 1 |
 | `/api/v1/circles` | 3 |
@@ -689,11 +689,11 @@
 | GET | `/api/v1/analytics/business` | `backend/api/routes/analytics.py` | api-only | NONE |
 | POST | `/api/v1/analytics/predict-churn` | `backend/api/routes/analytics.py` | api-only | NONE |
 | POST | `/api/v1/analytics/report` | `backend/api/routes/analytics.py` | api-only | NONE |
-| POST | `/api/v1/auth/login` | `backend/api/routes/auth.py` | user-facing | `frontend/src/pages/PublicPages.tsx`, `frontend/src/services/apiClient.test.ts`, `frontend/src/store/authStore.ts` |
+| POST | `/api/v1/auth/login` | `backend/api/routes/auth.py` | user-facing | `frontend/src/pages/PublicPages.tsx`, `frontend/src/services/apiClient.test.ts`, `frontend/src/services/apiClient.ts` (+1 more) |
 | POST | `/api/v1/auth/logout` | `backend/api/routes/auth.py` | user-facing | `frontend/src/services/apiClient.ts` |
 | GET | `/api/v1/auth/me` | `backend/api/routes/auth.py` | user-facing | `frontend/src/config/permissions.ts`, `frontend/src/services/apiClient.test.ts`, `frontend/src/services/apiClient.ts` (+2 more) |
-| POST | `/api/v1/auth/refresh` | `backend/api/routes/auth.py` | api-only | NONE |
-| POST | `/api/v1/auth/register` | `backend/api/routes/auth.py` | user-facing | `frontend/src/pages/PublicPages.tsx`, `frontend/src/store/authStore.ts` |
+| POST | `/api/v1/auth/refresh` | `backend/api/routes/auth.py` | user-facing | `frontend/src/services/apiClient.ts` |
+| POST | `/api/v1/auth/register` | `backend/api/routes/auth.py` | user-facing | `frontend/src/pages/PublicPages.tsx`, `frontend/src/services/apiClient.ts`, `frontend/src/store/authStore.ts` |
 | POST | `/api/v1/auth/totp/verify` | `backend/api/routes/auth.py` | api-only | NONE |
 | GET | `/api/v1/auth/users` | `backend/api/routes/auth.py` | api-only | NONE |
 | PATCH | `/api/v1/auth/users/:param/role` | `backend/api/routes/auth.py` | api-only | NONE |
