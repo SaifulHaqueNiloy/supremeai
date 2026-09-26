@@ -5,6 +5,7 @@
 
 1. **Env-var first (Zero-cost, no DB)** — SUPREMEAI_MEM0_ENABLED ইত্যাদি
    env ভ্যারিয়েবলের মান চেক করে। কোনো ডাটাবেস সংযোগ ছাড়াই কাজ করে।
+   Explicit মান (true/false) চূড়ান্ত — unset হলেই কেবল DB স্তরে যাওয়া হয়।
 
 2. **DB fallback (Supabase)** — যদি env-var সেট না থাকে, তবে
    SupabaseClient.is_feature_enabled() ক্যাল করে। per-user rollout ও
@@ -39,12 +40,25 @@ _DB_FLAG_NAMES: dict[str, str] = {
 
 _TRUTHY: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 
+# Canonical runtime feature_name keys (feature_flags DB table) — the single
+# naming source the admin UI and the runtime must share (issue #1818 bug 3).
+RUNTIME_FLAG_NAMES: frozenset[str] = frozenset(_DB_FLAG_NAMES.values())
 
-def _env_flag(name: str, default: bool = False) -> bool:
-    """Read a boolean feature-flag from the environment (zero-cost, no DB)."""
+
+def _env_flag(name: str) -> bool | None:
+    """Tri-state env read (issue #1818 bug-2 fix).
+
+    True/False when the variable is explicitly set (even to a falsy value),
+    None when unset or blank — the caller can then distinguish
+    "explicit kill-switch" from "not configured" and only consult the DB
+    tier in the latter case. Previously unset and explicit-false were
+    indistinguishable, so ``SUPREMEAI_MEM0_ENABLED=false`` was still
+    overridden by a true DB row (the documented env-first contract was
+    inverted).
+    """
     raw = os.getenv(name)
-    if raw is None:
-        return default
+    if raw is None or raw.strip() == "":
+        return None
     return raw.strip().lower() in _TRUTHY
 
 
@@ -56,9 +70,13 @@ def _db_flag(name: str, user_id: str | None = None) -> bool | None:
     try:
         from database.supabase_client import db
 
-        if not db or not getattr(db, "client", None):
+        if not db:
             return None
-        return db.client.is_feature_enabled(_DB_FLAG_NAMES.get(name, name), user_id)
+        # Issue #1818 bug-1 fix: is_feature_enabled lives on the SupabaseDB
+        # WRAPPER, not on the raw supabase-py client — the old db.client...
+        # call raised AttributeError, swallowed at DEBUG level, so DB flags
+        # could never enable anything.
+        return db.is_feature_enabled(_DB_FLAG_NAMES.get(name, name), user_id)
     except Exception as exc:
         logger.debug(f"feature_flags: DB lookup for '{name}' failed (non-fatal): {exc}")
         return None
@@ -105,11 +123,14 @@ class FeatureFlags:
         """Two-tier check: env-var → DB, cache result."""
         if flag_name in self._cache:
             return self._cache[flag_name]
-        result = _env_flag(flag_name, default=False)
-        if not result:
-            db_result = _db_flag(flag_name, user_id)
-            if db_result is True:
-                result = True
+        # Issue #1818 bug-2 fix — documented "env-var first" contract, now
+        # actually honored: an EXPLICIT env value (true or false) is final;
+        # the DB tier is consulted only when the env var is unset/blank.
+        env_result = _env_flag(flag_name)
+        if env_result is not None:
+            result = env_result
+        else:
+            result = _db_flag(flag_name, user_id) is True
         self._cache[flag_name] = result
         return result
 
@@ -163,6 +184,7 @@ feature_flags = FeatureFlags()
 
 __all__ = [
     "BROWSER_USE_FLAG",
+    "RUNTIME_FLAG_NAMES",
     "E2B_FLAG",
     "GRAPHITI_FLAG",
     "MEM0_FLAG",
