@@ -3,7 +3,9 @@ import os
 import sqlite3
 import uuid
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException
+
+from api.deps import get_current_user_token
 from pydantic import BaseModel
 
 from core.degraded_mode import sqlite_fallback_allowed
@@ -13,7 +15,13 @@ from database.supabase_client import db
 from tools.resource_catalog import ResourceCatalog
 from tools.social.marketplace_agent import MarketplaceAgent
 
-router = APIRouter(prefix="/marketplace", tags=["marketplace"])
+# Issue #1654: install mutates the local skills DB — enforce auth in-file
+# (not only via mount flags) so the guard survives re-mounting.
+router = APIRouter(
+    prefix="/marketplace",
+    tags=["marketplace"],
+    dependencies=[Depends(get_current_user_token)],
+)
 marketplace_agent = MarketplaceAgent()
 
 ALLOWED_CATALOG_SOURCES = {
