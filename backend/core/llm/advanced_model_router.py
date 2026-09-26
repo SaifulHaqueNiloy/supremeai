@@ -226,12 +226,58 @@ class Tier0Dispatcher:
         pkg_name = match.group(1).strip() if match else prompt.strip()
         # FIX (P0, review 2026-09-12): validate the package name — a crafted
         # prompt could previously inject URL path fragments into the request.
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", pkg_name):
+        # AUDIT-FIX (#1695 HIGH): regex tightened to be even more conservative —
+        # audit suggested `^[a-zA-Z0-9_-]+$` (no dots). PyPI package names
+        # technically allow dots, but allowing dots opens ambiguity with URL
+        # path separators. To balance security + PyPI compatibility, we keep
+        # dots in the middle but reject leading/trailing dots/dashes.
+        if not re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9]", pkg_name
+        ) and not re.fullmatch(r"[A-Za-z0-9]", pkg_name):
             return {"error": "invalid package name", "query": pkg_name}
         url = f"https://pypi.org/pypi/{pkg_name}/json"
+
+        # AUDIT-FIX (#1695 HIGH): SSRF defense — block redirects, tighter timeout.
+        # একটি redirect-handler যোগ করা হয়েছে যা সব redirect HTTPRedirectHandler
+        # কে প্রতিস্থাপন করে — ফলে যদি PyPI (বা কোনো man-in-the-middle) 3xx
+        # redirect দিয়ে একটি অন্য host-এ পাঠায়, সেটি প্রত্যাখ্যাত হয়।
+        # এটি গুরুত্বপূর্ণ কারণ pkg_name এর কিছু অংশ user-controlled, এবং
+        # কোনো malicious CDN বা DNS rebinding attack redirect দিয়ে internal
+        # IP (যেমন http://169.254.169.254 — AWS metadata) এ পাঠাতে পারত।
+        class _NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+            def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
+                # AUDIT-FIX (#1695): Block all redirects — fail loud.
+                raise urllib.error.HTTPError(
+                    req.full_url,
+                    code,
+                    f"Redirect blocked (SSRF guard, AUDIT-FIX #1695): {newurl}",
+                    headers,
+                    None,
+                )
+
+        no_redirect_opener = urllib.request.build_opener(_NoRedirectHandler)
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "SupremeAI/2.0"})
-            with urllib.request.urlopen(req, timeout=5) as resp:
+            # AUDIT-FIX (#1695): timeout reduced from 5s to 3s (audit recommendation).
+            # 3s is generous for PyPI's p50 (~150ms) and p99 (~1.5s) latency.
+            with no_redirect_opener.open(req, timeout=3) as resp:
+                # AUDIT-FIX (#1695): defense-in-depth — even with NoRedirectHandler,
+                # verify the response URL is still pypi.org (a misconfigured
+                # opener could in theory still allow some redirects).
+                final_url = resp.geturl()
+                from urllib.parse import urlparse
+
+                final_host = urlparse(final_url).netloc.lower()
+                if final_host not in {"pypi.org", "www.pypi.org"}:
+                    logger.warning(
+                        f"[Tier0Dispatcher] PyPI response from unexpected host {final_host} — "
+                        f"possible SSRF, rejecting (AUDIT-FIX #1695)."
+                    )
+                    return {
+                        "error": "PyPI response from unexpected host",
+                        "host": final_host,
+                        "query": pkg_name,
+                    }
                 data = json.loads(resp.read())
             return {
                 "name": data["info"]["name"],
@@ -239,6 +285,9 @@ class Tier0Dispatcher:
                 "summary": data["info"]["summary"],
                 "home_page": data["info"]["home_page"],
             }
+        except urllib.error.HTTPError as exc:
+            logger.warning(f"[Tier0Dispatcher] PyPI search HTTP error for '{pkg_name}': {exc}")
+            return {"error": str(exc), "query": pkg_name}
         except Exception as exc:
             logger.warning(f"[Tier0Dispatcher] PyPI search failed for '{pkg_name}': {exc}")
             return {"error": str(exc), "query": pkg_name}

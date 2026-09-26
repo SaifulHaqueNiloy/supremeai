@@ -1,6 +1,19 @@
 import os
+import time
+from typing import Any
 
 from core.logging_config import logger
+
+# AUDIT-FIX (#1693 HIGH): No deduplication key — same file patched repeatedly.
+# Per audit fix recommendation:
+#   - skip if same file remediated < 30 minutes ago
+#   - add max-remediation-per-file counter
+#   - escalate to human if exceeded
+# Configurable via env vars; conservative defaults.
+_DEDUP_WINDOW_SECONDS: int = int(
+    os.environ.get("AUTOREMEDIATION_DEDUP_WINDOW_SECONDS", "1800")
+)  # 30 min
+_MAX_REMEDIATIONS_PER_FILE: int = int(os.environ.get("AUTOREMEDIATION_MAX_PER_FILE", "3"))
 
 
 class AutoRemediation:
@@ -13,12 +26,20 @@ class AutoRemediation:
     এবং RemediationPipeline-এ ডিলিগেট করছে।
 
     Note: This module is designed to be mockable for tests.
+
+    AUDIT-FIX (#1693): এখন প্রতিটি file path-এর জন্য একটি deduplication
+    cache রাখা হয় — একই file-এ একই সমস্যায় বারবার patch প্রয়োগ prevent
+    করা হয়। max-per-file counter exceed হলে human escalation।
     """
 
     def __init__(self, gemini_api_key: str | None = None):
         self.gemini_api_key = gemini_api_key or os.getenv("GEMINI_API_KEY", "")
         # Allowed base dir is repo/backend (backend/core/resilience -> ../..)
         self._ALLOWED_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
+        # AUDIT-FIX (#1693): dedup state — {file_path: {"last_ts": float, "count": int}}
+        # Per-instance in-memory (per-worker). Multi-worker dedup requires Redis
+        # (out of scope for this narrow fix — see follow-up issue).
+        self._remediation_history: dict[str, dict[str, Any]] = {}
 
     def _validate_file_path(self, file_path: str) -> str:
         """Path traversal attack প্রতিরোধ.
@@ -57,6 +78,47 @@ class AutoRemediation:
         if not os.path.exists(safe_path):
             return {"success": False, "error": f"File {safe_path} not found"}
 
+        # AUDIT-FIX (#1693 HIGH): Deduplication + max-remediation enforcement.
+        # একই file-এ বারবার patch prevent করে oscillating infinite-loop থেকে।
+        now = time.time()
+        history_entry = self._remediation_history.get(safe_path, {"last_ts": 0.0, "count": 0})
+        last_ts = float(history_entry.get("last_ts", 0.0))
+        prior_count = int(history_entry.get("count", 0))
+
+        # Rule 1: skip if remediated within dedup window (default 30 min)
+        if (now - last_ts) < _DEDUP_WINDOW_SECONDS:
+            elapsed = int(now - last_ts)
+            logger.warning(
+                f"Auto-Remediation skipped for {safe_path}: already remediated {elapsed}s ago "
+                f"(within {_DEDUP_WINDOW_SECONDS}s dedup window, AUDIT-FIX #1693)"
+            )
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": "dedup_window_active",
+                "file": file_path,
+                "seconds_since_last_remediation": elapsed,
+                "dedup_window_seconds": _DEDUP_WINDOW_SECONDS,
+                "remediation_count": prior_count,
+            }
+
+        # Rule 2: max-remediations-per-file exceeded → escalate to human
+        if prior_count >= _MAX_REMEDIATIONS_PER_FILE:
+            logger.error(
+                f"Auto-Remediation ESCALATION for {safe_path}: already remediated {prior_count} "
+                f"times (max {_MAX_REMEDIATIONS_PER_FILE}). Human review required "
+                f"(AUDIT-FIX #1693)."
+            )
+            return {
+                "success": False,
+                "skipped": True,
+                "reason": "max_remediations_exceeded_escalate_to_human",
+                "file": file_path,
+                "remediation_count": prior_count,
+                "max_allowed": _MAX_REMEDIATIONS_PER_FILE,
+                "human_review_required": True,
+            }
+
         with open(safe_path, encoding="utf-8") as f:
             original_code = f.read()
 
@@ -77,6 +139,18 @@ class AutoRemediation:
         if str(result).startswith("reject"):
             return {"success": False, "error": f"Patch rejected by pipeline: {result}"}
 
+        # AUDIT-FIX (#1693): Record successful remediation in dedup cache.
+        # শুধু successful patch-ই count বাড়ায় — failed attempts dedup-এ পড়ে না।
+        self._remediation_history[safe_path] = {
+            "last_ts": now,
+            "count": prior_count + 1,
+        }
+        # Cleanup very old entries (>1 day) to keep memory bounded
+        cutoff = now - 86400
+        stale = [k for k, v in self._remediation_history.items() if v.get("last_ts", 0) < cutoff]
+        for k in stale:
+            self._remediation_history.pop(k, None)
+
         return {
             "success": True,
             "file": file_path,
@@ -84,6 +158,8 @@ class AutoRemediation:
             "branch": "supremeai-improvements",
             "pr_url": None,
             "message": f"Remediation patch processed by pipeline. ID: {result}",
+            "remediation_count": prior_count + 1,
+            "max_per_file": _MAX_REMEDIATIONS_PER_FILE,
         }
 
     async def _get_ai_patch(self, file_path: str, code: str, line_number: int, issue: str) -> str:

@@ -14,6 +14,7 @@ Performs genetic breeding of two parent agents to produce a superior offspring:
 from __future__ import annotations
 
 import copy
+import os
 import random
 import secrets
 import uuid
@@ -27,6 +28,35 @@ from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 from models.meta_ai import AgentGenome, AgentOffspring, AgentStatus, BreedingPool
+
+
+# AUDIT-FIX (#1692 HIGH): Permission extraction helper.
+# Extracts the set of "permissions" from a chromosome — primarily the `tools`
+# field (the main permission surface in this codebase today), plus an optional
+# explicit `permissions` field if a future schema adds one.
+def _extract_permission_set(chromosome: dict[str, Any]) -> frozenset[str]:
+    """Return the set of permission-granting tools/scopes in the chromosome.
+
+    AUDIT-FIX (#1692): used by promote_if_elite to validate that offspring's
+    permission set is a subset of the union of parents' permission sets.
+    """
+    if not isinstance(chromosome, dict):
+        return frozenset()
+    perms: set[str] = set()
+    # Primary: `tools` field (most common permission surface)
+    tools = chromosome.get("tools", [])
+    if isinstance(tools, list):
+        for t in tools:
+            if isinstance(t, str) and t.strip():
+                perms.add(t.strip())
+    # Future-proof: explicit `permissions` field if schema adds one
+    explicit = chromosome.get("permissions", [])
+    if isinstance(explicit, list):
+        for p in explicit:
+            if isinstance(p, str) and p.strip():
+                perms.add(p.strip())
+    return frozenset(perms)
+
 
 # ────────────────────────────────
 # Configuration (settings-driven, zero hardcode)
@@ -410,6 +440,12 @@ class AgentBreeder:
     ) -> AgentGenome | None:
         """
         Promote offspring to active agent if it outperforms both parents.
+
+        AUDIT-FIX (#1692 HIGH): permission validation gate added. Offspring's
+        tool set must be ⊆ union of parents' tool sets. If offspring has a
+        tool that neither parent had (permission expansion), promotion is
+        rejected unless human approval is explicitly granted (via env var
+        override — production should NOT enable this).
         """
         if offspring.fitness_score is None:
             await self.evaluate_offspring(offspring)
@@ -426,6 +462,41 @@ class AgentBreeder:
                 f"fit={offspring.fitness_score:.3f} <= parent={parent_fitness:.3f}"
             )
             return None
+
+        # AUDIT-FIX (#1692 HIGH): permission validation gate.
+        # Extract 'tools' (or 'permissions' if present) from each chromosome
+        # and verify offspring's set is a subset of the union of parents'.
+        offspring_perms = _extract_permission_set(offspring.chromosome)
+        parent_a_perms = _extract_permission_set(parent_a.chromosome)
+        parent_b_perms = _extract_permission_set(parent_b.chromosome)
+        parent_union = parent_a_perms | parent_b_perms
+
+        # Tools that offspring has but neither parent had → expansion
+        expanded = offspring_perms - parent_union
+        if expanded:
+            # Per audit: "Require human approval for permission expansion."
+            # We default to REJECT (fail-closed). A human must explicitly
+            # set AUTOREMEDIATION_ALLOW_PERMISSION_EXPANSION=1 to enable
+            # promotion-with-expansion (audited env, never in production).
+            allow_expansion = os.environ.get(
+                "AGENT_BREEDER_ALLOW_PERMISSION_EXPANSION", ""
+            ).lower() in {"1", "true", "yes"}
+            if not allow_expansion:
+                offspring.evaluation_status = "rejected_permission_expansion"
+                await self._db.commit()
+                logger.error(
+                    f"Offspring {offspring.offspring_name} REJECTED: permission expansion detected "
+                    f"(AUDIT-FIX #1692). Offspring has tools {sorted(expanded)} that neither parent had. "
+                    f"Parent A tools: {sorted(parent_a_perms)}, Parent B tools: {sorted(parent_b_perms)}. "
+                    f"Set AGENT_BREEDER_ALLOW_PERMISSION_EXPANSION=1 only in audited dev envs to override."
+                )
+                return None
+            # Allow with explicit warning (audited override)
+            logger.warning(
+                f"Offspring {offspring.offspring_name} promoted with permission expansion "
+                f"(AUDIT-FIX #1692 OVERRIDE): new tools {sorted(expanded)}. "
+                f"This should only happen in audited dev envs."
+            )
 
         # Create new active genome
         new_genome = AgentGenome(

@@ -1,4 +1,30 @@
-version: '1.0'
+version: '2.0'
+role_pools:
+  planner:
+    app: planner-and-auditor
+    branch_pattern: 'planner-{N}'  # e.g., planner-1 ... planner-100 (constant role, dynamic number)
+    description: 'Planning & Codebase Architecture Auditor Pool. Fixed App, Fixed Rules.'
+  coder:
+    app: coder-solver
+    branch_pattern: 'coder-{N}'    # e.g., coder-1 ... coder-100 (constant role, dynamic number)
+    description: 'Code Implementers & Issue Solvers Pool. Fixed App, Fixed Rules.'
+  pr-helper:
+    app: pr-helper
+    branch_pattern: 'pr-helper-{N}' # e.g., pr-helper-1 ... pr-helper-10
+    bot_identity: 'supremeai-pr-helper[bot]'
+    description: 'PR Gate Verification & Rollup Consolidation Pool. Fixed App, Fixed Rules.'
+  ci:
+    app: ci-action
+    branch_pattern: 'ci-{N}'        # e.g., ci-1 ... ci-10
+    bot_identity: 'supremeai-ci-action[bot]'
+    description: 'CI/CD Workflows & Pipeline Automation Pool. Fixed App, Fixed Rules.'
+  platform:
+    app: platform-agent
+    branch_pattern: 'platform-{N}'  # e.g., platform-1 ... platform-10
+    bot_identity: 'supremeai-platform-agent[bot]'
+    description: 'Cloud Platform Health & Connectivity Sweeper Pool. Fixed App, Fixed Rules.'
+
+# Legacy slot assignments (maintained for active session backwards compatibility):
 slots:
 - slot: agent-1
   tool: planner-and-auditor
