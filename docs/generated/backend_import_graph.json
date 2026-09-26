@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3410,
+  "edge_count": 3431,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -1442,6 +1442,14 @@
     {
       "from": "api.routes.agent_breeding",
       "to": "models.meta_ai"
+    },
+    {
+      "from": "api.routes.agent_registry",
+      "to": "api.dependencies"
+    },
+    {
+      "from": "api.routes.agent_registry",
+      "to": "core.agent_registry"
     },
     {
       "from": "api.routes.agent_tasks",
@@ -4024,6 +4032,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "core.agent_registry",
+      "to": "core.logging_config"
+    },
+    {
       "from": "core.agent_review_workflow",
       "to": "core.orchestration.trio_pipeline"
     },
@@ -4298,6 +4310,10 @@
     {
       "from": "core.browser_session_manager",
       "to": "core.playwright_manager"
+    },
+    {
+      "from": "core.browser_session_vault",
+      "to": "core.logging_config"
     },
     {
       "from": "core.cache.autocache_proxy",
@@ -7548,6 +7564,26 @@
       "to": "integrations._flags"
     },
     {
+      "from": "integrations.telegram_bot",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "integrations.telegram_config"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "integrations.telegram_handlers"
+    },
+    {
+      "from": "integrations.telegram_handlers",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.telegram_handlers",
+      "to": "integrations.telegram_config"
+    },
+    {
       "from": "learning",
       "to": "learning.experience"
     },
@@ -7622,6 +7658,22 @@
     {
       "from": "main",
       "to": "core.logging_config"
+    },
+    {
+      "from": "mcp.adapters.lovable_adapter",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "mcp.adapters.playwright_bolt",
+      "to": "core.browser_session_vault"
+    },
+    {
+      "from": "mcp.adapters.playwright_bolt",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "mcp.adapters.playwright_bolt",
+      "to": "mcp.adapters"
     },
     {
       "from": "memory.chromadb_store",
@@ -9492,6 +9544,14 @@
       "to": "core.config"
     },
     {
+      "from": "tests.api.test_agent_registry",
+      "to": "api.routes.agent_registry"
+    },
+    {
+      "from": "tests.api.test_agent_registry",
+      "to": "core.agent_registry"
+    },
+    {
       "from": "tests.api.test_api",
       "to": "core"
     },
@@ -10246,6 +10306,10 @@
     {
       "from": "tests.core.test_browser_credentials",
       "to": "core.security.secure_credential_store"
+    },
+    {
+      "from": "tests.core.test_browser_session_vault",
+      "to": "core.browser_session_vault"
     },
     {
       "from": "tests.core.test_cache_manager_coverage",
@@ -11272,6 +11336,18 @@
       "to": "services.hitl.engine"
     },
     {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_bot"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_config"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_handlers"
+    },
+    {
       "from": "tests.learning.test_learning",
       "to": "learning.experience"
     },
@@ -11310,6 +11386,10 @@
     {
       "from": "tests.llm.test_advanced_model_router_regression",
       "to": "core.llm.advanced_model_router"
+    },
+    {
+      "from": "tests.mcp.adapters.test_playwright_bolt",
+      "to": "mcp.adapters.playwright_bolt"
     },
     {
       "from": "tests.memory.test_chromadb_store_adapters",
@@ -13241,6 +13321,10 @@
     },
     {
       "from": "tools.mcp.mcp_server",
+      "to": "mcp"
+    },
+    {
+      "from": "tools.mcp.mcp_server",
       "to": "tools.graph_service"
     },
     {
@@ -13644,7 +13728,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1961,
+  "module_count": 1975,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13854,6 +13938,7 @@
     "api.routes.agent",
     "api.routes.agent_action",
     "api.routes.agent_breeding",
+    "api.routes.agent_registry",
     "api.routes.agent_tasks",
     "api.routes.agent_workspace",
     "api.routes.agents",
@@ -14068,6 +14153,7 @@
     "core.agent_factory",
     "core.agent_heartbeat",
     "core.agent_mailbox",
+    "core.agent_registry",
     "core.agent_review_workflow",
     "core.agent_supervisor",
     "core.agents",
@@ -14109,6 +14195,7 @@
     "core.browser_compat_store",
     "core.browser_session_catalog",
     "core.browser_session_manager",
+    "core.browser_session_vault",
     "core.cache",
     "core.cache.autocache_proxy",
     "core.cache.multi_layer_cache",
@@ -14563,6 +14650,9 @@
     "integrations.graphiti_adapter",
     "integrations.mem0_adapter",
     "integrations.openhands_adapter",
+    "integrations.telegram_bot",
+    "integrations.telegram_config",
+    "integrations.telegram_handlers",
     "learning",
     "learning.evidence_analyzer",
     "learning.evolution_bridge",
@@ -14572,6 +14662,10 @@
     "learning.pattern_detector",
     "learning.pattern_recognizer",
     "main",
+    "mcp",
+    "mcp.adapters",
+    "mcp.adapters.lovable_adapter",
+    "mcp.adapters.playwright_bolt",
     "memory",
     "memory.checkpoint_resume",
     "memory.chromadb_store",
@@ -14878,6 +14972,7 @@
     "tests.api.test_admin_ramp",
     "tests.api.test_admin_routes",
     "tests.api.test_agent_execute_contract",
+    "tests.api.test_agent_registry",
     "tests.api.test_api",
     "tests.api.test_api_bootstrap",
     "tests.api.test_api_chat",
@@ -15009,6 +15104,7 @@
     "tests.core.test_billing_zero_cost",
     "tests.core.test_brain",
     "tests.core.test_browser_credentials",
+    "tests.core.test_browser_session_vault",
     "tests.core.test_cache_manager_coverage",
     "tests.core.test_cache_optimization",
     "tests.core.test_capability_activation",
@@ -15206,11 +15302,13 @@
     "tests.hitl.test_hitl_approval_contract",
     "tests.hitl.test_hitl_engine",
     "tests.integration.test_integration_suite",
+    "tests.integrations.test_telegram_bot",
     "tests.learning.test_learning",
     "tests.learning.test_pattern_and_hypothesis",
     "tests.llm.test_advanced_model_router",
     "tests.llm.test_advanced_model_router_regression",
     "tests.load.locustfile",
+    "tests.mcp.adapters.test_playwright_bolt",
     "tests.memory.test_chromadb_store_adapters",
     "tests.memory.test_mcp_server_tools",
     "tests.memory.test_mcp_server_transport",

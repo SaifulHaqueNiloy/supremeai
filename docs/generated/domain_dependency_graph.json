@@ -3823,6 +3823,16 @@
       "evidence": [
         {
           "line": 35,
+          "path": "backend/core/browser_session_vault.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 35,
           "path": "backend/integrations/browser_use_adapter.py"
         }
       ],
