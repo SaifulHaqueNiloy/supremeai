@@ -277,20 +277,38 @@ class RoleBasedAccessControl:
 
 # ── FastAPI Dependency Injection Helpers ───────────────────────────────────────
 def get_current_user_token(request: Any = None) -> dict[str, Any]:
-    """Extract current user token payload from request context or test environment."""
+    """Extract current user token payload from request context or test environment.
+
+    Test fallback mirrors the canonical ``api/dependencies.get_current_user_token``
+    gate (AUDIT-SEC-9, issue #1662): it now requires BOTH the test-environment
+    signature (``utils.environment.is_test_environment``) AND the explicit
+    ``ALLOW_TEST_AUTH_BYPASS=true`` opt-in (``settings.is_bypass_allowed``,
+    hardcoded ``False`` in production). A stray ``pytest`` import inside a
+    production process can therefore no longer grant ``role=admin`` here.
+    """
     if request is not None:
         user = getattr(getattr(request, "state", None), "user", None)
         if user:
             return user
     try:
-        import sys
+        from utils.environment import is_test_environment
 
-        if "pytest" in sys.modules:
+        # বাংলা মন্তব্য (issue #1662 root-cause parity fix): আগে শুধু
+        # `"pytest" in sys.modules` দেখে এখানে role=admin ফেরত দেওয়া হতো —
+        # production প্রসেসে ভুল করে pytest লোড হলেই পুরো admin API খুলে যেত।
+        # এখন canonical dependency-র মতোই explicit bypass opt-in লাগবে।
+        from core.config import settings
+
+        if is_test_environment() and settings.is_bypass_allowed:
             admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")
+            logger.warning(
+                "RBAC test-auth bypass ACTIVE for %s (ALLOW_TEST_AUTH_BYPASS=true) — "
+                "never enable outside test/CI environments",
+                admin_email,
+            )
             return {"sub": admin_email, "role": "admin"}
     except Exception as e:
         logger.debug(f"RBAC environment check error: {e}")
-    admin_email = os.getenv("ADMIN_EMAIL", None)
     from fastapi import HTTPException
 
     raise HTTPException(status_code=401, detail="Unauthorized")
