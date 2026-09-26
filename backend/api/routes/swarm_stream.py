@@ -16,7 +16,6 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 
 from api.deps import get_current_user_token
-
 from core.swarm_pubsub import get_swarm_streamer
 
 # Issue #1652: the deprecated unauthenticated /execute-healing surface is
