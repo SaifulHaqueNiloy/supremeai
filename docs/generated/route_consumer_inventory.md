@@ -4,8 +4,8 @@
 
 | metric | value |
 |---|---|
-| backend routes | 859 |
-| routes with frontend consumer | 297 |
+| backend routes | 858 |
+| routes with frontend consumer | 296 |
 | unique frontend `/api/...` refs | 148 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 1 |
@@ -17,7 +17,7 @@
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 167 | frontend consumer matched |
+| `user-facing` | 166 | frontend consumer matched |
 | `admin-only` | 346 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
@@ -682,7 +682,6 @@
 | GET | `/api/v1/agents/:param` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
 | POST | `/api/v1/agents/:param/ownership` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
 | POST | `/api/v1/agents/execute` | `backend/api/routes/agent.py` | user-facing | `frontend/src/pages/user/AgentWorkspace.tsx`, `frontend/src/services/agentService.test.ts`, `frontend/src/services/agentService.ts` |
-| POST | `/api/v1/agents/execute` | `backend/api/routes/agent_tasks.py` | user-facing | `frontend/src/pages/user/AgentWorkspace.tsx`, `frontend/src/services/agentService.test.ts`, `frontend/src/services/agentService.ts` |
 | GET | `/api/v1/agents/monitor/latency` | `backend/api/routes/agent_tasks.py` | user-facing | `frontend/src/services/agentService.ts` |
 | GET | `/api/v1/agents/roles` | `backend/api/routes/agent_tasks.py` | user-facing | `frontend/src/services/agentService.ts` |
 | POST | `/api/v1/agents/swarm/execute` | `backend/api/routes/agent_tasks.py` | user-facing | `frontend/src/services/agentService.ts` |
