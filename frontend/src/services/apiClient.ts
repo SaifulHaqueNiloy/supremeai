@@ -277,7 +277,13 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
     // silently modified (and could not opt out of cookie sending).
     const fetchOptions: RequestInit = { ...options, credentials: 'include' };
 
-    while (attempts < 2) {
+    // Issue #1679 (cold-start retry hardening): 2 attempts with linear 2s/4s
+    // backoff was not enough for Render free-tier cold starts (30-50s).
+    // Now: 4 attempts total with exponential backoff + jitter
+    // (2^attempt * 2s + random(0..1s)) — 2s→~4-5s→~8-9s→~16-17s.
+    const MAX_ATTEMPTS = 4;
+
+    while (attempts < MAX_ATTEMPTS) {
       try {
         const res = await fetchWithTimeout(currentUrl, fetchOptions);
         // 502/503/504 মানে রেন্ডার সার্ভার স্লিপিং বা ডাউন — একই backend-এ রিট্রাই করব
@@ -287,15 +293,16 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
         return res;
       } catch (e: unknown) {
         attempts++;
-        if (attempts >= 2) {
-          if (isDev()) console.error(`[Queue Interceptor] Network failure for ${currentUrl} after 2 attempts:`, e);
+        if (attempts >= MAX_ATTEMPTS) {
+          if (isDev()) console.error(`[Queue Interceptor] Network failure for ${currentUrl} after ${MAX_ATTEMPTS} attempts:`, e);
           throw e;
         }
 
-        // বাংলা মন্তব্য: একই URL-এ backoff retry — backend কখনোই পাল্টানো হয় না (portal isolation)।
-        // Render free tier cold start (৩০-৫০ সেকেন্ড) সামলাতে delay বাড়ানো হলো।
-        const delayMs = 2000 * attempts;
-        if (isDev()) console.warn(`[Retry] Network error: ${(e as Error).message}. Retrying same backend in ${delayMs}ms...`);
+        // বাংলা মন্তব্য: একই URL-এ exponential backoff + jitter রিট্রাই — backend
+        // কখনোই পাল্টানো হয় না (portal isolation)। Render free tier cold start
+        // (৩০-৫০ সেকেন্ড) সামলাতে #1679 অনুযায়ী সূচকীয় ব্যাকঅফ + র‍্যান্ডম জিটার।
+        const delayMs = Math.round(Math.pow(2, attempts) * 2000 + Math.random() * 1000);
+        if (isDev()) console.warn(`[Retry] Network error: ${(e as Error).message}. Retrying same backend in ${delayMs}ms (attempt ${attempts + 1}/${MAX_ATTEMPTS})...`);
         await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
