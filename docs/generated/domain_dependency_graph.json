@@ -132,6 +132,16 @@
     {
       "evidence": [
         {
+          "line": 23,
+          "path": "backend/external_agents/providers/zai.py"
+        }
+      ],
+      "source": "ai",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
           "line": 61,
           "path": "backend/api/routes/living_brain.py"
         }
@@ -544,6 +554,16 @@
         {
           "line": 25,
           "path": "backend/core/self_evolution/daily_learner.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/external_agents/providers/zai.py"
         }
       ],
       "source": "ai",
@@ -3602,6 +3622,16 @@
     {
       "evidence": [
         {
+          "line": 19,
+          "path": "backend/external_agents/channels/browser_channel.py"
+        }
+      ],
+      "source": "research",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
           "line": 659,
           "path": "backend/api/routes/browser_routes.py"
         }
@@ -3862,6 +3892,16 @@
     {
       "evidence": [
         {
+          "line": 18,
+          "path": "backend/external_agents/channels/browser_channel.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 35,
           "path": "backend/integrations/browser_use_adapter.py"
         }
@@ -4104,6 +4144,16 @@
         {
           "line": 15,
           "path": "backend/core/browser_session_manager.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 20,
+          "path": "backend/external_agents/channels/browser_channel.py"
         }
       ],
       "source": "research",
@@ -4424,6 +4474,26 @@
         {
           "line": 17,
           "path": "backend/api/routes/admin_dashboard/endpoints_security_memory.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 31,
+          "path": "backend/external_agents/control/policy_engine.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 124,
+          "path": "backend/external_agents/control/policy_engine.py"
         }
       ],
       "source": "security",
