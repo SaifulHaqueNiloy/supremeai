@@ -357,7 +357,7 @@ class SwarmOrchestrator:
                                 guardian_agent.validate(workspace, user_id),
                                 timeout=SWARM_PER_AGENT_TIMEOUT_SECONDS,
                             )
-                        except asyncio.TimeoutError:
+                        except TimeoutError:
                             workspace.log(
                                 f"SwarmOrchestrator: Guardian validate TIMEOUT after "
                                 f"{SWARM_PER_AGENT_TIMEOUT_SECONDS}s in iteration {i + 1}. "
@@ -365,10 +365,14 @@ class SwarmOrchestrator:
                             )
                             logger.error(
                                 "[SwarmOrchestrator] Guardian validate timed out in iteration %d/%d",
-                                i + 1, max_refinements,
+                                i + 1,
+                                max_refinements,
                             )
-                            is_approved, feedback = False, (
-                                f"Guardian validation timed out after {SWARM_PER_AGENT_TIMEOUT_SECONDS}s"
+                            is_approved, feedback = (
+                                False,
+                                (
+                                    f"Guardian validation timed out after {SWARM_PER_AGENT_TIMEOUT_SECONDS}s"
+                                ),
                             )
 
                         if is_approved:
@@ -388,7 +392,7 @@ class SwarmOrchestrator:
                                 coder_agent.refine(workspace, feedback, user_id),
                                 timeout=SWARM_PER_AGENT_TIMEOUT_SECONDS,
                             )
-                        except asyncio.TimeoutError:
+                        except TimeoutError:
                             workspace.log(
                                 f"SwarmOrchestrator: Coder refine TIMEOUT after "
                                 f"{SWARM_PER_AGENT_TIMEOUT_SECONDS}s in iteration {i + 1}. "
@@ -396,7 +400,8 @@ class SwarmOrchestrator:
                             )
                             logger.error(
                                 "[SwarmOrchestrator] Coder refine timed out in iteration %d/%d",
-                                i + 1, max_refinements,
+                                i + 1,
+                                max_refinements,
                             )
                     else:  # This else belongs to the for loop, executes if loop finishes without break
                         workspace.log(
@@ -412,7 +417,7 @@ class SwarmOrchestrator:
                         reflection_agent.run(workspace, user_id),
                         timeout=SWARM_PER_AGENT_TIMEOUT_SECONDS,
                     )
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     workspace.log(
                         f"SwarmOrchestrator: Reflection agent TIMEOUT after "
                         f"{SWARM_PER_AGENT_TIMEOUT_SECONDS}s. Skipping reflection."

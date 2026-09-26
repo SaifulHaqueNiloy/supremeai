@@ -57,6 +57,7 @@ def _extract_permission_set(chromosome: dict[str, Any]) -> frozenset[str]:
                 perms.add(p.strip())
     return frozenset(perms)
 
+
 # ────────────────────────────────
 # Configuration (settings-driven, zero hardcode)
 # ────────────────────────────────

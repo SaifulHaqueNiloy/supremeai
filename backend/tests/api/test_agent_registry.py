@@ -113,7 +113,7 @@ def test_route_upsert_and_list(monkeypatch, tmp_path):
             __import__(
                 "api.routes.agent_registry", fromlist=["AgentUpsertRequest"]
             ).AgentUpsertRequest(
-                id="agent-5", role="solver", provider="any-vendor", workspace_branch="agent-5"
+                id="agent-5", role="coder", provider="any-vendor", workspace_branch="agent-5"
             ),
             {},
         )

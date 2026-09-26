@@ -10,7 +10,9 @@ from core.logging_config import logger
 #   - add max-remediation-per-file counter
 #   - escalate to human if exceeded
 # Configurable via env vars; conservative defaults.
-_DEDUP_WINDOW_SECONDS: int = int(os.environ.get("AUTOREMEDIATION_DEDUP_WINDOW_SECONDS", "1800"))  # 30 min
+_DEDUP_WINDOW_SECONDS: int = int(
+    os.environ.get("AUTOREMEDIATION_DEDUP_WINDOW_SECONDS", "1800")
+)  # 30 min
 _MAX_REMEDIATIONS_PER_FILE: int = int(os.environ.get("AUTOREMEDIATION_MAX_PER_FILE", "3"))
 
 
