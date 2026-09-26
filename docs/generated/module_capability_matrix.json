@@ -24170,6 +24170,15 @@
     },
     {
       "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/check_self_heal_token_usage.py"
+    },
+    {
+      "capability_signals": [],
       "classification": "canonical",
       "entrypoints": [
         "main"
@@ -26387,5 +26396,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3021
+  "source_file_count": 3022
 }
