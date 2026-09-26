@@ -22425,7 +22425,8 @@
     {
       "capability_signals": [
         "mcp",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "adapter",
       "entrypoints": [],
@@ -22437,6 +22438,7 @@
         "execute",
         "health",
         "mcp",
+        "memory",
         "register"
       ],
       "classification": "adapter",
