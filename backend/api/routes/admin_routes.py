@@ -844,13 +844,26 @@ def gcp_pubsub_stats(_admin: dict = Depends(get_current_admin)):
     return services.gcp_pubsub_queue.stats()
 
 
-@router.get("/admin/rules")
+@router.get("/admin/rules", deprecated=True)
 def get_admin_rules(_admin: dict = Depends(get_current_admin)):
+    """Deprecated alias of GET /admin-api/rules (issue #1497).
+
+    Both paths are backed by the SAME services.rules_engine instance, so
+    behavior cannot drift — but /admin-api/rules (CommandCenter/RulesEnginePanel
+    contract, core/effective_policy-aware) is the canonical surface. New callers
+    must use the canonical path; this legacy shape is retained for contract
+    compatibility only.
+    """
     return services.rules_engine.rules
 
 
-@router.post("/admin/rules")
+@router.post("/admin/rules", deprecated=True)
 def post_admin_rules(payload: dict = Body(...), _admin: dict = Depends(get_current_admin)):
+    """Deprecated alias of POST /admin-api/rules (issue #1497).
+
+    Single source of truth: services.rules_engine.save_rules — identical to the
+    canonical endpoint. Retained for legacy-contract compatibility only.
+    """
     new_rules = payload.get("rules")
     if new_rules:
         success = services.rules_engine.save_rules(new_rules)
