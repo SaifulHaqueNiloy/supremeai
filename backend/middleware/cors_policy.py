@@ -94,7 +94,9 @@ def _dedupe(origins: Iterable[str]) -> list[str]:
     return result
 
 
-def _origins_with_floor(defaults: tuple[str, ...], env_var: str, compat_var: str) -> tuple[str, ...]:
+def _origins_with_floor(
+    defaults: tuple[str, ...], env_var: str, compat_var: str
+) -> tuple[str, ...]:
     """Issue #1518 (CRITICAL): the production origins are a MANDATORY floor.
 
     বাংলা মন্তব্য: #1483/#1484/#1455 ফিক্সে default শুধু তখনই কাজ করত যখন env

@@ -21,8 +21,8 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
-from core.evolution.learning_pipeline import LearningPipeline, LearningResult, get_learning_pipeline
 from core.logging_config import logger
+from evolution.learning_pipeline import LearningPipeline, LearningResult, get_learning_pipeline
 
 
 @dataclass

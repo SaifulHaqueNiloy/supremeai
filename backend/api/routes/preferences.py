@@ -91,10 +91,7 @@ async def get_preferences(user_id: str = Query(default="default")):
         # PostgREST chain in a worker thread (same pattern as issue #443 fix in
         # memory/long_term_memory.py and services/memory_service.py).
         res = await asyncio.to_thread(
-            lambda: db.client.table("user_preferences")
-            .select("*")
-            .eq("user_id", user_id)
-            .execute()
+            lambda: db.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
         )
         # FIX (CI red 36219425476): when db.client is an ASYNC client (tests
         # stub it with AsyncMock), the chain above merely CREATES a coroutine
@@ -163,10 +160,12 @@ async def upsert_preferences(payload: PreferenceUpdate, user_id: str = Query(def
         if "custom_shortcuts" not in data:
             try:
                 cur = await asyncio.to_thread(
-                    lambda: db.client.table("user_preferences")
-                    .select("custom_shortcuts")
-                    .eq("user_id", user_id)
-                    .execute()
+                    lambda: (
+                        db.client.table("user_preferences")
+                        .select("custom_shortcuts")
+                        .eq("user_id", user_id)
+                        .execute()
+                    )
                 )
                 if asyncio.iscoroutine(cur):
                     cur = await cur
