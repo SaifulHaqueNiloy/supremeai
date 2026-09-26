@@ -698,6 +698,12 @@ async def admin_firebase_totp_verify(payload: AdminFirebaseTotpVerifyRequest, re
     return {"status": "success", "token": token}
 
 
+# Issue #1819: the Settings page (frontend/src/components/dashboard/SettingsPage.tsx)
+# calls '/api/admin/trusted-browsers'. The path also keeps the frontend's
+# isAdminContextPath() admin-backend routing intact (a bare '/admin/...' call from
+# the /settings page would be sent to the user backend instead). Same handler,
+# two advertised paths — no double-mount (distinct (path, method, endpoint) keys).
+@router.get("/api/admin/trusted-browsers")
 @router.get("/admin/trusted-browsers")
 async def list_trusted_browsers(admin: dict = Depends(get_current_admin)):
     redis = await _get_redis_client()
@@ -716,6 +722,8 @@ async def list_trusted_browsers(admin: dict = Depends(get_current_admin)):
     return {"browsers": browsers}
 
 
+# Issue #1819: '/api' alias — see list_trusted_browsers above.
+@router.delete("/api/admin/trusted-browsers/{browser_id}")
 @router.delete("/admin/trusted-browsers/{browser_id}")
 async def revoke_trusted_browser(browser_id: str, admin: dict = Depends(get_current_admin)):
     redis = await _get_redis_client()
@@ -732,6 +740,8 @@ async def revoke_trusted_browser(browser_id: str, admin: dict = Depends(get_curr
     return {"ok": True}
 
 
+# Issue #1819: '/api' alias — see list_trusted_browsers above.
+@router.delete("/api/admin/trusted-browsers")
 @router.delete("/admin/trusted-browsers")
 async def revoke_all_trusted_browsers(admin: dict = Depends(get_current_admin)):
     redis = await _get_redis_client()

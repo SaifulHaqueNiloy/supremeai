@@ -353,7 +353,7 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
               ))}
             </div>
           )}
-          {trustedBrowserStatus && <p className="text-[11px] text-slate-400 mt-3">{trustedBrowserStatus}</p>}
+          {trustedBrowserStatus && <p data-testid="trusted-browsers-status" className="text-[11px] text-slate-400 mt-3">{trustedBrowserStatus}</p>}
         </div>
 
         <div className="flex items-center gap-3">
