@@ -5681,7 +5681,9 @@
       "path": "backend/core/llm/telemetry.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
