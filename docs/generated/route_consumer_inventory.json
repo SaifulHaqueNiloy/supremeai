@@ -15,19 +15,19 @@
   ],
   "totals": {
     "backend_routes": 859,
-    "frontend_unique_refs": 147,
-    "routes_with_frontend_consumer": 296,
+    "frontend_unique_refs": 148,
+    "routes_with_frontend_consumer": 297,
     "unmounted_routes": 0,
     "orphan_routes": 1,
     "orphan_families": 1,
-    "api_only_routes": 304,
+    "api_only_routes": 303,
     "api_only_families": 158,
     "by_classification": {
-      "user-facing": 166,
+      "user-facing": 167,
       "admin-only": 346,
       "internal": 38,
       "deprecated": 4,
-      "api-only": 304,
+      "api-only": 303,
       "orphaned": 1
     }
   },
@@ -126,7 +126,7 @@
     "/api/tts/voices": 1,
     "/api/v1/agent_review_workflow": 2,
     "/api/v1/analytics": 3,
-    "/api/v1/auth": 5,
+    "/api/v1/auth": 4,
     "/api/v1/browse": 1,
     "/api/v1/cache": 1,
     "/api/v1/circles": 3,
@@ -7609,6 +7609,7 @@
       "frontend_consumers": [
         "frontend/src/pages/PublicPages.tsx",
         "frontend/src/services/apiClient.test.ts",
+        "frontend/src/services/apiClient.ts",
         "frontend/src/store/authStore.ts"
       ],
       "classification": "user-facing"
@@ -7660,8 +7661,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "refresh_token_endpoint",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/services/apiClient.ts"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",
@@ -7676,6 +7679,7 @@
       "operation": "register",
       "frontend_consumers": [
         "frontend/src/pages/PublicPages.tsx",
+        "frontend/src/services/apiClient.ts",
         "frontend/src/store/authStore.ts"
       ],
       "classification": "user-facing"
