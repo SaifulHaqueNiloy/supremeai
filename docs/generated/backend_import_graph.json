@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3492,
+  "edge_count": 3493,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -11516,6 +11516,10 @@
       "to": "core.upload_validator"
     },
     {
+      "from": "tests.core.test_vector_store_tenant_isolation",
+      "to": "core.ai_memory.vector_store"
+    },
+    {
       "from": "tests.core.test_voice_stream",
       "to": "core.app"
     },
@@ -13972,7 +13976,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2001,
+  "module_count": 2002,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -15560,6 +15564,7 @@
     "tests.core.test_universal_rules",
     "tests.core.test_universal_rules_extended",
     "tests.core.test_upload_validator",
+    "tests.core.test_vector_store_tenant_isolation",
     "tests.core.test_voice_stream",
     "tests.core.test_zero_cost_phase1_queue",
     "tests.core.test_zero_cost_redis_breaker_learning",
