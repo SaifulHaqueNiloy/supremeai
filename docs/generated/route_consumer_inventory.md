@@ -4,8 +4,8 @@
 
 | metric | value |
 |---|---|
-| backend routes | 860 |
-| routes with frontend consumer | 297 |
+| backend routes | 859 |
+| routes with frontend consumer | 296 |
 | unique frontend `/api/...` refs | 147 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 1 |
@@ -18,7 +18,7 @@
 | classification | count | meaning |
 |---|---|---|
 | `user-facing` | 166 | frontend consumer matched |
-| `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `admin-only` | 346 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 304 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
@@ -676,7 +676,6 @@
 | POST | `/api/v1/agent/learn` | `backend/api/routes/agent_workspace.py` | user-facing | `frontend/src/services/apiClient.ts` |
 | POST | `/api/v1/agent_review_workflow/execute` | `backend/api/routes/ide_trio.py` | api-only | NONE |
 | GET | `/api/v1/agent_review_workflow/status` | `backend/api/routes/ide_trio.py` | api-only | NONE |
-| GET | `/api/v1/agents` | `backend/api/routes/admin_v1.py` | admin-only | `frontend/src/services/agentService.ts` |
 | GET | `/api/v1/agents` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
 | POST | `/api/v1/agents` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
 | DELETE | `/api/v1/agents/:param` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
