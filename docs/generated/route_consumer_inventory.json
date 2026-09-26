@@ -14,16 +14,16 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 859,
+    "backend_routes": 858,
     "frontend_unique_refs": 148,
-    "routes_with_frontend_consumer": 297,
+    "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
     "orphan_routes": 1,
     "orphan_families": 1,
     "api_only_routes": 303,
     "api_only_families": 158,
     "by_classification": {
-      "user-facing": 167,
+      "user-facing": 166,
       "admin-only": 346,
       "internal": 38,
       "deprecated": 4,
@@ -7480,24 +7480,6 @@
       "mounted": true,
       "is_admin": false,
       "operation": "execute_agent_task",
-      "frontend_consumers": [
-        "frontend/src/pages/user/AgentWorkspace.tsx",
-        "frontend/src/services/agentService.test.ts",
-        "frontend/src/services/agentService.ts"
-      ],
-      "classification": "user-facing"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/agents/execute",
-      "declared": "/api/v1/agents/execute",
-      "deprecated": false,
-      "router_file": "backend/api/routes/agent_tasks.py",
-      "module": "api.routes.agent_tasks",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "execute_agent",
       "frontend_consumers": [
         "frontend/src/pages/user/AgentWorkspace.tsx",
         "frontend/src/services/agentService.test.ts",
