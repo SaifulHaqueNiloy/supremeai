@@ -4,6 +4,7 @@
 """
 
 import hashlib
+import threading
 import time
 from typing import Any
 
@@ -16,6 +17,29 @@ from core.logging_config import logger
 API_KEY_LIMIT_PREFIX = "apikey:rate:"
 DEFAULT_MAX_REQUESTS_PER_MINUTE = 60
 
+# Issue #1703: Redis-down degraded-mode guard — per-process sliding minute
+# window যাতে API-key rate limit কখনো সম্পূর্ণ অচল না হয়।
+_FALLBACK_WINDOW = 60.0
+_FALLBACK_HITS: dict[str, list[float]] = {}
+_FALLBACK_LOCK = threading.Lock()
+
+
+def _fallback_allow(api_key_hash: str, max_requests: int) -> bool:
+    """In-memory per-key minute-window check (issue #1703 degraded mode)."""
+    now = time.time()
+    key = api_key_hash[:16]
+    with _FALLBACK_LOCK:
+        if len(_FALLBACK_HITS) > 50_000:
+            # opportunistic prune of stale windows
+            for k in [
+                k for k, ts in _FALLBACK_HITS.items() if not ts or ts[-1] < now - _FALLBACK_WINDOW
+            ]:
+                _FALLBACK_HITS.pop(k, None)
+        window = [ts for ts in _FALLBACK_HITS.get(key, []) if ts > now - _FALLBACK_WINDOW]
+        window.append(now)
+        _FALLBACK_HITS[key] = window
+        return len(window) <= max_requests
+
 
 async def enforce_api_key_rate_limit(
     api_key_hash: str, max_requests: int = DEFAULT_MAX_REQUESTS_PER_MINUTE
@@ -24,7 +48,14 @@ async def enforce_api_key_rate_limit(
     from core.cache.redis_manager import redis_manager
 
     if not redis_manager or not getattr(redis_manager, "client", None):
-        return  # Fail open gracefully if Redis is down
+        # Issue #1703: fail-open বাদ — in-memory fallback window প্রয়োগ হয়।
+        if not _fallback_allow(api_key_hash, max_requests):
+            logger.critical(
+                "API key rate limit exceeded (in-memory fallback, Redis unavailable) "
+                f"for key hash prefix {api_key_hash[:8]}"
+            )
+            raise HTTPException(status_code=429, detail="API key rate limit exceeded")
+        return
 
     current_minute = int(time.time() / 60)
     window_key = f"{API_KEY_LIMIT_PREFIX}{api_key_hash[:16]}:{current_minute}"
@@ -32,9 +63,14 @@ async def enforce_api_key_rate_limit(
     try:
         # Issue #460: single atomic EVAL (1 billable op) instead of the
         # INCR+EXPIRE 2-command pipeline.
+        # Issue #1703: raise_on_failure=True — atomic_window_incr-এর
+        # "error-এ 0 রিটার্ন" fail-open contract এখানে গ্রহণযোগ্য নয়;
+        # exception ছড়িয়ে নিচের in-memory fallback window-এ যাওয়া হয়।
         from core.cache.rate_limit_atomic import atomic_window_incr
 
-        current_count = await atomic_window_incr(redis_manager.client, window_key, 120)
+        current_count = await atomic_window_incr(
+            redis_manager.client, window_key, 120, raise_on_failure=True
+        )
 
         if current_count > max_requests:
             logger.warning(
@@ -44,7 +80,12 @@ async def enforce_api_key_rate_limit(
     except HTTPException:
         raise
     except Exception as exc:
-        logger.warning(f"⚠️ API Key rate limiter error: {exc}. Failing open for resilience.")
+        # Issue #1703: unexpected Redis error-তেও fallback window প্রয়োগ হয়।
+        logger.warning(
+            f"⚠️ API Key rate limiter error: {exc}. Using in-memory fallback window (issue #1703)."
+        )
+        if not _fallback_allow(api_key_hash, max_requests):
+            raise HTTPException(status_code=429, detail="API key rate limit exceeded") from exc
 
 
 class APIKeyLimiter:
