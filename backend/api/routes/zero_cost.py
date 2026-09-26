@@ -1,11 +1,20 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from api.deps import get_current_user_token
 from core.zero_cost_architecture.zero_cost_patch_phase1_4 import (
     get_orchestrator,
     get_zero_cost_config,
 )
 
-router = APIRouter(prefix="/zero-cost", tags=["Zero-Cost Architecture"])
+# AUDIT-FIX (#1704 P0): আগে router-এ কোনো auth dependency ছিল না — ফলে
+# /zero-cost/health, /metrics, /recommendations-এর মাধ্যমে যে কেউ
+# queue metrics, circuit breaker state ও learning metrics দেখতে পারত।
+# এই endpoint গুলো system internals প্রকাশ করে — admin/operator-only।
+router = APIRouter(
+    prefix="/zero-cost",
+    tags=["Zero-Cost Architecture"],
+    dependencies=[Depends(get_current_user_token)],
+)
 
 
 @router.get("/health")
