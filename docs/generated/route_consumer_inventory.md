@@ -4,13 +4,13 @@
 
 | metric | value |
 |---|---|
-| backend routes | 832 |
-| routes with frontend consumer | 269 |
+| backend routes | 833 |
+| routes with frontend consumer | 271 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
-| api-only routes (allowlisted) | 303 |
+| api-only routes (allowlisted) | 304 |
 | api-only families | 158 |
 
 ## Classification legend
@@ -21,7 +21,7 @@
 | `admin-only` | 330 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `api-only` | 304 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families
@@ -123,7 +123,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | `/api/tts/voices` | 1 |
 | `/api/v1/agent_review_workflow` | 2 |
 | `/api/v1/analytics` | 3 |
-| `/api/v1/auth` | 4 |
+| `/api/v1/auth` | 5 |
 | `/api/v1/browse` | 1 |
 | `/api/v1/cache` | 1 |
 | `/api/v1/circles` | 3 |
@@ -344,6 +344,8 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/admin/infrastructure/status` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/integrations` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/integrations/:param/health` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/admin/librarian/process` | `backend/api/routes/admin_librarian.py` | admin-only | `frontend/src/components/admin/EnhancedSkillMarketplace.tsx` |
+| GET | `/api/admin/librarian/queue` | `backend/api/routes/admin_librarian.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/llm/providers` | `backend/api/routes/admin_llm.py` | admin-only | `frontend/src/components/dashboard/LlmGatewayPage.tsx` |
 | GET | `/api/admin/llm/router` | `backend/api/routes/admin_llm.py` | admin-only | `frontend/src/components/dashboard/LlmGatewayPage.tsx` |
 | POST | `/api/admin/llm/router/override` | `backend/api/routes/admin_llm.py` | admin-only | `frontend/src/components/dashboard/LlmGatewayPage.tsx` |
@@ -386,8 +388,6 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/api-keys/admin/bulk-delete` | `backend/api/routes/api_keys.py` | admin-only | `frontend/src/components/dashboard/SecretsPage.tsx` |
 | GET | `/api/api-keys/all` | `backend/api/routes/api_keys.py` | user-facing | `frontend/src/components/dashboard/SecretsPage.tsx` |
 | POST | `/api/api-keys/create` | `backend/api/routes/api_keys.py` | user-facing | `frontend/src/components/dashboard/SecretsPage.tsx` |
-| POST | `/api/api/admin/librarian/process` | `backend/api/routes/admin_librarian.py` | admin-only | NONE |
-| GET | `/api/api/admin/librarian/queue` | `backend/api/routes/admin_librarian.py` | admin-only | NONE |
 | POST | `/api/artifacts` | `backend/api/routes/artifacts.py` | api-only | NONE |
 | DELETE | `/api/artifacts/:param` | `backend/api/routes/artifacts.py` | api-only | NONE |
 | GET | `/api/artifacts/:param` | `backend/api/routes/artifacts.py` | api-only | NONE |
@@ -667,6 +667,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/auth/me` | `backend/api/routes/auth.py` | user-facing | `frontend/src/config/permissions.ts`, `frontend/src/services/apiClient.test.ts`, `frontend/src/services/apiClient.ts` (+2 more) |
 | POST | `/api/v1/auth/refresh` | `backend/api/routes/auth.py` | api-only | NONE |
 | POST | `/api/v1/auth/register` | `backend/api/routes/auth.py` | user-facing | `frontend/src/store/authStore.ts` |
+| POST | `/api/v1/auth/totp/verify` | `backend/api/routes/auth.py` | api-only | NONE |
 | GET | `/api/v1/auth/users` | `backend/api/routes/auth.py` | api-only | NONE |
 | PATCH | `/api/v1/auth/users/:param/role` | `backend/api/routes/auth.py` | api-only | NONE |
 | GET | `/api/v1/auth/verify` | `backend/api/routes/auth.py` | api-only | NONE |

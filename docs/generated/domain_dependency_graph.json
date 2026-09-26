@@ -2282,6 +2282,16 @@
     {
       "evidence": [
         {
+          "line": 739,
+          "path": "backend/api/routes/auth.py"
+        }
+      ],
+      "source": "identity",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/models/agent_session.py"
         }
@@ -2672,7 +2682,7 @@
     {
       "evidence": [
         {
-          "line": 257,
+          "line": 258,
           "path": "backend/api/routes/memory.py"
         }
       ],
@@ -2682,7 +2692,7 @@
     {
       "evidence": [
         {
-          "line": 321,
+          "line": 335,
           "path": "backend/api/routes/memory.py"
         }
       ],

@@ -14,20 +14,20 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 832,
+    "backend_routes": 833,
     "frontend_unique_refs": 145,
-    "routes_with_frontend_consumer": 269,
+    "routes_with_frontend_consumer": 271,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
-    "api_only_routes": 303,
+    "api_only_routes": 304,
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 161,
       "admin-only": 330,
       "internal": 38,
       "deprecated": 0,
-      "api-only": 303,
+      "api-only": 304,
       "orphaned": 0
     }
   },
@@ -124,7 +124,7 @@
     "/api/tts/voices": 1,
     "/api/v1/agent_review_workflow": 2,
     "/api/v1/analytics": 3,
-    "/api/v1/auth": 4,
+    "/api/v1/auth": 5,
     "/api/v1/browse": 1,
     "/api/v1/cache": 1,
     "/api/v1/circles": 3,
@@ -2362,6 +2362,38 @@
       "classification": "admin-only"
     },
     {
+      "method": "POST",
+      "path": "/api/admin/librarian/process",
+      "declared": "/api/admin/librarian/process",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_librarian.py",
+      "module": "api.routes.admin_librarian",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "process_skill_action",
+      "frontend_consumers": [
+        "frontend/src/components/admin/EnhancedSkillMarketplace.tsx"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/librarian/queue",
+      "declared": "/api/admin/librarian/queue",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_librarian.py",
+      "module": "api.routes.admin_librarian",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_quarantine_queue",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
       "method": "GET",
       "path": "/api/admin/llm/providers",
       "declared": "/api/admin/llm/providers",
@@ -3044,34 +3076,6 @@
         "frontend/src/components/dashboard/SecretsPage.tsx"
       ],
       "classification": "user-facing"
-    },
-    {
-      "method": "POST",
-      "path": "/api/api/admin/librarian/process",
-      "declared": "/api/api/admin/librarian/process",
-      "deprecated": false,
-      "router_file": "backend/api/routes/admin_librarian.py",
-      "module": "api.routes.admin_librarian",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "process_skill_action",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/api/admin/librarian/queue",
-      "declared": "/api/api/admin/librarian/queue",
-      "deprecated": false,
-      "router_file": "backend/api/routes/admin_librarian.py",
-      "module": "api.routes.admin_librarian",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "get_quarantine_queue",
-      "frontend_consumers": [],
-      "classification": "admin-only"
     },
     {
       "method": "POST",
@@ -7266,6 +7270,20 @@
         "frontend/src/store/authStore.ts"
       ],
       "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/totp/verify",
+      "declared": "/api/v1/auth/totp/verify",
+      "deprecated": false,
+      "router_file": "backend/api/routes/auth.py",
+      "module": "api.routes.auth",
+      "registry_prefix": "/api/v1",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "totp_verify_compat",
+      "frontend_consumers": [],
+      "classification": "api-only"
     },
     {
       "method": "GET",

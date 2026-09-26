@@ -6,17 +6,17 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 582,
+    "backend_routes": 583,
     "frontend_unique_refs": 145,
     "matched": 250,
-    "orphan_routes": 332
+    "orphan_routes": 333
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
     "/api/v1/admin-api": 25,
     "/api/v1/mesh": 15,
     "/api/v1/mcp": 14,
-    "/api/v1/auth": 10,
+    "/api/v1/auth": 11,
     "/api/v1/evolution": 9,
     "/api/v1/missions": 9,
     "/api/v1/meta-ai": 8,
@@ -132,7 +132,7 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 256,
+    "unclassified-orphan": 257,
     "internal": 44,
     "admin-only": 32
   },
@@ -317,6 +317,13 @@
       "method": "PATCH",
       "declared": "/auth/users/{user_id}/role",
       "resolved": "/api/v1/auth/users/:param/role",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/auth.py",
+      "method": "POST",
+      "declared": "/auth/totp/verify",
+      "resolved": "/api/v1/auth/totp/verify",
       "classification": "unclassified-orphan"
     },
     {
