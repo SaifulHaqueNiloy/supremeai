@@ -17,10 +17,18 @@ import pytest
 @pytest.fixture(autouse=True)
 def setup_token():
     os.environ["SUPREMEAI_API_KEY"] = "test-token"
+    # Red-CI fix (#1769, round 2): since issue #1570 the SecureCredentialStore
+    # defaults to fail-closed — without an encryption key in the environment
+    # any code path that persists credentials (e.g. the IMAP connect contract
+    # exercised below) honestly fails with CredentialEncryptionUnavailableError.
+    # Supply a throwaway key for the whole module, generated at runtime
+    # (32-byte urlsafe-b64) so no static key material lives in the repo.
+    os.environ["SUPREMEAI_CREDENTIAL_ENC_KEY"] = base64.urlsafe_b64encode(os.urandom(32)).decode()
     try:
         yield
     finally:
         os.environ.pop("SUPREMEAI_API_KEY", None)
+        os.environ.pop("SUPREMEAI_CREDENTIAL_ENC_KEY", None)
 
 
 @patch("tools.social.email_agent.imaplib.IMAP4_SSL")
@@ -43,26 +51,19 @@ def test_api_email_endpoints(mock_imap_ssl):
     mock_conn.__exit__.return_value = False
     mock_imap_ssl.return_value = mock_conn
 
-    # Red-CI fix (#1753 round 2): after issue #1570 the SecureCredentialStore
-    # defaults to fail-closed — without an encryption key in the environment
-    # the post-login credential persist raises
-    # CredentialEncryptionUnavailableError, which the route honestly reports
-    # as 500. A successful IMAP connect must persist the (encrypted) password,
-    # so supply a throwaway key for this test context only. Generated at
-    # runtime (32-byte urlsafe-b64) so no static key material lives in the
-    # repo — the secrets scanner and the credential store are both satisfied.
-    fernet_test_key = base64.urlsafe_b64encode(os.urandom(32)).decode()
-    with patch.dict(os.environ, {"SUPREMEAI_CREDENTIAL_ENC_KEY": fernet_test_key}):
-        resp2 = client.post(
-            "/integrations/email/imap",
-            json={
-                "host": "imap.gmail.com",
-                "port": 993,
-                "username": "supremeai@paykaribazar.com",
-                "app_password": "secret_password",  # pragma: allowlist secret
-            },
-            headers=auth_headers,
-        )
+    # Red-CI fix (#1769, round 2): the credential-encryption key required by
+    # the fail-closed store (#1570) is provided module-wide by the autouse
+    # setup_token fixture above.
+    resp2 = client.post(
+        "/integrations/email/imap",
+        json={
+            "host": "imap.gmail.com",
+            "port": 993,
+            "username": "supremeai@paykaribazar.com",
+            "app_password": "secret_password",  # pragma: allowlist secret
+        },
+        headers=auth_headers,
+    )
     assert resp2.status_code == 200
     assert resp2.json()["status"] == "success"
     mock_conn.login.assert_called_once_with("supremeai@paykaribazar.com", "secret_password")
