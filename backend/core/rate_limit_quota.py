@@ -6,6 +6,7 @@ and control LLM costs over a 24-hour period.
 
 from __future__ import annotations
 
+import threading
 import time
 
 import redis.asyncio as aioredis
@@ -30,6 +31,28 @@ class DailyQuotaLimiter:
             "premium": 5000,
             "admin": 999999,
         }
+        # Issue #1703: Redis-down degraded-mode guard — per-process daily
+        # counters যাতে quota কখনো অসীম না হয় (আগে নীরব fail-open)।
+        self._fallback_lock = threading.Lock()
+        self._fallback_counts: dict[str, int] = {}
+
+    def _fallback_check(self, user_id: str, limit: int) -> bool:
+        """In-memory fallback quota check (issue #1703).
+
+        Redis অনুপলব্ধ হলে per-process daily কাউন্টারে একই লিমিট প্রয়োগ
+        হয় — multi-instance ডিপ্লয়ে এটি per-instance সীমা (দুর্বল কিন্তু
+        অসীম নয়); single-instance ডিপ্লয়ে সম্পূর্ণ সঠিক।
+        """
+        key = f"{user_id}:{time.strftime('%Y-%m-%d')}"
+        with self._fallback_lock:
+            if len(self._fallback_counts) > 50_000:
+                today = time.strftime("%Y-%m-%d")
+                self._fallback_counts = {
+                    k: v for k, v in self._fallback_counts.items() if k.endswith(f":{today}")
+                }
+            current = self._fallback_counts.get(key, 0) + 1
+            self._fallback_counts[key] = current
+        return current <= limit
 
     async def get_redis(self):
         if not self._redis:
@@ -61,6 +84,12 @@ class DailyQuotaLimiter:
 
             return True
         except Exception as e:
-            logger.error(f"Quota error for {user_id}: {e}")
-            # Fail open if Redis is down so we don't break the app
-            return True
+            # Issue #1703: নীরব fail-open বাদ — Redis ডাউন হলে per-process
+            # in-memory fallback guard-এ একই দৈনিক লিমিট প্রয়োগ হয়। Unlimited
+            # spend আর সম্ভব নয়, আবার সম্পূর্ণ deny-outage-ও নয়।
+            logger.critical(
+                f"Daily quota check UNAVAILABLE (Redis unreachable) for "
+                f"{user_id} — using in-memory fallback quota (issue #1703): "
+                f"{type(e).__name__}: {e}"
+            )
+            return self._fallback_check(user_id, limit)
