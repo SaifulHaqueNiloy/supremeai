@@ -30,7 +30,21 @@ auth_headers = {"Authorization": f"Bearer {admin_token}"}
 
 @pytest.fixture(autouse=True)
 def override_admin_auth():
-    """বাংলা: require_admin_token ও get_current_user_token override করা হচ্ছে।"""
+    """বাংলা: require_admin_token ও get_current_user_token override করা হচ্ছে।
+
+    Issue #1842 fix: teardown আগে `app_mod.dependency_overrides = {}` লিখে
+    SHARED core.app singleton-এর পুরো override dict-টাই replace করে দিত —
+    ফলে অন্য test module-গুলোর (যেমন test_payments.py-র module-level
+    get_current_user_token override) সব override মুছে যেত এবং ওরা CI-তে
+    403/KeyError দিত (assert 403 == 200)। এখন snapshot→restore pattern:
+    এই fixture যে ২টা key set করে, শুধু সেগুলোর আগের মান restore হয় —
+    dict object অপরিবর্তিত থাকে (test_billing_system.py-র #1753
+    follow-through fix-এর মতোই)।
+    """
+    saved_overrides = {
+        require_admin_token: app_mod.dependency_overrides.get(require_admin_token),
+        get_current_user_token: app_mod.dependency_overrides.get(get_current_user_token),
+    }
     app_mod.dependency_overrides[require_admin_token] = lambda: {
         "sub": "admin",
         "uid": "admin",
@@ -38,7 +52,11 @@ def override_admin_auth():
     }
     app_mod.dependency_overrides[get_current_user_token] = lambda: {"sub": "admin", "role": "admin"}
     yield
-    app_mod.dependency_overrides = {}
+    for dep, previous in saved_overrides.items():
+        if previous is None:
+            app_mod.dependency_overrides.pop(dep, None)
+        else:
+            app_mod.dependency_overrides[dep] = previous
 
 
 @pytest.fixture(autouse=True)
