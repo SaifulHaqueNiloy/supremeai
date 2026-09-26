@@ -231,11 +231,12 @@ class Tier0Dispatcher:
         # technically allow dots, but allowing dots opens ambiguity with URL
         # path separators. To balance security + PyPI compatibility, we keep
         # dots in the middle but reject leading/trailing dots/dashes.
-        if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9]", pkg_name) and not re.fullmatch(
-            r"[A-Za-z0-9]", pkg_name
-        ):
+        if not re.fullmatch(
+            r"[A-Za-z0-9][A-Za-z0-9._-]*[A-Za-z0-9]", pkg_name
+        ) and not re.fullmatch(r"[A-Za-z0-9]", pkg_name):
             return {"error": "invalid package name", "query": pkg_name}
         url = f"https://pypi.org/pypi/{pkg_name}/json"
+
         # AUDIT-FIX (#1695 HIGH): SSRF defense — block redirects, tighter timeout.
         # একটি redirect-handler যোগ করা হয়েছে যা সব redirect HTTPRedirectHandler
         # কে প্রতিস্থাপন করে — ফলে যদি PyPI (বা কোনো man-in-the-middle) 3xx
@@ -247,8 +248,11 @@ class Tier0Dispatcher:
             def redirect_request(self, req, fp, code, msg, headers, newurl):  # noqa: ARG002
                 # AUDIT-FIX (#1695): Block all redirects — fail loud.
                 raise urllib.error.HTTPError(
-                    req.full_url, code, f"Redirect blocked (SSRF guard, AUDIT-FIX #1695): {newurl}",
-                    headers, None,
+                    req.full_url,
+                    code,
+                    f"Redirect blocked (SSRF guard, AUDIT-FIX #1695): {newurl}",
+                    headers,
+                    None,
                 )
 
         no_redirect_opener = urllib.request.build_opener(_NoRedirectHandler)
@@ -262,13 +266,18 @@ class Tier0Dispatcher:
                 # opener could in theory still allow some redirects).
                 final_url = resp.geturl()
                 from urllib.parse import urlparse
+
                 final_host = urlparse(final_url).netloc.lower()
                 if final_host not in {"pypi.org", "www.pypi.org"}:
                     logger.warning(
                         f"[Tier0Dispatcher] PyPI response from unexpected host {final_host} — "
                         f"possible SSRF, rejecting (AUDIT-FIX #1695)."
                     )
-                    return {"error": "PyPI response from unexpected host", "host": final_host, "query": pkg_name}
+                    return {
+                        "error": "PyPI response from unexpected host",
+                        "host": final_host,
+                        "query": pkg_name,
+                    }
                 data = json.loads(resp.read())
             return {
                 "name": data["info"]["name"],
@@ -336,19 +345,19 @@ class Tier0Dispatcher:
         default_allowed = ("docs", "frontend/src", "backend/api/routes")
         allowed_set = {
             os.path.realpath(os.path.join(sandbox_root, d))
-            for d in (default_allowed + tuple(
-                d.strip() for d in allowed_raw.split(",") if d.strip()
-            ))
+            for d in (
+                default_allowed + tuple(d.strip() for d in allowed_raw.split(",") if d.strip())
+            )
         }
         # resolved যদি কোনো allowed directory-র অধীন না হয় → block
         is_allowed = any(
-            resolved == allowed or resolved.startswith(allowed + os.sep)
-            for allowed in allowed_set
+            resolved == allowed or resolved.startswith(allowed + os.sep) for allowed in allowed_set
         )
         if not is_allowed:
             logger.warning(
                 "[Tier0Dispatcher] _list_files blocked: '%s' not in whitelist %s",
-                target_dir, sorted(allowed_set),
+                target_dir,
+                sorted(allowed_set),
             )
             return {
                 "error": "directory not in Tier0 whitelist",
