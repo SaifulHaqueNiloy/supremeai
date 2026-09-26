@@ -29,7 +29,8 @@ slots:
   branch: agent-3-coder-1
   notes: 'Primary Code Implementer. Claims assigned issues, performs local issue-scoped
     audit to confirm validity, writes production code and unit tests. FORBIDDEN from
-    performing full codebase audits or refactoring outside issue scope.'
+    performing full codebase audits or refactoring outside issue scope. FORBIDDEN from
+    modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-5
   tool: ci-action
   maintainer: '@SaifulHaqueNiloy'
@@ -48,7 +49,8 @@ slots:
   branch: agent-6-coder-2
   notes: 'Parallel Code Implementer. Claims assigned issues, performs local issue-scoped
     audit to confirm validity, writes production code and unit tests. FORBIDDEN from
-    performing full codebase audits or refactoring outside issue scope.'
+    performing full codebase audits or refactoring outside issue scope. FORBIDDEN from
+    modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-7
   tool: solver-c
   maintainer: '@SaifulHaqueNiloy'
@@ -60,7 +62,8 @@ slots:
     this instance''s prior agent-2 activity). Claims open issues one-by-one, implements
     scoped fixes and tests on agent-7-solver-b, opens focused PRs and squash-merges
     after green checks. Works the issue backlog until open count reaches ~zero.
-    FORBIDDEN from touching .github/workflows or other agents'' branches.'
+    FORBIDDEN from touching .github/workflows or other agents'' branches. FORBIDDEN from
+    modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-8
   tool: pr-verifier
   maintainer: '@SaifulHaqueNiloy'
@@ -107,10 +110,11 @@ slots:
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: CI fixer (renamed from browser-tester + log watcher per owner directive
+  notes: 'CI fixer (renamed from browser-tester + log watcher per owner directive
     2026-09-26). Watches CI/Actions logs on failure (handoff:log-fix), diagnoses,
-    fixes, re-verifies. Creates issues on repeated failures. Browser testing
-    split out to agent-13 — two different agents' jobs
+    fixes, re-verifies. Creates issues on repeated failures. FORBIDDEN from
+    modifying any files without an atomically claimed Issue (status:in-progress).
+    Browser testing split out to agent-13 — two different agents'' jobs'
 - slot: agent-13
   tool: browser-tester
   maintainer: '@SaifulHaqueNiloy'
