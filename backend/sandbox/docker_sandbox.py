@@ -205,6 +205,24 @@ class DockerSandbox:
                     "stderr": "Invalid bind mount target path detected.",
                 }
 
+        # 🛡️ AUDIT-FIX (#1701 MEDIUM): AST pre-execution validation — parity
+        # with core/microvm_sandbox.py::_ast_validate_code. The raw script used
+        # to go straight into `python3 -c` inside the container with no static
+        # inspection. বাংলা: কন্টেইনারে চলার আগেই AST দিয়ে কোড যাচাই হয় —
+        # getattr/hasattr বাইপাস ও unsafe কনস্ট্রাক্ট এখানেই ব্লক হয়।
+        from core.security.scanning.ast_scanner import validate_code_for_sandbox
+
+        is_safe, reason = validate_code_for_sandbox(script, strict_mode=True)
+        if not is_safe:
+            logger.critical(
+                f"[DockerSandbox] AST validation blocked unsafe script: {reason}"
+            )
+            return {
+                "exit_code": 1,
+                "stdout": "",
+                "stderr": f"AST sandbox validation failed: {reason}",
+            }
+
         docker_command = [
             "docker",
             "run",
