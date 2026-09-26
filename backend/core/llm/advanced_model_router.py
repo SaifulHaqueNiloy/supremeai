@@ -264,6 +264,38 @@ class Tier0Dispatcher:
         resolved = os.path.realpath(os.path.join(sandbox_root, target_dir))
         if not (resolved == sandbox_root or resolved.startswith(sandbox_root + os.sep)):
             return {"error": "path outside sandbox", "directory": target_dir}
+
+        # AUDIT-FIX (#1688 CRITICAL): স্যান্ডবক্স-এর ভেতরেও সব directory
+        # expose করা নিরাপদ নয় — .env, .git, secrets/, certs/ ইত্যাদি
+        # Tier0 deterministic fast-path-এ ফাঁস হতে পারে। এখন একটি strict
+        # whitelist যোগ করা হয়েছে। শুধুমাত্র explicitly-allowed top-level
+        # directory-গুলো Tier0 list_files করতে পারবে।
+        # Whitelist সম্প্রসারণযোগ্য (env var SUPREMEAI_TIER0_ALLOWED_DIRS)
+        # কিন্তু ডিফল্ট নিরাপদ — empty list = no listing allowed.
+        allowed_raw = os.environ.get("SUPREMEAI_TIER0_ALLOWED_DIRS", "")
+        # ডিফল্ট নিরাপদ whitelist: শুধু public docs + কোনো sensitive ফোল্ডার নয়
+        default_allowed = ("docs", "frontend/src", "backend/api/routes")
+        allowed_set = {
+            os.path.realpath(os.path.join(sandbox_root, d))
+            for d in (default_allowed + tuple(
+                d.strip() for d in allowed_raw.split(",") if d.strip()
+            ))
+        }
+        # resolved যদি কোনো allowed directory-র অধীন না হয় → block
+        is_allowed = any(
+            resolved == allowed or resolved.startswith(allowed + os.sep)
+            for allowed in allowed_set
+        )
+        if not is_allowed:
+            logger.warning(
+                "[Tier0Dispatcher] _list_files blocked: '%s' not in whitelist %s",
+                target_dir, sorted(allowed_set),
+            )
+            return {
+                "error": "directory not in Tier0 whitelist",
+                "directory": target_dir,
+                "hint": "Tier0 file listing is restricted to project documentation directories only.",
+            }
         target_dir = resolved
 
         files: list[dict[str, Any]] = []
