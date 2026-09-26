@@ -56,11 +56,16 @@ flowchart TD
   2. কোনো বিপজ্জনক ফোর্স-পুশ (`git push --force`) ছাড়াই গিটহাব নিজে ব্রাঞ্চটিকে রিবেস করে নেবে।
   3. যদি রিবেসে কনফ্লিক্ট দেখা দেয়, PR Helper তাত্ক্ষণিক `conflicts: true` ফ্ল্যাগ করে ডেভেলপার/এজেন্টকে সতর্ক করবে।
 
-### সেফগার্ড ২: শূন্য-স্পর্শে ব্রাঞ্চ রিমুভাল (Auto Branch Deletion)
-* **সমস্যা:** ডজন ডজন এজেন্টের ঘনঘন কাজের ফলে কয়েক দিনেই শত শত এতিম (orphaned) ব্রাঞ্চ তৈরি হয়ে রিপোজিটরি অপরচ্ছন্ন হয়ে যায়।
-* **সমাধান:** 
-  * GitHub Repo Settings (`Settings -> General -> Pull Requests`) থেকে **`Automatically delete head branches`** বাধ্যতামূলক অন রাখা।
-  * PR মার্জ হওয়ার সাথে সাথে গিটহাব নিজে থেকেই `agent-<id>/...` ব্রাঞ্চ সার্ভার থেকে ডিলিট করে দেবে।
+### সেফগার্ড ২: ব্রাঞ্চ রিটেনশন — তাৎক্ষণিক ডিলিট নয় (Branch Retention, replaces Auto Branch Deletion)
+* **সমস্যা:** আগের নিয়ম ছিল PR মার্জ হওয়ার সাথে সাথেই head branch অটোমেটিক ডিলিট ("Automatically delete head branches")। কিন্তু এখন **branch-ই task-এর রেকর্ড** — handoff comment-এর `branch:` field, task state, আর commit history সব branch-এর ভেতরে থাকে। মার্জের সাথে সাথে ডিলিট করলে agent-দের task context চিরতরে হারিয়ে যায়।
+* **নতুন নিয়ম (owner directive 2026-09-26):**
+  1. মার্জ হওয়া task branch **তাৎক্ষণিকভাবে ডিলিট হবে না** — সেটা task-এর রেকর্ড হিসেবে থেকে যাবে।
+  2. Repo Settings-এর **`Automatically delete head branches` বন্ধ করতে হবে** (owner manual action — API দিয়ে এই setting বদলানো যায় না)।
+  3. পরিবর্তে সাপ্তাহিক cleanup workflow (`.github/workflows/branch-retention-cleanup.yml`) চলবে, যা কেবল এই শর্তে branch ডিলিট করবে:
+     - branch মূল `main`-এ **মার্জড** এবং শেষ commit **১৪ দিনের পুরনো** (retention window),
+     - এবং কোনো open PR-এর head নয়,
+     - এবং **persistent slot branch নয়** (`agent-<N>` pattern, যেমন `agent-11` — এগুলো কখনোই ডিলিট হয় না)।
+  4. এতে orphan ব্রাঞ্চের অপরচ্ছন্নতাও ঠিক থাকবে, আবার task context ১৪ দিন পর্যন্ত নিরাপদ থাকবে।
 
 ### সেফগার্ড ৩: ক্লেইম-থেন-ভেরিফাই মিউটেক্স লকিং (Race Condition Protection)
 * **সমস্যা:** দুটি এজেন্ট একই সময়ে একই ইস্যু পিক করলে কাজের পুনরাবৃত্তি ও কনফ্লিক্ট ঘটে।
