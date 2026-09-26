@@ -27,7 +27,8 @@ export const HealthReportWidget: React.FC<HealthReportWidgetProps> = ({ healthMa
         ) : !healthMap || Object.keys(healthMap).length === 0 ? (
           <div className="text-xs text-slate-500 text-center mt-10">No health data available.</div>
         ) : (
-          Object.entries(healthMap).map(([service, details]: [string, any]) => {
+          Object.entries(healthMap).map(
+            ([service, details]: [string, { status?: string; region?: string; latency?: number }]) => {
             const isHealthy = details.status === 'healthy';
             return (
               <div key={service} className="bg-[#040814] border border-slate-800/50 rounded-lg p-3 flex justify-between items-center transition-all hover:border-slate-700">
@@ -59,7 +60,8 @@ export const HealthReportWidget: React.FC<HealthReportWidgetProps> = ({ healthMa
                 </div>
               </div>
             );
-          })
+            }
+          )
         )}
       </div>
     </div>

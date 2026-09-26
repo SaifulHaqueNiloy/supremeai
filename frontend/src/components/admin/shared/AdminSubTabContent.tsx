@@ -52,7 +52,11 @@ interface SubTabContentProps {
   liveLogs: string[];
   setLiveLogs: (logs: string[]) => void;
   costReport: string;
-  healthMap: any;
+  /** Per-service health snapshot: { "<service>": { status, region, latency, ... } } */
+  healthMap: Record<
+    string,
+    { status?: string; region?: string; latency?: number; [key: string]: unknown }
+  >;
   newUsername: string;
   setNewUsername: (val: string) => void;
   newUserRole: string;
@@ -60,7 +64,7 @@ interface SubTabContentProps {
   newUserPerms: string;
   setNewUserPerms: (val: string) => void;
   handleSaveUser?: () => void;
-  adminUsers?: any[];
+  adminUsers?: Array<{ username: string; role?: string; [key: string]: unknown }>;
   handleDeleteUser?: (username: string) => void;
   envConfig?: Record<string, string>;
   setEnvConfig?: React.Dispatch<React.SetStateAction<Record<string, string>>>;

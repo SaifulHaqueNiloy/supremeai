@@ -14,6 +14,7 @@ import {
   type Node,
   useReactFlow,
 } from '@xyflow/react';
+import type { Edge, Node, ReactFlowJsonObject } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import AgentNode from './nodes/AgentNode';
@@ -69,7 +70,12 @@ const EvolutionForgeCanvas = () => {
   const [lastFlowId, setLastFlowId] = useState<string | null>(null);
   const [isDebateOpen, setIsDebateOpen] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [debateLogs, setDebateLogs] = useState<any[]>([]);
+  interface DebateLogEntry {
+    agentName: string;
+    status: string;
+    message: string;
+  }
+  const [debateLogs, setDebateLogs] = useState<DebateLogEntry[]>([]);
   const { toObject } = useReactFlow();
   const { showToast } = useToast();
 
@@ -206,19 +212,16 @@ const EvolutionForgeCanvas = () => {
     [setNodes]
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const buildForgePayload = (name: string, flow: any) => ({
+  const buildForgePayload = (name: string, flow: ReactFlowJsonObject) => ({
     name,
     description: "Visual Swarm Architecture",
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    nodes: flow.nodes.map((n: any) => ({
+    nodes: flow.nodes.map((n: Node) => ({
       id: n.id,
       type: n.type,
       position: n.position,
       data: n.data
     })),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    edges: flow.edges.map((e: any) => ({
+    edges: flow.edges.map((e: Edge) => ({
       id: e.id,
       source: e.source,
       target: e.target,
