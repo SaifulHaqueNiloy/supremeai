@@ -982,10 +982,23 @@ Return a structured context report with:
         start_time = time.monotonic()
         tenant_id = str((arguments or {}).get("tenant_id") or "").strip()
         if not tenant_id or tenant_id == "default":
+            # Issue #1440: the gate used to return a bare error that spec-following
+            # clients could not act on (no schema advertises tenant_id). Keep the
+            # gate strict but make the failure self-explanatory: the control tower
+            # injects tenant_id automatically; direct sidecar callers must pass it.
             return [
                 TextContent(
                     type="text",
-                    text=json.dumps({"error": "tenant_id is required"}),
+                    text=json.dumps(
+                        {
+                            "error": "tenant_id is required",
+                            "hint": (
+                                "Pass a non-'default' tenant_id string identifying your tenant. "
+                                "The MCP control tower injects it automatically for memory.* calls "
+                                "(issue #1440); direct sidecar callers must provide it explicitly."
+                            ),
+                        }
+                    ),
                 )
             ]
 
