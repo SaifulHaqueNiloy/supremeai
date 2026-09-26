@@ -21,6 +21,11 @@ import { SlashCommandMenu } from '../commands/SlashCommandMenu';
 import { ChatSearchDialog } from '../search/ChatSearchDialog';
 import { ThinkingPanel } from '../reasoning/ThinkingPanel';
 import { ArtifactsPanel } from '../artifacts/ArtifactsPanel';
+// Issue #1525 (MEDIUM): while the orchestration round-trip is in flight the
+// thread used to go visually dead — the user message just sat there with no
+// acknowledgement. The branded typing indicator now renders for the whole
+// await window (it already existed as a component but was never mounted here).
+import { TypingIndicator } from './TypingIndicator';
 import type { CapabilityExecutionResult } from '../../services/controlPlane';
 import {
   useTierSStore,
@@ -205,10 +210,16 @@ export const ChatInterface: React.FC = () => {
     }
   };
 
-  const handleSend = async (retryPrompt?: string) => {
-    const userMessage = (retryPrompt ?? input).trim();
+  // Issue #1520 (HIGH): the Send button wires `onClick={handleSend}` directly,
+  // so React passed the MouseEvent in as `retryPrompt` and `(event ?? input).trim`
+  // threw — button-clicked messages never sent at all (Enter still worked).
+  // The parameter is now type-guarded: a real string retry prompt is honored,
+  // any non-string (event object) falls back to the composer input.
+  const handleSend = async (retryPrompt?: unknown) => {
+    const retryText = typeof retryPrompt === 'string' ? retryPrompt : undefined;
+    const userMessage = (retryText ?? input).trim();
     if (!userMessage) return;
-    if (!retryPrompt) setInput('');
+    if (!retryText) setInput('');
 
     // M10 বাংলা: প্রথম মেসেজেই স্থায়ী conversation identity তৈরি হয় এবং
     // পরের প্রতিটি কলে একই id বজায় থাকে।
@@ -400,7 +411,7 @@ export const ChatInterface: React.FC = () => {
       )}
 
       {/* Messages Area + S3 Artifacts side panel */}
-      <div className="flex flex-1 min-h-0">
+      <div className="relative flex flex-1 min-h-0">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {chatHistory.map((msg) => (
             <div key={msg.id} className="relative group">
@@ -431,11 +442,14 @@ export const ChatInterface: React.FC = () => {
               )}
             </div>
           ))}
+          {/* Issue #1525: assistant-is-thinking affordance while awaiting the
+              orchestration response — removed automatically in the finally. */}
+          {isOrchestrating && <TypingIndicator />}
           <div ref={messagesEndRef} />
         </div>
 
         {artifactsPanelOpen && (
-          <div className="w-80 shrink-0 border-l border-slate-800" data-testid="artifacts-panel-container">
+          <div className="w-72 shrink-0 border-l border-slate-800 lg:w-80 max-md:absolute max-md:inset-y-0 max-md:right-0 max-md:z-20 max-md:w-[85%] max-md:bg-[#0b0d14] max-md:shadow-2xl" data-testid="artifacts-panel-container">
             <ArtifactsPanel
               artifacts={artifacts}
               activeArtifactId={activeArtifactId ?? undefined}
@@ -474,7 +488,11 @@ export const ChatInterface: React.FC = () => {
             </button>
           </div>
         )}
-        <div className="flex gap-2">
+        {/* Issue #1526 (LOW): on narrow viewports the fixed 18px-icon button,
+            textarea, and Send button fought for one row and the composer
+            overflowed horizontally. flex-wrap + min-w-0 lets the composer
+            reflow; the textarea keeps priority via flex growth. */}
+        <div className="flex flex-wrap items-end gap-2">
           {/* S4: Image Upload */}
           <ImageUploadButton
             onUpload={(attachment) => { void attachment; }}
@@ -485,14 +503,14 @@ export const ChatInterface: React.FC = () => {
             onChange={handleInputChange}
             onKeyPress={handleKeyPress}
             placeholder="Type your message to the AI agent..."
-            className="flex-1 bg-slate-800 text-white rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="min-w-0 flex-[1_1_12rem] bg-slate-800 text-white rounded-lg p-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
             rows={2}
             disabled={isOrchestrating}
           />
           <button
             onClick={handleSend}
             disabled={isOrchestrating || !input.trim()}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="shrink-0 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isOrchestrating ? 'Sending...' : 'Send'}
           </button>

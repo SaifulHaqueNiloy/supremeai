@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowUp, BrainCircuit, Check, ChevronDown, FileCode2, FileText, History, Menu, Paperclip, Plus, Search, Sparkles, WandSparkles, Wrench, X, Zap } from 'lucide-react';
+import { ArrowUp, BrainCircuit, Check, ChevronDown, Clock, Database, Download, FileCode2, FileText, GitBranch, History, Image as ImageIcon, LayoutTemplate, Menu, Paperclip, Plus, Search, Share2, Sparkles, Telescope, Terminal, WandSparkles, Wrench, X, Zap } from 'lucide-react';
 
 const publicLinks = [
   { to: '/', label: 'Chat' },
@@ -111,20 +111,30 @@ export function PublicInfoPage({ kind }: { kind: '/features' | '/pricing' | '/do
 // now owns distinct, honest content.
 
 export function FeaturesPage() {
+  // Issue #1521 (HIGH): the audit asked for the full Tier-S feature showcase —
+  // exactly the twelve capabilities the product ships. Every card maps to a
+  // real, mounted surface (route or panel), no invented features.
   const featureSections = [
-    { title: 'Guest chat that actually helps', text: 'Start talking immediately — no account, no setup. Intent chips for research, writing, building, and analysis prime the composer for you.', icon: Sparkles },
-    { title: 'Save and revisit conversations', text: 'Sign in to keep your history. Search past work with the Cmd+K chat search dialog and pick up any thread where you left it.', icon: History },
-    { title: 'Bring your own context', text: 'Attach files so answers are grounded in your material instead of guesses. Uploads persist with the conversation.', icon: FileText },
-    { title: 'Reasoning you can inspect', text: 'The thinking panel shows step-by-step reasoning as the agent works — no black box, no magic numbers.', icon: BrainCircuitCompat },
-    { title: 'Artifacts, not walls of text', text: 'Runnable HTML, code, diagrams, and SVGs land in a dedicated artifacts panel you can open side-by-side with the chat.', icon: FileCode2Compat },
-    { title: 'Branch, share, export', text: 'Fork any message into a new conversation branch, share a read-only thread, or export the whole conversation to markdown.', icon: Wrench },
+    { title: 'Share links', text: 'Publish any conversation as a read-only link. Viewers see the thread without touching your account.', icon: Share2 },
+    { title: 'Reasoning you can inspect', text: 'The thinking panel streams step-by-step reasoning while the agent works — no black box.', icon: BrainCircuitCompat },
+    { title: 'Artifacts, not walls of text', text: 'Runnable HTML, code, diagrams, and SVGs land in a dedicated panel you open beside the chat.', icon: FileCode2Compat },
+    { title: 'Image upload', text: 'Drop in screenshots and images so answers are grounded in what you actually see.', icon: ImageIcon },
+    { title: 'Slash commands', text: 'Type / in the composer to call structured commands without leaving the keyboard.', icon: Terminal },
+    { title: 'Chat search', text: 'Cmd+K opens the search dialog across your saved conversations — pick up any thread instantly.', icon: Search },
+    { title: 'Export', text: 'Take the whole conversation with you — export to clean markdown whenever you need it.', icon: Download },
+    { title: 'Global memory', text: 'A memory panel keeps the facts that matter across sessions, visible and editable by you.', icon: Database },
+    { title: 'Prompt templates', text: 'Save the prompts you reuse and fire them from the template library instead of retyping.', icon: LayoutTemplate },
+    { title: 'Branch conversations', text: 'Fork any message into a new branch and explore alternatives without losing the original.', icon: GitBranchCompat },
+    { title: 'Scheduled tasks', text: 'Put recurring work on a schedule — the agent runs it and keeps the results waiting for you.', icon: Clock },
+    { title: 'Deep research', text: 'Launch multi-source research runs that compile findings into a structured report.', icon: Telescope },
   ];
-  return <PublicLayout><PublicHeader /><main className="mx-auto max-w-6xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">Features</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">A simple conversation can become useful work.</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">Start with a question. Layer on context, tools, and repeatable workflows as your needs grow.</p><div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{featureSections.map(({ title, text, icon: Icon }) => <section key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-cyan-300/30"><Icon size={19} className="text-cyan-300" aria-hidden="true" /><h2 className="mt-6 font-medium text-slate-200">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p></section>)}</div><Link to="/" className="mt-12 inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Try it in guest chat <ArrowUp size={16} className="rotate-45" /></Link></main></PublicLayout>;
+  return <PublicLayout><PublicHeader /><main className="mx-auto max-w-6xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">Features</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">A simple conversation can become useful work.</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">Start with a question. Layer on context, tools, and repeatable workflows as your needs grow — all twelve Tier-S surfaces ship in the product today.</p><div className="mt-14 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{featureSections.map(({ title, text, icon: Icon }) => <section key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition hover:border-cyan-300/30"><Icon size={19} className="text-cyan-300" aria-hidden="true" /><h2 className="mt-6 font-medium text-slate-200">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p></section>)}</div><Link to="/" className="mt-12 inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Try it in guest chat <ArrowUp size={16} className="rotate-45" /></Link></main></PublicLayout>;
 }
 
 // lucide import compatibility aliases (same icons, page-local names)
 const BrainCircuitCompat = BrainCircuit;
 const FileCode2Compat = FileCode2;
+const GitBranchCompat = GitBranch;
 
 export function PricingPage() {
   const tiers = [
@@ -136,13 +146,31 @@ export function PricingPage() {
 }
 
 export function DocsPage() {
+  // Issue #1523 (MEDIUM): the audit asked for a setup guide and an API
+  // reference on this page — both are now first-class sections alongside the
+  // topic clusters. Endpoints listed are the real, mounted contract surfaces.
   const docTopics = [
-    { title: 'Getting started', text: 'Ask your first question in guest chat, then create an account to keep your history.', items: ['Guest chat basics', 'Creating an account', 'Understanding roles and tokens'] },
     { title: 'Context & memory', text: 'Attach files, search past conversations, and let the reasoning panel show its work.', items: ['File uploads', 'Chat search (Cmd+K)', 'Reasoning panel'] },
     { title: 'Power features', text: 'Slash commands, artifacts, branching, sharing, and export turn chats into durable work.', items: ['Slash commands', 'Artifacts panel', 'Branching & sharing'] },
     { title: 'Admin & operations', text: 'Command Center metrics, self-heal approvals, API keys, and tenant limits for operators.', items: ['Command Center overview', 'Admin API contract', 'Tenant limits'] },
   ];
-  return <PublicLayout><PublicHeader /><main className="mx-auto max-w-6xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">Docs</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">From first question to governed execution.</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">Learn how guest chat, saved conversations, context, tools, and workspaces fit together.</p><div className="mt-14 grid gap-3 sm:grid-cols-2">{docTopics.map(({ title, text, items }) => <section key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="font-medium text-slate-200">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p><ul className="mt-5 space-y-2">{items.map((item) => <li key={item} className="flex items-center gap-2 text-sm text-slate-400"><span className="size-1 rounded-full bg-cyan-300" aria-hidden="true" />{item}</li>)}</ul></section>)}</div><Link to="/" className="mt-12 inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Start with the product <ArrowUp size={16} className="rotate-45" /></Link></main></PublicLayout>;
+  const setupSteps = [
+    { step: '1', title: 'Try guest chat', text: 'Open the home page and ask a question — no account required.' },
+    { step: '2', title: 'Create an account', text: 'Register to keep history, upload files, and unlock the workspace.' },
+    { step: '3', title: 'Pick your surface', text: 'Use /chat for conversation, /research for deep runs, /scheduled-tasks for recurring work.' },
+    { step: '4', title: 'Bring your tools', text: 'Connect integrations and generate API keys from /settings/api-keys.' },
+  ];
+  const apiEndpoints = [
+    { method: 'GET', path: '/api/v1/health', note: 'Service health probe (public)' },
+    { method: 'POST', path: '/api/v1/auth/login', note: 'Session login — sets the user token' },
+    { method: 'POST', path: '/api/v1/auth/register', note: 'Account creation' },
+    { method: 'POST', path: '/api/v1/chat/completions', note: 'Conversation orchestration entrypoint' },
+    { method: 'GET', path: '/api/preferences/', note: 'Per-tenant user preferences' },
+    { method: 'GET', path: '/api/memory/conversations', note: 'Conversation history (Firestore-backed)' },
+    { method: 'GET', path: '/admin-api/metrics', note: 'Real rolling-window metrics (admin)' },
+    { method: 'GET', path: '/admin-api/logs/stream', note: 'SSE log stream (admin)' },
+  ];
+  return <PublicLayout><PublicHeader /><main className="mx-auto max-w-6xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">Docs</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">From first question to governed execution.</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">Learn how guest chat, saved conversations, context, tools, and workspaces fit together.</p><div className="mt-14 grid gap-3 sm:grid-cols-2"><section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="font-medium text-slate-200">Getting started</h2><p className="mt-2 text-sm leading-6 text-slate-500">Four steps from zero to a working workspace.</p><ol className="mt-5 space-y-4">{setupSteps.map(({ step, title, text }) => <li key={step} className="flex items-start gap-3"><span className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-cyan-300/10 font-mono text-[11px] font-bold text-cyan-300">{step}</span><span><span className="block text-sm font-medium text-slate-300">{title}</span><span className="mt-0.5 block text-sm leading-6 text-slate-500">{text}</span></span></li>)}</ol></section>{docTopics.map(({ title, text, items }) => <section key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="font-medium text-slate-200">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p><ul className="mt-5 space-y-2">{items.map((item) => <li key={item} className="flex items-center gap-2 text-sm text-slate-400"><span className="size-1 rounded-full bg-cyan-300" aria-hidden="true" />{item}</li>)}</ul></section>)}</div><section className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="font-medium text-slate-200">API reference</h2><p className="mt-2 text-sm leading-6 text-slate-500">The core HTTP contract. Admin endpoints require the admin session; all others require a bearer token after login.</p><div className="mt-5 overflow-x-auto"><table className="w-full min-w-[34rem] border-collapse text-left text-sm"><thead><tr className="border-b border-white/10 text-xs uppercase tracking-wider text-slate-500"><th className="py-2 pr-4 font-medium">Method</th><th className="py-2 pr-4 font-medium">Endpoint</th><th className="py-2 font-medium">Purpose</th></tr></thead><tbody>{apiEndpoints.map(({ method, path, note }) => <tr key={method + path} className="border-b border-white/[0.06] last:border-0"><td className="py-2.5 pr-4"><span className="rounded-md bg-cyan-300/10 px-2 py-0.5 font-mono text-[11px] font-semibold text-cyan-300">{method}</span></td><td className="py-2.5 pr-4 font-mono text-xs text-slate-300">{path}</td><td className="py-2.5 text-slate-500">{note}</td></tr>)}</tbody></table></div></section><Link to="/" className="mt-12 inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Start with the product <ArrowUp size={16} className="rotate-45" /></Link></main></PublicLayout>;
 }
 
 export function AboutPage() {
@@ -151,6 +179,19 @@ export function AboutPage() {
     { title: 'Approachable by default', text: 'The first message requires zero setup; depth is there when you reach for it.' },
     { title: 'Governed autonomy', text: 'Agents act inside policy: deploy gates, approvals, and audit trails are first-class.' },
   ];
-  return <PublicLayout><PublicHeader /><main className="mx-auto max-w-5xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">About</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">AI that starts simple and grows with you.</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">SupremeAI makes intelligent work approachable at the first message and dependable at scale — a single conversation surface backed by observable, governed agents.</p><div className="mt-14 grid gap-3 sm:grid-cols-3">{principles.map(({ title, text }) => <section key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"><h2 className="font-medium text-slate-200">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p></section>)}</div><div className="mt-12 rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="font-medium text-slate-200">Built in the open</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Development happens on GitHub with a public issue tracker, slot-based agent registry, and CI-gated merges. Every merge that touches you is traceable to a reviewed pull request.</p></div><Link to="/" className="mt-12 inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Meet your first agent <ArrowUp size={16} className="rotate-45" /></Link></main></PublicLayout>;
+  // Issue #1524 (MEDIUM): the audit asked for team info and the technology
+  // stack — both now live on the page (mission + principles already did).
+  const stack = [
+    { layer: 'Frontend', text: 'React 18 + Vite single build (supremeai-studio-client), react-router, framer-motion, Tailwind design tokens, PWA service worker.' },
+    { layer: 'Backend', text: 'FastAPI on Python — modular routers for auth, chat, memory, preferences, and the admin surface, with SSE streaming.' },
+    { layer: 'Data', text: 'Firestore for durable tenant data, Redis-compatible caching at the edge, object storage for files and artifacts.' },
+    { layer: 'Operations', text: 'Firebase Hosting + Vercel portals, Render-deployed API, CI-gated merges with a slot-based agent registry.' },
+  ];
+  const team = [
+    { name: 'Saiful Haque Niloy', role: 'Project lead — architecture, product direction, and the governance model' },
+    { name: 'The agent fleet', role: 'Slot-registered AI agents (agent-2, agent-7, agent-11, …) ship reviewed PRs against the public tracker' },
+    { name: 'CI Doctor & vault-doctor', role: 'Automated guardians that track CI health and credential rotation in the open' },
+  ];
+  return <PublicLayout><PublicHeader /><main className="mx-auto max-w-5xl px-5 pb-24 pt-36 sm:px-8"><p className="font-mono text-xs uppercase tracking-[0.2em] text-cyan-300">About</p><h1 className="mt-5 max-w-3xl text-balance text-4xl font-medium tracking-tight text-slate-100 sm:text-6xl">AI that starts simple and grows with you.</h1><p className="mt-6 max-w-2xl text-pretty text-lg leading-8 text-slate-500">SupremeAI makes intelligent work approachable at the first message and dependable at scale — a single conversation surface backed by observable, governed agents.</p><div className="mt-14 grid gap-3 sm:grid-cols-3">{principles.map(({ title, text }) => <section key={title} className="rounded-2xl border border-white/10 bg-white/[0.03] p-5"><h2 className="font-medium text-slate-200">{title}</h2><p className="mt-2 text-sm leading-6 text-slate-500">{text}</p></section>)}</div><div className="mt-6 grid gap-3 sm:grid-cols-2"><section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="font-medium text-slate-200">Team</h2><ul className="mt-5 space-y-4">{team.map(({ name, role }) => <li key={name}><p className="text-sm font-medium text-slate-300">{name}</p><p className="mt-1 text-sm leading-6 text-slate-500">{role}</p></li>)}</ul></section><section className="rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="font-medium text-slate-200">Technology stack</h2><ul className="mt-5 space-y-4">{stack.map(({ layer, text }) => <li key={layer}><p className="text-sm font-medium text-slate-300">{layer}</p><p className="mt-1 text-sm leading-6 text-slate-500">{text}</p></li>)}</ul></section></div><div className="mt-6 rounded-2xl border border-white/10 bg-white/[0.03] p-6"><h2 className="font-medium text-slate-200">Built in the open</h2><p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">Development happens on GitHub with a public issue tracker, slot-based agent registry, and CI-gated merges. Every merge that touches you is traceable to a reviewed pull request.</p></div><Link to="/" className="mt-12 inline-flex items-center gap-2 rounded-full bg-cyan-300 px-5 py-3 text-sm font-semibold text-slate-950 hover:bg-cyan-200">Meet your first agent <ArrowUp size={16} className="rotate-45" /></Link></main></PublicLayout>;
 }
 export default GuestChatPage;

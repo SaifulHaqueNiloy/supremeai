@@ -88,7 +88,9 @@ export function AISurfaceAssignment() {
   const handleTest = async (providerId: string) => {
     setTestingProvider(providerId);
     try {
-      const result = await apiClient.post(`/api/admin/ai/test/${providerId}`, {});
+      // Type the post() generic explicitly — untyped T infers `unknown` and
+      // `result.status` failed the typecheck gate.
+      const result = await apiClient.post<{ status: string }>(`/api/admin/ai/test/${providerId}`, {});
       setTestResult(prev => ({ ...prev, [providerId]: result.status }));
     } catch (e) {
       setTestResult(prev => ({ ...prev, [providerId]: '❌ error' }));
