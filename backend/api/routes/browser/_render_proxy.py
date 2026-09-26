@@ -7,12 +7,15 @@ dropped because of a missing optional dependency at import time.
 
 import ipaddress
 import os
+import secrets
 import socket
+import threading
+import time
 import urllib.error
 import urllib.request
 from urllib.parse import urlparse
 
-from fastapi import HTTPException, Response
+from fastapi import APIRouter, HTTPException, Response
 
 from api.routes.browser import router
 from core.config_parsers import parse_origin_list
@@ -72,13 +75,70 @@ def _frame_ancestors_sources() -> str:
     return " ".join(sources)
 
 
-@router.get("/render")
-def render_proxy(url: str):
+# ─── Issue #1669 (CRITICAL): ticket-based auth for the render proxy ──────────
+# JWT কখনো URL query-তে যাবে না (logs/history/Referer leak)। এখন flow:
+#   1) ফ্রন্টএন্ড header-auth দিয়ে POST /api/browser/render-ticket কল করে
+#   2) সার্ভার এক-ব্যবহারযোগ্য, 60s-TTL টিকেট জেনারেট করে (crypto-random)
+#   3) iframe src = /api/browser/render?url=…&ticket=… — টিকেট consume হয়
+# Query-token সরাসরি যাচাই-ই হত না (router guard header চায়) — ফাঁস ছাড়া
+# কোনো কাজ ছিল না; এখন URL-এ শুধু অননুকলনযোগ্য (unguessable) এককালীন ticket থাকে।
+_TICKET_TTL_SECONDS = 60
+_TICKETS: dict[str, float] = {}
+_TICKETS_LOCK = threading.Lock()
+
+
+def _purge_expired_tickets(now: float) -> None:
+    stale = [t for t, exp in _TICKETS.items() if exp <= now]
+    for t in stale:
+        _TICKETS.pop(t, None)
+
+
+def _issue_ticket() -> str:
+    ticket = secrets.token_urlsafe(32)
+    with _TICKETS_LOCK:
+        _purge_expired_tickets(time.time())
+        _TICKETS[ticket] = time.time() + _TICKET_TTL_SECONDS
+    return ticket
+
+
+def _consume_ticket(ticket: str | None) -> bool:
+    """One-time consume: valid, unexpired ticket হলে তা মুছে True ফেরত।"""
+    if not ticket:
+        return False
+    now = time.time()
+    with _TICKETS_LOCK:
+        exp = _TICKETS.pop(ticket, None)
+    return exp is not None and exp > now
+
+
+@router.post("/render-ticket")
+def issue_render_ticket():
+    """Issue a short-lived ONE-TIME ticket for the iframe render proxy.
+
+    Lives on the header-authenticated router — the browser attaches the JWT
+    as an Authorization header (never in a URL).
+    """
+    return {"ticket": _issue_ticket(), "expires_in": _TICKET_TTL_SECONDS}
+
+
+# The render GET is mounted WITHOUT the header-auth guard: iframe requests
+# cannot attach Authorization headers. Auth = the single-use ticket above.
+render_public_router = APIRouter(prefix="/api/browser", tags=["browser"])
+
+
+@render_public_router.get("/render")
+def render_proxy(url: str, ticket: str = ""):
     """Server-side web proxy so the in-app browser can render sites that block iframes.
 
     Uses stdlib urllib only (no third-party http client) so the route cannot be dropped
     because of a missing optional dependency at import time.
     """
+    # Issue #1669: fail-closed ticket auth — no/invalid/reused ticket → 401.
+    if not _consume_ticket(ticket):
+        raise HTTPException(
+            status_code=401,
+            detail="Valid one-time render ticket required (obtain via POST /api/browser/render-ticket).",
+        )
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
         raise HTTPException(status_code=400, detail="Only absolute http(s) URLs are supported.")
