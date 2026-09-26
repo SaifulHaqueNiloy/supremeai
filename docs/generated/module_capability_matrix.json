@@ -1287,6 +1287,15 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_27_193000_merge_learning_reports.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/alembic_migrations/versions/2f7b3c5f620e_add_missing_indexes.py"
     },
     {
@@ -2751,6 +2760,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/memory_mcp_http.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/merge_learning.py"
     },
     {
       "capability_signals": [
@@ -9027,6 +9043,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/models/merge_learning_report.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/models/meta_ai.py"
     },
     {
@@ -11636,6 +11659,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_stream_chat_contract.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_sworm_adapter_contract.py"
     },
     {
       "capability_signals": [
@@ -24661,6 +24693,17 @@
       "path": "scripts/ci/reconcile_secrets_registry.py"
     },
     {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/record_merge_learning.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -26561,5 +26604,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3037
+  "source_file_count": 3042
 }
