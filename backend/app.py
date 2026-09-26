@@ -70,6 +70,16 @@ from api.routes.stream_chat_sse import legacy_router as chat_stream_legacy_route
 
 app.include_router(chat_stream_legacy_router)
 
+# Issue #1490 fix completed (CI red 36219425476): #1510 moved /api/browser/health
+# onto a dependency-free `public_router` (liveness probe must be credential-free)
+# but only mounted it in core/app_builder.py's create_app — THIS canonical
+# singleton (used by `core.app:app` uvicorn boot, all tests, and the audit
+# contract) kept answering 404 for /api/browser/health. Mount it here too; the
+# admin-gated browser surface itself stays registry-only.
+from api.routes.browser_routes import public_router as browser_public_router
+
+app.include_router(browser_public_router)
+
 # Task 7-c / 7-d mount hygiene (2026-09-15): missions and mcp_hub are mounted
 # through the canonical ALL_ROUTERS registry (api/routers.py — AUDIT-WIRE FIX 3,
 # boot-proofed mounted=N/N accounting). The direct include_router() blocks that

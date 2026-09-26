@@ -464,6 +464,10 @@ ALL_ROUTERS = [
     # messaging (/api/v1/mesh/messages/*, /subscriptions)। Core নিজস্ব prefix
     # সহ আসে, তাই registry prefix ""। Core: backend/core/agent_mailbox.py।
     {"path": "api.routes.mesh_mailbox", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── #1150 Phase 1: Agent Registry — admin-defined roles + AI provider per
+    # agent (/api/v1/agents/*)। রাউটার নিজস্ব prefix সহ আসে, তাই registry prefix
+    # ""। Reads are inert (no privileged resource); writes are admin-only.
+    {"path": "api.routes.agent_registry", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "integrations.github_webhook", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
@@ -538,6 +542,22 @@ def register_all_routers(app: FastAPI) -> None:
             f"Less than half of registry routers mounted ({mounted}/{registered}) — "
             "API surface is likely broken; check the failure list above."
         )
+
+    # Issue #1494: mount the Memory MCP server over HTTP at /mcp (SSE +
+    # client→server frames), Bearer MCP_ADMIN_KEY auth, fail-closed. Optional
+    # dependency — a missing mcp SDK logs a warning and boot continues
+    # (the sub-app answers 503 at request time). Skipped on scraper/worker
+    # roles, mirroring the registry gating above: the memory surface is a
+    # core/monolith concern.
+    if current_role in ("scraper", "worker"):
+        logger.info(f"Memory MCP HTTP mount skipped for SERVICE_ROLE={current_role}")
+    else:
+        try:
+            from api.routes.memory_mcp_http import create_memory_mcp_asgi_app
+
+            app.mount("/mcp", create_memory_mcp_asgi_app())
+        except Exception as exc:
+            logger.warning(f"Memory MCP HTTP mount skipped: {exc}")
 
 
 def include_user_routers(app: FastAPI) -> None:

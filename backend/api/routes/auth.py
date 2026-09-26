@@ -722,9 +722,7 @@ class TotpVerifyCompatRequest(BaseModel):
     id_token: str = Field(..., description="Firebase ID token")
     totp_code: str | None = Field(default=None, description="6-digit TOTP code")
     otp: str | None = Field(default=None, description="alias of totp_code")
-    remember_browser: bool = Field(
-        default=False, description="Trust this browser for seven days"
-    )
+    remember_browser: bool = Field(default=False, description="Trust this browser for seven days")
 
 
 @router.post("/totp/verify")

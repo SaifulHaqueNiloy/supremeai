@@ -54,6 +54,9 @@ class FakeLLMResult:
 async def browser_env(monkeypatch):
     app = FastAPI()
     app.include_router(br.router)
+    # Issue #1490 (CI red 36219425476): /api/browser/health lives on the
+    # dependency-free public_router — the fixture app must mirror production.
+    app.include_router(br.public_router)
 
     monkeypatch.setattr(
         "core.security.protection.ssrf_protection.SSRFProtection.validate_url",
@@ -525,17 +528,33 @@ class TestSSRFGateDirect:
         assert exc.value.status_code == 403
 
     async def test_admin_guard_403_for_non_admin(self):
-        """Router-level get_current_admin rejects a non-admin payload."""
+        """Router-level get_current_admin rejects a non-admin payload.
+
+        CONTRACT UPDATE (CI red 36219425476, issue #1490): /api/browser/health
+        is intentionally PUBLIC now — #1510 moved it onto the dependency-free
+        `public_router` (liveness probe consumed by ServiceHealthMonitor and
+        the audit contract without credentials). A non-admin hitting it must
+        get 200, NOT 403. The admin gate is asserted on the guarded surface
+        (/api/browser/screenshots) instead.
+        """
         from api.dependencies import get_current_user_token
 
         app = FastAPI()
         app.include_router(br.router)
+        app.include_router(br.public_router)
 
         def non_admin():
             return {"sub": "u@x.com", "role": "user"}
 
         app.dependency_overrides[get_current_user_token] = non_admin
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
-            resp = await http.get("/api/browser/health")
+            health = await http.get("/api/browser/health")
+            # FIX (round 3): /api/browser/screenshots is a POST-only route — a GET
+            # answers 405 (method mismatch) before auth runs. Assert the admin
+            # gate on an actual GET endpoint of the guarded router.
+            guarded = await http.get("/api/browser/browse-sessions")
         app.dependency_overrides.clear()
-        assert resp.status_code == 403
+        # Liveness probe: public by contract (issue #1490) — 200 for non-admin.
+        assert health.status_code == 200
+        # The rest of the browser surface stays admin-gated.
+        assert guarded.status_code == 403

@@ -147,8 +147,13 @@ test.describe('Public marketing pages render', () => {
       if (heading.source !== '.+') {
         await expect(page.getByRole('heading', { level: 1, name: heading })).toBeVisible();
       }
-      // Every public page funnels back into the chat.
-      await expect(page.getByRole('link', { name: /Try SupremeAI|Try in chat/i }).first()).toBeVisible();
+      // Every public page funnels back into the chat. The CTA label is
+      // page-specific ("Try in chat", "Try it in guest chat", "Start with the
+      // product", "Meet your first agent", …) — assert the funnel TARGET
+      // (an in-main link back to "/") instead of copy that each page owns.
+      // FIX (CI red 36219425476): the old label regex only matched /models,
+      // breaking the four pages #1514 gave distinct copy to.
+      await expect(page.locator('main a[href="/"]').first()).toBeVisible();
     });
   }
 });

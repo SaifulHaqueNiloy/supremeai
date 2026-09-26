@@ -9,12 +9,12 @@ import pytest
 # Add backend to path
 sys.path.insert(0, str(Path(__file__).resolve().parents[3]))
 
-from core.evolution.evolution_orchestrator import (
+from evolution.evolution_orchestrator import (
     EvolutionOrchestrator,
     EvolutionResult,
     get_evolution_orchestrator,
 )
-from core.evolution.learning_pipeline import (
+from evolution.learning_pipeline import (
     FailurePattern,
     LearningPipeline,
     LearningResult,

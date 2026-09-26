@@ -62,6 +62,12 @@ vi.mock('./pages/PublicPages', () => ({
   ModelsPage: () => <div>Models page</div>,
   PublicInfoPage: ({ kind }: { kind: string }) => <div>{kind} page</div>,
   PricingPage: () => <div>Pricing page</div>,
+  // Issue #1521/#1523/#1524 follow-up: /features /docs /about route to their
+  // own distinct page components since #1514 — the mock here predated that
+  // split and the three smoke tests fell into the route-error fallback.
+  FeaturesPage: () => <div>/features page</div>,
+  DocsPage: () => <div>/docs page</div>,
+  AboutPage: () => <div>/about page</div>,
 }));
 vi.mock('./pages/ErrorPage', () => ({ default: ({ code }: { code: number }) => <div> Error {code}</div> }));
 vi.mock('./pages/auth/LoginPage', () => ({ LoginPage: () => <div>Login page</div> }));

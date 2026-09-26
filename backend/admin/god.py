@@ -190,13 +190,9 @@ class AdminGodLayer:
 
             try:
                 with self.sqlite_lock:
-                    with closing(
-                        sqlite3.connect(self.db_path, check_same_thread=False)
-                    ) as conn:
+                    with closing(sqlite3.connect(self.db_path, check_same_thread=False)) as conn:
                         conn.row_factory = sqlite3.Row
-                        rows = conn.execute(
-                            "SELECT key, value, updated_at FROM rules"
-                        ).fetchall()
+                        rows = conn.execute("SELECT key, value, updated_at FROM rules").fetchall()
                 for row in rows:
                     rules[row["key"]] = {
                         "key": row["key"],

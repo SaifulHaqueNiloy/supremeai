@@ -175,12 +175,12 @@ class FakeStealth:
 
 
 class FakeStore:
-    """Honours the agent's assumed JSON round-trip contract.
+    """Honours the agent's JSON round-trip contract (ISSUE-1570 revision).
 
-    encrypt returns a JSON-SERIALIZABLE mapping (the agent json.dumps-es it and
-    decrypt receives the parsed mapping back). The REAL SecureCredentialStore
-    is bytes-oriented Fernet — the contract mismatch is documented as an owner
-    decision item, not silently redesigned here.
+    The agent now serializes cookies to a JSON string and encrypts the STRING;
+    encrypt returns a JSON-SERIALIZABLE mapping envelope (legacy mapping
+    contract kept so persisted mapping-shaped stores still load). decrypt
+    receives the parsed mapping back.
     """
 
     def __init__(self):
@@ -373,7 +373,10 @@ def test_save_cookies_writes_encrypted_payload(agent, stealth_env):
     assert path.exists()
     stored = json.loads(path.read_text())
     assert stored["__enc__"] is True
-    assert stored["blob"] == [{"name": "sid", "value": "x"}]
+    # ISSUE-1570: blob is now the ENCRYPTED serialized string (real store tuple
+    # contract); with the mapping-contract FakeStore it stays the serialized
+    # JSON string — either way it must never equal a raw plaintext list.
+    assert stored["blob"] == json.dumps([{"name": "sid", "value": "x"}])
 
 
 # ---------------------------------------------------------------------------
@@ -830,32 +833,57 @@ def test_navigate_delegates_to_open(agent, stealth_env, monkeypatch):
 
 
 def test_click_target_with_and_without_url(agent, stealth_env, monkeypatch):
-    seen: list = []
-    monkeypatch.setattr(
-        agent,
-        "click",
-        lambda url, selector, session_name=None: seen.append((url, selector)) or {"success": True},
-    )
+    # ISSUE-1570: with a URL the wrapper spins a fresh context and runs the
+    # REAL 5-step cascade — the fake page resolves '#go' via the known-locator
+    # step and a human-like click is dispatched (bezier path → mouse click).
     out = asyncio.run(agent.click_target("#go", "https://example.com"))
-    # with a url the wrapper returns the underlying click() dict verbatim
-    assert out == {"success": True}
-    assert seen == [("https://example.com", "#go")]
+    assert out["success"] is True
+    assert out["method"] == "known_locator"
+    ctx = stealth_env.context
+    assert ("goto", "https://example.com") in ctx.pages[0].calls
+    assert ctx.pages[0].mouse_clicks, "a real mouse click must be dispatched"
+    assert stealth_env.stealth.close_calls == 1
+
+    # without a URL and without a bound page the wrapper must FAIL HONESTLY —
+    # the old fake `{'success': True, 'target': ...}` response is forbidden.
     fallback = asyncio.run(agent.click_target("#x", None))
-    assert fallback == {"success": True, "target": "#x"}
-    assert len(seen) == 1  # no-url branch never touches the browser
+    assert fallback["success"] is False
+    assert fallback["status"] == "PAUSED_HITL"
+    assert len(ctx.pages) == 1  # no-url branch never touches the browser
 
 
-def test_type_text_with_and_without_url(agent, stealth_env, monkeypatch):
-    seen: list = []
-    monkeypatch.setattr(
-        agent,
-        "text",
-        lambda url, selector, session_name=None: seen.append((url, selector)) or {"success": True},
-    )
+def test_click_target_without_url_uses_bound_page(agent, stealth_env):
+    page = FakePage()
+    agent.bind_page(page)
+    out = asyncio.run(agent.click_target("#btn", None))
+    assert out["success"] is True
+    assert out["method"] == "known_locator"
+    assert page.mouse_clicks
+    agent.unbind_page()
+    # unbound again → honest failure
+    out2 = asyncio.run(agent.click_target("#btn", None))
+    assert out2["success"] is False
+
+
+def test_type_text_with_and_without_url(agent, stealth_env):
+    # ISSUE-1570: typing is TRUE keystroke insertion — never the read-only
+    # text() call, and never a fake success without a page/URL.
     out = asyncio.run(agent.type_text("#q", "hello", "https://example.com"))
-    # with a url the wrapper returns the underlying text() dict verbatim
-    assert out == {"success": True}
-    assert seen == [("https://example.com", "#q")]
+    assert out["success"] is True
+    assert out["typed_chars"] == 5
+    typed = stealth_env.context.pages[0].typed
+    assert [t[1] for t in typed] == list("hello")
+    assert all(30 <= t[2] <= 100 for t in typed), "keystrokes need 30-100ms jitter"
+
     fallback = asyncio.run(agent.type_text("#q", "hello", None))
-    assert fallback == {"success": True, "typed": "hello"}
-    assert len(seen) == 1
+    assert fallback["success"] is False
+    assert "refusing to fake success" in fallback["error"]
+
+
+def test_type_text_without_url_uses_bound_page(agent, stealth_env):
+    page = FakePage()
+    agent.bind_page(page)
+    out = asyncio.run(agent.type_text("#q", "ab", None))
+    assert out["success"] is True
+    assert out["typed_chars"] == 2
+    assert [t[1] for t in page.typed] == ["a", "b"]
