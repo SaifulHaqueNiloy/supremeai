@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3395,
+  "edge_count": 3405,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -1232,6 +1232,14 @@
       "to": "core.logging_config"
     },
     {
+      "from": "api.routes.admin_dashboard.endpoints_metrics",
+      "to": "core.monitoring"
+    },
+    {
+      "from": "api.routes.admin_dashboard.endpoints_metrics",
+      "to": "core.observability.metrics_registry"
+    },
+    {
       "from": "api.routes.admin_dashboard.endpoints_router_cfg",
       "to": "api.routes.admin_dashboard"
     },
@@ -2185,6 +2193,34 @@
     },
     {
       "from": "api.routes.commandcenter",
+      "to": "api.routes.commandcenter.build"
+    },
+    {
+      "from": "api.routes.commandcenter",
+      "to": "api.routes.commandcenter.money"
+    },
+    {
+      "from": "api.routes.commandcenter",
+      "to": "api.routes.commandcenter.observe"
+    },
+    {
+      "from": "api.routes.commandcenter",
+      "to": "api.routes.commandcenter.operate"
+    },
+    {
+      "from": "api.routes.commandcenter",
+      "to": "api.routes.commandcenter.overview"
+    },
+    {
+      "from": "api.routes.commandcenter",
+      "to": "api.routes.commandcenter.secure"
+    },
+    {
+      "from": "api.routes.commandcenter",
+      "to": "api.routes.commandcenter.system"
+    },
+    {
+      "from": "api.routes.commandcenter",
       "to": "core.logging_config"
     },
     {
@@ -2669,11 +2705,11 @@
     },
     {
       "from": "api.routes.living_brain",
-      "to": "core.logging_config"
+      "to": "api.dependencies"
     },
     {
       "from": "api.routes.living_brain",
-      "to": "core.security.authentication.rbac"
+      "to": "core.logging_config"
     },
     {
       "from": "api.routes.living_engine",
@@ -3622,6 +3658,10 @@
     {
       "from": "app",
       "to": "api.routers"
+    },
+    {
+      "from": "app",
+      "to": "api.routes.browser_routes"
     },
     {
       "from": "app",
