@@ -207,6 +207,19 @@ def get_cloud_function_client():
     return GCPCloudFunctionClient()
 
 
+@functools.lru_cache(maxsize=1)
+def get_rules_engine():
+    """Lazy factory for the UniversalRulesEngine singleton.
+
+    Issue #1489/#1469: api/routes/admin_routes.py reads `services.rules_engine`
+    (GET/POST /admin/rules) but this module never exposed the attribute —
+    `__getattr__` fell through to AttributeError → 500 on every call.
+    """
+    from core.universal_rules import UniversalRulesEngine
+
+    return UniversalRulesEngine()
+
+
 # PATCH v4: singleton factories registry — used by `__getattr__` below to
 # resolve legacy `services.<name>` attribute access lazily.
 _SINGLETON_FACTORIES: dict[str, Callable[[], Any]] = {
@@ -222,6 +235,9 @@ _SINGLETON_FACTORIES: dict[str, Callable[[], Any]] = {
     "verification_queue": get_verification_queue,
     "gcp_pubsub_queue": get_gcp_pubsub_queue,
     "cloud_function_client": get_cloud_function_client,
+    # AUDIT-WIRE FIX (#1489/#1469): /admin/rules read `services.rules_engine`
+    # which never resolved → AttributeError → 500 on every admin rules call.
+    "rules_engine": get_rules_engine,
 }
 
 
