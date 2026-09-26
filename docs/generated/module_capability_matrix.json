@@ -11193,7 +11193,8 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "register"
       ],
       "classification": "test",
       "entrypoints": [],

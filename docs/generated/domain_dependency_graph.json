@@ -1559,37 +1559,17 @@
     {
       "evidence": [
         {
+          "line": 8,
+          "path": "backend/api/routes/agent_tasks.py"
+        }
+      ],
+      "source": "execution",
+      "target": "ai"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
-          "path": "backend/api/routes/agent_tasks.py"
-        }
-      ],
-      "source": "execution",
-      "target": "ai"
-    },
-    {
-      "evidence": [
-        {
-          "line": 10,
-          "path": "backend/api/routes/agent_tasks.py"
-        }
-      ],
-      "source": "execution",
-      "target": "ai"
-    },
-    {
-      "evidence": [
-        {
-          "line": 11,
-          "path": "backend/api/routes/agent_tasks.py"
-        }
-      ],
-      "source": "execution",
-      "target": "ai"
-    },
-    {
-      "evidence": [
-        {
-          "line": 12,
           "path": "backend/api/routes/agent_tasks.py"
         }
       ],
@@ -1949,7 +1929,7 @@
     {
       "evidence": [
         {
-          "line": 14,
+          "line": 11,
           "path": "backend/api/routes/agent_tasks.py"
         }
       ],
@@ -2215,16 +2195,6 @@
       ],
       "source": "execution",
       "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 15,
-          "path": "backend/api/routes/agent_tasks.py"
-        }
-      ],
-      "source": "execution",
-      "target": "security"
     },
     {
       "evidence": [
