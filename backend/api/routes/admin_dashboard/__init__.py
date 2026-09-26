@@ -502,6 +502,9 @@ from .endpoints_gate import (  # noqa: E402  (registers route + re-export)
     GateOverridePayload,
     execute_manual_gate_override,
 )
+from .endpoints_secrets_health import (  # noqa: E402  (registers routes + re-export)
+    get_secrets_health,
+)
 from .endpoints_security import (  # noqa: E402  (registers routes + re-export)
     get_security_findings,
     run_security_scan,
