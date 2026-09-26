@@ -24,9 +24,9 @@
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 161,
-      "admin-only": 351,
+      "admin-only": 347,
       "internal": 38,
-      "deprecated": 0,
+      "deprecated": 4,
       "api-only": 304,
       "orphaned": 0
     }
@@ -1555,7 +1555,7 @@
       "method": "GET",
       "path": "/admin/rules",
       "declared": "/admin/rules",
-      "deprecated": false,
+      "deprecated": true,
       "router_file": "backend/api/routes/admin_routes.py",
       "module": "api.routes.admin_routes",
       "registry_prefix": "",
@@ -1563,13 +1563,13 @@
       "is_admin": false,
       "operation": "get_admin_rules",
       "frontend_consumers": [],
-      "classification": "admin-only"
+      "classification": "deprecated"
     },
     {
       "method": "POST",
       "path": "/admin/rules",
       "declared": "/admin/rules",
-      "deprecated": false,
+      "deprecated": true,
       "router_file": "backend/api/routes/admin_routes.py",
       "module": "api.routes.admin_routes",
       "registry_prefix": "",
@@ -1577,7 +1577,7 @@
       "is_admin": false,
       "operation": "post_admin_rules",
       "frontend_consumers": [],
-      "classification": "admin-only"
+      "classification": "deprecated"
     },
     {
       "method": "GET",
@@ -1865,7 +1865,7 @@
       "method": "POST",
       "path": "/api/admin/alerts",
       "declared": "/api/admin/alerts",
-      "deprecated": false,
+      "deprecated": true,
       "router_file": "backend/api/routes/admin.py",
       "module": "api.routes.admin",
       "registry_prefix": "",
@@ -1875,7 +1875,7 @@
       "frontend_consumers": [
         "frontend/src/utils/api.ts"
       ],
-      "classification": "admin-only"
+      "classification": "deprecated"
     },
     {
       "method": "POST",
@@ -6787,7 +6787,7 @@
       "method": "POST",
       "path": "/api/v1/admin/alerts",
       "declared": "/api/v1/admin/alerts",
-      "deprecated": false,
+      "deprecated": true,
       "router_file": "backend/api/routes/internal.py",
       "module": "api.routes.internal",
       "registry_prefix": "",
@@ -6797,7 +6797,7 @@
       "frontend_consumers": [
         "frontend/src/utils/api.ts"
       ],
-      "classification": "admin-only"
+      "classification": "deprecated"
     },
     {
       "method": "GET",

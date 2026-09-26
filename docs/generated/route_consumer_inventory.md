@@ -18,9 +18,9 @@
 | classification | count | meaning |
 |---|---|---|
 | `user-facing` | 161 | frontend consumer matched |
-| `admin-only` | 351 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
-| `deprecated` | 0 | marked deprecated (docstring/decorator/name/path) |
+| `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 304 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
@@ -292,8 +292,8 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/admin/free-tier-pause/:param` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
 | GET | `/admin/free-tier-status` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
 | GET | `/admin/free-tier-status/:param` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
-| GET | `/admin/rules` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
-| POST | `/admin/rules` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
+| GET | `/admin/rules` | `backend/api/routes/admin_routes.py` | deprecated | NONE |
+| POST | `/admin/rules` | `backend/api/routes/admin_routes.py` | deprecated | NONE |
 | GET | `/admin/token-budget-stats` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
 | DELETE | `/admin/trusted-browsers` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
 | GET | `/admin/trusted-browsers` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
@@ -313,7 +313,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/admin/ai/surfaces` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
 | POST | `/api/admin/ai/test/:param` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/components/admin/AISurfaceAssignment.tsx` |
 | GET | `/api/admin/alerts` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
-| POST | `/api/admin/alerts` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/admin/alerts` | `backend/api/routes/admin.py` | deprecated | `frontend/src/utils/api.ts` |
 | POST | `/api/admin/alerts/:param/resolve` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/automation/executions` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/automation/executions/:param` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
@@ -636,7 +636,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/tts/voices` | `backend/tools/media/multilingual_tts.py` | api-only | NONE |
 | POST | `/api/v1/access/set-mode` | `backend/api/routes/access.py` | user-facing | `frontend/src/services/connectionsApi.ts` |
 | GET | `/api/v1/admin/agents` | `backend/api/routes/admin_v1.py` | admin-only | `frontend/src/utils/api.ts` |
-| POST | `/api/v1/admin/alerts` | `backend/api/routes/internal.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/v1/admin/alerts` | `backend/api/routes/internal.py` | deprecated | `frontend/src/utils/api.ts` |
 | GET | `/api/v1/admin/analytics` | `backend/api/routes/admin_v1.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/v1/admin/api-keys` | `backend/api/routes/admin_v1.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/v1/admin/audit` | `backend/api/routes/admin_v1.py` | admin-only | `frontend/src/utils/api.ts` |

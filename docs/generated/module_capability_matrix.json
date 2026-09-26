@@ -10600,6 +10600,13 @@
       "path": "backend/tests/api/routes/commandcenter/test_system.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_admin_route_consolidation.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "health",
@@ -25960,5 +25967,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2975
+  "source_file_count": 2976
 }
