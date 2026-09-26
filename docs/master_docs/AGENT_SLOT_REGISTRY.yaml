@@ -17,6 +17,7 @@ slots:
   expires_on: '2026-10-03'
   active: true
   branch: agent-2-pr-helper
+  bot_identity: supremeai-pr-helper[bot]
   notes: 'PR Gate & Diagnostics Verifier. Evaluates PR delta, regression risk, and performs
     beneficial squash merges. FORBIDDEN from opening feature PRs or writing core code.'
 - slot: agent-3
@@ -92,6 +93,8 @@ slots:
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
+  branch: agent-11-longrun
+  bot_identity: supremeai-platform-agent[bot]
   notes: 'Owns ALL connected 3rd-party platforms end-to-end (charter: docs/agents/platform-agent-charter.md).
     Every 3 hours: API-key health sweep of Render x4, Upstash chain x5, MCP tower,
     Infisical, Cloudflare, Supabase, Kaggle, AI providers (automated: .github/workflows/platform-agent-check.yml).
