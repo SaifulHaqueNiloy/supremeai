@@ -539,6 +539,22 @@ def register_all_routers(app: FastAPI) -> None:
             "API surface is likely broken; check the failure list above."
         )
 
+    # Issue #1494: mount the Memory MCP server over HTTP at /mcp (SSE +
+    # client→server frames), Bearer MCP_ADMIN_KEY auth, fail-closed. Optional
+    # dependency — a missing mcp SDK logs a warning and boot continues
+    # (the sub-app answers 503 at request time). Skipped on scraper/worker
+    # roles, mirroring the registry gating above: the memory surface is a
+    # core/monolith concern.
+    if current_role in ("scraper", "worker"):
+        logger.info(f"Memory MCP HTTP mount skipped for SERVICE_ROLE={current_role}")
+    else:
+        try:
+            from api.routes.memory_mcp_http import create_memory_mcp_asgi_app
+
+            app.mount("/mcp", create_memory_mcp_asgi_app())
+        except Exception as exc:
+            logger.warning(f"Memory MCP HTTP mount skipped: {exc}")
+
 
 def include_user_routers(app: FastAPI) -> None:
     """For compatibility/tests - registers non-admin routers."""
