@@ -6,7 +6,7 @@
 import { getApiBaseUrl } from '../utils/api';
 import { buildUrl } from '@supremeai/shared-services';
 import { getDeviceFingerprint } from '../utils/deviceFingerprint';
-import { clearAdminToken, clearUserToken, getAdminToken, getUserToken } from './tokenStorage';
+import { clearAdminToken, clearUserToken, getAdminToken, getUserToken, setUserToken } from './tokenStorage';
 import PQueue from 'p-queue';
 
 // বাংলা মন্তব্য: কাস্টম এরর ক্লাস — status প্রপার্টি দিয়ে React Query retry ফাংশন সঠিকভাবে 401/403/429 চিহ্নিত করতে পারে
@@ -357,6 +357,65 @@ const buildRequestId = (): string =>
 
 // Last correlation id seen on a backend response (success or error) — exposed
 // for error reporting/support flows.
+// ── Issue #1673: transparent token refresh ──────────────────────────────────
+// বাংলা: access token মেয়াদোত্তীর্ণ হলে (401) সরাসরি লগআউটের বদলে প্রথমে
+// /api/v1/auth/refresh ডাকা হয় (refresh token httpOnly cookie-তে থাকে,
+// credentials:'include' দিয়ে যায়)। সফল হলে নতুন access token দিয়ে একবার
+// মূল request রিট্রাই হয়। single-flight mutex — একসাথে ২০টা 401 এলেও
+// refresh ঠিক একবারই হবে। refresh-exempt পাথ (login/register/refresh/me/
+// logout) কখনো রিট্রাই হবে না, নাহলে লুপ তৈরি হতো।
+const REFRESH_PATH = '/api/v1/auth/refresh';
+const REFRESH_EXEMPT_PATHS = [
+  REFRESH_PATH,
+  '/api/v1/auth/login',
+  '/api/v1/auth/register',
+  '/api/v1/auth/me',
+  '/api/v1/auth/logout',
+];
+
+let refreshInFlight: Promise<boolean> | null = null;
+
+const tryRefreshSession = async (): Promise<boolean> => {
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      try {
+        const res = await fetch(buildUrl(getApiBaseUrl(REFRESH_PATH), REFRESH_PATH), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({}),
+        });
+        if (!res.ok) return false;
+        const data = (await res.json().catch(() => null)) as { access_token?: string } | null;
+        const newToken = data?.access_token;
+        if (!newToken) return false;
+        setUserToken(newToken);
+        updateTokenCache(newToken);
+        if (isDev()) console.warn('[Auth] Session refreshed via /auth/refresh after 401.');
+        return true;
+      } catch {
+        return false;
+      } finally {
+        refreshInFlight = null;
+      }
+    })();
+  }
+  return refreshInFlight;
+};
+
+const withAuthRetry = async <T>(path: string, attempt: () => Promise<T>): Promise<T> => {
+  try {
+    return await attempt();
+  } catch (e) {
+    const isAuthFailure = e instanceof ApiError && e.status === 401;
+    const isExempt = REFRESH_EXEMPT_PATHS.some((p) => path.includes(p));
+    if (!isAuthFailure || isExempt) throw e;
+    const refreshed = await tryRefreshSession();
+    if (!refreshed) throw e;
+    return attempt();  // single retry with the fresh access token
+  }
+};
+
 let lastRequestId: string = '';
 export const getLastRequestId = (): string => lastRequestId;
 
@@ -365,15 +424,17 @@ export const apiClient = {
     // FIX (P1, review 2026-09-12): `options` was spread LAST, so a caller passing
     // `options.headers` silently REPLACED the merged auth headers. Spread options
     // first, then re-assert the computed method/headers/body.
-    const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
-      ...options,
-      method: 'GET',
-      headers: {
-        ...(options?.headers as Record<string, string>),
-        ...(await getAuthHeaders()),
-      },
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
+        ...options,
+        method: 'GET',
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...(await getAuthHeaders()),
+        },
+      });
+      return handleResponse(res);
     });
-    return handleResponse(res);
   },
 
   post: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
@@ -386,17 +447,19 @@ export const apiClient = {
     ) {
       authHeaders['Idempotency-Key'] = buildIdempotencyKey();
     }
-    const res = await throttledFetch(finalUrl, {
-      // FIX (P1, review 2026-09-12): options first — see get() above.
-      ...options,
-      method: 'POST',
-      headers: {
-        ...(options?.headers as Record<string, string>),
-        ...authHeaders,
-      },
-      body: body ? JSON.stringify(body) : undefined,
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(finalUrl, {
+        // FIX (P1, review 2026-09-12): options first — see get() above.
+        ...options,
+        method: 'POST',
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...authHeaders,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return handleResponse(res);
     });
-    return handleResponse(res);
   },
 
   put: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
@@ -409,17 +472,19 @@ export const apiClient = {
     ) {
       authHeaders['Idempotency-Key'] = buildIdempotencyKey();
     }
-    const res = await throttledFetch(finalUrl, {
-      // FIX (P1, review 2026-09-12): options first — see get() above.
-      ...options,
-      method: 'PUT',
-      headers: {
-        ...(options?.headers as Record<string, string>),
-        ...authHeaders,
-      },
-      body: body ? JSON.stringify(body) : undefined,
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(finalUrl, {
+        // FIX (P1, review 2026-09-12): options first — see get() above.
+        ...options,
+        method: 'PUT',
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...authHeaders,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return handleResponse(res);
     });
-    return handleResponse(res);
   },
 
   // ERR-B02 (defect register 2026-09-15): multipart upload path. Unlike post(),
@@ -428,16 +493,18 @@ export const apiClient = {
   postForm: async <T>(path: string, body: FormData, options?: RequestInit): Promise<T> => {
     const authHeaders = await getAuthHeaders();
     delete authHeaders['Content-Type'];
-    const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
-      ...options,
-      method: 'POST',
-      headers: {
-        ...(options?.headers as Record<string, string>),
-        ...authHeaders,
-      },
-      body,
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
+        ...options,
+        method: 'POST',
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...authHeaders,
+        },
+        body,
+      });
+      return handleResponse(res);
     });
-    return handleResponse(res);
   },
 
   patch: async <T>(path: string, body?: unknown, options?: RequestInit): Promise<T> => {
@@ -450,30 +517,34 @@ export const apiClient = {
     ) {
       authHeaders['Idempotency-Key'] = buildIdempotencyKey();
     }
-    const res = await throttledFetch(finalUrl, {
-      // FIX (P1, review 2026-09-12): options first — see get() above.
-      ...options,
-      method: 'PATCH',
-      headers: {
-        ...(options?.headers as Record<string, string>),
-        ...authHeaders,
-      },
-      body: body ? JSON.stringify(body) : undefined,
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(finalUrl, {
+        // FIX (P1, review 2026-09-12): options first — see get() above.
+        ...options,
+        method: 'PATCH',
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...authHeaders,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      return handleResponse(res);
     });
-    return handleResponse(res);
   },
 
   delete: async <T>(path: string, options?: RequestInit): Promise<T> => {
     // FIX (P1, review 2026-09-12): options first — see get() above.
-    const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
-      ...options,
-      method: 'DELETE',
-      headers: {
-        ...(options?.headers as Record<string, string>),
-        ...(await getAuthHeaders()),
-      },
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
+        ...options,
+        method: 'DELETE',
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...(await getAuthHeaders()),
+        },
+      });
+      return handleResponse(res);
     });
-    return handleResponse(res);
   },
 
   performSensitiveAction: async <T>(path: string, body?: unknown, otpCode?: string): Promise<T> => {
