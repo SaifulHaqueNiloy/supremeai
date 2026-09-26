@@ -1289,7 +1289,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 14,
           "path": "backend/core/rate_limit_quota.py"
         }
       ],
@@ -1305,6 +1305,16 @@
       ],
       "source": "billing",
       "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 15,
+          "path": "backend/tests/core/test_rate_limit_quota_fallback.py"
+        }
+      ],
+      "source": "billing",
+      "target": "security"
     },
     {
       "evidence": [
@@ -4749,7 +4759,7 @@
     {
       "evidence": [
         {
-          "line": 14,
+          "line": 15,
           "path": "backend/core/security/api_key_limiter.py"
         }
       ],
