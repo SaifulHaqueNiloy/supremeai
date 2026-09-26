@@ -115,3 +115,19 @@ Every active agent connects to the central MCP Control Tower (`infrastructure/mc
 - Local IDE connects via `stdio` transport (`CLIENT_ID: local_ide`, `role: admin`, `scopes: [*]`).
 - Remote agents connect via authorized tokens in `config/mcp-clients.json`.
 - Query health and platform status via `system_summary`, `system_health`, and `resource_list` before and after major operations.
+
+---
+
+## 8. Concurrency-Gated Merge Queue (Merge Train & Rollup)
+
+**Scope:** `supremeai_internal` platform rule (Level 3) — no analogy in customer projects. Owner lane: CI/CD & Workflows (`agent-5`).
+
+Integration into `main` is **FIFO and single-flight** so parallel agent PRs never thrash runners or fight over shared services:
+
+- **Queue lane:** a ready PR (own CI green + review complete) is queued with `queue:pending-rollup`. Queued PRs burn **no** CI minutes. `queue:hold` freezes a PR out of the queue; `queue:in-batch` marks a member of an in-flight batch.
+- **Single-flight gate:** `.github/workflows/merge-train-rollup.yml` declares one strict concurrency group — `supremeai-integration-gate` with `cancel-in-progress: false` — so exactly **one** integration CI execution is ever active. While a batch is in flight, the scheduler holds the queue (no second batch for the same members).
+- **Dynamic batch drain:** when the active run ends, `scripts/ci/merge_train_rollup.py` drains whatever accumulated — 1 PR proceeds alone; N PRs are consolidated (FIFO, pairwise file-disjoint only, collision logic reused from `scripts/git/cross_pr_collision_detector.py`) into ONE `batch/rollup-<ts>` branch proven by ONE CI execution.
+- **Landed together:** on green, the batch lands as a single squash commit and `merge_train_rollup.py land` cascade-closes the member PRs and their linked issues.
+- **Fault isolation (circuit breaker):** a failed batch is never retried blindly — members are frozen with `queue:hold`, the batch PR is closed with `queue:failed`, and `bisect` halves are published for triage.
+- **Governance:** the batch ALWAYS lands through a reviewable PR. Auto-land requires explicit opt-in (`vars.MERGE_TRAIN_AUTO_LAND == 'true'` or `workflow_dispatch.auto_land: true`); otherwise the exact approval command is posted for Tier-3 human sign-off. `main` is never force-pushed and batch refs are deleted only after landing or a bisect freeze.
+

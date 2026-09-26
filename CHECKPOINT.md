@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-26 17:13 UTC
+- **Date:** 2026-09-26 17:35 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,9 +10,13 @@
   - (see git log for details)
 
 ## Files Changed
-  - `docs/generated/module_capability_matrix.json`
-  - `docs/generated/backend_import_graph.json`
-  - `.github/workflows/artifact-regen.yml`
+  - `scripts/ci/merge_train_rollup.py`
+  - `tests/test_merge_train_workflow.py`
+  - `docs/plans/PENDING_APPROVALS.md`
+  - `.github/workflows/merge-train-rollup.yml`
+  - `STATUS.md`
+  - `tests/test_merge_train_rollup.py`
+  - `AGENTS.md`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)

@@ -61,6 +61,24 @@ target_scope: supremeai_internal
 
 ## Instructions
 
+### `TASK-004` — Merge-Train Rollup auto-land enablement (Issue #1711)
+
+| Field | Value |
+|---|---|
+| **Timestamp** | `2026-09-26T23:30:00+06:00` |
+| **Severity** | HIGH (autonomous merge automation touching the single merge door) |
+| **Risk tier** | Tier 3 — CI/CD governance + automatic landing of batched PRs |
+| **Branch** | `agent-5-ci-action` (persistent slot) → PR to `main` |
+| **Files** | `scripts/ci/merge_train_rollup.py` (new); `.github/workflows/merge-train-rollup.yml` (new); `tests/test_merge_train_rollup.py` (new); `tests/test_merge_train_workflow.py` (new); `AGENTS.md` §8; `STATUS.md` |
+| **Risk rationale** | The merge train batches file-disjoint ready PRs onto `batch/rollup-<ts>` and proves them with ONE CI execution. The dangerous edge is *who* is allowed to merge: enabling runaway auto-land would let a batch land without human eyes. Default posture is therefore fail-safe — auto-land is OFF unless `vars.MERGE_TRAIN_AUTO_LAND == 'true'` (or an explicit `workflow_dispatch.auto_land: true`), and the default path posts the exact approval command instead. `main` is never force-pushed; batch refs are deleted only after landing or a bisect freeze. |
+| **Verification evidence** | `pytest tests/test_merge_train_rollup.py tests/test_merge_train_workflow.py` → **30/30 PASS**; `scripts/ci/check_self_heal_token_usage.py` → PASS (no bare-token mutations); workflow YAML structurally validated (5 jobs, single concurrency group `supremeai-integration-gate`, `cancel-in-progress: false`); live `merge_train_rollup.py plan --format json` smoke run against the real repository (0 queued) which also exposed and fixed a real Windows cp1252 decode defect. |
+| **Ratification needed** | (1) Confirm the queue-label protocol (`queue:pending-rollup` → `queue:in-batch` → landed, with `queue:hold`/`queue:failed` as freeze states) is the desired operator workflow. (2) Decide whether to enable standing auto-land (`gh variable set MERGE_TRAIN_AUTO_LAND --body 'true'`) or keep mandatory human approval for every batch landing. (3) Confirm the failed-batch circuit breaker (freeze + bisect, no blind retry) is the accepted trade-off versus automatic retry. |
+| **Approval command** | `/admin-api/approvals/TASK-004/approve` |
+| **Enable auto-land (if approved)** | `gh variable set MERGE_TRAIN_AUTO_LAND --body 'true'` |
+
+---
+
+
 - Tier 3 (High-Risk) autonomous remediations MUST log here before proceeding.
 - Tier 2 (Medium-Risk) changes may optionally log here for human visibility.
 - When admin approves, execute the exact CLI/UI command and update the task status to `APPROVED` or `REJECTED`.
