@@ -101,7 +101,13 @@ def mock_db_session():
     # Override FastAPI dependency
     app.dependency_overrides[get_db_session] = lambda: session
     yield session
-    app.dependency_overrides.clear()
+    # Red-CI fix (#1753 follow-through): this fixture previously called
+    # app.dependency_overrides.clear() on the SHARED core.app singleton,
+    # silently wiping every other test module's overrides (e.g. the
+    # module-level get_current_user_token override in test_payments.py,
+    # which then failed 403/KeyError depending on execution order). Pop
+    # only the key this fixture owns.
+    app.dependency_overrides.pop(get_db_session, None)
 
 
 def test_fetch_wallet_pre_seeds_bonus(mock_db_session):
