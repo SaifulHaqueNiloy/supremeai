@@ -21,14 +21,14 @@ slots:
   notes: 'PR Gate & Diagnostics Verifier. Evaluates PR delta, regression risk, and performs
     beneficial squash merges. FORBIDDEN from opening feature PRs or writing core code.'
 - slot: agent-3
-  tool: solver-a
+  tool: coder-solver-1
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
   branch: agent-3-coder-1
-  notes: 'Primary Code Implementer. Claims assigned issues, performs local issue-scoped
-    audit to confirm validity, writes production code and unit tests. FORBIDDEN from
+  notes: 'Code Implementer & Issue Solver (Worker 1). Claims assigned backlog issues, performs
+    local issue-scoped audit to confirm validity, writes production code and unit tests. FORBIDDEN from
     performing full codebase audits or refactoring outside issue scope. FORBIDDEN from
     modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-5
@@ -41,29 +41,27 @@ slots:
   notes: 'CI/CD & Workflow Specialist. Owns .github/workflows/*, git pre-push hooks,
     auto-sync engines, and artifact regeneration. FORBIDDEN from modifying business code.'
 - slot: agent-6
-  tool: solver-b
+  tool: coder-solver-2
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
   branch: agent-6-coder-2
-  notes: 'Parallel Code Implementer. Claims assigned issues, performs local issue-scoped
-    audit to confirm validity, writes production code and unit tests. FORBIDDEN from
-    performing full codebase audits or refactoring outside issue scope. FORBIDDEN from
+  notes: 'Code Implementer & Issue Solver (Worker 2 - Parallel). 99% identical role and scope
+    to Worker 1. Claims assigned backlog issues, performs local issue-scoped audit, writes
+    production code and unit tests. FORBIDDEN from performing full codebase audits or
     modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-7
-  tool: solver-c
+  tool: coder-solver-3
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
   branch: agent-7-solver-b
-  notes: 'Dedicated Issue Solver (self-assigned per Admin directive 2026-09-26, supersedes
-    this instance''s prior agent-2 activity). Claims open issues one-by-one, implements
-    scoped fixes and tests on agent-7-solver-b, opens focused PRs and squash-merges
-    after green checks. Works the issue backlog until open count reaches ~zero.
-    FORBIDDEN from touching .github/workflows or other agents'' branches. FORBIDDEN from
-    modifying any files without an atomically claimed Issue (status:in-progress).'
+  notes: 'Code Implementer & Issue Solver (Worker 3 - Parallel). 99% identical role and scope
+    to Workers 1 & 2. Claims backlog issues, implements scoped fixes and unit tests,
+    opens focused PRs. FORBIDDEN from touching .github/workflows or modifying any files
+    without an atomically claimed Issue (status:in-progress).'
 - slot: agent-8
   tool: pr-verifier
   maintainer: '@SaifulHaqueNiloy'
