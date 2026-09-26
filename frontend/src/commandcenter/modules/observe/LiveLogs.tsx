@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiClient } from '../../../services/apiClient';
+import { useAuthStore } from '../../../store/authStore';
 import { LogStream, EmptyState } from '../../kit';
 
 interface LogEntry {
@@ -15,18 +15,40 @@ export function LiveLogs() {
   const [levelFilter, setLevelFilter] = useState<string>('all');
   const [keyword, setKeyword] = useState('');
 
-  const { data: logs, isLoading } = useQuery({
+  // Issue #1831 fixes (2 of them here):
+  // 1. Gate: 'admin_token' localStorage key is NEVER written anywhere in the
+  //    repo (canonical session token lives in tokenStorage as
+  //    'supreme_admin_jwt') — the module was permanently disabled for
+  //    everyone. Gate on the auth store instead (same pattern as
+  //    SecretsHealth.tsx).
+  // 2. Source: GET /admin-api/logs does not exist (404); the CommandCenter
+  //    realtime provider already streams /admin-api/logs/stream SSE into the
+  //    ['cmd','logs'] query cache. Subscribe to that cache (enabled:false →
+  //    observer-only, no fetching) instead of polling a dead endpoint.
+  const isAdminAuthenticated = useAuthStore((s) => s.role === 'admin' && s.status === 'loggedIn');
+  const { data: logs, isLoading } = useQuery<LogEntry[]>({
     queryKey: ['cmd', 'logs'],
-    queryFn: () => apiClient.get<LogEntry[]>('/admin-api/logs?limit=200'),
-    refetchInterval: 5000,
-    enabled: !!localStorage.getItem('admin_token'),
+    queryFn: () => [], // cache-only: CommandCenterRealtimeProvider fills this
+    enabled: false,
+    initialData: [],
+    refetchOnMount: false,
   });
+
 
   const filtered = logs?.filter((log) => {
     if (levelFilter !== 'all' && log.level !== levelFilter) return false;
     if (keyword && !log.message.toLowerCase().includes(keyword.toLowerCase())) return false;
     return true;
   }) ?? [];
+
+  if (!isAdminAuthenticated) {
+    return (
+      <EmptyState
+        title="অ্যাক্সেস নেই"
+        message="Live Logs শুধু authenticated admin-দের জন্য — অ্যাডমিন হিসেবে লগইন করুন।"
+      />
+    );
+  }
 
   if (isLoading && !logs) {
     return <EmptyState title="লগ লোড হচ্ছে..." message="SSE স্ট্রিম সংযোগ করা হচ্ছে..." loading />;
