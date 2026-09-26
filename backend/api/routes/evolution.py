@@ -436,10 +436,7 @@ async def list_proposals(
     `limit` ডিফল্ট ৫০ (সর্বোচ্চ ২০০), `offset` দিয়ে পেজ স্কিপ করা যায়।
     """
     result = await session.execute(
-        select(CodeProposal)
-        .order_by(CodeProposal.created_at.desc())
-        .offset(offset)
-        .limit(limit)
+        select(CodeProposal).order_by(CodeProposal.created_at.desc()).offset(offset).limit(limit)
     )
     proposals = result.scalars().all()
     # Serialize to keep Pydantic serialization happy
