@@ -81,6 +81,14 @@ class FakeSession:
         self.execute_calls = []
         self.added = []
         self.commits = 0
+        # ISSUE-1588 follow-through (#1753 round 2): the backup route now
+        # quotes table identifiers through the SQLAlchemy dialect preparer
+        # (session.bind.dialect.identifier_preparer). Mirror that surface:
+        # valid identifiers (^[A-Za-z0-9_]+$ — the route's regex pre-filter)
+        # stay unquoted in SQLAlchemy, so a passthrough is faithful here.
+        self.bind = SimpleNamespace(
+            dialect=SimpleNamespace(identifier_preparer=SimpleNamespace(quote=lambda name: name))
+        )
 
     async def execute(self, stmt):
         self.execute_calls.append(stmt)
