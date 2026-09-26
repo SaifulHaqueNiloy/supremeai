@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import os
 import sqlite3
+import threading
 from datetime import UTC, datetime
 from typing import Any
 
@@ -72,8 +73,35 @@ class EvolutionEngine:
         os.makedirs(os.path.dirname(str(self.db_path)), exist_ok=True)
         self._ensure_schema()
 
+    # Issue #1700 (thread-unsafe SQLite): all connections were opened with
+    # check_same_thread=False and no mutual exclusion — concurrent callers
+    # (async tasks + worker threads) could interleave writes and hit SQLite
+    # "database is locked" corruption windows. A re-entrant lock now
+    # serializes every connection's full lifetime (acquire → work → close),
+    # and a busy_timeout gives honest waiting instead of instant lock errors.
+    # বাংলা: প্রতিটি কানেকশনের সম্পূর্ণ জীবনকাল জুড়ে RLock ধরে রাখা হয়,
+    # ফলে একাধিক থ্রেড/টাস্ক একসাথে একই SQLite ফাইলে লিখতে পারে না।
+    _db_lock = threading.RLock()
+
+    def _acquire_connection(self) -> sqlite3.Connection:
+        """Open a connection while holding the class DB lock (issue #1700)."""
+        self._db_lock.acquire()
+        try:
+            conn = sqlite3.connect(str(self.db_path), check_same_thread=False, timeout=30.0)
+            conn.execute("PRAGMA busy_timeout = 30000")
+            return conn
+        except BaseException:
+            self._db_lock.release()
+            raise
+
+    @staticmethod
+    def _release_connection(conn: sqlite3.Connection) -> None:
+        """Close the connection and drop the DB lock (always pair in finally)."""
+        conn.close()
+        EvolutionEngine._db_lock.release()
+
     def _ensure_schema(self) -> None:
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = self._acquire_connection()
         try:
             conn.executescript("""
                 CREATE TABLE IF NOT EXISTS task_history (
@@ -114,7 +142,7 @@ class EvolutionEngine:
             """)
             conn.commit()
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def learn_from_success(self, task: str, approach: str, result: str) -> dict[str, Any]:
         created_at = datetime.now(UTC).isoformat()
@@ -139,7 +167,7 @@ class EvolutionEngine:
 
         # বাংলা মন্তব্য: Supabase fail হলেও local SQLite-তে store করা হবে (degraded mode)
         # আগে: supabase fail হলে SQLite skip করা হতো — data loss হতো
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = self._acquire_connection()
         try:
             conn.execute(
                 "INSERT OR IGNORE INTO task_history (task, approach, result, success, created_at) VALUES (?, ?, ?, ?, ?)",
@@ -163,7 +191,7 @@ class EvolutionEngine:
                 "sqlite_error": str(db_err),
             }
         finally:
-            conn.close()
+            self._release_connection(conn)
             # SELF-EVOLVE FIX: update FitnessEngine so _tick() can evaluate
             # the "approach" (model name) and trigger refactors if needed.
             if self.fitness_engine is not None:
@@ -201,7 +229,7 @@ class EvolutionEngine:
                 "error": "Supabase write failed. Saga rollback: skipping SQLite.",
             }
 
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = self._acquire_connection()
         try:
             # বাংলা মন্তব্য: P1+P3 Fix — INSERT OR IGNORE দিয়ে idempotency নিশ্চিত।
             conn.execute(
@@ -227,7 +255,7 @@ class EvolutionEngine:
                 "task": task,
             }
         finally:
-            conn.close()
+            self._release_connection(conn)
             # SELF-EVOLVE FIX: update FitnessEngine with failure to close the loop.
             if self.fitness_engine is not None:
                 try:
@@ -250,7 +278,7 @@ class EvolutionEngine:
             if evolution_write_failures:
                 evolution_write_failures.inc()
 
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = self._acquire_connection()
         try:
             cursor = conn.execute(
                 """
@@ -273,12 +301,12 @@ class EvolutionEngine:
                 for row in cursor.fetchall()
             ]
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def detect_underperforming_prompts(
         self, min_occurrences: int = 5, min_failure_rate: float = 0.5
     ) -> list[dict[str, Any]]:
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = self._acquire_connection()
         try:
             # বাংলা মন্তব্য: এখানে আমরা টাস্কের নাম (প্রম্পট) দ্বারা গ্রুপ করে ব্যর্থতার হার বিশ্লেষণ করছি।
             cursor = conn.execute(
@@ -305,7 +333,7 @@ class EvolutionEngine:
                 for row in cursor.fetchall()
             ]
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     async def propose_prompt_optimization(
         self, original_prompt: str, failure_data: dict[str, Any]
@@ -341,7 +369,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
             return {"status": "error", "error": str(e)}
 
         created_at = datetime.now(UTC).isoformat()
-        conn = sqlite3.connect(self.db_path, check_same_thread=False)
+        conn = self._acquire_connection()
         try:
             conn.execute(
                 """
@@ -358,7 +386,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
                 "status": "proposed",
             }
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     async def propose_new_skill(self, pattern: str) -> dict[str, Any]:
         """
@@ -399,7 +427,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
             if evolution_write_failures:
                 evolution_write_failures.inc()
 
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = self._acquire_connection()
         try:
             conn.execute(
                 "INSERT INTO skill_proposals (skill_name, source_pattern, generated_code, status, created_at) VALUES (?, ?, ?, ?, ?)",
@@ -415,7 +443,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
                 "error": error_note,
             }
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     def record_feedback(
         self, session_id: str, query: str, retrieved_chunks: str, user_rating: float
@@ -437,7 +465,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
             if evolution_write_failures:
                 evolution_write_failures.inc()
 
-        conn = sqlite3.connect(str(self.db_path), check_same_thread=False)
+        conn = self._acquire_connection()
         try:
             conn.execute(
                 "INSERT INTO feedback_loop (session_id, query, retrieved_chunks, user_rating, created_at) VALUES (?, ?, ?, ?, ?)",
@@ -446,7 +474,7 @@ Based on the prompt, rewrite it to be more precise, clear, and effective. Provid
             conn.commit()
             return {"recorded": True, "session_id": session_id, "rating": user_rating}
         finally:
-            conn.close()
+            self._release_connection(conn)
 
     async def run_daily_evolution(self, task_history: list[dict[str, Any]]) -> dict[str, Any]:
         total = len(task_history)
