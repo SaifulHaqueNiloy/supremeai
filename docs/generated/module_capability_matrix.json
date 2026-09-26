@@ -6893,7 +6893,8 @@
     {
       "capability_signals": [
         "browser",
-        "health"
+        "health",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
