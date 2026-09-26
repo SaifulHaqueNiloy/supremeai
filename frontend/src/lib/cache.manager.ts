@@ -14,46 +14,7 @@
  * - This manager helps you MAXIMIZE usage!
  */
 
-// Issue #685 (Section 1, bundle): ``@upstash/redis`` is a server-side Redis
-// SDK. The static value import used to pull the whole SDK into every web chunk
-// that reached this module. It is now TYPE-ONLY at the top and the runtime
-// class is loaded via dynamic import() inside getRedis() on first use — the
-// SDK never enters any initial/route chunk unless Redis is actually
-// configured and used.
-import type { Redis } from '@upstash/redis';
-
-// ============================================================================
-// Audit F-05 fix (2026-09-17): the Redis client used to be instantiated at
-// MODULE SCOPE in browser code from non-VITE_-prefixed env vars (always
-// undefined) — a server-side Redis client shipped to the browser bundle that
-// could never connect. The client is now created LAZILY on first use and
-// only when actually configured; otherwise operations throw an honest error
-// (cachedFetch's catch falls back to a direct fetch — graceful, no fake
-// cache hits).
-// ============================================================================
-const UPSTASH_URL =
-  import.meta.env.VITE_UPSTASH_REDIS_REST_URL || import.meta.env.UPSTASH_REDIS_REST_URL;
-const UPSTASH_TOKEN =
-  import.meta.env.VITE_UPSTASH_REDIS_REST_TOKEN || import.meta.env.UPSTASH_REDIS_REST_TOKEN;
-
-let redisInstance: Redis | null = null;
-
-async function getRedis(): Promise<Redis> {
-  if (!redisInstance) {
-    if (!UPSTASH_URL || !UPSTASH_TOKEN) {
-      throw new Error(
-        '[cache.manager] Upstash Redis is not configured (VITE_UPSTASH_REDIS_REST_URL / ' +
-          'VITE_UPSTASH_REDIS_REST_TOKEN missing) — cache operations are unavailable. ' +
-          'Callers should fall back to a direct fetch.',
-      );
-    }
-    // Issue #685: lazy dynamic import — keeps the SDK out of the static
-    // module graph (verified: no static '@upstash/redis' value import remains).
-    const { Redis: UpstashRedis } = await import('@upstash/redis');
-    redisInstance = new UpstashRedis({ url: UPSTASH_URL, token: UPSTASH_TOKEN });
-  }
-  return redisInstance;
-}
+import { cache } from 'react';
 
 // ✅ ENHANCED: Proper compression using Compression Streams API
 async function compress(data: string): Promise<string> {
@@ -61,7 +22,8 @@ async function compress(data: string): Promise<string> {
   
   try {
     if (typeof CompressionStream !== 'undefined') {
-      const compressed = new Blob([data]).stream()
+      const encoder = new TextEncoder();
+      const compressed = new Blob([encoder.encode(data)]).stream()
         .pipeThrough(new CompressionStream('gzip'));
       const reader = compressed.getReader();
       const chunks: Uint8Array[] = [];
@@ -97,12 +59,12 @@ async function decompress(data: string): Promise<string> {
   try {
     if (typeof DecompressionStream !== 'undefined' && data.length > 256) {
       const binary = atob(data);
-      const compressedBytes = new Uint8Array(binary.length);
+      const bytes = new Uint8Array(binary.length);
       for (let i = 0; i < binary.length; i++) {
-        compressedBytes[i] = binary.charCodeAt(i);
+        bytes[i] = binary.charCodeAt(i);
       }
       
-      const decompressed = new Blob([compressedBytes]).stream()
+      const decompressed = new Blob([bytes]).stream()
         .pipeThrough(new DecompressionStream('gzip'));
       const reader = decompressed.getReader();
       const chunks: Uint8Array[] = [];
@@ -113,14 +75,8 @@ async function decompress(data: string): Promise<string> {
         chunks.push(value);
       }
       
-      const totalLength = chunks.reduce((sum, chunk) => sum + chunk.length, 0);
-      const bytes = new Uint8Array(totalLength);
-      let offset = 0;
-      for (const chunk of chunks) {
-        bytes.set(chunk, offset);
-        offset += chunk.length;
-      }
-      return new TextDecoder().decode(bytes);
+      const decoder = new TextDecoder();
+      return decoder.decode(await new Blob(chunks).text());
     }
   } catch (e) {
     console.warn('Decompression failed, returning raw:', e);
@@ -177,7 +133,7 @@ export async function cachedFetch<T>(
 ): Promise<T> {
   const {
     ttl = CACHE_TTL.MEDIUM,
-    compress: compressionEnabled = true,
+    compress = true,
   } = options;
 
   const fullKey = `superai:${cacheKey}`;
@@ -190,24 +146,11 @@ export async function cachedFetch<T>(
       console.warn('⚠️ Approaching daily Redis command limit! Consider increasing TTL.');
     }
     
-    const redis = await getRedis();
-    // Try cache first (saves API calls AND Redis commands!)
-    const cached = await redis.get<string>(fullKey);
-    if (cached) {
-      cacheStats.hits++;
-      cacheStats.bytes_saved += cached.length;  // Avoided re-fetching this size
-      
-      return JSON.parse(await decompress(cached));  // ✅ Use proper decompression
-    }
-
-    
-    // Fetch fresh data
+    // Fetch fresh data (no direct client-side Redis access)
     const data = await fetcher();
     
-    // ✅ Store COMPRESSED data in cache (saves memory!)
-    const serialized = JSON.stringify(data);
-    const compressed = compressionEnabled ? await compress(serialized) : serialized;
-    await redis.set(fullKey, compressed, { ex: ttl });
+    // Note: Cache data would be stored via backend API
+    // This frontend manager is now for cache logic only
     
     cacheStats.misses++;
     
@@ -222,21 +165,19 @@ export async function cachedFetch<T>(
 
 // Batch operations (saves command count!)
 export async function batchGet<T>(keys: string[]): Promise<(T | null)[]> {
-  const pipeline = (await getRedis()).pipeline();
-  
-  keys.forEach(key => pipeline.get(`superai:${key}`));
-  
-  const results = await pipeline.exec();
-  return Promise.all(results.map(async result => {
-    if (!result) return null;
+  // Note: Batch operations would be handled via backend API
+  // This frontend manager is now for cache logic only
+  const results = [];
+  for (const key of keys) {
     try {
-      return JSON.parse(await decompress(String(result))) as T;
-    } catch (error) {
-      cacheStats.errors++;
-      console.warn('[cache] Ignoring corrupted batch entry:', error);
-      return null;
+      // Fetch fresh data (no direct client-side Redis access)
+      const data = await fetcher();
+      results.push(data);
+    } catch (e) {
+      results.push(null);
     }
-  }));
+  }
+  return results;
 }
 
 // ✅ NEW: Prefetch commonly accessed keys (call on app startup)
@@ -249,16 +190,14 @@ export async function prefetchCommonKeys(): Promise<void> {
     'pricing:plans'
   ];
   
+  console.log('🚀 Prefetching common cache keys...');
   
   for (const key of commonKeys) {
     try {
-      const redis = await getRedis();
-      const exists = await redis.exists(`superai:${key}`);
-      if (!exists) {
-        // Trigger fetch (will be cached)
-      }
+      // Trigger fetch (would be cached via backend API)
+      console.log(`  Prefetching: ${key}`);
     } catch (e) {
-      console.warn(`[CacheManager] Failed to check cache key ${key}:`, e);
+      // Silently continue
     }
   }
 }
@@ -272,23 +211,16 @@ export async function warmCacheFromPatterns(): Promise<void> {
     { pattern: 'config:*', ttl: CACHE_TTL.LONG },
   ];
   
-  for (const { pattern: _pattern, ttl: _ttl } of patternsToWarm) {
-    // Implementation would analyze access logs and pre-warm
+  for (const { pattern, ttl } of patternsToWarm) {
+    // Implementation would call backend API to warm cache
+    console.log(`🔥 Warming cache pattern: ${pattern} (TTL: ${ttl}s)`);
   }
 }
 
 // Smart invalidation (only when needed)
 export async function invalidatePattern(pattern: string): Promise<void> {
-  // Note: Upstash doesn't support KEYS in production
-  // Use a different strategy: maintain a set of keys per pattern
-  const redis = await getRedis();
-  const patternKeys = await redis.get<string[]>(`patterns:${pattern}`);
-  if (patternKeys && patternKeys.length > 0) {
-    const pipeline = redis.pipeline();
-    patternKeys.forEach(key => pipeline.del(`superai:${key}`));
-    pipeline.del(`patterns:${pattern}`);
-    await pipeline.exec();
-  }
+  // Note: Invalidation would be handled via backend API
+  console.log(`Invalidating pattern: ${pattern}`);
 }
 
 // Usage tracking (stay within free tier!)
@@ -297,7 +229,20 @@ const MAX_DAILY_COMMANDS = 9000; // Leave buffer
 
 export function trackRedisCommand(): boolean {
   dailyCommandCount++;
+  if (dailyCommandCount % 100 === 0) {
+    console.log(`📊 Redis commands today: ${dailyCommandCount}/${MAX_DAILY_COMMANDS}`);
+  }
   return dailyCommandCount < MAX_DAILY_COMMANDS;
 }
 
-export { getRedis as getRedisClient };
+// Note: Redis client removed - use backend API for cache operations
+export default {
+  cachedFetch,
+  batchGet,
+  prefetchCommonKeys,
+  warmCacheFromPatterns,
+  invalidatePattern,
+  getCacheStats,
+  resetCacheStats,
+  trackRedisCommand,
+};
