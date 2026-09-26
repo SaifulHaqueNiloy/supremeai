@@ -4,8 +4,8 @@
 
 | metric | value |
 |---|---|
-| backend routes | 854 |
-| routes with frontend consumer | 292 |
+| backend routes | 859 |
+| routes with frontend consumer | 297 |
 | unique frontend `/api/...` refs | 147 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
@@ -17,7 +17,7 @@
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 161 | frontend consumer matched |
+| `user-facing` | 166 | frontend consumer matched |
 | `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
@@ -675,6 +675,11 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/v1/agent_review_workflow/execute` | `backend/api/routes/ide_trio.py` | api-only | NONE |
 | GET | `/api/v1/agent_review_workflow/status` | `backend/api/routes/ide_trio.py` | api-only | NONE |
 | GET | `/api/v1/agents` | `backend/api/routes/admin_v1.py` | admin-only | `frontend/src/services/agentService.ts` |
+| GET | `/api/v1/agents` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
+| POST | `/api/v1/agents` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
+| DELETE | `/api/v1/agents/:param` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
+| GET | `/api/v1/agents/:param` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
+| POST | `/api/v1/agents/:param/ownership` | `backend/api/routes/agent_registry.py` | user-facing | `frontend/src/services/agentService.ts` |
 | POST | `/api/v1/agents/execute` | `backend/api/routes/agent.py` | user-facing | `frontend/src/pages/user/AgentWorkspace.tsx`, `frontend/src/services/agentService.test.ts`, `frontend/src/services/agentService.ts` |
 | POST | `/api/v1/agents/execute` | `backend/api/routes/agent_tasks.py` | user-facing | `frontend/src/pages/user/AgentWorkspace.tsx`, `frontend/src/services/agentService.test.ts`, `frontend/src/services/agentService.ts` |
 | GET | `/api/v1/agents/monitor/latency` | `backend/api/routes/agent_tasks.py` | user-facing | `frontend/src/services/agentService.ts` |
