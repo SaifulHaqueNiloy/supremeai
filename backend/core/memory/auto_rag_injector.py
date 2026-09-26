@@ -100,6 +100,18 @@ class AutoRAGInjector:
         if not user_query or not user_query.strip():
             return system_prompt
 
+        # Issue #1689 (CRITICAL): tenant-less recall এখন অসম্ভব —
+        # vector_store.similarity_search-এ user_id REQUIRED। user_id ছাড়া
+        # ইনজেকশন করলে অন্য ইউজারের প্রাইভেট মেমরি প্রম্পটে ফাঁস হতো।
+        # Memory is an enhancement, never a dependency → এখানে স্কিপ করে
+        # graceful degradation করা হয় (fail-closed অর্থে কোনো recall নয়)।
+        if not user_id or not str(user_id).strip():
+            logger.warning(
+                "[AutoRAG] Skipping memory recall: no user_id provided "
+                "(tenant isolation mandatory — issue #1689)"
+            )
+            return system_prompt
+
         try:
             vector_store = self._get_vector_store()
             if vector_store is None:
@@ -112,8 +124,8 @@ class AutoRAGInjector:
             async with self._vs_lock:
                 memories = await vector_store.similarity_search(
                     query_embedding=embedding,
+                    user_id=str(user_id),
                     limit=self.TOP_K,
-                    user_id=user_id,
                 )
 
             # বাংলা: low-relevance noise বাদ + tenant isolation।
