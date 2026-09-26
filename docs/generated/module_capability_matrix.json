@@ -1573,6 +1573,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "execute",
         "health",
         "mcp",
@@ -1762,7 +1763,10 @@
       "path": "backend/api/routes/admin_routes.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -1885,6 +1889,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "register"
       ],
       "classification": "human_review",
@@ -2235,7 +2240,8 @@
     {
       "capability_signals": [
         "health",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -2824,7 +2830,8 @@
     },
     {
       "capability_signals": [
-        "execute"
+        "execute",
+        "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -3282,6 +3289,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "health",
         "mcp",
         "memory",
@@ -4570,6 +4578,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "memory"
       ],
       "classification": "human_review",
@@ -5994,7 +6003,8 @@
     },
     {
       "capability_signals": [
-        "health"
+        "health",
+        "memory"
       ],
       "classification": "canonical",
       "entrypoints": [],
@@ -7771,7 +7781,9 @@
       "path": "backend/database/supabase_client.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -8385,7 +8397,9 @@
       "path": "backend/middleware/chaos_injector.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "browser"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -20023,6 +20037,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
+      "path": "frontend/src/hooks/useMobileNav.ts"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "ts",
       "path": "frontend/src/hooks/usePlugins.test.ts"
     },
     {
@@ -20165,6 +20186,7 @@
     {
       "capability_signals": [
         "browser",
+        "health",
         "register"
       ],
       "classification": "human_review",
@@ -20282,6 +20304,8 @@
     {
       "capability_signals": [
         "capability",
+        "health",
+        "memory",
         "register"
       ],
       "classification": "human_review",
@@ -23670,6 +23694,7 @@
     },
     {
       "capability_signals": [
+        "browser",
         "mcp"
       ],
       "classification": "human_review",
@@ -25935,5 +25960,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2974
+  "source_file_count": 2975
 }

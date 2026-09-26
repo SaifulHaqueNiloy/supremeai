@@ -7,7 +7,7 @@
   ],
   "totals": {
     "backend_routes": 604,
-    "frontend_unique_refs": 145,
+    "frontend_unique_refs": 147,
     "matched": 271,
     "orphan_routes": 333
   },
@@ -3681,6 +3681,7 @@
       "resolved": "/api/v1/auth/login",
       "classification": "unclassified-orphan",
       "frontend": [
+        "frontend/src/pages/PublicPages.tsx",
         "frontend/src/services/apiClient.test.ts",
         "frontend/src/store/authStore.ts"
       ]
@@ -3692,6 +3693,7 @@
       "resolved": "/api/v1/auth/register",
       "classification": "unclassified-orphan",
       "frontend": [
+        "frontend/src/pages/PublicPages.tsx",
         "frontend/src/store/authStore.ts"
       ]
     },
@@ -4425,8 +4427,7 @@
       "resolved": "/api/v1/health/predictions",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4436,8 +4437,7 @@
       "resolved": "/api/v1/health",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4447,8 +4447,7 @@
       "resolved": "/api/v1/health/agents",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4458,8 +4457,7 @@
       "resolved": "/api/v1/health/agents",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4561,7 +4559,8 @@
       "resolved": "/api/memory/conversations/messages",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/admin/MemoryBrowser.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4571,7 +4570,8 @@
       "resolved": "/api/memory/conversations",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/admin/MemoryBrowser.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4968,8 +4968,7 @@
       "resolved": "/api/v1/health",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
