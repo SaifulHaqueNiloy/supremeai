@@ -2272,7 +2272,7 @@
     {
       "evidence": [
         {
-          "line": 739,
+          "line": 737,
           "path": "backend/api/routes/auth.py"
         }
       ],
@@ -2682,8 +2682,18 @@
     {
       "evidence": [
         {
-          "line": 335,
+          "line": 334,
           "path": "backend/api/routes/memory.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 40,
+          "path": "backend/api/routes/memory_mcp_http.py"
         }
       ],
       "source": "knowledge",

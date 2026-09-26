@@ -549,7 +549,10 @@ class TestSSRFGateDirect:
         app.dependency_overrides[get_current_user_token] = non_admin
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
             health = await http.get("/api/browser/health")
-            guarded = await http.get("/api/browser/screenshots")
+            # FIX (round 3): /api/browser/screenshots is a POST-only route — a GET
+            # answers 405 (method mismatch) before auth runs. Assert the admin
+            # gate on an actual GET endpoint of the guarded router.
+            guarded = await http.get("/api/browser/browse-sessions")
         app.dependency_overrides.clear()
         # Liveness probe: public by contract (issue #1490) — 200 for non-admin.
         assert health.status_code == 200

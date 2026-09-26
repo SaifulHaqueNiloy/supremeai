@@ -288,8 +288,7 @@ async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
         else:
             doc = {
                 "_id": conversation_id,
-                "title": req.message.get("metadata", {}).get("source", "chat")
-                + " conversation",
+                "title": req.message.get("metadata", {}).get("source", "chat") + " conversation",
                 "created_at": now,
                 "updated_at": now,
                 "messages": [message_doc],
@@ -340,9 +339,7 @@ async def list_conversations(request: Request, db=Depends(get_tenant_db)):
         # API (tenant-scoped), offloaded to a worker thread.
         snaps = await asyncio.to_thread(
             lambda: list(
-                db.conversations.order_by("updated_at", direction="DESCENDING")
-                .limit(50)
-                .stream()
+                db.conversations.order_by("updated_at", direction="DESCENDING").limit(50).stream()
             )
         )
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-# Re-export from core.evolution
+# Re-export from the canonical evolution package
 from core.self_evolution import (
     AgentBreeder,
     AutoSkillCreator,
