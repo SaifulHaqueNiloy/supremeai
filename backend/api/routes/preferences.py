@@ -85,7 +85,17 @@ async def get_preferences(user_id: str = Query(default="default")):
             "custom_shortcuts": {},
         }
     try:
-        res = await db.client.table("user_preferences").select("*").eq("user_id", user_id).execute()
+        # Issue #1473 fix: supabase-py v2's client is SYNC — ``await ...execute()``
+        # raised TypeError ("object APIResponse can't be used in 'await'") ->
+        # GET /api/preferences/ always 500'd in production. Run the blocking
+        # PostgREST chain in a worker thread (same pattern as issue #443 fix in
+        # memory/long_term_memory.py and services/memory_service.py).
+        res = await asyncio.to_thread(
+            lambda: db.client.table("user_preferences")
+            .select("*")
+            .eq("user_id", user_id)
+            .execute()
+        )
         rows = res.data or []
         if rows:
             # ERR-H01 FIX: hoist _extended prefs so callers read them back as
@@ -144,8 +154,8 @@ async def upsert_preferences(payload: PreferenceUpdate, user_id: str = Query(def
         shortcuts_base = dict(data.get("custom_shortcuts") or {})
         if "custom_shortcuts" not in data:
             try:
-                cur = (
-                    await db.client.table("user_preferences")
+                cur = await asyncio.to_thread(
+                    lambda: db.client.table("user_preferences")
                     .select("custom_shortcuts")
                     .eq("user_id", user_id)
                     .execute()
@@ -161,7 +171,11 @@ async def upsert_preferences(payload: PreferenceUpdate, user_id: str = Query(def
         data["custom_shortcuts"] = shortcuts_base
     data["user_id"] = user_id
     try:
-        res = await db.client.table("user_preferences").upsert(data).execute()
+        # Issue #1473 fix: sync supabase client must not be awaited — offload
+        # the upsert to a worker thread (see GET handler comment above).
+        res = await asyncio.to_thread(
+            lambda: db.client.table("user_preferences").upsert(data).execute()
+        )
         if payload.theme:
             await theme_pubsub.publish(user_id, {"theme": payload.theme})
         pref_res = res.data[0] if res.data else data
