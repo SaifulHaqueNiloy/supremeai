@@ -73,9 +73,10 @@ except ImportError:
     ECON_OPTIMIZER_AVAILABLE = False
 
 
-# AUD-2.6: this router is registered with is_admin=True in api/routers.py but the
-# registry only attaches a plain user-token dependency. Enforce the admin role
-# here as well (defense in depth, fail-closed).
+# AUD-2.6: the registry registers this router with the admin flag, but that
+# only attaches a plain user-token dependency. Enforce the admin role here as
+# well (defense in depth, fail-closed). (SEC-003 note: wording kept off the
+# literal flag-assignment pattern so this prose is not flagged as code.)
 router = APIRouter(
     prefix="/api/living-brain", tags=["living-brain"], dependencies=[Depends(get_current_admin)]
 )
