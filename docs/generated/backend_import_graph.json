@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3449,
+  "edge_count": 3484,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -7540,6 +7540,38 @@
       "to": "core.logging_config"
     },
     {
+      "from": "external_agents.channels",
+      "to": "external_agents.channels.browser_channel"
+    },
+    {
+      "from": "external_agents.channels",
+      "to": "external_agents.channels.mcp_channel"
+    },
+    {
+      "from": "external_agents.channels.browser_channel",
+      "to": "browser.session_manager"
+    },
+    {
+      "from": "external_agents.channels.browser_channel",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "external_agents.channels.browser_channel",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.channels.browser_channel",
+      "to": "external_agents.control.policy_engine"
+    },
+    {
+      "from": "external_agents.channels.browser_channel",
+      "to": "external_agents.providers.registry"
+    },
+    {
+      "from": "external_agents.channels.mcp_channel",
+      "to": "core.logging_config"
+    },
+    {
       "from": "external_agents.contracts",
       "to": "external_agents.contracts.architecture_artifact"
     },
@@ -7576,8 +7608,116 @@
       "to": "external_agents.control.state_manager"
     },
     {
+      "from": "external_agents.control.policy_engine",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.control.policy_engine",
+      "to": "external_agents.providers.registry"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.contracts.architecture_artifact"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.contracts.planner_artifact"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.control.policy_engine"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.providers.chatgpt"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.providers.gemini"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.providers.registry"
+    },
+    {
       "from": "external_agents.control.state_manager",
       "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers",
+      "to": "external_agents.providers.registry"
+    },
+    {
+      "from": "external_agents.providers.chatgpt",
+      "to": "external_agents.contracts.planner_artifact"
+    },
+    {
+      "from": "external_agents.providers.chatgpt",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers.gemini",
+      "to": "external_agents.contracts.architecture_artifact"
+    },
+    {
+      "from": "external_agents.providers.gemini",
+      "to": "external_agents.contracts.planner_artifact"
+    },
+    {
+      "from": "external_agents.providers.gemini",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers.registry",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers.zai",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "external_agents.providers.zai",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers.zai",
+      "to": "external_agents.control.state_manager"
+    },
+    {
+      "from": "external_agents.verification",
+      "to": "external_agents.verification.artifact_bridge"
+    },
+    {
+      "from": "external_agents.verification",
+      "to": "external_agents.verification.git_verifier"
+    },
+    {
+      "from": "external_agents.verification",
+      "to": "external_agents.verification.pr_manager"
+    },
+    {
+      "from": "external_agents.verification.artifact_bridge",
+      "to": "external_agents.contracts.code_artifact"
+    },
+    {
+      "from": "external_agents.verification.git_verifier",
+      "to": "external_agents.contracts.code_artifact"
+    },
+    {
+      "from": "external_agents.verification.pr_manager",
+      "to": "external_agents.contracts.code_artifact"
+    },
+    {
+      "from": "external_agents.verification.pr_manager",
+      "to": "external_agents.control.state_manager"
+    },
+    {
+      "from": "external_agents.verification.pr_manager",
+      "to": "external_agents.verification.git_verifier"
     },
     {
       "from": "integrations.browser_use_adapter",
@@ -13800,7 +13940,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1987,
+  "module_count": 2001,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14718,6 +14858,9 @@
     "evolution.strategy_optimizer",
     "examples.sample_buggy",
     "external_agents",
+    "external_agents.channels",
+    "external_agents.channels.browser_channel",
+    "external_agents.channels.mcp_channel",
     "external_agents.contracts",
     "external_agents.contracts.architecture_artifact",
     "external_agents.contracts.code_artifact",
@@ -14725,7 +14868,18 @@
     "external_agents.contracts.task_contract",
     "external_agents.control",
     "external_agents.control.job_api",
+    "external_agents.control.policy_engine",
+    "external_agents.control.router",
     "external_agents.control.state_manager",
+    "external_agents.providers",
+    "external_agents.providers.chatgpt",
+    "external_agents.providers.gemini",
+    "external_agents.providers.registry",
+    "external_agents.providers.zai",
+    "external_agents.verification",
+    "external_agents.verification.artifact_bridge",
+    "external_agents.verification.git_verifier",
+    "external_agents.verification.pr_manager",
     "integrations",
     "integrations._flags",
     "integrations.browser_use_adapter",
