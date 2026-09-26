@@ -14,9 +14,9 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 860,
+    "backend_routes": 859,
     "frontend_unique_refs": 147,
-    "routes_with_frontend_consumer": 297,
+    "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
     "orphan_routes": 1,
     "orphan_families": 1,
@@ -24,7 +24,7 @@
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 166,
-      "admin-only": 347,
+      "admin-only": 346,
       "internal": 38,
       "deprecated": 4,
       "api-only": 304,
@@ -7388,22 +7388,6 @@
       "operation": "trio_status",
       "frontend_consumers": [],
       "classification": "api-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/agents",
-      "declared": "/api/v1/agents",
-      "deprecated": false,
-      "router_file": "backend/api/routes/admin_v1.py",
-      "module": "api.routes.admin_v1",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "list_agents_v1",
-      "frontend_consumers": [
-        "frontend/src/services/agentService.ts"
-      ],
-      "classification": "admin-only"
     },
     {
       "method": "GET",
