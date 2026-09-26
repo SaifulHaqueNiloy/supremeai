@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-26 20:16 UTC
+- **Date:** 2026-09-26 20:20 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,34 +10,8 @@
   - (see git log for details)
 
 ## Files Changed
-  - `scripts/agents/create_blocker_issue.py`
-  - `docs/master_docs/AGENT_SLOT_REGISTRY.yaml`
-  - `CHECKPOINT.md`
-  - `infrastructure/mcp-control-plane/src/policy/mcp-access.ts`
-  - `infrastructure/mcp-control-plane/src/tools/agent.tools.ts`
-  - `.github/workflows/branch-naming-guard.yml`
-  - `backend/core/resilience/auto_remediation.py`
-  - `backend/api/routes/zero_cost.py`
-  - `.github/workflows/merge-train-rollup.yml`
-  - `.github/workflows/pr-pipeline.yml`
-  - `tests/test_acquire_role_slot.py`
-  - `docs/generated/module_capability_matrix.json`
-  - `tests/test_create_blocker_issue.py`
-  - `infrastructure/mcp-control-plane/src/policy/client-registry.ts`
-  - `backend/core/self_evolution/agent_breeder.py`
-  - `backend/api/routes/evolution.py`
-  - `backend/api/routes/cognitive.py`
-  - `.github/scripts/platform_agent_check.py`
-  - `.github/workflows/cross-pr-collision-guard.yml`
-  - `scripts/agents/acquire_role_slot.py`
-  - `backend/sandbox/docker_sandbox.py`
-  - `backend/core/resilience/predictive_circuit_breaker.py`
-  - `scripts/ci/merge_train_rollup.py`
-  - `docs/generated/backend_import_graph.json`
-  - `backend/core/orchestration/swarm_orchestrator.py`
-  - `docs/agents/AGENT_WORK_BOUNDARIES_CHARTER.md`
-  - `AGENTS.md`
-  - `backend/core/llm/advanced_model_router.py`
+  - `backend/core/security/authentication/rbac.py`
+  - `scripts/pre_push_hook.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
