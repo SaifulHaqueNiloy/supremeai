@@ -34,24 +34,63 @@ export async function sendMessageStream(
 ): Promise<void> {
   const API_BASE = getApiBaseUrl();
   const authHeaders = await getAuthHeaders();  // 🔒 Get JWT/CSRF/Fingerprint headers
-  
+
+  // Issue #1680 (streaming cold-start retry): the stream endpoint had no
+  // retry — a single 502/503/504 (Render free-tier cold start) or transient
+  // network blip killed the chat. Before the stream starts, we now retry
+  // connection-level failures up to 4 attempts with exponential backoff +
+  // jitter (mirrors apiClient.throttledFetch #1679). Once the reader is
+  // obtained, no retry happens — duplicate tokens would corrupt the UI.
+  // বাংলা: স্ট্রিম শুরু হওয়ার আগে 50x/নেটওয়ার্ক ত্রুটিতে সূচকীয় ব্যাকঅফসহ
+  // রিট্রাই; স্ট্রিম শুরু হওয়ার পর কোনো রিট্রাই নেই (ডুপ্লিকেট টোকেন এড়াতে)।
+  const STREAM_MAX_ATTEMPTS = 4;
+
   try {
     // 🔒 SECURITY FIX: Now includes authentication headers (previously missing)
     // FIX (API-contract audit): migrated to the hardened SSE pipeline
     // (POST /api/v1/stream/chat) — state machine, 15s heartbeat, chunk
     // sanitization. Body sends { message }; backend harmonizes to `prompt`.
-    const res = await fetch(`${API_BASE}/api/v1/stream/chat`, {
-      method: 'POST',
-      headers: { 
-        'Content-Type': 'application/json',
-        ...authHeaders,  // Spread auth headers into request
-      },
-      body: JSON.stringify({ message }),
-      signal: abortSignal,
-    });
+    let res: Response | null = null;
+    let lastHttpError = '';
 
-    if (!res.ok) {
-      onError(`HTTP ${res.status}: ${res.statusText}`);
+    for (let attempt = 1; attempt <= STREAM_MAX_ATTEMPTS; attempt++) {
+      let attemptRes: Response;
+      try {
+        attemptRes = await fetch(`${API_BASE}/api/v1/stream/chat`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...authHeaders,  // Spread auth headers into request
+          },
+          body: JSON.stringify({ message }),
+          signal: abortSignal,
+        });
+      } catch (err) {
+        if (abortSignal?.aborted) throw err;  // user cancelled — not retryable
+        if (attempt >= STREAM_MAX_ATTEMPTS) throw err;
+        lastHttpError = (err as Error)?.message ?? 'network error';
+        const delayMs = Math.round(Math.pow(2, attempt) * 1000 + Math.random() * 1000);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        continue;
+      }
+
+      if (attemptRes.ok) {
+        res = attemptRes;
+        break;
+      }
+
+      const retryable = attemptRes.status >= 502 && attemptRes.status <= 504;
+      lastHttpError = `HTTP ${attemptRes.status}: ${attemptRes.statusText}`;
+      if (!retryable || attempt >= STREAM_MAX_ATTEMPTS) {
+        onError(lastHttpError);
+        return;
+      }
+      const delayMs = Math.round(Math.pow(2, attempt) * 1000 + Math.random() * 1000);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+
+    if (!res) {
+      onError(lastHttpError || 'Stream connection failed after retries');
       return;
     }
 
