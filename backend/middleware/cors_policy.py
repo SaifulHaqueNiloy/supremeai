@@ -74,21 +74,6 @@ DEFAULT_ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = (
     "https://supremeai-admin.web.app",  # Firebase Hosting admin console
 )
 
-USER_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
-    "USER_CORS_ORIGINS",
-    _load_origins("CORS_ORIGINS", DEFAULT_USER_ALLOWED_ORIGINS),
-)
-
-ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _load_origins(
-    "ADMIN_CORS_ORIGINS", DEFAULT_ADMIN_ALLOWED_ORIGINS
-)
-
-# বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
-USER_ORIGIN_DENYLIST: frozenset[str] = frozenset()
-
-# বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
-ADMIN_ORIGIN_DENYLIST: frozenset[str] = frozenset()
-
 
 def _dedupe(origins: Iterable[str]) -> list[str]:
     """অর্ডার রক্ষা করে ডুপ্লিকেট বাদ দেয়।"""
@@ -103,6 +88,35 @@ def _dedupe(origins: Iterable[str]) -> list[str]:
     return result
 
 
+def _origins_with_floor(defaults: tuple[str, ...], env_var: str, compat_var: str) -> tuple[str, ...]:
+    """Issue #1518 (CRITICAL): the production origins are a MANDATORY floor.
+
+    বাংলা মন্তব্য: #1483/#1484/#1455 ফিক্সে default শুধু তখনই কাজ করত যখন env
+    ভ্যারিয়েবল সম্পূর্ণ অনুপস্থিত ছিল। কিন্তু হোস্টে পুরোনো (stale) env বসে থাকলে —
+    যেমন Render-এ পুরোনো CORS_ORIGINS যাতে supremeai-a.web.app নেই — সেটি
+    ডিফল্টকে সম্পূর্ণ replace করে দিত এবং preflight আবার 400 হতো। নতুন সেম্যান্টিকস:
+    production অরিজিনগুলো সবসময় থাকবে; env শুধু নতুন অরিজিন ADD করতে পারে,
+    production অরিজিন সরাতে পারে না।
+    """
+    env_origins = _load_origins(env_var, _load_origins(compat_var, ()))
+    return tuple(_dedupe([*defaults, *env_origins]))
+
+
+USER_ALLOWED_ORIGINS: tuple[str, ...] = _origins_with_floor(
+    DEFAULT_USER_ALLOWED_ORIGINS, "USER_CORS_ORIGINS", "CORS_ORIGINS"
+)
+
+ADMIN_ALLOWED_ORIGINS: tuple[str, ...] = _origins_with_floor(
+    DEFAULT_ADMIN_ALLOWED_ORIGINS, "ADMIN_CORS_ORIGINS", "ADMIN_CORS_ORIGINS"
+)
+
+# বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
+USER_ORIGIN_DENYLIST: frozenset[str] = frozenset()
+
+# বাংলা মন্তব্য: সিঙ্গেল ব্যাকএন্ড আর্কিটেকচারের জন্য Denylist ফাঁকা রাখা হলো
+ADMIN_ORIGIN_DENYLIST: frozenset[str] = frozenset()
+
+
 def resolve_user_cors_origins(configured: Iterable[str] | None) -> list[str]:
     """User API-এর চূড়ান্ত allow_origins তালিকা তৈরি করে।
 
@@ -114,6 +128,11 @@ def resolve_user_cors_origins(configured: Iterable[str] | None) -> list[str]:
     cleaned = [o for o in _dedupe(configured or []) if o != "*" and o not in ADMIN_ORIGIN_DENYLIST]
     if not cleaned:
         return list(USER_ALLOWED_ORIGINS)
+    # Issue #1518: a stale env override can no longer evict the production
+    # portal origins — they are a mandatory floor; configured values only ADD.
+    for required in USER_ALLOWED_ORIGINS:
+        if required not in cleaned:
+            cleaned.append(required)
     return cleaned
 
 
