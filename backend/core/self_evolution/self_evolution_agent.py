@@ -11,6 +11,7 @@ through AST security scanning, CI/CD dry runs, and atomic database transactions.
 
 import asyncio
 import contextlib
+import re
 import time
 import uuid
 from pathlib import Path
@@ -21,6 +22,7 @@ from sqlalchemy.future import select
 
 from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
+from core.messaging.event_bus import ErrorContext, ErrorEvent, error_event_bus
 
 try:
     from core.self_evolution.auto_skill_creator import AutoSkillCreator
@@ -49,6 +51,7 @@ class SelfEvolutionAgent:
         refactor_penalty_threshold: float = 0.3,
         min_runs_before_action: int = 5,
         max_consecutive_penalties: int = 3,
+        max_refactors_per_skill: int = 3,
     ) -> None:
         # Conditional instantiation to avoid AttributeError when imports failed
         if fitness_engine is None:
@@ -71,6 +74,9 @@ class SelfEvolutionAgent:
         self.refactor_penalty_threshold = refactor_penalty_threshold
         self.min_runs_before_action = min_runs_before_action
         self.max_consecutive_penalties = max_consecutive_penalties
+        # Issue #1686: একই skill কতবার refactor হয়েছে (lineage-ভিত্তিক) —
+        # এর বেশি হলে freeze + human alert (infinite evolution loop guard)।
+        self.max_refactors_per_skill = max_refactors_per_skill
 
         self._running: bool = False
         self._task: asyncio.Task | None = None
@@ -79,6 +85,9 @@ class SelfEvolutionAgent:
         self.scanner = ImmuneSystemScanner()
         self._redis = None  # cached client — issue #1685 (avoid per-tick client leak)
         self._instance_id = uuid.uuid4().hex[:12]
+        # Issue #1686 guards: per-lineage refactor counts + frozen skills
+        self._refactor_counts: dict[str, int] = {}
+        self._frozen_skills: set[str] = set()
 
     async def start(self) -> None:
         if self._running:
@@ -211,6 +220,15 @@ class SelfEvolutionAgent:
             await self._process_demand(demand)
 
     async def _evaluate_skill(self, skill_name: str) -> None:
+        # Issue #1686: frozen skill (refactor budget শেষ, human alert দেওয়া)
+        # আর কোনো mutation-ও হয় না — evaluation loop-এ পুরো বাদ।
+        if self._base_skill_name(skill_name) in self._frozen_skills:
+            logger.debug(
+                f"SelfEvolutionAgent: skill '{skill_name}' is FROZEN (refactor "
+                "budget exhausted) — skipping evaluation"
+            )
+            return
+
         score = self.fitness_engine.calculate_fitness(skill_name)
         entry = self.fitness_engine.metrics.get(skill_name, {})
         total_runs = entry.get("success_count", 0) + entry.get("failure_count", 0)
@@ -223,17 +241,71 @@ class SelfEvolutionAgent:
                 self._consecutive_penalties.get(skill_name, 0) + 1
             )
             if self._consecutive_penalties[skill_name] >= self.max_consecutive_penalties:
-                await self._trigger_refactor(skill_name)
-                # বাংলা মন্তব্য: refactor পরে penalty 0-তে reset — pop নয় যাতে test assert করতে পারে
-                self._consecutive_penalties[skill_name] = 0
+                await self._maybe_trigger_refactor(skill_name)
+                # Issue #1686: reset-to-0 বাদ — DECAY। 0-reset হলে
+                # refactor→bad-score→refactor চক্র কখনো শেষ হত না।
+                self._consecutive_penalties[skill_name] = max(
+                    0, self._consecutive_penalties[skill_name] - 1
+                )
         else:
-            # বাংলা মন্তব্য: good score হলে penalty 0-তে reset করা হয় (pop নয়)
-            self._consecutive_penalties[skill_name] = 0
+            # বাংলা মন্তব্য (issue #1686): good score-এও এখন hard reset নয়,
+            # decay — কারণ বারবার সীমানায় দোদুল্যমান skill তখনই লুপ তৈরি করে।
+            self._consecutive_penalties[skill_name] = max(
+                0, self._consecutive_penalties.get(skill_name, 0) - 1
+            )
 
         if score < self.fitness_threshold:
             self.fitness_engine.evaluate_and_prune(
                 skill_name, self.fitness_threshold, self.min_runs_before_action
             )
+
+    @staticmethod
+    def _base_skill_name(skill_name: str) -> str:
+        """`foo_v3` → `foo` — রিফ্যাক্টর লিনেজ এক skill হিসেবে গোনা হয়।"""
+        return re.sub(r"_v\d+$", "", skill_name)
+
+    def _next_refactor_name(self, skill_name: str) -> str:
+        """`foo` → `foo_v2`, `foo_v2` → `foo_v3` (issue #1686)।"""
+        base = self._base_skill_name(skill_name)
+        lineage = self._refactor_counts.get(base, 0) + 1
+        return f"{base}_v{lineage + 1}"
+
+    async def _maybe_trigger_refactor(self, skill_name: str) -> None:
+        """Issue #1686: refactor-এর আগে lineage budget যাচাই —
+        শেষ হলে freeze + human alert, আর refactor নয়।"""
+        base = self._base_skill_name(skill_name)
+        refactors_done = self._refactor_counts.get(base, 0)
+
+        if refactors_done >= self.max_refactors_per_skill:
+            if base not in self._frozen_skills:
+                self._frozen_skills.add(base)
+                logger.critical(
+                    f"[SelfEvolution] INFINITE-LOOP GUARD: skill lineage '{base}' "
+                    f"has been refactored {refactors_done} times without improvement "
+                    "— FROZEN, no further automatic refactors. Human intervention "
+                    "required."
+                )
+                error_event_bus.emit(
+                    ErrorEvent(
+                        module="self_evolution",
+                        error_type="EVOLUTION_LOOP_FROZEN",
+                        message=(
+                            f"Skill lineage '{base}' refactored {refactors_done}x "
+                            "without improvement — frozen (issue #1686)"
+                        ),
+                        severity="ALERT",
+                        structured_context=ErrorContext(module="self_evolution"),
+                        context={
+                            "skill": base,
+                            "refactor_count": refactors_done,
+                            "max_refactors": self.max_refactors_per_skill,
+                        },
+                    )
+                )
+            return
+
+        self._refactor_counts[base] = refactors_done + 1
+        await self._trigger_refactor(skill_name)
 
     async def _trigger_refactor(self, skill_name: str) -> None:
         logger.warning(f"Skill '{skill_name}' hit consecutive penalty threshold. Refactoring...")
@@ -243,7 +315,7 @@ class SelfEvolutionAgent:
             f"Current source code:\n{current_code}\n"
             "Preserve the public interface (class name and async execute(self, kwargs) -> dict method).\n"
         )
-        refactored_name = f"{skill_name}_v2"
+        refactored_name = self._next_refactor_name(skill_name)
         # In actual execution, we route through process_new_skill_proposal with DB session
         logger.info(f"Refactor triggered for {skill_name}. New proposal will be processed.")
         await self.auto_skill_creator.generate_and_deploy_skill(user_demand, refactored_name)
