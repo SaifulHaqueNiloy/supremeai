@@ -10,27 +10,32 @@ router = APIRouter(
 
 
 @router.get("/money/cost")
-async def get_cost():
+# Issue #1665: these handlers return static/aggregated data with no
+# await — plain `def` routes (FastAPI runs them in the threadpool)
+# instead of `async def` coroutines that never await. HTTP contract
+# unchanged; only the event-loop scheduling semantics are corrected.
+
+def get_cost():
     return {"report": "", "generated_at": ""}
 
 
 @router.get("/money/usage")
-async def get_usage():
+def get_usage():
     return {"daily": [], "cost_projected_monthly": 0, "cost_per_hour": 0}
 
 
 @router.get("/money/budget")
-async def get_budget():
+def get_budget():
     return {"default_cap": 0, "per_tenant": {}}
 
 
 @router.post("/money/budget")
-async def update_budget(payload: dict):
+def update_budget(payload: dict):
     return {"message": "updated"}
 
 
 @router.get("/money/roi")
-async def get_roi():
+def get_roi():
     return {
         "semantic_cache_hits": 0,
         "estimated_usd_saved": 0,

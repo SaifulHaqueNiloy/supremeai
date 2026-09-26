@@ -306,11 +306,20 @@ class SwarmOrchestrator:
                     return_exceptions=True,
                 )
 
+                # AUDIT-FIX (#1690 HIGH): graceful degradation. আগে যেকোনো
+                # single failure পুরো pipeline কে কিল করত — এখন partial
+                # results নিয়ে continue করা হয়, শুধু সব agents fail হলে raise।
                 failures = [
                     (task, r)
                     for task, r in zip(runnable, results, strict=False)
                     if isinstance(r, Exception)
                 ]
+                succeeded = [
+                    task
+                    for task, r in zip(runnable, results, strict=False)
+                    if not isinstance(r, Exception)
+                ]
+
                 if failures:
                     failed_names = ", ".join(
                         f"{t}: {type(e).__name__}: {e}"
@@ -318,8 +327,7 @@ class SwarmOrchestrator:
                         else f"{t}: TIMEOUT after {SWARM_PER_AGENT_TIMEOUT_SECONDS}s"
                         for t, e in failures
                     )
-                    # AUDIT-FIX (#1691): টাইমআউট হলে স্পষ্টভাবে log করি — অন্যথায়
-                    # silent hang ছিল। এখন অপারেটর dashboard-এ দেখা যাবে।
+                    # AUDIT-FIX (#1691): টাইমআউট হলে স্পষ্টভাবে log করি — অন্যথায় silent hang
                     if any(isinstance(e, asyncio.TimeoutError) for _, e in failures):
                         logger.error(
                             "[SwarmOrchestrator] %d agent(s) timed out after %ss: %s",
@@ -327,11 +335,48 @@ class SwarmOrchestrator:
                             SWARM_PER_AGENT_TIMEOUT_SECONDS,
                             [t for t, e in failures if isinstance(e, asyncio.TimeoutError)],
                         )
-                    raise RuntimeError(
-                        f"SwarmOrchestrator: task(s) failed in this batch — {failed_names}"
+                    # AUDIT-FIX (#1690): শুধু সব (ALL) agents fail হলেই raise।
+                    # কিছু succeed করলে warning দিয়ে continue করি — partial results
+                    # workspace-এ থাকে, pipeline পরের batch-এ যেতে পারে।
+                    if not succeeded:
+                        logger.error(
+                            "SwarmOrchestrator: ALL agents failed in batch (no partial results) — %s",
+                            failed_names,
+                        )
+                        raise RuntimeError(
+                            f"SwarmOrchestrator: ALL tasks failed in this batch (no partial results to continue with) — {failed_names}"
+                        )
+                    # Partial failure: কিছু agents succeed করেছে, কিছু fail।
+                    # Continue with successful ones; record failures for observability.
+                    logger.warning(
+                        "SwarmOrchestrator: PARTIAL failure in batch — %d/%d succeeded, "
+                        "%d failed: %s. Continuing with partial results (AUDIT-FIX #1690).",
+                        len(succeeded),
+                        len(runnable),
+                        len(failures),
+                        failed_names,
+                    )
+                    workspace.log(
+                        f"SwarmOrchestrator: Partial batch result — {len(succeeded)}/{len(runnable)} "
+                        f"agents succeeded. Failures: {failed_names}. Continuing with partial results."
+                    )
+                    # Record partial failures in work_product for downstream observability
+                    partial_failures = workspace.work_product.setdefault("partial_failures", [])
+                    partial_failures.extend(
+                        [
+                            {
+                                "agent": task,
+                                "error_type": type(e).__name__,
+                                "error_message": str(e)[:500],
+                            }
+                            for task, e in failures
+                        ]
                     )
 
-                completed_tasks.update(runnable)  # শুধু যেগুলো সত্যিই সফলভাবে রান হয়েছে
+                completed_tasks.update(succeeded)  # শুধু successful গুলো mark করি
+                # failed tasks কে আবার next iteration-এ ready হিসেবে না দিয়ে,
+                # সরাসরি skip করা হল — কারণ পুনরায় চেষ্টা করা infinite loop ডাকতে পারে।
+                # যদি retry দরকার হয়, আলাদা retry mechanism লাগবে (out of scope)।
 
             # Special Handling for 'code_generation' intent's refinement loop
             if workspace.intent == "code_generation":

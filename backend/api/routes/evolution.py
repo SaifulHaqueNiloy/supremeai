@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any
 
 import jwt
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -414,15 +414,30 @@ async def quarantine_skill(
 
 
 # 🛑 ZERO-GAP: Admin Evolution Proposals API Routing
+# Issue #1663 (unbounded query — OOM risk): the endpoint used to SELECT ALL
+# proposals with no LIMIT — the admin dashboard would hang or OOM on large
+# tables. Now bounded: `limit` defaults to 50 and is hard-capped at 200,
+# `offset` enables pagination. The response stays a bare list, so existing
+# clients remain compatible.
+MAX_PROPOSALS_PAGE_SIZE = 200
+
+
 @router.get("/proposals")
 async def list_proposals(
     admin: dict = Depends(require_admin_token),
     session: AsyncSession = Depends(get_db_session),
+    limit: int = Query(default=50, ge=1, le=MAX_PROPOSALS_PAGE_SIZE),
+    offset: int = Query(default=0, ge=0),
 ):
     """
-    List all pending AI code proposals for admin review.
+    List AI code proposals for admin review, newest first (paginated).
+
+    বাংলা: প্রস্তাবগুলো নতুন-থেকে-পুরনো ক্রমে পেজিনেশন সহ ফেরত দেয়।
+    `limit` ডিফল্ট ৫০ (সর্বোচ্চ ২০০), `offset` দিয়ে পেজ স্কিপ করা যায়।
     """
-    result = await session.execute(select(CodeProposal).order_by(CodeProposal.created_at.desc()))
+    result = await session.execute(
+        select(CodeProposal).order_by(CodeProposal.created_at.desc()).offset(offset).limit(limit)
+    )
     proposals = result.scalars().all()
     # Serialize to keep Pydantic serialization happy
     return [

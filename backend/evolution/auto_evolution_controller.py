@@ -11,6 +11,8 @@ Coordinates:
 
 from __future__ import annotations
 
+import time
+from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, StrEnum
@@ -96,6 +98,21 @@ class AutoEvolutionController:
         self.safety_threshold: float = self.config.get("safety_threshold", 0.85)
         self.rollback_on_degradation: bool = self.config.get("auto_rollback", True)
 
+        # Issue #1699 (unbounded cycle count / infinite-loop risk) — rate gate,
+        # exponential backoff and a degradation circuit breaker so a mis-wired
+        # caller cannot spin evolution cycles forever.
+        # বাংলা: ঘণ্টায় সর্বোচ্চ সাইকেল সংখ্যা, অবনতিতে সূচকীয় ব্যাকঅফ এবং
+        # টানা ৩ বার অবনতি হলে সার্কিট ব্রেকার খুলে যায় — অসীম লুপ ঠেকাতে।
+        self.max_cycles_per_hour: int = int(self.config.get("max_cycles_per_hour", 6))
+        self.backoff_base_seconds: float = float(self.config.get("backoff_base_seconds", 60))
+        self.degradation_circuit_threshold: int = int(
+            self.config.get("degradation_circuit_threshold", 3)
+        )
+        self._cycle_timestamps: deque[float] = deque(maxlen=256)
+        self._next_allowed_cycle: float = 0.0
+        self._consecutive_degradations: int = 0
+        self._circuit_open: bool = False
+
         self.trigger_queue: list[EvolutionTrigger] = []
         self.health_history: list[SystemHealth] = []
         self.baseline_health: SystemHealth | None = None
@@ -106,6 +123,8 @@ class AutoEvolutionController:
             "failed_optimizations": 0,
             "rollbacks_performed": 0,
             "total_improvement_pct": 0.0,
+            "cycles_gated": 0,
+            "circuit_breaker_tripped": 0,
         }
 
     async def check_system_health(self) -> SystemHealth:
@@ -140,7 +159,44 @@ class AutoEvolutionController:
         return health
 
     async def run_evolution_cycle(self) -> EvolutionCycle:
-        """Executes a full 6-phase self-evolution cycle."""
+        """Executes a full 6-phase self-evolution cycle.
+
+        Issue #1699 guards (checked before any work):
+        1. Circuit breaker — opens after `degradation_circuit_threshold`
+           consecutive degraded cycles; only `reset_circuit_breaker()` re-arms.
+        2. Hourly rate gate — at most `max_cycles_per_hour` cycles per 3600s.
+        3. Exponential backoff — after a degraded cycle the next cycle is
+           deferred by `backoff_base_seconds * 2**consecutive_degradations`.
+
+        Guarded calls raise RuntimeError with an actionable message; background
+        loops already catch and log exceptions, so the controller stays alive.
+        """
+        now = time.monotonic()
+
+        if self._circuit_open:
+            self.stats["cycles_gated"] += 1
+            raise RuntimeError(
+                "Evolution circuit breaker OPEN after "
+                f"{self._consecutive_degradations} consecutive degraded cycles — "
+                "resolve the underlying degradation, then call reset_circuit_breaker()."
+            )
+
+        recent = sum(1 for ts in self._cycle_timestamps if now - ts < 3600)
+        if recent >= self.max_cycles_per_hour:
+            self.stats["cycles_gated"] += 1
+            raise RuntimeError(
+                f"Evolution rate limit reached: {recent} cycles in the last hour "
+                f"(max_cycles_per_hour={self.max_cycles_per_hour}). "
+                "Back off before requesting another cycle."
+            )
+
+        if now < self._next_allowed_cycle:
+            self.stats["cycles_gated"] += 1
+            defer = round(self._next_allowed_cycle - now, 3)
+            raise RuntimeError(
+                f"Evolution cycle deferred by exponential backoff — retry in {defer}s."
+            )
+
         cycle_id = f"cycle_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
         cycle_start = datetime.now()
 
@@ -201,9 +257,27 @@ class AutoEvolutionController:
 
             if health.overall_score < self.safety_threshold and self.rollback_on_degradation:
                 self.stats["rollbacks_performed"] += 1
+                self._consecutive_degradations += 1
                 cycle.errors_encountered.append(
                     "Health degradation guard triggered - auto rollback engaged"
                 )
+                # Issue #1699: exponential backoff after degradation + circuit
+                # breaker once the consecutive-degradation threshold is hit.
+                backoff = self.backoff_base_seconds * (
+                    2 ** max(self._consecutive_degradations - 1, 0)
+                )
+                self._next_allowed_cycle = time.monotonic() + backoff
+                if self._consecutive_degradations >= self.degradation_circuit_threshold:
+                    self._circuit_open = True
+                    self.stats["circuit_breaker_tripped"] += 1
+                    cycle.errors_encountered.append(
+                        "Circuit breaker OPENED: "
+                        f"{self._consecutive_degradations} consecutive degraded cycles "
+                        "- further cycles refused until manual reset_circuit_breaker()"
+                    )
+            else:
+                self._consecutive_degradations = 0
+                self._next_allowed_cycle = 0.0
 
             cycle.end_time = datetime.now()
             cycle.duration_seconds = round((cycle.end_time - cycle_start).total_seconds(), 3)
@@ -212,6 +286,7 @@ class AutoEvolutionController:
             self.stats["successful_optimizations"] += 1
             self.stats["total_improvement_pct"] += sum(cycle.improvements_measured.values())
             self.evolution_history.append(cycle)
+            self._cycle_timestamps.append(time.monotonic())
 
             return cycle
 
@@ -221,12 +296,29 @@ class AutoEvolutionController:
             cycle.duration_seconds = round((cycle.end_time - cycle_start).total_seconds(), 3)
             self.current_state = EvolutionState.IDLE
             cycle.state = EvolutionState.IDLE
+            self._cycle_timestamps.append(time.monotonic())
             return cycle
 
+    def reset_circuit_breaker(self) -> None:
+        """Manually re-arm the circuit breaker after the degradation is fixed.
+
+        বাংলা: অবনতির কারণ সমাধান হলে অপারেটর এটি ডেকে সার্কিট ব্রেকার আবার চালু করবেন।
+        """
+        self._circuit_open = False
+        self._consecutive_degradations = 0
+        self._next_allowed_cycle = 0.0
+
     def get_statistics(self) -> dict[str, Any]:
+        now = time.monotonic()
         return {
             **self.stats,
             "current_state": self.current_state.value,
             "cycles_completed": len(self.evolution_history),
             "baseline_health": self.baseline_health.overall_score if self.baseline_health else 0.94,
+            # Issue #1699 observability
+            "circuit_open": self._circuit_open,
+            "consecutive_degradations": self._consecutive_degradations,
+            "cycles_last_hour": sum(1 for ts in self._cycle_timestamps if now - ts < 3600),
+            "max_cycles_per_hour": self.max_cycles_per_hour,
+            "backoff_remaining_seconds": max(round(self._next_allowed_cycle - now, 3), 0.0),
         }
