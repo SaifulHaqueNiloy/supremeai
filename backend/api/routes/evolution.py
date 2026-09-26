@@ -131,10 +131,17 @@ async def evaluate_canary_route(
     proposal_id: str,
     request: Request,
     client_id: str | None = None,
+    user: dict = Depends(get_current_user_token),
 ):
     """Evaluate if caller should route to canary or baseline for proposal_id.
 
     Supports 'X-Canary' header override (true/false) and sticky client_id hashing.
+
+    AUDIT-FIX (#1704 P0): আগে এই endpoint-এ কোনো auth dependency ছিল না —
+    যে কেউ proposal_id দিয়ে active canary trial-এর state দেখতে পারত (active,
+    sample_ratio)। যদিও operational endpoint, এটি still information disclosure —
+    unauthenticated caller যে কোনো proposal_id-এর canary state এনুমারেট করতে
+    পারত। এখন authenticated user_token দিয়ে বাধ্যতামূলক করা হয়েছে।
     """
     from evolution.canary_manager import get_canary_controller
 
@@ -143,7 +150,7 @@ async def evaluate_canary_route(
     is_canary = controller.route_request(
         proposal_id=proposal_id,
         headers=headers_dict,
-        client_id=client_id,
+        client_id=client_id or user.get("sub"),
     )
     trial = controller.active_canaries.get(proposal_id)
     return {
@@ -493,12 +500,19 @@ def _blueprint_path(flow_id: str) -> Path:
 
 
 @router.post("/swarm/forge")
-async def save_swarm_blueprint(payload: dict):
+async def save_swarm_blueprint(
+    payload: dict,
+    admin: dict = Depends(require_admin_token),
+):
     """
     Save swarm blueprint configuration to persistent storage (real, not fabricated).
 
     বাংলা: ব্লুপ্রিন্ট এখন সত্যিই data/swarm_blueprints/ ফোল্ডারে JSON হিসেবে
     সেভ হয় — আগে কোনো সেভই হত না, শুধু ফাঁকি সাকসেস রিটার্ন হত (issue #446)।
+
+    AUDIT-FIX (#1704 P0): আগে এই endpoint-এ কোনো auth dependency ছিল না —
+    যে কেউ অথ ছাড়াই blueprint persist করতে পারত। এখন admin-only করা হয়েছে,
+    কারণ blueprint পরবর্তী execution-এ প্রভাব ফেলে — high-risk action।
     """
     name = str(payload.get("name") or "").strip()
     if not name:
@@ -512,28 +526,41 @@ async def save_swarm_blueprint(payload: dict):
         "flow_id": flow_id,
         "name": name,
         "saved_at": datetime.now(UTC).isoformat(),
+        "saved_by": admin.get("sub", "unknown"),
         "blueprint": payload,
     }
     path = _blueprint_path(flow_id)
     path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
-    logger.info(f"Swarm blueprint persisted: {flow_id} ({name}) -> {path}")
+    logger.info(
+        "Swarm blueprint persisted: %s (%s) by %s -> %s",
+        flow_id, name, admin.get("sub", "unknown"), path,
+    )
     return {
         "status": "success",
         "message": "Swarm blueprint saved to persistent storage",
         "flow_id": flow_id,
         "persisted": True,
         "path": str(path),
+        "saved_by": admin.get("sub", "unknown"),
     }
 
 
 @router.post("/swarm/forge/{flow_id}/execute")
-async def execute_swarm_blueprint(flow_id: str, payload: dict | None = None):
+async def execute_swarm_blueprint(
+    flow_id: str,
+    payload: dict | None = None,
+    admin: dict = Depends(require_admin_token),
+):
     """
     Trigger execution of a saved swarm blueprint.
 
     বাংলা: ব্লুপ্রিন্ট লোড ও ভ্যালিডেশন সত্যিই হয়; কিন্তু এক্সিকিউশন ইঞ্জিন
     এখনো ইমপ্লিমেন্ট হয়নি — তাই এটি সৎভাবে 501 NOT_IMPLEMENTED রিটার্ন করে।
     আগের "executed successfully" ছিল সম্পূর্ণ বানানো (issue #446)।
+
+    AUDIT-FIX (#1704 P0): আগে এই endpoint-এ কোনো auth dependency ছিল না —
+    যে কেউ অথ ছাড়াই blueprint execute করতে পারত (ভবিষ্যতে execution engine
+    এলে code execution হতে পারত)। এখন admin-only করা হয়েছে।
     """
     path = _blueprint_path(flow_id)
     if not path.exists():
@@ -549,6 +576,12 @@ async def execute_swarm_blueprint(flow_id: str, payload: dict | None = None):
             detail=f"Saved blueprint '{flow_id}' is unreadable: {exc}",
         ) from exc
 
+    # Audit trail: who attempted execution
+    logger.warning(
+        "Swarm blueprint execution attempted: %s by %s (admin=%s) — NOT_IMPLEMENTED",
+        flow_id, admin.get("sub", "unknown"), admin.get("role"),
+    )
+
     # The blueprint is real and validated; the execution engine is not built yet.
     # Loud, honest 501 — never a fabricated "executed successfully".
     raise HTTPException(
@@ -562,6 +595,7 @@ async def execute_swarm_blueprint(flow_id: str, payload: dict | None = None):
             ),
             "flow_id": flow_id,
             "blueprint_name": record.get("name"),
+            "requested_by": admin.get("sub", "unknown"),
         },
     )
 
