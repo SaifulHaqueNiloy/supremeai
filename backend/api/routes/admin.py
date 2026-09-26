@@ -135,7 +135,6 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
             import re
 
             from sqlalchemy import text
-            from sqlalchemy.sql import quoted_name
 
             from database.session import get_db_session
 
@@ -150,12 +149,16 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
                     )
                 )
                 tables = [row[0] for row in result.fetchall()]
+                # ISSUE-1588: SQL identifiers cannot be bound as query parameters,
+                # so quoting MUST go through SQLAlchemy's dialect identifier
+                # preparer — never a hand-rolled f-string inside text().
+                preparer = session.bind.dialect.identifier_preparer
                 for table in tables:
                     if not _VALID_TABLE_PATTERN.match(table):
                         logger.warning(f"Skipping table '{table}' due to invalid naming pattern.")
                         continue
-                    safe_table = quoted_name(table, quote=True)
-                    rows_res = await session.execute(text(f'SELECT * FROM "{safe_table}"'))
+                    safe_table = preparer.quote(table)
+                    rows_res = await session.execute(text(f"SELECT * FROM {safe_table}"))
                     columns = rows_res.keys()
                     rows = [dict(zip(columns, row, strict=False)) for row in rows_res.fetchall()]
                     for row in rows:
