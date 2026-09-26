@@ -9,6 +9,16 @@ import { ToastProvider } from './contexts/ToastProvider';
 
 setupGlobalFetchInterceptor();
 
+// Issue #1528 (LOW): background services (SSE watchers, heartbeat, telemetry)
+// float promises; any rejection surfaced as a raw "Uncaught (in promise)" and
+// QA read the console as broken on a healthy load. The handler does NOT
+// swallow the signal — it logs a single structured line so real bugs remain
+// debuggable — but it stops the default uncaught-error noise.
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason instanceof Error ? event.reason.message : String(event.reason ?? 'unknown');
+  console.warn(`[async] Unhandled promise rejection (handled by global guard): ${reason}`);
+});
+
 import { startAntiSleepHeartbeat } from './services/heartbeat';
 if (import.meta.env.PROD) {
   startAntiSleepHeartbeat();
