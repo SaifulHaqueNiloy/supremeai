@@ -633,10 +633,19 @@ jobs:
           if [[ -n "$ISSUE_REFS" ]]; then
             echo "issue_linked=true" >> "$GITHUB_OUTPUT"
             echo "issue_refs=$ISSUE_REFS" >> "$GITHUB_OUTPUT"
-            echo "::notice::PR linked to issue(s): $ISSUE_REFS"
+            # AUDIT-FIX (#2006): Rule #4 "1 ISSUE = 1 PR" — count issue references.
+            # If more than 1, set a flag that the contract step will check.
+            ISSUE_COUNT=$(printf '%s' "$ISSUE_REFS" | tr ' ' '\n' | grep -c '#')
+            echo "issue_count=$ISSUE_COUNT" >> "$GITHUB_OUTPUT"
+            if [[ "$ISSUE_COUNT" -gt 1 ]]; then
+              echo "::error::Multiple issues in one PR ($ISSUE_REFS) — Rule #4: 1 Issue = 1 PR. Split into separate PRs."
+            else
+              echo "::notice::PR linked to issue(s): $ISSUE_REFS"
+            fi
           else
             echo "issue_linked=false" >> "$GITHUB_OUTPUT"
             echo "issue_refs=" >> "$GITHUB_OUTPUT"
+            echo "issue_count=0" >> "$GITHUB_OUTPUT"
             echo "::warning::No issue reference found in PR title/body — recommend 'Closes #N' or 'Refs #N'"
           fi
 
@@ -773,6 +782,11 @@ jobs:
             [[ "$AUTH_BOUNDARY_B" == "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
             [[ "$HITL_BYPASS_B" == "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
             [[ "$PRESERVATION_OK_B" != "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + DELETED_PROTECTED_INT))
+            # AUDIT-FIX (#1991): "NO CLAIM, NO CODE" (Rule #2) — PR without issue reference is BLOCKED.
+            [[ "$ISSUE_LINKED_B" != "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
+            # AUDIT-FIX (#2006): Rule #4 "1 ISSUE = 1 PR" — multiple issues in one PR is BLOCKED.
+            ISSUE_COUNT_NUM="${ISSUE_COUNT:-0}"
+            [[ "$ISSUE_COUNT_NUM" -gt 1 ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
 
             if [[ $BLOCK_COUNT -gt 0 ]]; then
               STATUS="BLOCK"
