@@ -11667,6 +11667,15 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/api/test_sworm_adapter_contract.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/api/test_task_endpoints.py"
     },
     {
@@ -26595,5 +26604,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3041
+  "source_file_count": 3042
 }
