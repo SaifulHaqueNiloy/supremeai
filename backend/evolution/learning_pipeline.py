@@ -11,7 +11,7 @@ Learning Pipeline — Phase 3 Evolution Activation (#1035)
   4. AutoHealer → L1-L5 healing tiers
 
 Usage:
-  from core.evolution.learning_pipeline import LearningPipeline
+  from evolution.learning_pipeline import LearningPipeline
   pipeline = LearningPipeline()
   result = await pipeline.process_failure(failure_data)
 """

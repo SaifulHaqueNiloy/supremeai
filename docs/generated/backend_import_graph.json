@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3407,
+  "edge_count": 3410,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -7480,6 +7480,10 @@
       "to": "core.logging_config"
     },
     {
+      "from": "evolution.evolution_orchestrator",
+      "to": "evolution.learning_pipeline"
+    },
+    {
       "from": "evolution.learning_pipeline",
       "to": "core.logging_config"
     },
@@ -10650,6 +10654,14 @@
     {
       "from": "tests.core.test_learning_loop_sprint34",
       "to": "core.llm.telemetry"
+    },
+    {
+      "from": "tests.core.test_learning_pipeline",
+      "to": "evolution.evolution_orchestrator"
+    },
+    {
+      "from": "tests.core.test_learning_pipeline",
+      "to": "evolution.learning_pipeline"
     },
     {
       "from": "tests.core.test_learning_store",

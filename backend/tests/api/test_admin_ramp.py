@@ -403,19 +403,13 @@ class TestFixesLifecycle:
         # query, tagging each fix with its owning tenant. Mutations still
         # require an explicit tenant_id.
         ref = SimpleNamespace(parent=SimpleNamespace(parent=SimpleNamespace(id="t9")))
-        doc = SimpleNamespace(
-            id="f3", to_dict=lambda: {"status": "pending_review"}, reference=ref
-        )
-        cg = SimpleNamespace(
-            where=lambda *_: SimpleNamespace(get=AsyncMock(return_value=[doc]))
-        )
+        doc = SimpleNamespace(id="f3", to_dict=lambda: {"status": "pending_review"}, reference=ref)
+        cg = SimpleNamespace(where=lambda *_: SimpleNamespace(get=AsyncMock(return_value=[doc])))
         db = SimpleNamespace(collection_group=lambda *_: cg)
         monkeypatch.setattr(ar, "get_firestore_db", lambda: db)
         resp = client.get("/api/admin/fixes")
         assert resp.status_code == 200
-        assert resp.json()["fixes"] == [
-            {"status": "pending_review", "id": "f3", "tenant_id": "t9"}
-        ]
+        assert resp.json()["fixes"] == [{"status": "pending_review", "id": "f3", "tenant_id": "t9"}]
 
     def test_apply_fixes_no_firestore_returns_zero(self, client, monkeypatch):
         monkeypatch.setattr(ar, "get_firestore_db", lambda: None)
