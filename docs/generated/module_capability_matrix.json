@@ -6657,7 +6657,9 @@
       "path": "backend/core/rate_limit.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -6841,6 +6843,7 @@
     {
       "capability_signals": [
         "dispatch",
+        "memory",
         "register"
       ],
       "classification": "human_review",
@@ -13520,6 +13523,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_rate_limit_full.py"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_rate_limit_quota_fallback.py"
     },
     {
       "capability_signals": [],
@@ -26430,5 +26443,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3025
+  "source_file_count": 3026
 }
