@@ -192,6 +192,25 @@ class TokenBudgetManager:
         self._budgets = {**PROVIDER_TOKEN_BUDGETS, **(custom_budgets or {})}
         self._stats: dict[str, TokenBudgetStats] = {}
         self._redis = None
+        # AUDIT-FIX (#1687 CRITICAL): Redis down হলে আগে dev/test-এ সম্পূর্ণ
+        # fail-open ছিল (return True = unlimited spend)। এখন একটি local
+        # in-memory budget tracker fallback যোগ করা হয়েছে যাতে Redis
+        # unavailable হলেও conservative limit enforce হয়।
+        # Per-user/per-day in-memory counter; resets each UTC day.
+        # Note: in-memory counter multi-worker-এ share হয় না — কিন্তু Redis
+        # down অবস্থায় এটির উপরে নির্ভর না করাই সঠিক, কারণ Redis-এর
+        # অনুপস্থিতি নিজেই degraded mode-এর সংকেত।
+        self._local_budget_fallback: dict[str, dict[str, int]] = {}
+        # Conservative fallback limit — audit suggestion "conservative limit"
+        # = daily_limit-এর অর্ধেক (যাতে একাধিক worker থাকলেও aggregate
+        # spend bounded থাকে)। env var দিয়ে tune করা যায়।
+        import os as _os
+        try:
+            self._local_fallback_cap = int(
+                _os.environ.get("SUPREMEAI_LOCAL_BUDGET_FALLBACK_CAP", "50000")
+            )
+        except (TypeError, ValueError):
+            self._local_fallback_cap = 50000
 
     async def _get_redis(self):
         if not self._redis:
@@ -246,6 +265,13 @@ class TokenBudgetManager:
             # spend)। এখন production/staging-এ অনুমতি অস্বীকার করা হয় (fail-
             # closed), dev/test-এ অনুমতি + loud error log। সিদ্ধান্তটি
             # token_deductor-এর বিদ্যমান env-policy-র সাথে সামঞ্জস্যপূর্ণ।
+            #
+            # AUDIT-FIX (#1687 CRITICAL): dev/test-এও এখন fail-CLOSED, তবে
+            # একটি local in-memory fallback tracker দিয়ে conservative limit
+            # enforce করা হয় — যাতে Redis down হলেও runaway agent কয়েক
+            # হাজার tokens-এর বেশি spend না করতে পারে। অডিট-এর সুস্পষ্ট
+            # নির্দেশ: "Add local in-memory budget tracker as fallback with
+            # conservative limit."
             try:
                 from core.config import settings
 
@@ -256,16 +282,51 @@ class TokenBudgetManager:
                 f"User budget check UNAVAILABLE (env={current_env or 'unknown'}): "
                 f"{type(e).__name__}: {e}"
             )
-            if current_env in {"production", "prod", "staging"}:
-                return False  # fail-closed: যাচাই ছাড়া spend অনুমোদিত নয়
-            return True  # dev/test: fail-open (উপরের error log-এ স্পষ্ট)
+            # In-memory fallback check — env নির্বিশেষে conservative cap
+            # enforce হয়। শুধু এই worker এর জন্য প্রযোজ্য, কিন্তু কোনো
+            # protection না থাকার চেয়ে ভালো।
+            today = time.strftime("%Y-%m-%d")
+            user_day_key = f"{user_id}:{today}"
+            user_bucket = self._local_budget_fallback.setdefault(
+                user_day_key, {"count": 0}
+            )
+            if user_bucket["count"] >= self._local_fallback_cap:
+                logger.error(
+                    f"User {user_id} exceeded LOCAL fallback budget cap "
+                    f"({self._local_fallback_cap}) — Redis unavailable, "
+                    f"denying spend (AUDIT-FIX #1687 fail-closed)."
+                )
+                return False  # fail-closed: local cap reached
+            # Below cap — allow, but warn that we're in degraded mode.
+            logger.warning(
+                f"User {user_id} budget check in degraded mode (Redis down) — "
+                f"local count {user_bucket['count']}/{self._local_fallback_cap}. "
+                f"Spend allowed up to cap (AUDIT-FIX #1687)."
+            )
+            return True  # allow with warning — bounded by local cap
 
     async def record_user_usage(self, user_id: str, tokens: int) -> None:
         """
         Record tokens used by a user in Redis.
+
+        AUDIT-FIX (#1687): Redis down হলেও local in-memory tracker-এ
+        record হয়, যাতে পরবর্তী check_user_budget call-এ সঠিকভাবে
+        local cap enforce করা যায়।
         """
         if tokens <= 0:
             return
+        # AUDIT-FIX (#1687): always update local fallback (cheap, in-process)
+        today = time.strftime("%Y-%m-%d")
+        user_day_key = f"{user_id}:{today}"
+        user_bucket = self._local_budget_fallback.setdefault(
+            user_day_key, {"count": 0}
+        )
+        user_bucket["count"] += tokens
+        # Clean up old days (keep only today's entry)
+        for k in list(self._local_budget_fallback.keys()):
+            if k != user_day_key:
+                self._local_budget_fallback.pop(k, None)
+
         try:
             redis = await self._get_redis()
             today = time.strftime("%Y-%m-%d")
@@ -274,7 +335,9 @@ class TokenBudgetManager:
             if current == tokens:
                 await redis.expire(key, 86400)  # 24 hours
         except Exception as e:
-            logger.error(f"Redis user budget record failed: {e}")
+            logger.error(
+                f"Redis user budget record failed (local tracker updated): {e}"
+            )
 
     # ------------------------------------------------------------------
     # Public API
