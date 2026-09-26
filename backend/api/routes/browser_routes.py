@@ -38,6 +38,16 @@ router = APIRouter(
     dependencies=[Depends(get_current_admin)],
 )
 
+# Issue #1490: /api/browser/health is a liveness probe consumed by
+# ServiceHealthMonitor and the audit contract — it must be reachable without
+# credentials (like the core /health/* contract). It therefore lives on its
+# own dependency-free router mounted explicitly by core/app_builder.py; the
+# capability probes it reports were already best-effort/try-except safe.
+public_router = APIRouter(
+    prefix="/api/browser",
+    tags=["browser-integration"],
+)
+
 
 def _assert_safe_public_url(url: str) -> None:
     """SECURITY FIX (AUDIT-SEC-2): hard SSRF gate.
@@ -770,7 +780,7 @@ async def save_screenshot_to_gallery(
 # ════════════════════════════════════════════════════════════════════
 
 
-@router.get("/health")
+@public_router.get("/health")
 async def browser_service_health():
     """
     Health check endpoint for browser integration service.

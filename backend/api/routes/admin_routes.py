@@ -901,3 +901,143 @@ def check_totp(user_otp: str, base32_secret: str) -> bool:
 # বাংলা মন্তব্য: verify_totp_code এখন check_totp-এর backward-compatible alias (Patch 5 fix)
 # duplicate function সরানো হয়েছে, কিন্তু tests ও external callers-এর জন্য alias রাখা হয়েছে
 verify_totp_code = check_totp
+
+
+@router.get("/api/health-aggregation")
+async def health_aggregation_contract(admin: dict = Depends(get_current_admin)):
+    """Issue #1475 contract alias: GET /api/health-aggregation.
+
+    The real implementation lives in api.routes.health_aggregation (mounted at
+    /admin-api/health-aggregation). This prefix-less router can serve the
+    absolute contract path directly; it reuses the very same handler, so both
+    URLs always report identical, real service-health data under admin auth.
+    """
+    from api.routes.health_aggregation import get_health_aggregation
+
+    return await get_health_aggregation()
+
+
+@router.post("/api/admin/traffic/kill-switch")
+async def traffic_kill_switch_contract_alias(
+    payload: "CloudNodeTarget", admin: dict = Depends(get_current_admin)
+):
+    """Issue #1493 contract alias: POST /api/admin/traffic/kill-switch.
+
+    The real implementation lives at /api/admin/cloud-mesh/kill-switch
+    (api.routes.cloud_mesh). This prefix-less router carries the absolute
+    contract path and delegates to the very same handler under the same
+    admin guard, so both URLs stay in lockstep."""
+    from api.routes.cloud_mesh import kill_switch as _real_kill_switch
+
+    return await _real_kill_switch(payload)
+
+
+@router.get("/api/admin/tenant-limits")
+async def list_tenant_limits_contract_alias(
+    include_usage: bool = True, admin: dict = Depends(get_current_admin)
+):
+    """Issue #1493 contract alias: GET /api/admin/tenant-limits.
+
+    The real implementation lives at /admin-api/tenant-limits
+    (api.routes.tenant_admin.list_tenants) — same data, same admin gate."""
+    from api.routes.tenant_admin import list_tenants as _real_list_tenants
+
+    return await _real_list_tenants(include_usage=include_usage)
+
+
+@router.put("/api/admin/tenant-limits/{tenant_id}")
+async def update_tenant_limits_contract_alias(
+    tenant_id: str,
+    payload: "TenantLimitUpdate",
+    admin: dict = Depends(get_current_admin),
+):
+    """Issue #1493 contract alias: PUT /api/admin/tenant-limits/{tenant_id}.
+
+    Delegates to api.routes.tenant_admin.update_tenant (real handler)."""
+    from api.routes.tenant_admin import update_tenant as _real_update_tenant
+
+    return await _real_update_tenant(tenant_id=tenant_id, payload=payload)
+
+
+class _ContractCloudNodeTarget(BaseModel):
+    """Body of POST /api/admin/traffic/kill-switch (same shape as cloud_mesh)."""
+    target_node: str
+
+
+class _ContractSmellCheckRequest(BaseModel):
+    """Body of POST /api/admin/cloud-mesh/smell-check (same shape as tools_ops)."""
+    path: str
+    thresholds: dict[str, int] | None = None
+
+
+@router.post("/api/admin/cloud-mesh/smell-check")
+async def cloud_mesh_smell_check_contract_alias(
+    payload: _ContractSmellCheckRequest, admin: dict = Depends(get_current_admin)
+):
+    """Issue #1493 contract alias: POST /api/admin/cloud-mesh/smell-check.
+
+    The codebase's real smell-check implementation is POST /tools/smell-check
+    (api.routes.tools_ops, admin-gated). Route the contract path to it instead
+    of leaving a misleading 404."""
+    from api.routes.tools_ops import smell_check as _real_smell_check
+    from api.routes.tools_ops import SmellCheckRequest as _RealRequest
+
+    return await _real_smell_check(_RealRequest(path=payload.path, thresholds=payload.thresholds))
+
+
+@router.post("/api/admin/traffic/kill-switch")
+async def traffic_kill_switch_contract_alias(
+    payload: _ContractCloudNodeTarget, admin: dict = Depends(get_current_admin)
+):
+    """Issue #1493 contract alias: POST /api/admin/traffic/kill-switch.
+
+    The real implementation lives at /api/admin/cloud-mesh/kill-switch
+    (api.routes.cloud_mesh) — same body shape, same admin gate, same handler."""
+    from api.routes.cloud_mesh import CloudNodeTarget as _RealTarget
+    from api.routes.cloud_mesh import kill_switch as _real_kill_switch
+
+    return await _real_kill_switch(_RealTarget(target_node=payload.target_node))
+
+
+@router.get("/api/admin/tenant-limits")
+async def list_tenant_limits_contract_alias(
+    include_usage: bool = True, admin: dict = Depends(get_current_admin)
+):
+    """Issue #1493 contract alias: GET /api/admin/tenant-limits.
+
+    Real implementation: /admin-api/tenant-limits (api.routes.tenant_admin)."""
+    from api.routes.tenant_admin import TenantLimitUpdate
+    from api.routes.tenant_admin import list_tenants as _real_list_tenants
+
+    return await _real_list_tenants(include_usage=include_usage)
+
+
+@router.put("/api/admin/tenant-limits/{tenant_id}")
+async def update_tenant_limits_contract_alias(
+    tenant_id: str,
+    org_name: str | None = None,
+    billing_tier: str | None = None,
+    requests_per_minute: int | None = None,
+    max_tokens_per_day: int | None = None,
+    max_concurrent_sessions: int | None = None,
+    stripe_customer_id: str | None = None,
+    notes: str | None = None,
+    admin: dict = Depends(get_current_admin),
+):
+    """Issue #1493 contract alias: PUT /api/admin/tenant-limits/{tenant_id}.
+
+    Delegates to api.routes.tenant_admin.update_tenant with the identical
+    field set (TenantLimitUpdate)."""
+    from api.routes.tenant_admin import TenantLimitUpdate as _RealUpdate
+    from api.routes.tenant_admin import update_tenant as _real_update_tenant
+
+    payload = _RealUpdate(
+        org_name=org_name,
+        billing_tier=billing_tier,
+        requests_per_minute=requests_per_minute,
+        max_tokens_per_day=max_tokens_per_day,
+        max_concurrent_sessions=max_concurrent_sessions,
+        stripe_customer_id=stripe_customer_id,
+        notes=notes,
+    )
+    return await _real_update_tenant(tenant_id=tenant_id, payload=payload)
