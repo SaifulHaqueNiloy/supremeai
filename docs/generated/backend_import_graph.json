@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3410,
+  "edge_count": 3449,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -1442,6 +1442,14 @@
     {
       "from": "api.routes.agent_breeding",
       "to": "models.meta_ai"
+    },
+    {
+      "from": "api.routes.agent_registry",
+      "to": "api.dependencies"
+    },
+    {
+      "from": "api.routes.agent_registry",
+      "to": "core.agent_registry"
     },
     {
       "from": "api.routes.agent_tasks",
@@ -3848,8 +3856,24 @@
       "to": "core.logging_config"
     },
     {
+      "from": "browser.action_cascade",
+      "to": "browser.semantic_dom"
+    },
+    {
+      "from": "browser.action_cascade",
+      "to": "browser.vision_grounding"
+    },
+    {
+      "from": "browser.action_cascade",
+      "to": "core.logging_config"
+    },
+    {
       "from": "browser.autonomous_browser",
       "to": "brain.reasoning_orchestrator"
+    },
+    {
+      "from": "browser.autonomous_browser",
+      "to": "browser.action_cascade"
     },
     {
       "from": "browser.autonomous_browser",
@@ -3857,14 +3881,10 @@
     },
     {
       "from": "browser.autonomous_browser",
-      "to": "browser.semantic_dom"
+      "to": "core.logging_config"
     },
     {
-      "from": "browser.autonomous_browser",
-      "to": "browser.vision_grounding"
-    },
-    {
-      "from": "browser.autonomous_browser",
+      "from": "browser.browser_session",
       "to": "core.logging_config"
     },
     {
@@ -3884,6 +3904,14 @@
       "to": "core.logging_config"
     },
     {
+      "from": "browser.session_manager",
+      "to": "browser.browser_session"
+    },
+    {
+      "from": "browser.session_manager",
+      "to": "core.logging_config"
+    },
+    {
       "from": "browser.swarm_browser",
       "to": "brain.reasoning_orchestrator"
     },
@@ -3893,7 +3921,15 @@
     },
     {
       "from": "browser.swarm_browser",
+      "to": "browser.session_manager"
+    },
+    {
+      "from": "browser.swarm_browser",
       "to": "core.logging_config"
+    },
+    {
+      "from": "browser.vision_grounding",
+      "to": "browser.semantic_dom"
     },
     {
       "from": "browser.vision_grounding",
@@ -4021,6 +4057,10 @@
     },
     {
       "from": "core.agent_mailbox",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.agent_registry",
       "to": "core.logging_config"
     },
     {
@@ -4298,6 +4338,10 @@
     {
       "from": "core.browser_session_manager",
       "to": "core.playwright_manager"
+    },
+    {
+      "from": "core.browser_session_vault",
+      "to": "core.logging_config"
     },
     {
       "from": "core.cache.autocache_proxy",
@@ -7496,6 +7540,46 @@
       "to": "core.logging_config"
     },
     {
+      "from": "external_agents.contracts",
+      "to": "external_agents.contracts.architecture_artifact"
+    },
+    {
+      "from": "external_agents.contracts",
+      "to": "external_agents.contracts.code_artifact"
+    },
+    {
+      "from": "external_agents.contracts",
+      "to": "external_agents.contracts.planner_artifact"
+    },
+    {
+      "from": "external_agents.contracts",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.contracts",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.control",
+      "to": "external_agents.control.job_api"
+    },
+    {
+      "from": "external_agents.control",
+      "to": "external_agents.control.state_manager"
+    },
+    {
+      "from": "external_agents.control.job_api",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.control.job_api",
+      "to": "external_agents.control.state_manager"
+    },
+    {
+      "from": "external_agents.control.state_manager",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
       "from": "integrations.browser_use_adapter",
       "to": "core.logging_config"
     },
@@ -7546,6 +7630,26 @@
     {
       "from": "integrations.openhands_adapter",
       "to": "integrations._flags"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "integrations.telegram_config"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "integrations.telegram_handlers"
+    },
+    {
+      "from": "integrations.telegram_handlers",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.telegram_handlers",
+      "to": "integrations.telegram_config"
     },
     {
       "from": "learning",
@@ -7622,6 +7726,22 @@
     {
       "from": "main",
       "to": "core.logging_config"
+    },
+    {
+      "from": "mcp.adapters.lovable_adapter",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "mcp.adapters.playwright_bolt",
+      "to": "core.browser_session_vault"
+    },
+    {
+      "from": "mcp.adapters.playwright_bolt",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "mcp.adapters.playwright_bolt",
+      "to": "mcp.adapters"
     },
     {
       "from": "memory.chromadb_store",
@@ -9492,6 +9612,14 @@
       "to": "core.config"
     },
     {
+      "from": "tests.api.test_agent_registry",
+      "to": "api.routes.agent_registry"
+    },
+    {
+      "from": "tests.api.test_agent_registry",
+      "to": "core.agent_registry"
+    },
+    {
       "from": "tests.api.test_api",
       "to": "core"
     },
@@ -10246,6 +10374,10 @@
     {
       "from": "tests.core.test_browser_credentials",
       "to": "core.security.secure_credential_store"
+    },
+    {
+      "from": "tests.core.test_browser_session_vault",
+      "to": "core.browser_session_vault"
     },
     {
       "from": "tests.core.test_cache_manager_coverage",
@@ -11272,6 +11404,18 @@
       "to": "services.hitl.engine"
     },
     {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_bot"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_config"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_handlers"
+    },
+    {
       "from": "tests.learning.test_learning",
       "to": "learning.experience"
     },
@@ -11310,6 +11454,10 @@
     {
       "from": "tests.llm.test_advanced_model_router_regression",
       "to": "core.llm.advanced_model_router"
+    },
+    {
+      "from": "tests.mcp.adapters.test_playwright_bolt",
+      "to": "mcp.adapters.playwright_bolt"
     },
     {
       "from": "tests.memory.test_chromadb_store_adapters",
@@ -12717,6 +12865,10 @@
     },
     {
       "from": "tools.browser.playwright_browser_agent",
+      "to": "browser.action_cascade"
+    },
+    {
+      "from": "tools.browser.playwright_browser_agent",
       "to": "core.logging_config"
     },
     {
@@ -13241,6 +13393,10 @@
     },
     {
       "from": "tools.mcp.mcp_server",
+      "to": "mcp"
+    },
+    {
+      "from": "tools.mcp.mcp_server",
       "to": "tools.graph_service"
     },
     {
@@ -13644,7 +13800,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1961,
+  "module_count": 1987,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13854,6 +14010,7 @@
     "api.routes.agent",
     "api.routes.agent_action",
     "api.routes.agent_breeding",
+    "api.routes.agent_registry",
     "api.routes.agent_tasks",
     "api.routes.agent_workspace",
     "api.routes.agents",
@@ -14040,9 +14197,12 @@
     "brain.supreme_learning_engine",
     "brain.task_execution_engine",
     "brain.user_digital_twin",
+    "browser.action_cascade",
     "browser.autonomous_browser",
+    "browser.browser_session",
     "browser.browsing_memory",
     "browser.semantic_dom",
+    "browser.session_manager",
     "browser.swarm_browser",
     "browser.vision_grounding",
     "byoc",
@@ -14068,6 +14228,7 @@
     "core.agent_factory",
     "core.agent_heartbeat",
     "core.agent_mailbox",
+    "core.agent_registry",
     "core.agent_review_workflow",
     "core.agent_supervisor",
     "core.agents",
@@ -14109,6 +14270,7 @@
     "core.browser_compat_store",
     "core.browser_session_catalog",
     "core.browser_session_manager",
+    "core.browser_session_vault",
     "core.cache",
     "core.cache.autocache_proxy",
     "core.cache.multi_layer_cache",
@@ -14555,6 +14717,15 @@
     "evolution.performance_monitor",
     "evolution.strategy_optimizer",
     "examples.sample_buggy",
+    "external_agents",
+    "external_agents.contracts",
+    "external_agents.contracts.architecture_artifact",
+    "external_agents.contracts.code_artifact",
+    "external_agents.contracts.planner_artifact",
+    "external_agents.contracts.task_contract",
+    "external_agents.control",
+    "external_agents.control.job_api",
+    "external_agents.control.state_manager",
     "integrations",
     "integrations._flags",
     "integrations.browser_use_adapter",
@@ -14563,6 +14734,9 @@
     "integrations.graphiti_adapter",
     "integrations.mem0_adapter",
     "integrations.openhands_adapter",
+    "integrations.telegram_bot",
+    "integrations.telegram_config",
+    "integrations.telegram_handlers",
     "learning",
     "learning.evidence_analyzer",
     "learning.evolution_bridge",
@@ -14572,6 +14746,10 @@
     "learning.pattern_detector",
     "learning.pattern_recognizer",
     "main",
+    "mcp",
+    "mcp.adapters",
+    "mcp.adapters.lovable_adapter",
+    "mcp.adapters.playwright_bolt",
     "memory",
     "memory.checkpoint_resume",
     "memory.chromadb_store",
@@ -14878,6 +15056,7 @@
     "tests.api.test_admin_ramp",
     "tests.api.test_admin_routes",
     "tests.api.test_agent_execute_contract",
+    "tests.api.test_agent_registry",
     "tests.api.test_api",
     "tests.api.test_api_bootstrap",
     "tests.api.test_api_chat",
@@ -15009,6 +15188,7 @@
     "tests.core.test_billing_zero_cost",
     "tests.core.test_brain",
     "tests.core.test_browser_credentials",
+    "tests.core.test_browser_session_vault",
     "tests.core.test_cache_manager_coverage",
     "tests.core.test_cache_optimization",
     "tests.core.test_capability_activation",
@@ -15206,11 +15386,13 @@
     "tests.hitl.test_hitl_approval_contract",
     "tests.hitl.test_hitl_engine",
     "tests.integration.test_integration_suite",
+    "tests.integrations.test_telegram_bot",
     "tests.learning.test_learning",
     "tests.learning.test_pattern_and_hypothesis",
     "tests.llm.test_advanced_model_router",
     "tests.llm.test_advanced_model_router_regression",
     "tests.load.locustfile",
+    "tests.mcp.adapters.test_playwright_bolt",
     "tests.memory.test_chromadb_store_adapters",
     "tests.memory.test_mcp_server_tools",
     "tests.memory.test_mcp_server_transport",

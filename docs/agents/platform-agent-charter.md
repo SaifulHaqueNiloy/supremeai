@@ -25,6 +25,15 @@ agent-11 **owns every 3rd-party platform this project touches, end-to-end**:
 **Rule (handoff orchestration):** *role owns responsibility, orchestrator owns
 routing, GitHub owns events, Merge Guardian owns merge.*
 
+### Role boundary (owner directive 2026-09-26)
+
+- **CI checking/fixing is NOT agent-11's responsibility.** CI failures route
+  to agent-12 (CI fixer) via `handoff:log-fix`; agent-11 never picks up CI
+  watch/fix tasks, even incidentally.
+- Browser testing is agent-13's job (`handoff:browser-test`) — likewise out of
+  scope here.
+- agent-11 stays in its lane: 3rd-party platform sweep → issue → fix → config.
+
 ---
 
 ## Platform inventory (check every 3 hours)
@@ -78,10 +87,12 @@ vs the 500k ceiling).
 
 ## Fix protocol
 
-1. Branch: `agent-11-<task>` off latest `main` (hyphen form — the slash form
-   `agent-11/<task>` is impossible while the `agent-11` registration branch
-   exists, git refuses the directory/file ref conflict; never work on the
-   stale `agent-11` registration branch itself).
+1. Branch: `agent-11-longrun/issue-<N>-<slug>` off latest `main` (OPS-06
+   naming-guard compliant). NOTE: the plain slash form `agent-11/<task>` is
+   impossible while the `agent-11` registration branch exists (git
+   directory/file ref conflict) — hence the extended slot name
+   `agent-11-longrun` as the first path component. Never work on the stale
+   `agent-11` registration branch itself.
 2. Fix in-repo (adapter, pool, env wiring, failover) → normal PR flow.
 3. Platform-side config change:
    - **Non-destructive** (add env var via safe snapshot→union→diff-verify PUT,

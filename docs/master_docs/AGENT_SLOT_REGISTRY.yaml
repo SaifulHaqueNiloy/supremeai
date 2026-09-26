@@ -35,7 +35,11 @@ slots:
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: PR helper bot decision check + code quality. Fixes wrong merges
+  notes: PR helper bot decision check + code quality. Fixes wrong merges. MAIN
+    duty = preserve beneficial changes + remove regressions (owner directive
+    2026-09-26); CI green is desirable for all agents but NOT the helper's
+    mandatory gate — decisions weigh benefit-vs-regression, red CI alone is
+    not a veto when the failure is provably unrelated (evidence in comment)
 - slot: agent-9
   tool: Continue
   maintainer: '@SaifulHaqueNiloy'
@@ -60,15 +64,28 @@ slots:
   notes: 'Owns ALL connected 3rd-party platforms end-to-end (charter: docs/agents/platform-agent-charter.md).
     Every 3 hours: API-key health sweep of Render x4, Upstash chain x5, MCP tower,
     Infisical, Cloudflare, Supabase, Kaggle, AI providers (automated: .github/workflows/platform-agent-check.yml).
-    Creates handoff:platform issues on any problem, fixes in-repo on agent-11-<task>
-    branches, applies platform-side config changes (owner approval for destructive/billing).'
+    Creates handoff:platform issues on any problem, fixes in-repo on
+    agent-11-longrun/issue-<N>-<slug> branches (OPS-06 naming guard), applies
+    platform-side config changes (owner approval for destructive/billing).'
 - slot: agent-12
-  tool: browser-tester + log watcher
+  tool: ci-fixer
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Browser test after merge + CI/Actions log watch. Creates issues on failure
+  notes: CI fixer (renamed from browser-tester + log watcher per owner directive
+    2026-09-26). Watches CI/Actions logs on failure (handoff:log-fix), diagnoses,
+    fixes, re-verifies. Creates issues on repeated failures. Browser testing
+    split out to agent-13 — two different agents' jobs
+- slot: agent-13
+  tool: browser-tester
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  notes: Post-merge browser testing (handoff:browser-test). Split from agent-12
+    per owner directive 2026-09-26 — browser test and CI fix are two different
+    agents' jobs
 validation_rules:
 - 'slot MUST match pattern: agent-[0-9]+'
 - tool MUST be a non-empty string
