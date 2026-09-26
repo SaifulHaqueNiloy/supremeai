@@ -48,7 +48,13 @@ class RuleUpdate(BaseModel):
 async def update_constitutional_rule(
     payload: RuleUpdate, admin_user: dict = Depends(get_current_admin)
 ):
-    """Update God.py constitutional rules directly from the Command Center UI"""
+    """Update God.py constitutional rules directly from the Command Center UI.
+
+    Issue #1497 path-disambiguation: /api/admin/rules is the CONSTITUTIONAL
+    (GodLayer) rules surface — a different concept from the rules-engine
+    feature switches served canonically at /admin-api/rules. The similar
+    paths are intentional; do not merge them.
+    """
     try:
         god_layer.set_rule(payload.key, payload.value)
         logger.critical(
@@ -410,7 +416,11 @@ async def verify_otp(payload: VerifyOtpRequest, admin_user: dict = Depends(get_c
 # এখন GET endpoint যোগ করা হয়েছে যাতে rules লিস্ট ফেচ করা যায়।
 @router.get("/rules")
 async def get_rules(admin_user: dict = Depends(get_current_admin)):
-    """Fetch all constitutional rules from God.py."""
+    """Fetch all constitutional rules from God.py.
+
+    Issue #1497 path-disambiguation: constitutional (GodLayer) rules — NOT the
+    rules-engine switches at /admin-api/rules.
+    """
     rules = god_layer.list_rules()
     return {"rules": rules}
 
@@ -438,9 +448,16 @@ async def get_system_alerts(admin_user: dict = Depends(get_current_admin)):
         return {"alerts": alerts}
 
 
-@router.post("/alerts")
+@router.post("/alerts", deprecated=True)
 async def create_system_alert(payload: AlertCreate, x_api_key: str = Header(None)):
-    """Create a new system alert (Used by internal AI Log Analyzer)."""
+    """Deprecated legacy ingestion alias (issue #1497).
+
+    Canonical internal alert ingestion is POST /api/v1/admin/alerts
+    (api/routes/internal.py) — the AI Log Analyzer caller (scripts/devops/
+    ai_log_analyzer.py) already uses it. This DB-persist variant is retained
+    only for legacy-contract compatibility; new callers must use the
+    canonical endpoint.
+    """
     from core.config import settings
 
     expected_key = (
