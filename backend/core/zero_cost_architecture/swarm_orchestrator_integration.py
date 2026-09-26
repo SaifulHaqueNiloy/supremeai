@@ -247,8 +247,11 @@ class ZeroCostSwarmOrchestrator:
 
     async def _check_agent_health(self, workspace: SharedWorkspace) -> None:
         """Check and record health of each agent that ran."""
-        # Analyze workspace logs for agent issues
-        log_content = "\n".join(workspace.logs) if hasattr(workspace, "logs") else ""
+        # Analyze workspace logs for agent issues.
+        # AUDIT-FIX (P0): SharedWorkspace-এ `logs` ফিল্ড নেই — সঠিক ফিল্ড
+        # `execution_logs`। আগে hasattr(workspace, "logs") সবসময় False হতো, ফলে
+        # কখনোই circuit breaker failure record হত না — silent skip।
+        log_content = "\n".join(getattr(workspace, "execution_logs", []) or [])
 
         for agent_name, breaker in self._agent_breakers.items():
             # Simple heuristic: check for errors related to this agent
@@ -426,6 +429,37 @@ class ZeroCostSwarmOrchestrator:
                 final_results.append(result)
 
         return final_results
+
+    async def run_dag_for_workspace(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str = "default_user_session",
+    ) -> SharedWorkspace:
+        """
+        Backward-compatible passthrough to the original SwarmOrchestrator.
+
+        AUDIT-FIX (P0): ZeroCostSwarmOrchestrator-এর docstring "drop-in replacement"
+        ও "Same interface as original SwarmOrchestrator" দাবি করলেও এই মেথডটি আগে
+        missing ছিল — যার ফলে api/routes/agent_action.py runtime-এ AttributeError দিত।
+        এখন আমরা আসল orchestrator-এ delegate করছি, সাথে per-agent circuit breaker
+        recording ও fallback হ্যান্ডলিং যোগ করেছি।
+        """
+        try:
+            workspace = await self._original_orchestrator.run_dag_for_workspace(
+                workspace, user_id=user_id
+            )
+            # health check: workspace-এর execution_logs থেকে agent-specific
+            # error থাকলে সংশ্লিষ্ট circuit breaker-কে failure রেকর্ড করি।
+            await self._check_agent_health(workspace)
+            return workspace
+        except Exception as e:
+            # Graceful fallback: circuit breaker open বা agent failure-এও
+            # একটা কাজের workspace ফেরত দিই, যাতে caller স্পষ্ট এরর দেখতে পায়।
+            workspace.add_error(f"run_dag_for_workspace failed: {e}")
+            workspace.log(
+                "ZeroCostSwarmOrchestrator: degraded mode — original DAG failed"
+            )
+            return workspace
 
     def get_metrics(self) -> dict[str, Any]:
         """

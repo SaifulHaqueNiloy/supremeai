@@ -18,27 +18,40 @@ load_dotenv()
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
 # Canonical Mapping: Branch Slot -> GitHub App Bot Identity
+#
+# AUDIT-FIX (P0): আগে এই registry-তে মাত্র ৬টি slot ছিল (agent-1, 2, 3, 5, 6, 8),
+# কিন্তু docs/master_docs/AGENT_SLOT_REGISTRY.yaml (canonical charter) ১১টি slot
+# define করে। এছাড়া agent-8-এর রোল দুই file-এ ভিন্ন ছিল — Python বলছিল "Platform
+# & External Integrations", YAML বলছিল "PR Verifier" (platform এখন agent-11)।
+# এই registry এখন YAML-এর সাথে পুরোপুরি sync করা।
 AGENT_SLOT_REGISTRY: Dict[str, Dict[str, Any]] = {
     "agent-1": {
         "bot_name": "supremeai-planner",
-        "role": "Planner & Task Decomposer",
+        "role": "Planner & Full Codebase Auditor",
         "env_prefix": "GITHUB_APP",
-        "description": "Manages GitHub issues, creates implementation plans, reviews task scope",
+        "description": "Owns comprehensive architectural audits, gap identification, implementation planning, backlog issue creation",
         "primary_branch": "agent-1-planner",
     },
     "agent-2": {
         "bot_name": "supremeai-pr-helper",
         "role": "PR Gate & Diagnostics Verifier",
         "env_prefix": "AGENT_PR_HELPER",
-        "description": "Validates PR compliance, checks test coverage, monitors CI gate statuses",
+        "description": "Evaluates PR delta, regression risk, performs beneficial squash merges",
         "primary_branch": "agent-2-pr-helper",
     },
     "agent-3": {
         "bot_name": "supremeai-coder-1",
         "role": "Primary Code Implementer",
         "env_prefix": "AGENT_CODER_1",
-        "description": "Writes production code, unit tests, bug fixes and pushes implementation commits",
+        "description": "Claims assigned issues, performs local issue-scoped audit, writes production code and unit tests",
         "primary_branch": "agent-3-coder-1",
+    },
+    "agent-5": {
+        "bot_name": "supremeai-ci-action",
+        "role": "CI/CD & Workflow Specialist",
+        "env_prefix": "AGENT_CI_ACTION",
+        "description": "Owns .github/workflows/*, git pre-push hooks, auto-sync engines, artifact regeneration",
+        "primary_branch": "agent-5-ci-action",
     },
     "agent-6": {
         "bot_name": "supremeai-coder-2",
@@ -47,19 +60,53 @@ AGENT_SLOT_REGISTRY: Dict[str, Dict[str, Any]] = {
         "description": "Handles parallel features, independent bug resolution without cross-branch contention",
         "primary_branch": "agent-6-coder-2",
     },
-    "agent-5": {
-        "bot_name": "supremeai-ci-action",
-        "role": "CI/CD & Workflow Specialist",
-        "env_prefix": "AGENT_CI_ACTION",
-        "description": "Maintains GitHub Workflows, resolves pipeline failures, checks artifacts",
-        "primary_branch": "agent-5-ci-action",
-    },
+    # AUDIT-FIX: agent-8 এখন YAML অনুসারে PR verifier — আগে ভুলে platform role দেওয়া হয়েছিল।
     "agent-8": {
-        "bot_name": "supremeai-3rd-party-platform",
+        "bot_name": "supremeai-pr-verifier",
+        "role": "PR Verifier & Code Quality",
+        "env_prefix": "AGENT_PR_VERIFIER",
+        "description": "PR helper bot decision check + code quality. Fixes wrong merges. Preserves beneficial changes + removes regressions",
+        "primary_branch": "agent-8-pr-verifier",
+    },
+    # AUDIT-FIX: agent-9 — observability standby (active=false per YAML)। token
+    # minting path থাকলেও ডিফল্টে কল হবে না, যাতে inactive slot-এর জন্য env না
+    # থাকলেও startup-এ crash না করে।
+    "agent-9": {
+        "bot_name": "supremeai-observer",
+        "role": "Observability & Metrics Standby",
+        "env_prefix": "AGENT_OBSERVER",
+        "description": "Standby — observability + metrics dashboards (activatable on demand)",
+        "primary_branch": "agent-9-observer",
+        "active": False,
+    },
+    "agent-10": {
+        "bot_name": "supremeai-super-orchestrator",
+        "role": "Super Orchestrator & Fallback",
+        "env_prefix": "AGENT_SUPER",
+        "description": "Orchestrator + fallback. Assigns alternatives if agent inactive. Does any role if needed",
+        "primary_branch": "agent-10-super",
+    },
+    # AUDIT-FIX: agent-11 — এখানে এসেছে platform role (আগে agent-8 এ ভুল ছিল)।
+    "agent-11": {
+        "bot_name": "supremeai-platform-agent",
         "role": "Platform & External Integrations",
         "env_prefix": "AGENT_PLATFORM",
-        "description": "Deploys services, integrates external platforms, manages multi-cloud webhooks",
-        "primary_branch": "agent-8-platform",
+        "description": "Owns ALL connected 3rd-party platforms end-to-end (Render, Upstash, MCP tower, Infisical, Cloudflare, Supabase, Kaggle, AI providers)",
+        "primary_branch": "agent-11-longrun",
+    },
+    "agent-12": {
+        "bot_name": "supremeai-ci-fixer",
+        "role": "CI Fixer & Log Watcher",
+        "env_prefix": "AGENT_CI_FIXER",
+        "description": "Watches CI/Actions logs on failure (handoff:log-fix), diagnoses, fixes, re-verifies. Creates issues on repeated failures",
+        "primary_branch": "agent-12-ci-fixer",
+    },
+    "agent-13": {
+        "bot_name": "supremeai-browser-tester",
+        "role": "Post-Merge Browser Tester",
+        "env_prefix": "AGENT_BROWSER_TESTER",
+        "description": "Post-merge browser testing (handoff:browser-test). Split from agent-12 — browser test and CI fix are two different agents' jobs",
+        "primary_branch": "agent-13-browser-tester",
     },
 }
 

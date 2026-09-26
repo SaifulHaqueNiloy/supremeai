@@ -84,17 +84,29 @@ async def run_agent_action(
         logger.info(f"Triggering ZeroCostSwarmOrchestrator for intent '{intent}'")
         orchestrator = ZeroCostSwarmOrchestrator()
 
-        # বাংলা মন্তব্য: রিকোয়েস্টে ডাবল সোয়ার্ম এক্সিকিউশন ও ওপারেশনাল কস্ট এড়াতে সরাসরি কাস্টম ওয়ার্কস্পেস দিয়ে রান করানো হচ্ছে।
+        # বাংলা মন্তব্য: রিকোয়েস্টে ডাবল সোয়ার্ম এক্সিকিউশন ও ওপারেশনাল কস্ট এড়াতে সরাসরি কাস্টম ওয়ার্কস্পেস দিয়ে রান করানো হচ্ছে।
         import uuid
 
         from models.shared_workspace import SharedWorkspace
 
+        # AUDIT-FIX (P0): আগে custom_workspace.kwargs = kwargs লেখা হতো — কিন্তু
+        # SharedWorkspace-এ kwargs ফিল্ড নেই। Pydantic v2 strict mode-এ এটা
+        # silent drop না করে এরর দেবে। তাই kwargs এখন work_product-এর ভেতরে
+        # স্ট্যান্ডার্ড key হিসেবে রাখা হচ্ছে — agents সেখান থেকেই পড়বে।
         custom_workspace = SharedWorkspace(
-            task_id=str(uuid.uuid4()), original_prompt=payload.content, intent=intent
+            task_id=str(uuid.uuid4()),
+            original_prompt=payload.content,
+            intent=intent,
+            work_product={
+                "platform": platform,
+                "kwargs": kwargs,
+                "context": payload.context,
+            },
         )
-        custom_workspace.kwargs = kwargs
 
         # বাংলা মন্তব্য: ডুপ্লিকেট এবং বাগি লোকাল DAG লুপ পরিহার করে সেন্ট্রাল run_dag_for_workspace রান করা হলো।
+        # AUDIT-FIX (P0): ZeroCostSwarmOrchestrator এখন run_dag_for_workspace সাপোর্ট করে
+        # (delegation মেথড যোগ করা হয়েছে — backward-compat সত্যিই কাজ করবে)।
         custom_workspace = await orchestrator.run_dag_for_workspace(
             custom_workspace, user_id=user_id
         )
@@ -108,8 +120,11 @@ async def run_agent_action(
 
         return {
             "status": "success",
-            "workspace_logs": custom_workspace.logs,
+            "task_id": custom_workspace.task_id,
+            # AUDIT-FIX (P0): SharedWorkspace.logs → SharedWorkspace.execution_logs
+            "workspace_logs": custom_workspace.execution_logs,
             "result": result,
+            "errors": custom_workspace.errors,
         }
 
     except HTTPException:

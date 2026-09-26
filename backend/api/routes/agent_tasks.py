@@ -141,26 +141,31 @@ async def execute_swarm(request: Request, body: SwarmExecuteRequest):
         session_id,
         _correlation_id(request),
     )
-    orchestrator = ZeroCostSwarmOrchestrator(
-        user_id=body.user_id, session_id=session_id, task_prompt=body.task
-    )  # type: ignore
-
-    # We await the orchestrator execution.
-    # In a real heavy system this might be a background task,
-    # but since it's zero-cost lean, we keep it simple or run it directly.
-
-    # Run the swarm as a background task to not block the request immediately,
-    # or just await it if we want the HTTP response to contain the final output.
-    # For now, we await it directly as requested by the plan.
-    workspace = await orchestrator.execute(max_retries=2)
+    # AUDIT-FIX (P0): আগে ZeroCostSwarmOrchestrator-কে ভুল কনস্ট্রাক্টর আর্গুমেন্ট
+    # (user_id/session_id/task_prompt) দিয়ে call করা হতো — কিন্তু আসল সিগনেচার শুধু
+    # (config: ZeroCostConfig | None = None)। এছাড়া .execute(max_retries=2) মেথড
+    # নেই; সঠিক মেথড .execute_task(prompt, user_id, priority, timeout)।
+    # workspace.generated_code/architecture_design-ও SharedWorkspace-এ নেই —
+    # সঠিক ফিল্ড: work_product (dict) ও execution_logs (list)।
+    swarm_orchestrator = ZeroCostSwarmOrchestrator()
+    execution_result = await swarm_orchestrator.execute_task(
+        prompt=body.task,
+        user_id=body.user_id or f"session:{session_id}",
+    )
+    workspace = execution_result.workspace
 
     return {
-        "status": "completed",
+        "status": execution_result.status,  # "success" | "degraded" | "error"
         "session_id": session_id,
+        "task_id": execution_result.task_id,
         "results": {
             "passed_qa": workspace.test_results.get("passed", False),
             "feedback": workspace.test_results.get("feedback", ""),
-            "generated_code": workspace.generated_code,
-            "architecture": workspace.architecture_design,
+            "work_product": workspace.work_product,
+            "execution_logs": workspace.execution_logs,
+            "errors": [*workspace.errors, *(execution_result.errors or [])],
         },
+        # বোনাস: প্রতি রেসপন্ন্সে orchestrator-এর স্বাস্থ্য ও metrics দেখাচ্ছে —
+        # ক্লায়েন্ট বুঝতে পারবে circuit breaker ট্রিপ করেছে কিনা।
+        "orchestrator_status": swarm_orchestrator.get_status(),
     }
