@@ -27,9 +27,24 @@ class EmailAgent:
     def __init__(self, auth_method: str = "oauth"):
         self.auth_method = auth_method
         self.connected = False
-        self._credential_store = SecureCredentialStore()
+        # Issue #1845 fix: SecureCredentialStore এখন LAZY — প্রথম ব্যবহারের সময়
+        # তৈরি হয় (api/routes/browser/_credentials.py-র factory প্যাটার্নের মতো,
+        # যেটা এই মডিউলের docstring নিজেই নিজের প্যাটার্ন হিসেবে দাবি করে)। আগে
+        # __init__-এই তৈরি হতো, কিন্তু এই অবজেক্ট api/routes/email.py-তে module-level
+        # singleton — import করার মুহূর্তে env-এ encryption key এখনো থাকে না
+        # (CI/test fixture পরে সেট করে; প্রোডাকশনে vault bootstrap পরে লোড হয়)।
+        # ফলে fail-closed (#1570) store চিরকালের জন্য disabled হয়ে যেত এবং
+        # connect_imap() সবসময় CredentialEncryptionUnavailableError → 500 দিত।
+        self._credential_store: SecureCredentialStore | None = None
         self._imap_config: dict[str, Any] | None = None
         logger.info(f"EmailAgent initialized with auth_method={auth_method}")
+
+    @property
+    def credential_store(self) -> SecureCredentialStore:
+        """Key env-var-গুলো first-use-এর সময় পড়ে — import-time eager নয়।"""
+        if self._credential_store is None:
+            self._credential_store = SecureCredentialStore()
+        return self._credential_store
 
     def connect_gmail_oauth(self, provider: str, scopes: list) -> bool:
         """Gmail OAuth এখনো real consent/token-exchange ফ্লো-র সাথে ওয়্যার করা হয়নি।
@@ -51,7 +66,7 @@ class EmailAgent:
             self.connected = False
             return False
 
-        ciphertext, key_ref = self._credential_store.encrypt(app_password)
+        ciphertext, key_ref = self.credential_store.encrypt(app_password)
         self._imap_config = {
             "host": host,
             "port": port,
@@ -78,7 +93,7 @@ class EmailAgent:
 
         cfg = self._imap_config
         try:
-            app_password = self._credential_store.decrypt(cfg["ciphertext"], cfg["key_ref"])
+            app_password = self.credential_store.decrypt(cfg["ciphertext"], cfg["key_ref"])
         except Exception as exc:
             logger.error(f"Failed to decrypt stored IMAP credentials: {exc}")
             return ""
