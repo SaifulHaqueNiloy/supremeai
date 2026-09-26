@@ -11,6 +11,7 @@ through AST security scanning, CI/CD dry runs, and atomic database transactions.
 
 import asyncio
 import contextlib
+import os
 import time
 import uuid
 from pathlib import Path
@@ -77,6 +78,23 @@ class SelfEvolutionAgent:
         self._consecutive_penalties: dict[str, int] = {}
         self._pending_demands: asyncio.Queue = asyncio.Queue()
         self.scanner = ImmuneSystemScanner()
+        # AUDIT-FIX (#1686 CRITICAL): refactor history per skill — prevents
+        # infinite evolution/refactor loop. Tracks count, last fitness
+        # score (to detect improvement), last refactor timestamp, and
+        # frozen status (when max refactors reached without improvement).
+        self._refactor_history: dict[str, dict] = {}
+        # Conservative limits per audit recommendation:
+        #   "If refactored > N times (e.g., 3) without improvement, freeze"
+        # Default 3, env-tunable for ops flexibility.
+        self._MAX_REFACTORS_PER_SKILL: int = int(
+            os.environ.get("SELF_EVOLUTION_MAX_REFACTORS_PER_SKILL", "3")
+        )
+        # Cooldown between refactors of the SAME skill (seconds).
+        # Prevents back-to-back refactors while the previous one's
+        # fitness is still being measured.
+        self._REFACTOR_COOLDOWN_SECONDS: int = int(
+            os.environ.get("SELF_EVOLUTION_REFACTOR_COOLDOWN_SECONDS", "300")
+        )
 
     async def start(self) -> None:
         if self._running:
@@ -171,14 +189,78 @@ class SelfEvolutionAgent:
         if total_runs > 0 and total_runs < self.min_runs_before_action:
             return
 
+        # AUDIT-FIX (#1686 CRITICAL): যদি skill freeze করা থাকে (max refactors
+        # reached without improvement), আর penalty accumulate করবে না —
+        # human review করা পর্যন্ত আর refactor trigger হবে না।
+        history = self._refactor_history.get(skill_name, {})
+        if history.get("frozen"):
+            logger.debug(
+                f"Skill '{skill_name}' is FROZEN (max refactors reached without "
+                f"improvement, AUDIT-FIX #1686). Skipping penalty accumulation. "
+                f"Human review required to unfreeze."
+            )
+            return
+
+        # AUDIT-FIX (#1686): refactor cooldown check — একই skill-এ পরপর দুটো
+        # refactor যাতে না হয় (আগের refactor-এর ফলাফল measure হতে দিন)।
+        last_refactor_ts = float(history.get("last_refactor_ts", 0.0))
+        if last_refactor_ts > 0 and (time.time() - last_refactor_ts) < self._REFACTOR_COOLDOWN_SECONDS:
+            logger.debug(
+                f"Skill '{skill_name}' refactor cooldown active "
+                f"({int(time.time() - last_refactor_ts)}s elapsed, "
+                f"{self._REFACTOR_COOLDOWN_SECONDS}s required). Skipping penalty check."
+            )
+            return
+
         if score < self.refactor_penalty_threshold:
             self._consecutive_penalties[skill_name] = (
                 self._consecutive_penalties.get(skill_name, 0) + 1
             )
             if self._consecutive_penalties[skill_name] >= self.max_consecutive_penalties:
+                # AUDIT-FIX (#1686): refactor history check — আগে কতবার refactor
+                # হয়েছে এবং উন্নতি হয়েছে কিনা দেখি।
+                refactor_count = int(history.get("count", 0))
+                last_score = float(history.get("last_score", 0.0))
+
+                # Improvement check: বর্তমান score কি আগের refactor-এর score
+                # থেকে ভালো? যদি না হয়, count বাড়বে। যদি ভালো হয়, count reset।
+                if refactor_count > 0 and score > last_score:
+                    logger.info(
+                        f"Skill '{skill_name}' improved after refactor "
+                        f"(score {last_score:.3f} → {score:.3f}). Resetting refactor count."
+                    )
+                    refactor_count = 0  # উন্নতি হয়েছে — counter reset
+
+                if refactor_count >= self._MAX_REFACTORS_PER_SKILL:
+                    # Max refactors reached without improvement → freeze + alert human
+                    history["frozen"] = True
+                    self._refactor_history[skill_name] = history
+                    logger.error(
+                        f"Skill '{skill_name}' FROZEN: refactored {refactor_count} times "
+                        f"without improvement (last_score={last_score:.3f}, current={score:.3f}). "
+                        f"Human review required (AUDIT-FIX #1686). Skill will not be auto-refactored "
+                        f"until manually unfrozen."
+                    )
+                    # সতর্কতা: penalty reset করি না — frozen skill এ আর penalty
+                    # accumulate ও হয় না (early return above)।
+                    return
+
+                # Trigger refactor
                 await self._trigger_refactor(skill_name)
-                # বাংলা মন্তব্য: refactor পরে penalty 0-তে reset — pop নয় যাতে test assert করতে পারে
-                self._consecutive_penalties[skill_name] = 0
+                # AUDIT-FIX (#1686): penalty reset না করে decay করি (অর্ধেক করি)।
+                # এতে যদি refactor সফল না হয়, penalty দ্রুত আবার threshold-এ পৌঁছায় —
+                # কিন্তু refactor_count ও বাড়ে, যা freeze trigger করবে।
+                self._consecutive_penalties[skill_name] = (
+                    self._consecutive_penalties[skill_name] // 2
+                )
+                # Update history: increment count, record current score + timestamp
+                history.update({
+                    "count": refactor_count + 1,
+                    "last_score": score,
+                    "last_refactor_ts": time.time(),
+                    "frozen": False,
+                })
+                self._refactor_history[skill_name] = history
         else:
             # বাংলা মন্তব্য: good score হলে penalty 0-তে reset করা হয় (pop নয়)
             self._consecutive_penalties[skill_name] = 0
