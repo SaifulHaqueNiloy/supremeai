@@ -118,22 +118,31 @@ class FreeTierOptimizedVectorStore:
     async def similarity_search(
         self,
         query_embedding: list[float],
+        user_id: str,
         limit: int = MAX_RESULTS,
         filter_metadata: dict | None = None,
-        user_id: str | None = None,
     ) -> list[dict]:
         """
-        Search with memory-efficient streaming.
-        Uses RPC call for vector search (pgvector).
+        Search with memory-efficient streaming (pgvector RPC).
+
+        Issue #1689 (CRITICAL): `user_id` এখন REQUIRED — আগে
+        `user_id: str | None = None` এবং None হলে RPC-তে `p_user_id`
+        যেত না, ফলে `match_memories` সব ইউজারের মেমরি ফেরত দিত
+        (cross-tenant data leak)। এখন tenant scope ছাড়া কল করা
+        fail-closed: খালি/সাদা user_id → ValueError, কোনো DB কল নয়।
         """
+        if not user_id or not str(user_id).strip():
+            raise ValueError(
+                "similarity_search requires a non-empty user_id "
+                "(tenant isolation is mandatory — issue #1689)"
+            )
         try:
             rpc_params: dict[str, Any] = {
                 "query_embedding": query_embedding,
                 "match_threshold": 0.7,
                 "match_count": min(limit, self.MAX_RESULTS),
+                "p_user_id": str(user_id),
             }
-            if user_id:
-                rpc_params["p_user_id"] = user_id
 
             # Build query with filters
             query = self.client.rpc("match_memories", rpc_params)
