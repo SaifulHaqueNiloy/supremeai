@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3484,
+  "edge_count": 3488,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -2532,6 +2532,14 @@
       "to": "api.routes.healing_stats"
     },
     {
+      "from": "api.routes.healing_stats",
+      "to": "core.health.proactive_healer"
+    },
+    {
+      "from": "api.routes.healing_stats",
+      "to": "services.auto_healer"
+    },
+    {
       "from": "api.routes.health",
       "to": "core.cache"
     },
@@ -2942,6 +2950,10 @@
     {
       "from": "api.routes.onboarding",
       "to": "core.logging_config"
+    },
+    {
+      "from": "api.routes.payments",
+      "to": "api.deps"
     },
     {
       "from": "api.routes.payments",
@@ -11114,6 +11126,10 @@
     {
       "from": "tests.core.test_output_validator_coverage",
       "to": "core.output_validator"
+    },
+    {
+      "from": "tests.core.test_payments",
+      "to": "api.deps"
     },
     {
       "from": "tests.core.test_payments",
