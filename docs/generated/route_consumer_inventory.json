@@ -14,12 +14,12 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 859,
+    "backend_routes": 860,
     "frontend_unique_refs": 147,
     "routes_with_frontend_consumer": 297,
     "unmounted_routes": 0,
-    "orphan_routes": 0,
-    "orphan_families": 0,
+    "orphan_routes": 1,
+    "orphan_families": 1,
     "api_only_routes": 304,
     "api_only_families": 158,
     "by_classification": {
@@ -28,10 +28,12 @@
       "internal": 38,
       "deprecated": 4,
       "api-only": 304,
-      "orphaned": 0
+      "orphaned": 1
     }
   },
-  "orphan_families": {},
+  "orphan_families": {
+    "/render-ticket": 1
+  },
   "api_only_families": {
     "/agent/plan": 1,
     "/api/artifacts": 1,
@@ -12313,6 +12315,20 @@
       "operation": "stripe_webhook_endpoint",
       "frontend_consumers": [],
       "classification": "internal"
+    },
+    {
+      "method": "POST",
+      "path": "/render-ticket",
+      "declared": "/render-ticket",
+      "deprecated": false,
+      "router_file": "backend/api/routes/browser/_render_proxy.py",
+      "module": "api.routes.browser._render_proxy",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "issue_render_ticket",
+      "frontend_consumers": [],
+      "classification": "orphaned"
     },
     {
       "method": "GET",
