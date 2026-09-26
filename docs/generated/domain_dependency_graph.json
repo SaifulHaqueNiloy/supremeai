@@ -1,5 +1,12 @@
 {
-  "boundary_violations": [],
+  "boundary_violations": [
+    {
+      "line": 23,
+      "reason": "private cross-domain import",
+      "source": "backend/tests/security/test_render_ticket_auth.py",
+      "target": "backend/api/routes/browser/_render_proxy.py"
+    }
+  ],
   "cycles": [],
   "domain_count": 9,
   "domains": [
@@ -3712,7 +3719,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 22,
           "path": "backend/api/routes/browser/_render_proxy.py"
         }
       ],
@@ -5354,6 +5361,16 @@
         {
           "line": 9,
           "path": "backend/tests/scout_tests/test_crawler_policy.py"
+        }
+      ],
+      "source": "security",
+      "target": "research"
+    },
+    {
+      "evidence": [
+        {
+          "line": 23,
+          "path": "backend/tests/security/test_render_ticket_auth.py"
         }
       ],
       "source": "security",
