@@ -8,14 +8,13 @@ from typing import Any
 
 import jwt
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-
-from api.deps import get_current_user_token
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
 from api.dependencies import get_fitness_engine, get_tenant_db
+from api.deps import get_current_user_token
 from core.config import settings
 from core.logging_config import logger
 from core.self_evolution.agent_breeder import AgentBreeder, BreederConfig
