@@ -86,6 +86,10 @@ class MemoryManager:
 
         # Call a Supabase RPC function to perform vector similarity search
         # (issue #443 fix: sync client must not be awaited — use to_thread).
+        # Issue #1689 (CRITICAL): p_user_id এখন RPC-তে mandatory — NULL/অনুপস্থিত
+        # p_user_id আর tenant-বিহীন স্ক্যান নয়। এটি agent-নিজস্ব learning recall,
+        # তাই agent-scope sentinel ব্যবহৃত হয়: DB-তে এই কল শুধু user_id IS NULL
+        # (agent-own) rows পায় — কোনো ইউজারের প্রাইভেট মেমরি এখানে আসে না।
         result = await asyncio.to_thread(
             lambda: self.db_client.rpc(
                 "match_memories",
@@ -93,6 +97,7 @@ class MemoryManager:
                     "query_embedding": query_embedding,
                     "match_threshold": 0.75,
                     "match_count": top_k,
+                    "p_user_id": "__agent_internal__",
                 },
             ).execute()
         )

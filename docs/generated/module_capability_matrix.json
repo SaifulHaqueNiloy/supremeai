@@ -5681,7 +5681,9 @@
       "path": "backend/core/llm/telemetry.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -8576,7 +8578,7 @@
       "classification": "adapter",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/mcp/__init__.py"
+      "path": "backend/mcp_adapters/__init__.py"
     },
     {
       "capability_signals": [
@@ -8585,7 +8587,7 @@
       "classification": "adapter",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/mcp/adapters/__init__.py"
+      "path": "backend/mcp_adapters/adapters/__init__.py"
     },
     {
       "capability_signals": [
@@ -8594,7 +8596,7 @@
       "classification": "adapter",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/mcp/adapters/lovable_adapter.py"
+      "path": "backend/mcp_adapters/adapters/lovable_adapter.py"
     },
     {
       "capability_signals": [
@@ -8604,7 +8606,7 @@
       "classification": "adapter",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/mcp/adapters/playwright_bolt.py"
+      "path": "backend/mcp_adapters/adapters/playwright_bolt.py"
     },
     {
       "capability_signals": [],
@@ -13688,6 +13690,15 @@
     },
     {
       "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_self_evolution_lock.py"
+    },
+    {
+      "capability_signals": [
         "health"
       ],
       "classification": "test",
@@ -13903,6 +13914,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_upload_validator.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_vector_store_tenant_isolation.py"
     },
     {
       "capability_signals": [],
@@ -26382,5 +26403,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3020
+  "source_file_count": 3022
 }

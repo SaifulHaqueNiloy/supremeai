@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3492,
+  "edge_count": 3493,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -7896,20 +7896,20 @@
       "to": "core.logging_config"
     },
     {
-      "from": "mcp.adapters.lovable_adapter",
+      "from": "mcp_adapters.adapters.lovable_adapter",
       "to": "core.logging_config"
     },
     {
-      "from": "mcp.adapters.playwright_bolt",
+      "from": "mcp_adapters.adapters.playwright_bolt",
       "to": "core.browser_session_vault"
     },
     {
-      "from": "mcp.adapters.playwright_bolt",
+      "from": "mcp_adapters.adapters.playwright_bolt",
       "to": "core.logging_config"
     },
     {
-      "from": "mcp.adapters.playwright_bolt",
-      "to": "mcp.adapters"
+      "from": "mcp_adapters.adapters.playwright_bolt",
+      "to": "mcp_adapters.adapters"
     },
     {
       "from": "memory.chromadb_store",
@@ -11328,6 +11328,10 @@
       "to": "core.self_evolution.self_evolution_agent"
     },
     {
+      "from": "tests.core.test_self_evolution_lock",
+      "to": "core.self_evolution.self_evolution_agent"
+    },
+    {
       "from": "tests.core.test_self_healer",
       "to": "core.health.self_healer"
     },
@@ -11516,6 +11520,10 @@
       "to": "core.upload_validator"
     },
     {
+      "from": "tests.core.test_vector_store_tenant_isolation",
+      "to": "core.ai_memory.vector_store"
+    },
+    {
       "from": "tests.core.test_voice_stream",
       "to": "core.app"
     },
@@ -11629,7 +11637,7 @@
     },
     {
       "from": "tests.mcp.adapters.test_playwright_bolt",
-      "to": "mcp.adapters.playwright_bolt"
+      "to": "mcp_adapters.adapters.playwright_bolt"
     },
     {
       "from": "tests.memory.test_chromadb_store_adapters",
@@ -13565,10 +13573,6 @@
     },
     {
       "from": "tools.mcp.mcp_server",
-      "to": "mcp"
-    },
-    {
-      "from": "tools.mcp.mcp_server",
       "to": "tools.graph_service"
     },
     {
@@ -13972,7 +13976,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2001,
+  "module_count": 2003,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14932,10 +14936,10 @@
     "learning.pattern_detector",
     "learning.pattern_recognizer",
     "main",
-    "mcp",
-    "mcp.adapters",
-    "mcp.adapters.lovable_adapter",
-    "mcp.adapters.playwright_bolt",
+    "mcp_adapters",
+    "mcp_adapters.adapters",
+    "mcp_adapters.adapters.lovable_adapter",
+    "mcp_adapters.adapters.playwright_bolt",
     "memory",
     "memory.checkpoint_resume",
     "memory.chromadb_store",
@@ -15534,6 +15538,7 @@
     "tests.core.test_security_vault",
     "tests.core.test_self_benchmark_reliability",
     "tests.core.test_self_evolution_agent",
+    "tests.core.test_self_evolution_lock",
     "tests.core.test_self_healer",
     "tests.core.test_skill_execution_pipeline",
     "tests.core.test_skill_manager",
@@ -15560,6 +15565,7 @@
     "tests.core.test_universal_rules",
     "tests.core.test_universal_rules_extended",
     "tests.core.test_upload_validator",
+    "tests.core.test_vector_store_tenant_isolation",
     "tests.core.test_voice_stream",
     "tests.core.test_zero_cost_phase1_queue",
     "tests.core.test_zero_cost_redis_breaker_learning",
