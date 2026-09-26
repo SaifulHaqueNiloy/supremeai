@@ -78,8 +78,10 @@ vs the 500k ceiling).
 
 ## Fix protocol
 
-1. Branch: `agent-11/<task>` off latest `main` (never work on the stale
-   `agent-11` registration branch).
+1. Branch: `agent-11-<task>` off latest `main` (hyphen form — the slash form
+   `agent-11/<task>` is impossible while the `agent-11` registration branch
+   exists, git refuses the directory/file ref conflict; never work on the
+   stale `agent-11` registration branch itself).
 2. Fix in-repo (adapter, pool, env wiring, failover) → normal PR flow.
 3. Platform-side config change:
    - **Non-destructive** (add env var via safe snapshot→union→diff-verify PUT,

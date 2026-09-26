@@ -60,7 +60,7 @@ slots:
   notes: 'Owns ALL connected 3rd-party platforms end-to-end (charter: docs/agents/platform-agent-charter.md).
     Every 3 hours: API-key health sweep of Render x4, Upstash chain x5, MCP tower,
     Infisical, Cloudflare, Supabase, Kaggle, AI providers (automated: .github/workflows/platform-agent-check.yml).
-    Creates handoff:platform issues on any problem, fixes in-repo on agent-11/<task>
+    Creates handoff:platform issues on any problem, fixes in-repo on agent-11-<task>
     branches, applies platform-side config changes (owner approval for destructive/billing).'
 - slot: agent-12
   tool: browser-tester + log watcher
