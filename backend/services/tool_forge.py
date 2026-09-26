@@ -17,6 +17,7 @@ only), with a loud one-time warning emitted at import/boot when it is.
 
 from __future__ import annotations
 
+import signal
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -177,8 +178,41 @@ class ToolForgeService:
         }
         sandbox_locals: dict[str, Any] = {}
 
+        # Issue #1589: enforce the time budget the signature always promised.
+        # ``timeout_seconds`` was previously accepted but never applied, so a
+        # runaway/looping tool could hang the API process indefinitely (even in
+        # local-dev gate-on mode). SIGALRM is POSIX + main-thread only; where it
+        # is unavailable we still execute (gate + AST scanner remain the primary
+        # controls) — the limit is defense-in-depth, not the sandbox itself.
+        timeout_seconds = max(0.1, float(timeout_seconds))
+        alarm_active = hasattr(signal, "SIGALRM")
+        if alarm_active:
+
+            def _alarm_timeout(signum: int, frame: Any) -> None:
+                raise TimeoutError(
+                    f"tool '{tool.spec.name}' exceeded {timeout_seconds}s execution budget"
+                )
+
+            try:
+                signal.signal(signal.SIGALRM, _alarm_timeout)
+            except ValueError:
+                # Not on the main thread — SIGALRM cannot be installed here.
+                alarm_active = False
+        if alarm_active:
+            signal.setitimer(signal.ITIMER_REAL, timeout_seconds)
+
         try:
             exec(tool.compiled_code, sandbox_globals, sandbox_locals)
+
+            # Defense-in-depth (#1589): reject dunder-level globals injected by
+            # the executed code itself (sandbox-escape staging attempts).
+            staged_dunders = [
+                k for k in sandbox_locals if k.startswith("__") and k.endswith("__")
+            ]
+            if staged_dunders:
+                raise SecurityViolationError(
+                    f"Tool '{tool.spec.name}' staged dunder-level globals: {staged_dunders}"
+                )
 
             # Target function matching spec.name or 'main' or 'run' or the only callable
             func = (
@@ -199,9 +233,18 @@ class ToolForgeService:
             result = func(**params) if params else func()
             return result
 
+        except TimeoutError as exc:
+            logger.error(f"Execution budget exceeded for tool '{tool.spec.name}': {exc}")
+            raise ToolForgeError(str(exc)) from exc
+        except SecurityViolationError:
+            raise
         except Exception as exc:
             logger.error(f"Execution error in tool '{tool.spec.name}': {exc}")
             raise ToolForgeError(f"Tool execution failed: {exc}") from exc
+        finally:
+            if alarm_active:
+                signal.setitimer(signal.ITIMER_REAL, 0)
+                signal.signal(signal.SIGALRM, signal.SIG_DFL)
 
     def get_tool(self, name: str) -> SynthesizedTool | None:
         return self._tool_registry.get(name)
