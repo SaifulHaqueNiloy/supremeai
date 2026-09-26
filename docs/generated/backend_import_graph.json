@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3493,
+  "edge_count": 3492,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -7896,20 +7896,20 @@
       "to": "core.logging_config"
     },
     {
-      "from": "mcp.adapters.lovable_adapter",
+      "from": "mcp_adapters.adapters.lovable_adapter",
       "to": "core.logging_config"
     },
     {
-      "from": "mcp.adapters.playwright_bolt",
+      "from": "mcp_adapters.adapters.playwright_bolt",
       "to": "core.browser_session_vault"
     },
     {
-      "from": "mcp.adapters.playwright_bolt",
+      "from": "mcp_adapters.adapters.playwright_bolt",
       "to": "core.logging_config"
     },
     {
-      "from": "mcp.adapters.playwright_bolt",
-      "to": "mcp.adapters"
+      "from": "mcp_adapters.adapters.playwright_bolt",
+      "to": "mcp_adapters.adapters"
     },
     {
       "from": "memory.chromadb_store",
@@ -11633,7 +11633,7 @@
     },
     {
       "from": "tests.mcp.adapters.test_playwright_bolt",
-      "to": "mcp.adapters.playwright_bolt"
+      "to": "mcp_adapters.adapters.playwright_bolt"
     },
     {
       "from": "tests.memory.test_chromadb_store_adapters",
@@ -13569,10 +13569,6 @@
     },
     {
       "from": "tools.mcp.mcp_server",
-      "to": "mcp"
-    },
-    {
-      "from": "tools.mcp.mcp_server",
       "to": "tools.graph_service"
     },
     {
@@ -14936,10 +14932,10 @@
     "learning.pattern_detector",
     "learning.pattern_recognizer",
     "main",
-    "mcp",
-    "mcp.adapters",
-    "mcp.adapters.lovable_adapter",
-    "mcp.adapters.playwright_bolt",
+    "mcp_adapters",
+    "mcp_adapters.adapters",
+    "mcp_adapters.adapters.lovable_adapter",
+    "mcp_adapters.adapters.playwright_bolt",
     "memory",
     "memory.checkpoint_resume",
     "memory.chromadb_store",
