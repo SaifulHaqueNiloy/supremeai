@@ -5,7 +5,7 @@
 | metric | value |
 |---|---|
 | backend routes | 832 |
-| routes with frontend consumer | 269 |
+| routes with frontend consumer | 271 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
@@ -344,6 +344,8 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/admin/infrastructure/status` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/integrations` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/integrations/:param/health` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/admin/librarian/process` | `backend/api/routes/admin_librarian.py` | admin-only | `frontend/src/components/admin/EnhancedSkillMarketplace.tsx` |
+| GET | `/api/admin/librarian/queue` | `backend/api/routes/admin_librarian.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/llm/providers` | `backend/api/routes/admin_llm.py` | admin-only | `frontend/src/components/dashboard/LlmGatewayPage.tsx` |
 | GET | `/api/admin/llm/router` | `backend/api/routes/admin_llm.py` | admin-only | `frontend/src/components/dashboard/LlmGatewayPage.tsx` |
 | POST | `/api/admin/llm/router/override` | `backend/api/routes/admin_llm.py` | admin-only | `frontend/src/components/dashboard/LlmGatewayPage.tsx` |
@@ -386,8 +388,6 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/api-keys/admin/bulk-delete` | `backend/api/routes/api_keys.py` | admin-only | `frontend/src/components/dashboard/SecretsPage.tsx` |
 | GET | `/api/api-keys/all` | `backend/api/routes/api_keys.py` | user-facing | `frontend/src/components/dashboard/SecretsPage.tsx` |
 | POST | `/api/api-keys/create` | `backend/api/routes/api_keys.py` | user-facing | `frontend/src/components/dashboard/SecretsPage.tsx` |
-| POST | `/api/api/admin/librarian/process` | `backend/api/routes/admin_librarian.py` | admin-only | NONE |
-| GET | `/api/api/admin/librarian/queue` | `backend/api/routes/admin_librarian.py` | admin-only | NONE |
 | POST | `/api/artifacts` | `backend/api/routes/artifacts.py` | api-only | NONE |
 | DELETE | `/api/artifacts/:param` | `backend/api/routes/artifacts.py` | api-only | NONE |
 | GET | `/api/artifacts/:param` | `backend/api/routes/artifacts.py` | api-only | NONE |

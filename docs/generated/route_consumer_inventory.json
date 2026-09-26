@@ -16,7 +16,7 @@
   "totals": {
     "backend_routes": 832,
     "frontend_unique_refs": 145,
-    "routes_with_frontend_consumer": 269,
+    "routes_with_frontend_consumer": 271,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
@@ -2362,6 +2362,38 @@
       "classification": "admin-only"
     },
     {
+      "method": "POST",
+      "path": "/api/admin/librarian/process",
+      "declared": "/api/admin/librarian/process",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_librarian.py",
+      "module": "api.routes.admin_librarian",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "process_skill_action",
+      "frontend_consumers": [
+        "frontend/src/components/admin/EnhancedSkillMarketplace.tsx"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/librarian/queue",
+      "declared": "/api/admin/librarian/queue",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_librarian.py",
+      "module": "api.routes.admin_librarian",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_quarantine_queue",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
       "method": "GET",
       "path": "/api/admin/llm/providers",
       "declared": "/api/admin/llm/providers",
@@ -3044,34 +3076,6 @@
         "frontend/src/components/dashboard/SecretsPage.tsx"
       ],
       "classification": "user-facing"
-    },
-    {
-      "method": "POST",
-      "path": "/api/api/admin/librarian/process",
-      "declared": "/api/api/admin/librarian/process",
-      "deprecated": false,
-      "router_file": "backend/api/routes/admin_librarian.py",
-      "module": "api.routes.admin_librarian",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "process_skill_action",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/api/admin/librarian/queue",
-      "declared": "/api/api/admin/librarian/queue",
-      "deprecated": false,
-      "router_file": "backend/api/routes/admin_librarian.py",
-      "module": "api.routes.admin_librarian",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "get_quarantine_queue",
-      "frontend_consumers": [],
-      "classification": "admin-only"
     },
     {
       "method": "POST",
