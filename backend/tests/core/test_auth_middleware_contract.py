@@ -305,3 +305,89 @@ async def test_admin_verify_non_admin_rejected(no_test_env):
         await verify_admin_session_fail_closed(request)
     assert excinfo.value.status_code == 401
     assert excinfo.value.detail == "Not authorized"
+
+
+# ---------------------------------------------------------------------------
+# JWT-COOKIE-MIGRATION (issue #1668, ধাপ ২/২): httpOnly cookie auth source
+# ---------------------------------------------------------------------------
+async def test_cookie_token_authenticates_get(no_test_env):
+    """The httpOnly access cookie (set at login) is a valid auth source for
+    safe methods — no CSRF header required."""
+    token = _encode({"sub": "cookie-user", "role": "viewer", "tenant_id": "t1"})
+    sent, scope = await _run(
+        _scope(
+            path="/api/v1/agents",
+            headers=[(b"cookie", f"supreme_access_token={token}".encode())],
+        )
+    )
+    assert sent[-1]["type"] == "downstream.called"
+    assert scope["user"]["sub"] == "cookie-user"
+
+
+async def test_cookie_token_post_without_csrf_rejected(no_test_env):
+    """Cookie-authenticated state-changing request without the matching
+    X-CSRF-Token header must be rejected (double-submit pattern)."""
+    token = _encode({"sub": "cookie-user", "role": "viewer", "tenant_id": "t1"})
+    sent, _ = await _run(
+        _scope(
+            path="/api/v1/agents",
+            method="POST",
+            headers=[(b"cookie", f"supreme_access_token={token}".encode())],
+        )
+    )
+    start = next(m for m in sent if m.get("type") == "http.response.start")
+    assert start["status"] == 403
+
+
+async def test_cookie_token_post_with_matching_csrf_accepted(no_test_env):
+    """Cookie-auth POST with matching CSRF cookie+header passes."""
+    token = _encode({"sub": "cookie-user", "role": "viewer", "tenant_id": "t1"})
+    csrf = "csrf-value-123"
+    sent, scope = await _run(
+        _scope(
+            path="/api/v1/agents",
+            method="POST",
+            headers=[
+                (b"cookie", f"supreme_access_token={token}; supreme_csrf_token={csrf}".encode()),
+                (b"x-csrf-token", csrf.encode()),
+            ],
+        )
+    )
+    assert sent[-1]["type"] == "downstream.called"
+    assert scope["user"]["sub"] == "cookie-user"
+
+
+async def test_cookie_token_post_with_wrong_csrf_rejected(no_test_env):
+    """A CSRF header that does not match the cookie must be rejected."""
+    token = _encode({"sub": "cookie-user", "role": "viewer", "tenant_id": "t1"})
+    sent, _ = await _run(
+        _scope(
+            path="/api/v1/agents",
+            method="POST",
+            headers=[
+                (b"cookie", f"supreme_access_token={token}; supreme_csrf_token=real".encode()),
+                (b"x-csrf-token", b"forged"),
+            ],
+        )
+    )
+    start = next(m for m in sent if m.get("type") == "http.response.start")
+    assert start["status"] == 403
+
+
+async def test_bearer_header_still_takes_priority(no_test_env):
+    """Existing clients: a valid Bearer header must win over the cookie, and
+    must not require CSRF even on POST."""
+    token = _encode({"sub": "header-user", "role": "viewer", "tenant_id": "t1"})
+    stale_cookie_token = _encode({"sub": "stale-cookie", "role": "viewer"})
+    sent, scope = await _run(
+        _scope(
+            path="/api/v1/agents",
+            method="POST",
+            headers=[
+                (b"authorization", f"Bearer {token}".encode()),
+                (b"cookie", f"supreme_access_token={stale_cookie_token}".encode()),
+            ],
+        )
+    )
+    assert sent[-1]["type"] == "downstream.called"
+    assert scope["user"]["sub"] == "header-user"
