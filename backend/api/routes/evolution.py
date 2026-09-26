@@ -533,7 +533,10 @@ async def save_swarm_blueprint(
     path.write_text(json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8")
     logger.info(
         "Swarm blueprint persisted: %s (%s) by %s -> %s",
-        flow_id, name, admin.get("sub", "unknown"), path,
+        flow_id,
+        name,
+        admin.get("sub", "unknown"),
+        path,
     )
     return {
         "status": "success",
@@ -579,7 +582,9 @@ async def execute_swarm_blueprint(
     # Audit trail: who attempted execution
     logger.warning(
         "Swarm blueprint execution attempted: %s by %s (admin=%s) — NOT_IMPLEMENTED",
-        flow_id, admin.get("sub", "unknown"), admin.get("role"),
+        flow_id,
+        admin.get("sub", "unknown"),
+        admin.get("role"),
     )
 
     # The blueprint is real and validated; the execution engine is not built yet.
