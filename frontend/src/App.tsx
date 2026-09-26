@@ -69,6 +69,9 @@ const GuestChatPage = React.lazy(() => import("./pages/PublicPages"));
 const ModelsPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.ModelsPage })));
 const PublicInfoPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.PublicInfoPage })));
 const PricingPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.PricingPage })));
+const FeaturesPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.FeaturesPage })));
+const DocsPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.DocsPage })));
+const AboutPage = React.lazy(() => import("./pages/PublicPages").then(m => ({ default: m.AboutPage })));
 const RunsPage = React.lazy(() => import("./pages/RunsPage"));
 const MarketplacePage = React.lazy(() => import("./pages/MarketplacePage"));
 const ActivityPage = React.lazy(() => import("./pages/ActivityPage"));
@@ -144,11 +147,13 @@ const AppContent: React.FC = () => {
               <Route path="/" element={<RouteBoundary><GuestChatPage /></RouteBoundary>} />
               {/* Public viewer path: shared URLs should work without forcing a normal viewer through login. */}
               <Route path="/viewer" element={<RouteBoundary><MCPConnector /></RouteBoundary>} />
-              <Route path="/features" element={<RouteBoundary><PublicInfoPage kind="/features" /></RouteBoundary>} />
+              {/* Issue #1458/#1459/#1487/#1488: every public page now owns real,
+                  distinct content instead of one shared template body. */}
+              <Route path="/features" element={<RouteBoundary><FeaturesPage /></RouteBoundary>} />
               <Route path="/models" element={<RouteBoundary><ModelsPage /></RouteBoundary>} />
               <Route path="/pricing" element={<RouteBoundary><PricingPage /></RouteBoundary>} />
-              <Route path="/docs" element={<RouteBoundary><PublicInfoPage kind="/docs" /></RouteBoundary>} />
-              <Route path="/about" element={<RouteBoundary><PublicInfoPage kind="/about" /></RouteBoundary>} />
+              <Route path="/docs" element={<RouteBoundary><DocsPage /></RouteBoundary>} />
+              <Route path="/about" element={<RouteBoundary><AboutPage /></RouteBoundary>} />
               <Route path="/contact" element={<RouteBoundary><PublicInfoPage kind="/contact" /></RouteBoundary>} />
 
               {/* AUTHENTICATED USER STATE */}
