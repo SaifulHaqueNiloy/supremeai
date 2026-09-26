@@ -150,7 +150,7 @@ class AIMemory(Base):
         cls,
         session,
         query_embedding: list[float],
-        user_id: str | None = None,
+        user_id: str,
         limit: int = 10,
         threshold: float = 0.7,
     ) -> list[AIMemory]:
@@ -159,7 +159,10 @@ class AIMemory(Base):
         Args:
             session: Async DB session
             query_embedding: Query vector (must be 384-dim per the contract)
-            user_id: Optional owner filter (auth.uid()::text)
+            user_id: REQUIRED owner filter (auth.uid()::text) — never None.
+                AUDIT-FIX (#1689): আগে Optional ছিল, None হলে সব user-এর
+                memory ফেরত দিত (cross-tenant data leak)। এখন required,
+                empty হলে ValueError raise করে — fail-closed।
             limit: Max results fetched before threshold post-filter
             threshold: Minimum cosine similarity (0-1)
 
@@ -168,15 +171,27 @@ class AIMemory(Base):
         """
         from sqlalchemy import select
 
+        # AUDIT-FIX (#1689): tenant isolation fail-closed guard
+        if not user_id or not isinstance(user_id, str) or not user_id.strip():
+            raise ValueError(
+                "AIMemory.similarity_search requires a non-empty user_id for tenant isolation "
+                "(AUDIT-FIX #1689: cross-tenant data leak prevention)."
+            )
+
         if not HAS_PGVECTOR_TYPE:
             raise RuntimeError(
                 "AIMemory.similarity_search requires the optional 'pgvector' package"
             )
 
-        query = select(cls).order_by(cls.embedding.cosine_distance(query_embedding)).limit(limit)
-
-        if user_id is not None:
-            query = query.where(cls.user_id == user_id)
+        # AUDIT-FIX (#1689): user_id is now always required (validated above).
+        # The `.where(cls.user_id == user_id)` filter is unconditional — no
+        # more silent global search when user_id is missing.
+        query = (
+            select(cls)
+            .order_by(cls.embedding.cosine_distance(query_embedding))
+            .where(cls.user_id == user_id)
+            .limit(limit)
+        )
 
         result = await session.execute(query)
         memories = result.scalars().all()

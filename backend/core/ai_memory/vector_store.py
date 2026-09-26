@@ -118,22 +118,40 @@ class FreeTierOptimizedVectorStore:
     async def similarity_search(
         self,
         query_embedding: list[float],
+        user_id: str,
         limit: int = MAX_RESULTS,
         filter_metadata: dict | None = None,
-        user_id: str | None = None,
     ) -> list[dict]:
         """
         Search with memory-efficient streaming.
         Uses RPC call for vector search (pgvector).
+
+        AUDIT-FIX (#1689 CRITICAL): আগে `user_id: str | None = None` ছিল — যদি
+        caller None পাস করত (বা ক্ষেত্র বাদ দিত), RPC match_memories-এ p_user_id
+        পাস হতো না, ফলে Supabase সব user-এর record ফেরত দিত — cross-tenant
+        data leak. এখন user_id required (positional, no default) এবং
+        falsy মান (None/empty) হলে স্পষ্ট ValueError ফেরত দেয় — fail-closed।
+
+        RLS (Row-Level Security) Supabase-এ আলাদাভাবে কনফিগার করা দরকার;
+        এই PR application-level enforcement যোগ করে, DB-level RLS পরবর্তী
+        migration-এ আসবে।
         """
+        # AUDIT-FIX (#1689): Tenant isolation fail-closed guard.
+        # কখনোই `None`/empty গ্রহণ করব না — এটাই প্রাথমিক leak vector ছিল।
+        if not user_id or not isinstance(user_id, str) or not user_id.strip():
+            raise ValueError(
+                "similarity_search requires a non-empty user_id for tenant isolation "
+                "(AUDIT-FIX #1689: cross-tenant data leak prevention). "
+                "Pass an explicit user_id, or do not call similarity_search."
+            )
+
         try:
             rpc_params: dict[str, Any] = {
                 "query_embedding": query_embedding,
                 "match_threshold": 0.7,
                 "match_count": min(limit, self.MAX_RESULTS),
+                "p_user_id": user_id,  # AUDIT-FIX (#1689): সর্বদা পাঠানো হয়
             }
-            if user_id:
-                rpc_params["p_user_id"] = user_id
 
             # Build query with filters
             query = self.client.rpc("match_memories", rpc_params)

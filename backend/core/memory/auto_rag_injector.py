@@ -96,8 +96,23 @@ class AutoRAGInjector:
         Failure policy: ANY error → return the original prompt untouched
         (silent graceful degradation — memory is an enhancement, never a
         dependency).
+
+        AUDIT-FIX (#1689 CRITICAL): আগে user_id=None হলেও similarity_search-এ
+        পাঠানো হতো — যা vector_store-এ গিয়ে সব user-এর memory return করত
+        (cross-tenant data leak)। এখন user_id None/empty হলে memory recall
+        সম্পূর্ণ skip করা হয় — fail-closed, কোনো recall না হওয়া ভালো একদম
+        ভুল user-এর memory inject হওয়ার চেয়ে।
         """
         if not user_query or not user_query.strip():
+            return system_prompt
+
+        # AUDIT-FIX (#1689): user_id ছাড়া memory recall করা নিষিদ্ধ।
+        # Return original prompt হিসেবে fail-closed — silent global leak নয়।
+        if not user_id or not isinstance(user_id, str) or not user_id.strip():
+            logger.warning(
+                "[AutoRAG] enrich_system_prompt called without user_id — "
+                "skipping memory recall (tenant isolation guard, AUDIT-FIX #1689)"
+            )
             return system_prompt
 
         try:
