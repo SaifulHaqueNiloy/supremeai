@@ -48,12 +48,23 @@ export function useAuth(): UseAuthReturn {
   const [authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
+    // Issue #1682 (auth listener memory leak): the unsubscribe function
+    // returned by onAuthStateChanged was discarded, so the Firebase listener
+    // stayed registered for the lifetime of the page even after this hook
+    // unmounted — one leaked listener per mount (HMR / route re-entries
+    // compounded it). The `cancelled` flag only silenced state updates.
+    // Now the unsubscribe is captured and invoked in the effect cleanup,
+    // and both guards are kept (flag for the async window before the
+    // listener exists, unsubscribe for everything after).
+    // বাংলা: onAuthStateChanged যে unsubscribe ফাংশন ফেরত দেয় সেটি এখন
+    // ক্লিনআপে কল করা হয় — লিসেনার আর লিক করবে না।
     let cancelled = false;
+    let unsubscribe: (() => void) | null = null;
 
     (async () => {
       try {
         const auth = await getFirebaseAuth();
-        onAuthStateChanged(auth, (fbUser) => {
+        const stopListening = onAuthStateChanged(auth, (fbUser) => {
           if (cancelled) return;
           setFirebaseUser(fbUser);
           if (fbUser) {
@@ -64,6 +75,12 @@ export function useAuth(): UseAuthReturn {
           setAuthReady(true);
           setLoading(false);
         });
+        if (cancelled) {
+          // Component unmounted while auth was initializing — clean up now.
+          stopListening();
+          return;
+        }
+        unsubscribe = stopListening;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
         if (!cancelled) {
@@ -74,7 +91,13 @@ export function useAuth(): UseAuthReturn {
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (unsubscribe) {
+        unsubscribe();
+        unsubscribe = null;
+      }
+    };
   }, [setUser]);
 
   const signIn = useCallback(async (email: string, password: string) => {
