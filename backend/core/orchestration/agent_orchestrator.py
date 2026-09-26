@@ -69,8 +69,15 @@ def _normalize(text: str) -> str:
 
 
 def _matches_any(prompt_lower: str, keywords: list[str]) -> bool:
+    """Issue #1697 (keyword-routing manipulation): plain substring matching
+    made the router trivially gameable — e.g. the substring "code" inside
+    "code_of_conduct" (or any word merely *containing* a keyword) flipped the
+    request onto the expensive coding tier. Keywords are now matched on
+    word boundaries only, so compound/underscored words never trigger a tier.
+    বাংলা: শব্দের ভেতরে আংশিক মিল আর টিয়ার বদলাতে পারবে না — শুধু পূর্ণ শব্দ মিললেই কাজ করবে।
+    """
     norm = _normalize(prompt_lower)
-    return any(kw.lower() in norm for kw in keywords)
+    return any(re.search(rf"\b{re.escape(kw.lower())}\b", norm) for kw in keywords)
 
 
 def route_request(prompt: str, task_type: str = "general") -> "SmartSemanticRouter":
