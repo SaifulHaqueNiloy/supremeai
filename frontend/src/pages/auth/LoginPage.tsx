@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { ServiceHealthBar } from '../../components/auth/ServiceHealthBar';
+import { getApiBaseUrl } from '../../utils/api';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [errorKey, setErrorKey] = useState(0);
+  const [diagnostic, setDiagnostic] = useState<{ ok: boolean; message: string } | null>(null);
+  const [isDiagnosing, setIsDiagnosing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const login = useAuthStore((state) => state.login);
@@ -14,6 +19,7 @@ export const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setDiagnostic(null);
     if (!email || !password) {
       setError('দয়া করে সব ফিল্ড পূরণ করুন।');
       return;
@@ -61,8 +67,43 @@ export const LoginPage: React.FC = () => {
       }
       
       setError(userMessage);
+      // Issue #1456: re-mount the alert on every failure so the shake
+      // animation replays, and surface the diagnostics affordance.
+      setErrorKey((k) => k + 1);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Issue #1456: one-click diagnostic — pings the public health contract so a
+  // user can distinguish "my credentials are wrong" from "the API is down".
+  const runConnectionDiagnostic = async () => {
+    setIsDiagnosing(true);
+    setDiagnostic(null);
+    const started = performance.now();
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 10000);
+      const resp = await fetch(`${getApiBaseUrl()}/api/v1/health`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+      clearTimeout(timer);
+      const ms = Math.round(performance.now() - started);
+      setDiagnostic({
+        ok: resp.ok,
+        message: resp.ok
+          ? `✅ API reachable (${resp.status}, ${ms}ms) — the server is up, so the problem is likely your credentials.`
+          : `⚠️ API responded with status ${resp.status} (${ms}ms).`,
+      });
+    } catch {
+      setDiagnostic({
+        ok: false,
+        message:
+          '❌ API unreachable — no response at all. This points to the server being down or a network/CORS problem on this connection.',
+      });
+    } finally {
+      setIsDiagnosing(false);
     }
   };
 
@@ -96,7 +137,34 @@ export const LoginPage: React.FC = () => {
                 <p className="mt-2 text-sm text-[var(--supremeai-color-text-secondary-light)] dark:text-[var(--supremeai-color-text-secondary-dark)]">Access your workspace and active tasks.</p>
               </div>
 
-              {error && <div role="alert" className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">{error}</div>}
+              {error && (
+                <motion.div
+                  key={errorKey}
+                  role="alert"
+                  initial={{ x: 0 }}
+                  animate={{ x: [0, -9, 9, -6, 6, -3, 3, 0] }}
+                  transition={{ duration: 0.45, ease: 'easeInOut' }}
+                  className="mb-5 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300"
+                >
+                  {error}
+                  <button
+                    type="button"
+                    onClick={runConnectionDiagnostic}
+                    disabled={isDiagnosing}
+                    className="mt-2 block rounded-lg border border-red-300 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-900/40"
+                  >
+                    {isDiagnosing ? 'Checking…' : '🔍 Check connection'}
+                  </button>
+                  {diagnostic && (
+                    <p
+                      className={`mt-2 text-xs ${diagnostic.ok ? 'text-emerald-700 dark:text-emerald-300' : 'text-red-700 dark:text-red-300'}`}
+                      role="status"
+                    >
+                      {diagnostic.message}
+                    </p>
+                  )}
+                </motion.div>
+              )}
 
               <form onSubmit={handleLogin} className="space-y-5">
                 <label className="block text-sm font-medium" htmlFor="login-email">Email address<input id="login-email" name="email" data-testid="email-input" autoComplete="email" type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--supremeai-color-border-default-light)] bg-[var(--supremeai-color-bg-void-light)] px-4 py-3 outline-none transition focus:border-[var(--supremeai-color-primary-light)] focus:ring-4 focus:ring-[var(--supremeai-color-primary-soft-light)] dark:border-[var(--supremeai-color-border-default-dark)] dark:bg-[var(--supremeai-color-bg-void-dark)] dark:focus:border-[var(--supremeai-color-primary-dark)]" /></label>
