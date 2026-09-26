@@ -57,6 +57,14 @@ class SettingsSecretsMixin:
         "SUPREMEAI_ADMIN_PASSWORD_HASH",
         "CI_WEBHOOK_SECRET",
         "SUPREMEAI_API_KEY",
+        # Issues #1483/#1484/#1455: CORS origins live in the vault but were
+        # never mapped into the settings cache — os.getenv()-only consumers
+        # (middleware/cors_policy.py, settings.cors_origins) saw EMPTY lists
+        # on deploys whose Render env omits the vars → every browser preflight
+        # 400'd (login/chat/admin dashboard fully blocked).
+        "CORS_ORIGINS",
+        "USER_CORS_ORIGINS",
+        "ADMIN_CORS_ORIGINS",
     ]
 
     def _ensure_secrets_loaded(self) -> None:
@@ -260,6 +268,15 @@ class SettingsSecretsMixin:
                 )
                 cached[key] = ""
         return cached.get(key, "")
+
+    def get_secret(self, key: str) -> str:
+        """Public read-only accessor for the settings secret cache.
+
+        বাংলা মন্তব্য: os.getenv()-only মডিউলগুলোর জন্য (যেমন middleware/cors_policy.py)
+        vault-backed fallback — 12-factor ক্রম বজায় থাকে: প্রসেস env আগে, vault cache পরে।
+        Tests skip vault I/O entirely (see _is_test_environment).
+        """
+        return self._get_cached_secret(key)
 
     # ── Cloud-fetched secrets — GCP Secret Manager বা env fallback ───────────
     # বাংলা মন্তব্য: স্টার্টআপ টাইম কমাতে এবং Infisical ভল্ট থেকে একের পর এক সিক্রেট ফেচ করা এড়াতে
