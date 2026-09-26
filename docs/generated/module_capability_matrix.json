@@ -2721,6 +2721,16 @@
     },
     {
       "capability_signals": [
+        "mcp",
+        "memory"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/memory_mcp_http.py"
+    },
+    {
+      "capability_signals": [
         "dispatch",
         "health",
         "mcp",
@@ -10600,6 +10610,13 @@
       "path": "backend/tests/api/routes/commandcenter/test_system.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_admin_route_consolidation.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "health",
@@ -10710,6 +10727,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/routes/test_mcp_hub_contract.py"
+    },
+    {
+      "capability_signals": [
+        "mcp",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_memory_mcp_http.py"
     },
     {
       "capability_signals": [
@@ -25960,5 +25987,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 2975
+  "source_file_count": 2978
 }
