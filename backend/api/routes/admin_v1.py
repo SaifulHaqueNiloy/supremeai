@@ -181,8 +181,8 @@ async def admin_system_status_v1(admin: dict = Depends(get_current_admin)) -> di
 @router.get("/admin/dashboard")
 async def admin_dashboard_v1(admin: dict = Depends(get_current_admin)) -> dict[str, Any]:
     """Composite dashboard payload: real metrics + real stats + real health."""
-    from api.routes.admin_dashboard.endpoints_metrics import get_metrics
     from api.routes.admin_dashboard.endpoints_health import get_health_map
+    from api.routes.admin_dashboard.endpoints_metrics import get_metrics
 
     dashboard: dict[str, Any] = {
         "generated_at": datetime.now(UTC).isoformat(),

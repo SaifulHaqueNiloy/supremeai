@@ -62,6 +62,10 @@ import { workspaceFeatureRoutes } from './routes/workspaceFeatureRoutes';
 import ErrorBoundary from './components/admin/DashboardErrorBoundary';
 import ServerHealthWatcher from './components/shell/ServerHealthWatcher';
 import { RouteBoundary } from './router/RouteBoundary';
+// Issue #1468 (CRITICAL): the admin Firebase Hosting target serves this same
+// build — on that host the whole route graph must land on /admin instead of
+// the user-facing app. Transparent pass-through on every other host.
+import { AdminHostEntry } from './router/AdminHostEntry';
 
 // বাংলা মন্তব্য (Wave 3): বাকি ১০টি eager page import-ও React.lazy করা হলো —
 // ২৬টি lazy page-এর মতোই একই top-level Suspense-এর নিচে চলে, main chunk ছোট থাকে।
@@ -123,6 +127,8 @@ const AppContent: React.FC = () => {
               </div>
             </div>
           }>
+            {/* #1468: admin portal host → /admin entry gate (see AdminHostEntry). */}
+            <AdminHostEntry>
             <Routes>
               {/* =========================================
                   ONE ROUTE GRAPH — User + Admin in one build
@@ -291,6 +297,7 @@ const AppContent: React.FC = () => {
               {/* Catch-all 404 Route */}
               <Route path="*" element={<RouteBoundary><ErrorPage code={404} /></RouteBoundary>} />
             </Routes>
+            </AdminHostEntry>
           </React.Suspense>
       </GlobalConfigInitializer>
     </ErrorBoundary>

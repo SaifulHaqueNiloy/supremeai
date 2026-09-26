@@ -149,17 +149,12 @@ class SettingsFieldsMixin:
     # a static Field on this mixin would shadow the property in the MRO and
     # silently disable env-driven CORS validation (incl. STRICT_CORS_TEST bypass).
 
-    # Issues #1483/#1484/#1455 (CRITICAL): previously these defaulted to [] and
-    # production relied purely on env sync — when USER_CORS_ORIGINS failed to
-    # reach the host, every preflight from the real frontends (supremeai-a.web.app,
-    # supremeai-admin.web.app) got 400 with zero CORS headers and login/chat were
-    # 100% broken. The known production browser origins are now safe code-level
-    # defaults; explicit env vars (USER_CORS_ORIGINS / ADMIN_CORS_ORIGINS) still
-    # win when present. Kept in sync with middleware/cors_policy.py defaults.
+    # Kept in sync with middleware/cors_policy.py defaults. Issue #1491:
+    # https://supremeai-lac.vercel.app is dead in production (HTTP 404) and was
+    # removed from the code-level defaults.
     user_cors_origins: str | list[str] = Field(
         default=[
             "https://supremeai-a.web.app",  # Firebase Hosting user portal
-            "https://supremeai-lac.vercel.app",  # Vercel portal
             "https://supremeai-studio.vercel.app",  # Vercel studio
         ],
         validation_alias="USER_CORS_ORIGINS",

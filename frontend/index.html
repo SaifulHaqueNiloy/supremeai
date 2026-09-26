@@ -2,7 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- Issue #1529 (LOW): the browser tab fell back to the default favicon on
+         every surface that could not rasterize SVG (legacy browsers, iOS
+         home-screen, some crawlers). A real multi-resolution favicon.ico and
+         an apple-touch-icon now ship alongside the SVG mark. -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <!-- Issue #1462: PWA installability — without a manifest link the browser
          never offers "Add to Home Screen". Icon paths point at files that

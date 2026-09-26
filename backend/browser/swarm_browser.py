@@ -4,6 +4,14 @@ backend/browser/swarm_browser.py
 L5+: Swarm Browser & Flow Digital Twin — Orchestrates parallel multi-agent swarms
 exploring different sectors of a web platform simultaneously, and dry-runs flows in
 a Digital Twin simulator before execution to guarantee zero downtime and zero failures.
+
+ISSUE-1571 (Part 2) refactor:
+* ``AutonomousBrowserAgent(session=None)`` stateless hacks are GONE — every
+  swarm member now acquires a REAL stateful session from
+  ``BrowserSessionManager`` (stable ``session_id``, cookies + page preserved).
+* Parallel tab coordination: each sub-goal runs on its own session/page while
+  findings are merged through the unified synthesis report.
+* Sessions are ALWAYS released after the mission — no orphaned browsers.
 """
 
 from __future__ import annotations
@@ -13,12 +21,20 @@ from typing import Any
 
 from brain.reasoning_orchestrator import ReasoningOrchestrator
 from browser.autonomous_browser import AutonomousBrowserAgent
+from browser.session_manager import BrowserSessionManager
 from core.logging_config import logger
+
+__all__ = ["SwarmBrowser"]
 
 
 class SwarmBrowser:
-    def __init__(self):
+    def __init__(self, session_manager: BrowserSessionManager | None = None):
         self.reasoner = ReasoningOrchestrator.get_instance()
+        # NOTE: `manager or default` লিখলে ভুল হতো — BrowserSessionManager-এ
+        # `__len__` আছে, তাই খালি (0-session) manager falsy হয়ে যায়!
+        self.session_manager = (
+            session_manager if session_manager is not None else BrowserSessionManager()
+        )
 
     async def explore(self, site: str, sub_goals: list[str]) -> dict[str, Any]:
         """Deploy parallel agent swarm to explore sub-goals simultaneously and synthesize findings.
@@ -44,11 +60,24 @@ class SwarmBrowser:
         logger.info(f"[SwarmBrowser] Deploying {len(sub_goals)} parallel agents for site: {site}")
 
         tasks = []
-        for goal in sub_goals:
-            agent = AutonomousBrowserAgent(session=None)
-            tasks.append(agent.achieve(goal))
+        sessions = []
+        for i, goal in enumerate(sub_goals):
+            # ISSUE-1571: real stateful session per sub-goal — parallel tabs with
+            # a shared synthesis; stable session_ids keep cookies/state per tab.
+            session_id = f"swarm-{site[:24]}-{i}"
+            session = self.session_manager.acquire(provider="swarm-tab", session_id=session_id)
+            session.metadata["swarm_site"] = site
+            session.metadata["swarm_goal"] = goal
+            sessions.append(session)
+            agent = AutonomousBrowserAgent(session=session, start_url=site, goal=goal)
+            tasks.append(agent.achieve(goal, start_url=site))
 
-        results = await asyncio.gather(*tasks, return_exceptions=True)
+        try:
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+        finally:
+            # ISSUE-1571: every acquired session is released — no orphans.
+            for session in sessions:
+                await self.session_manager.release(session.session_id)
 
         successful_results = []
         for i, res in enumerate(results):

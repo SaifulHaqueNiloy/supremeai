@@ -82,6 +82,13 @@ class SystemAlertPayload(BaseModel):
 
 @router.post("/api/v1/admin/alerts")
 async def report_system_alert(request: Request, payload: SystemAlertPayload):
+    """Canonical internal alert ingestion (issue #1497).
+
+    Machine-to-machine alert reporting (API key or admin secret). The AI Log
+    Analyzer (scripts/devops/ai_log_analyzer.py) consumes this endpoint; the
+    legacy DB-persist variant POST /api/admin/alerts is deprecated in favor of
+    this one.
+    """
     # Allow if valid API key is present
     if not hasattr(request.state, "api_key") or not request.state.api_key:
         # Fallback to Admin Secret if API key is missing

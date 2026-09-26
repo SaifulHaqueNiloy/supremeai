@@ -57,6 +57,20 @@ export const LoginPage: React.FC = () => {
         userMessage = '🔧 Server temporarily unavailable (maintenance/cold start). Please wait 1-2 minutes.';
       } else if (err?.status === 401 || err?.status === 403) {
         userMessage = '🔑 Invalid credentials. Check your email/password and try again.';
+      } else if (err?.status === 400) {
+        // Issue #1519 (CRITICAL): 400 responses previously fell through to the
+        // generic "login failed" line with zero explanation. Surface the
+        // backend detail when the API provides one; otherwise say plainly that
+        // the request was rejected as malformed.
+        const detail400 = err?.response?.data?.detail ?? err?.data?.detail ?? err?.detail;
+        if (detail400) {
+          const text = typeof detail400 === 'string' ? detail400 : JSON.stringify(detail400);
+          userMessage = text.includes('database') || text.includes('Database')
+            ? '🗄️ Database service unavailable — Our team has been notified.'
+            : `⚠️ ${text}`;
+        } else {
+          userMessage = '⚠️ The sign-in request was rejected (400). Check the entered fields and try again.';
+        }
       } else if (err?.response?.data?.detail) {
         const detail = typeof err.response.data.detail === 'string' 
           ? err.response.data.detail 
@@ -64,6 +78,11 @@ export const LoginPage: React.FC = () => {
         userMessage = detail.includes('database') || detail.includes('Database')
           ? '🗄️ Database service unavailable — Our team has been notified.'
           : `Error: ${detail}`;
+      } else if (err instanceof Error && err.message) {
+        // Issue #1519: last-resort branch — an unclassified failure used to
+        // collapse into the bare Bengali generic with no signal at all. Show
+        // the underlying message so nothing fails silently.
+        userMessage = `⚠️ ${err.message}`;
       }
       
       setError(userMessage);

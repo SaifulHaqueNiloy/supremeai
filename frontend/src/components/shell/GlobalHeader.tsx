@@ -13,6 +13,7 @@ import { useAuthStore, AuthStatus } from '../../store/authStore';
 import { useStore } from '../../store/useStore';
 import { useTheme } from '../../contexts/useTheme';
 import { useWorkspaceSettings } from '../../hooks/useWorkspaceSettings';
+import { useMobileNav } from '../../hooks/useMobileNav';
 import { canAccessAdminContext, resolveLandingPath } from '../../auth/identity';
 import { PANEL_OPEN_EVENT } from './shellEvents';
 
@@ -51,6 +52,9 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
   // misleading "SYSTEM UNAVAILABLE" during cold start.
   const isServerStatusChecking = useStore((s) => s.isServerStatusChecking);
   const { isSidebarCollapsed, toggleSidebar } = useWorkspaceSettings();
+  // Issue #1526: mobile drawer state — GlobalHeader's sidebar button opens the
+  // overlay nav below md; DashboardLayout closes it on route change/backdrop.
+  const { isMobileNavOpen, toggleMobileNav } = useMobileNav();
 
   const [notifOpen, setNotifOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -96,11 +100,21 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
 
   return (
     <div ref={headerRef} className="h-14 flex items-center gap-3 px-4 border-b border-border">
-      {/* Sidebar collapse toggle — shared collapse state, দুই context-এই কাজ করে */}
+      {/* Sidebar collapse toggle — shared collapse state, দুই context-এই কাজ করে。
+          Issue #1526: below md the sidebar is an overlay drawer, so the same
+          button toggles the mobile drawer instead of the desktop collapse
+          state (checked at click time, not render time). */}
       <button
         type="button"
-        onClick={toggleSidebar}
+        onClick={() => {
+          if (typeof window !== 'undefined' && window.innerWidth < 768) {
+            toggleMobileNav();
+          } else {
+            toggleSidebar();
+          }
+        }}
         aria-label={isSidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        aria-expanded={isMobileNavOpen ? true : undefined}
         className="h-9 w-9 shrink-0 rounded-lg hover:surface-2 text-secondary hover:text-text flex items-center justify-center transition-colors"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

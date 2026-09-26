@@ -6,17 +6,17 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 582,
-    "frontend_unique_refs": 145,
-    "matched": 250,
-    "orphan_routes": 332
+    "backend_routes": 607,
+    "frontend_unique_refs": 147,
+    "matched": 274,
+    "orphan_routes": 333
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
     "/api/v1/admin-api": 25,
     "/api/v1/mesh": 15,
     "/api/v1/mcp": 14,
-    "/api/v1/auth": 10,
+    "/api/v1/auth": 11,
     "/api/v1/evolution": 9,
     "/api/v1/missions": 9,
     "/api/v1/meta-ai": 8,
@@ -132,7 +132,7 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 256,
+    "unclassified-orphan": 257,
     "internal": 44,
     "admin-only": 32
   },
@@ -317,6 +317,13 @@
       "method": "PATCH",
       "declared": "/auth/users/{user_id}/role",
       "resolved": "/api/v1/auth/users/:param/role",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/auth.py",
+      "method": "POST",
+      "declared": "/auth/totp/verify",
+      "resolved": "/api/v1/auth/totp/verify",
       "classification": "unclassified-orphan"
     },
     {
@@ -3015,6 +3022,57 @@
       ]
     },
     {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/api/health-aggregation",
+      "resolved": "/api/health-aggregation",
+      "classification": "internal",
+      "frontend": [
+        "frontend/src/utils/apiInterceptor.ts",
+        "frontend/src/utils/apiInterceptor.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/api/admin/cloud-mesh/smell-check",
+      "resolved": "/api/admin/cloud-mesh/smell-check",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "POST",
+      "declared": "/api/admin/traffic/kill-switch",
+      "resolved": "/api/admin/traffic/kill-switch",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "GET",
+      "declared": "/api/admin/tenant-limits",
+      "resolved": "/api/admin/tenant-limits",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_routes.py",
+      "method": "PUT",
+      "declared": "/api/admin/tenant-limits/{tenant_id}",
+      "resolved": "/api/admin/tenant-limits/:param",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
       "file": "backend/api/routes/admin_v1.py",
       "method": "GET",
       "declared": "/api/v1/agents",
@@ -3055,6 +3113,166 @@
       ]
     },
     {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/metrics",
+      "resolved": "/api/v1/admin/metrics",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/health",
+      "resolved": "/api/v1/admin/health",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/system-status",
+      "resolved": "/api/v1/admin/system-status",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/dashboard",
+      "resolved": "/api/v1/admin/dashboard",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/analytics",
+      "resolved": "/api/v1/admin/analytics",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/tiers",
+      "resolved": "/api/v1/admin/tiers",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/billing",
+      "resolved": "/api/v1/admin/billing",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/skills",
+      "resolved": "/api/v1/admin/skills",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/api-keys",
+      "resolved": "/api/v1/admin/api-keys",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/security",
+      "resolved": "/api/v1/admin/security",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/config",
+      "resolved": "/api/v1/admin/config",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/audit",
+      "resolved": "/api/v1/admin/audit",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/webhooks",
+      "resolved": "/api/v1/admin/webhooks",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/notifications",
+      "resolved": "/api/v1/admin/notifications",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/deployments",
+      "resolved": "/api/v1/admin/deployments",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/admin_v1.py",
+      "method": "GET",
+      "declared": "/api/v1/admin/agents",
+      "resolved": "/api/v1/admin/agents",
+      "classification": "admin-only",
+      "frontend": [
+        "frontend/src/utils/api.ts"
+      ]
+    },
+    {
       "file": "backend/api/routes/agent.py",
       "method": "POST",
       "declared": "/api/v1/agents/execute",
@@ -3075,6 +3293,44 @@
       "classification": "unclassified-orphan",
       "frontend": [
         "frontend/src/hooks/useDynamicDock.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/agent_registry.py",
+      "method": "GET",
+      "declared": "/api/v1/agents/{agent_id}",
+      "resolved": "/api/v1/agents/:param",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/pages/user/AgentWorkspace.tsx",
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/agent_registry.py",
+      "method": "POST",
+      "declared": "/api/v1/agents/{agent_id}/ownership",
+      "resolved": "/api/v1/agents/:param/ownership",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.ts",
+        "frontend/src/services/apiClient.test.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/agent_registry.py",
+      "method": "DELETE",
+      "declared": "/api/v1/agents/{agent_id}",
+      "resolved": "/api/v1/agents/:param",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/pages/user/AgentWorkspace.tsx",
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.ts"
       ]
     },
     {
@@ -3463,6 +3719,7 @@
       "resolved": "/api/v1/auth/login",
       "classification": "unclassified-orphan",
       "frontend": [
+        "frontend/src/pages/PublicPages.tsx",
         "frontend/src/services/apiClient.test.ts",
         "frontend/src/store/authStore.ts"
       ]
@@ -3474,6 +3731,7 @@
       "resolved": "/api/v1/auth/register",
       "classification": "unclassified-orphan",
       "frontend": [
+        "frontend/src/pages/PublicPages.tsx",
         "frontend/src/store/authStore.ts"
       ]
     },
@@ -4207,8 +4465,7 @@
       "resolved": "/api/v1/health/predictions",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4218,8 +4475,7 @@
       "resolved": "/api/v1/health",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4229,8 +4485,7 @@
       "resolved": "/api/v1/health/agents",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4240,8 +4495,7 @@
       "resolved": "/api/v1/health/agents",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4343,7 +4597,8 @@
       "resolved": "/api/memory/conversations/messages",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/admin/MemoryBrowser.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4353,7 +4608,8 @@
       "resolved": "/api/memory/conversations",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/admin/MemoryBrowser.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4750,8 +5006,7 @@
       "resolved": "/api/v1/health",
       "classification": "internal",
       "frontend": [
-        "frontend/src/utils/apiInterceptor.ts",
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
