@@ -236,3 +236,38 @@ def test_retention_function_default_and_guards() -> None:
         in _SQL_NO_COMMENTS
     )
     assert "DELETE FROM ai_memory" in _SQL_NO_COMMENTS
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Contract 4 — match_memories RPC tenant isolation (issue #1689, CRITICAL)
+# ─────────────────────────────────────────────────────────────────────────────
+def test_match_memories_rpc_tenant_isolation_mandatory() -> None:
+    """Issue #1689: `p_user_id` must be a MANDATORY argument with strict
+    per-user equality — the old `DEFAULT NULL` + `(p_user_id IS NULL OR …)`
+    contract let a single missing argument return EVERY user's memories."""
+    block = re.search(
+        r"CREATE OR REPLACE FUNCTION match_memories\((.*?)\$\$;",
+        SQL_TEXT,
+        re.DOTALL,
+    )
+    assert block is not None, "match_memories definition missing from canonical SQL"
+    body = block.group(1)
+
+    # 1. p_user_id has no DEFAULT NULL → PostgREST call without it fails closed
+    assert re.search(r"p_user_id\s+text\s*\)", body) is not None, (
+        "p_user_id must be declared WITHOUT a DEFAULT (mandatory argument)"
+    )
+    assert "DEFAULT NULL" not in body, "match_memories must not default p_user_id to NULL"
+
+    # 2. strict tenant equality; the only NULL-user scope is the explicit
+    #    agent-internal sentinel (agent-own learning rows have user_id IS NULL)
+    assert "m.user_id = p_user_id" in body, "strict tenant equality predicate missing"
+    assert "p_user_id IS NULL OR" not in body, "the old tenant-bypass predicate remains"
+    assert "__agent_internal__" in body, "agent-scope sentinel predicate missing"
+
+    # 3. anon must NOT have EXECUTE on the tenant RPC (unauthenticated callers
+    #    carry no tenant identity)
+    grants = re.findall(r"GRANT EXECUTE ON FUNCTION match_memories\([^;]*?\) TO ([^;]+);", SQL_TEXT)
+    assert grants, "match_memories EXECUTE grant missing"
+    for grant in grants:
+        assert "anon" not in grant, f"anon must not EXECUTE match_memories: {grant}"
