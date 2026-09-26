@@ -1,5 +1,4 @@
 import uuid
-from typing import Any
 
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
@@ -7,12 +6,9 @@ from pydantic import BaseModel
 
 from api.dependencies import get_current_user_token
 from brain.agent_departments import AgentDepartment
-from brain.autonomous_agent import AutonomousAgent
-from brain.langgraph_agent import SupremeOrchestrator
 from brain.model_router import ModelRouter
 from core.generation_monitor import GenerationMonitor
 from core.logging_config import logger
-from core.security.authentication.rbac import RoleBasedAccessControl
 from core.zero_cost_architecture.swarm_orchestrator_integration import ZeroCostSwarmOrchestrator
 
 agent_router = APIRouter(
@@ -27,20 +23,8 @@ agent_router = APIRouter(
 router = agent_router
 
 model_router = ModelRouter()
-orchestrator = SupremeOrchestrator()
-autonomous_agent = AutonomousAgent()
 agent_department = AgentDepartment(model_router)
-rbac = RoleBasedAccessControl()
 monitor = GenerationMonitor()
-
-
-class AgentExecuteRequest(BaseModel):
-    task: str
-    task_type: str = "general"
-    role: str | None = None
-    department: str | None = None
-    autonomous: bool = False
-    user_context: dict[str, Any] | None = None
 
 
 class SwarmExecuteRequest(BaseModel):
@@ -49,72 +33,9 @@ class SwarmExecuteRequest(BaseModel):
     user_id: str = "default_user"
 
 
-class AgentExecuteResponse(BaseModel):
-    success: bool
-    output: str | None = None
-    role: str | None = None
-    provider: str | None = None
-    cost: float | None = None
-    errors: list | None = None
-
-
-def _user_context(request: Request) -> dict[str, Any]:
-    return {
-        "ip": request.client.host if request.client else None,
-        "source": request.headers.get("X-Source"),
-    }
-
-
 def _correlation_id(request: Request) -> str:
     """Issue #685: the id assigned by SupremeContext/RequestContext middleware."""
     return getattr(request.state, "correlation_id", "") or ""
-
-
-@agent_router.post("/execute", response_model=AgentExecuteResponse)
-async def execute_agent(request: Request, body: AgentExecuteRequest):
-    correlation_id = _correlation_id(request)
-    # Issue #685 (Domain 15): high-traffic router correlation logging.
-    logger.info(
-        "[agents.execute] task_type=%s department=%s autonomous=%s correlation_id=%s",
-        body.task_type,
-        body.department,
-        body.autonomous,
-        correlation_id,
-    )
-    _user_context(request)
-    if body.autonomous:
-        run = autonomous_agent.run(body.task, body.task_type)
-        monitor.track_agent_call(prompt=body.task, provider="autonomous")
-        return AgentExecuteResponse(
-            success=run.get("run", {}).get("success", False),
-            output=run.get("run", {}).get("output"),
-            role="autonomous",
-            cost=0.0,
-            errors=run.get("run", {}).get("errors") or [],
-        )
-
-    if body.department:
-        result = agent_department.execute(body.department, body.task, body.task_type)
-        monitor.track_agent_call(prompt=body.task, provider=result.get("provider", "unknown"))
-        return AgentExecuteResponse(
-            success=result.get("success", False),
-            output=result.get("output"),
-            role=result.get("role"),
-            provider=result.get("provider"),
-            cost=result.get("cost"),
-            errors=[result.get("error")] if result.get("error") else [],
-        )
-
-    result = orchestrator.execute_task(body.task, body.task_type)
-    monitor.track_agent_call(prompt=body.task, provider=result.get("provider", "unknown"))
-    return AgentExecuteResponse(
-        success=result.get("success", False),
-        output=result.get("result"),
-        role="orchestrator",
-        provider=result.get("provider"),
-        cost=result.get("cost"),
-        errors=[result.get("result")] if not result.get("success") else [],
-    )
 
 
 @agent_router.get("/roles")

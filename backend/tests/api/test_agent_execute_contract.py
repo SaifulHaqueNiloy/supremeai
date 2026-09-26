@@ -19,6 +19,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from unittest.mock import patch
 
+import importlib
 import jwt as pyjwt
 import pytest
 from fastapi import FastAPI
@@ -72,6 +73,39 @@ class TestTwoSurfaceContract:
         route_paths = {getattr(r, "path", "") for r in agents_route.router.routes}
         assert all("execute" not in p for p in route_paths), (
             "ERR-H07 violation: execution endpoint added to the user read surface"
+        )
+
+    def test_exactly_one_post_execute_registration_across_all_routers(self):
+        """Issue #1822 drift guard: agent_tasks.py used to register a second
+        POST /api/v1/agents/execute with a different request contract and
+        auth — FastAPI serves first-registered, so it was permanently
+        unreachable while looking live to clients. This walks EVERY module
+        in ALL_ROUTERS (not just the two surfaces above) and fails if more
+        than one POST registration of the canonical execution path exists.
+        """
+        from api.routers import ALL_ROUTERS
+
+        METHOD = "POST"
+        FULL_PATH = "/api/v1/agents/execute"
+        registrations = []
+        for entry in ALL_ROUTERS:
+            module = importlib.import_module(entry["path"])
+            router = getattr(module, "router", None)
+            if router is None:
+                continue
+            for route in getattr(router, "routes", []):
+                route_path = getattr(route, "path", "")
+                methods = {m.upper() for m in getattr(route, "methods", set()) or set()}
+                if route_path.rstrip("/") == FULL_PATH and METHOD in methods:
+                    registrations.append((entry["path"], route_path, METHOD))
+        assert len(registrations) == 1, (
+            f"POST {FULL_PATH} is registered {len(registrations)} times "
+            f"({registrations}) — first-registration wins, so every extra "
+            "registration is an unreachable shadow endpoint with possibly "
+            "divergent contracts/auth (issue #1822)"
+        )
+        assert registrations and registrations[0][0] == "api.routes.agent", (
+            "The canonical execution surface must be api.routes.agent"
         )
 
 
