@@ -5,6 +5,7 @@
 # কনফিডেন্স ফাস্ট-পাথ সব কভার করে।
 
 import json
+import os
 import urllib.request
 from unittest.mock import patch
 
@@ -128,10 +129,74 @@ def test_tier0_list_files(tmp_path, monkeypatch):
     # শুধুমাত্র SUPREMEAI_TIER0_SANDBOX_ROOT এর ভিতরের পাথ অ্যাক্সেসযোগ্য, তাই
     # tmp_path কেই স্যান্ডবক্স রুট হিসেবে সেট করে রিলেটিভ পাথে কল করা হচ্ছে।
     monkeypatch.setenv("SUPREMEAI_TIER0_SANDBOX_ROOT", str(tmp_path))
+    # issue #1688: default-deny gate — explicit opt-in ছাড়া চলে না।
+    monkeypatch.setenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", "1")
     result = Tier0Dispatcher.execute("list_files", "list files in .")
     assert result["count"] >= 2
     assert any(f["name"] == "a.txt" for f in result["files"])
     assert any(f["is_dir"] for f in result["files"])
+
+
+# ── issue #1688 (CRITICAL): Tier0 list_files default-deny + symlink hardening ──
+def test_tier0_list_files_disabled_by_default(tmp_path, monkeypatch):
+    """Default-deny: gate env unset/0 হলে কোনো scandir চালানো হয় না —
+    \"Remove list_files from Tier0\" (issue #1688) মর্ম পূরণ।"""
+    monkeypatch.setenv("SUPREMEAI_TIER0_SANDBOX_ROOT", str(tmp_path))
+    monkeypatch.delenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", raising=False)
+    result = Tier0Dispatcher.execute("list_files", "list files in /etc")
+    assert "error" in result
+    assert "disabled" in result["error"]
+    assert result.get("files") is None
+
+
+def test_tier0_list_files_disabled_accepts_truthy_values_only(monkeypatch):
+    monkeypatch.delenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", raising=False)
+    for val in ("", "0", "false", "off"):
+        monkeypatch.setenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", val)
+        result = Tier0Dispatcher.execute("list_files", "list files in .")
+        assert "disabled" in result["error"]
+
+
+def test_tier0_list_files_rejects_absolute_and_traversal(monkeypatch):
+    monkeypatch.setenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", "1")
+    for prompt in ("list files in /etc", "list files in ../secrets", "list files in a/../../x"):
+        result = Tier0Dispatcher.execute("list_files", prompt)
+        assert result.get("error") == "path outside sandbox", prompt
+
+
+def test_tier0_list_files_symlink_escape_rejected(tmp_path, monkeypatch):
+    """sandbox-এর ভিতরে symlink যদি বাইরের ডিরেক্টরি পয়েন্ট করে, realpath
+    resolve করে containment ভাঙবে → reject (TOCTOU-বহির্ভূত স্ট্যাটিক গার্ড)।"""
+    outside = tmp_path / "outside"
+    outside.mkdir()
+    (outside / "secret.txt").write_text("x" * 100)
+    sandbox = tmp_path / "sandbox"
+    (sandbox / "sub").mkdir(parents=True)
+    os.symlink(str(outside), str(sandbox / "sub" / "escape"))
+    monkeypatch.setenv("SUPREMEAI_TIER0_SANDBOX_ROOT", str(sandbox))
+    monkeypatch.setenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", "1")
+    result = Tier0Dispatcher.execute("list_files", "list files in sub/escape")
+    assert result.get("error") == "path outside sandbox"
+
+
+def test_tier0_list_files_symlink_entry_meta_not_followed(tmp_path, monkeypatch):
+    """ভেতরের symlink entry-র stat follow করা হয় না — বাইরের টার্গেটের
+    size/type ফাঁস এড়ানো (issue #1688)।"""
+    outside_file = tmp_path / "outer_secret.txt"
+    outside_file.write_text("x" * 500)
+    sandbox = tmp_path / "sandbox"
+    sandbox.mkdir()
+    (sandbox / "real.txt").write_text("hello")
+    os.symlink(str(outside_file), str(sandbox / "link.txt"))
+    monkeypatch.setenv("SUPREMEAI_TIER0_SANDBOX_ROOT", str(sandbox))
+    monkeypatch.setenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", "1")
+    result = Tier0Dispatcher.execute("list_files", "list files in .")
+    assert "error" not in result
+    by_name = {f["name"]: f for f in result["files"]}
+    assert by_name["link.txt"]["is_symlink"] is True
+    assert by_name["link.txt"]["size_bytes"] is None  # outer size (500) leaked না
+    assert by_name["link.txt"]["is_dir"] is False
+    assert by_name["real.txt"]["size_bytes"] == 5
 
 
 def test_tier0_format_json():

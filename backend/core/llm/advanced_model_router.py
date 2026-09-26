@@ -247,6 +247,25 @@ class Tier0Dispatcher:
     def _list_files(prompt: str) -> dict[str, Any]:
         import os
 
+        # FIX (issue #1688, CRITICAL): Tier0 হচ্ছে LLM-safety চেক-এর আগে চলা
+        # deterministic fast-path — তাই ফাইল-সিস্টেম এক্সপোজার এখানে ডিফল্ট-অফ।
+        # "Remove list_files from Tier0" মর্ম অনুযায়ী এখন default-deny:
+        # explicit SUPREMEAI_TIER0_ALLOW_LIST_FILES=1 opt-in ছাড়া প্যাটার্নটি
+        # কোনো scandir চালায় না। Opt-in করলেও নিচের sandbox containment
+        # (P0, review 2026-09-12) অপরিবর্তিত থাকে।
+        if os.environ.get("SUPREMEAI_TIER0_ALLOW_LIST_FILES", "").lower() not in {
+            "1",
+            "true",
+            "yes",
+        }:
+            return {
+                "error": (
+                    "tier0 list_files disabled (default-deny, issue #1688); "
+                    "set SUPREMEAI_TIER0_ALLOW_LIST_FILES=1 to enable sandboxed mode"
+                ),
+                "pattern": "list_files",
+            }
+
         match = re.search(r"(?:in|under|at|from)\s+(.+)", prompt, re.I)
         target_dir = match.group(1).strip() if match else "."
 
@@ -270,12 +289,22 @@ class Tier0Dispatcher:
         try:
             with os.scandir(target_dir) as entries:
                 for entry in entries:
+                    # FIX (issue #1688): symlinked entries-এর meta follow করা হয়
+                    # না — sandbox-এর বাইরের টার্গেটের size/type ফাঁস এড়াতে।
+                    is_symlink = entry.is_symlink()
+                    is_dir = entry.is_dir(follow_symlinks=False)
+                    size = (
+                        entry.stat(follow_symlinks=False).st_size
+                        if entry.is_file(follow_symlinks=False)
+                        else None
+                    )
                     files.append(
                         {
                             "name": entry.name,
                             "path": entry.path,
-                            "is_dir": entry.is_dir(),
-                            "size_bytes": entry.stat().st_size if entry.is_file() else None,
+                            "is_dir": is_dir,
+                            "is_symlink": is_symlink,
+                            "size_bytes": size,
                         }
                     )
             return {"directory": target_dir, "count": len(files), "files": files[:50]}
