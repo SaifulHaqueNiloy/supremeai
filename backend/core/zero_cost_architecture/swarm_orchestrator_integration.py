@@ -133,6 +133,20 @@ class ZeroCostSwarmOrchestrator:
             f"Learning: {'ON' if self.config.LEARNING_ENABLED else 'OFF'}"
         )
 
+    async def run_dag_for_workspace(
+        self,
+        workspace: SharedWorkspace,
+        user_id: str = "default_user_session",
+    ) -> SharedWorkspace:
+        """Issue #1816 fix: forward to the composed original orchestrator.
+
+        The wrapper composes ``SwarmOrchestrator`` as
+        ``self._original_orchestrator`` but never forwarded this method, so
+        api/routes/agent_action.py (platform sync actions) crashed with
+        AttributeError → 500 on every Slack/Notion/GitHub sync action.
+        """
+        return await self._original_orchestrator.run_dag_for_workspace(workspace, user_id=user_id)
+
     def _initialize_agent_breakers(self) -> None:
         """Create circuit breakers for each known agent."""
         agent_names = [
