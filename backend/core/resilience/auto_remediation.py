@@ -15,6 +15,73 @@ _DEDUP_WINDOW_SECONDS: int = int(
 )  # 30 min
 _MAX_REMEDIATIONS_PER_FILE: int = int(os.environ.get("AUTOREMEDIATION_MAX_PER_FILE", "3"))
 
+# AUDIT-FIX (#1698): permanent audit-trail file (JSONL). Every remediation
+# decision — applied, rejected, skipped — is appended so masked root causes
+# are always reconstructible. বাংলা: প্রতিটি সিদ্ধান্ত স্থায়ী অডিট ট্রেইলে যায়।
+_AUDIT_DIR: str = os.environ.get(
+    "AUTOREMEDIATION_AUDIT_DIR",
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "logs"),
+)
+
+
+def _count_swallow_only_handlers(code: str) -> int:
+    """AUDIT-FIX (#1698): count except-handlers that silently swallow errors.
+
+    A "swallow-only" handler is a bare ``except:`` (or ``except Exception:`` /
+    ``except BaseException:``) whose body does nothing but ``pass`` / ``...`` /
+    a string literal — the classic auto-patch pattern that hides the real bug
+    while turning health checks green. বাংলা: শুধু exception চেপে রাখা হ্যান্ডলার
+    গোনা হয় — এগুলো আসল বাগ লুকিয়ে রাখে।
+    """
+    import ast
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return 0
+
+    count = 0
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ExceptHandler):
+            continue
+        bare_or_broad = node.type is None or (
+            isinstance(node.type, ast.Name) and node.type.id in {"Exception", "BaseException"}
+        )
+        body_only_silent = all(
+            isinstance(stmt, (ast.Pass, ast.Expr)) and (
+                isinstance(stmt, ast.Pass)
+                or isinstance(getattr(stmt, "value", None), ast.Constant)
+            )
+            for stmt in node.body
+        )
+        if bare_or_broad and body_only_silent:
+            count += 1
+    return count
+
+
+def _patch_masks_root_cause(original_code: str, fixed_code: str) -> bool:
+    """AUDIT-FIX (#1698): True if the patch adds silent swallowing on top of
+    the original code without removing any — masking suspect, must not be
+    auto-trusted. বাংলা: আগের চেয়ে বেশি silent handler এলে সেটা masking।"""
+    return _count_swallow_only_handlers(fixed_code) > _count_swallow_only_handlers(original_code)
+
+
+def _append_audit_trail(record: dict) -> None:
+    """AUDIT-FIX (#1698): append one JSON line to the permanent audit trail.
+    Never raises — an audit write failure must not break remediation itself.
+    বাংলা: অডিট লেখা ব্যর্থ হলেও remediation আটকাবে না।"""
+    import json
+    from datetime import UTC, datetime
+
+    try:
+        os.makedirs(_AUDIT_DIR, exist_ok=True)
+        path = os.path.join(_AUDIT_DIR, "auto_remediation_audit.jsonl")
+        record = {"ts": datetime.now(UTC).isoformat(), **record}
+        with open(path, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
+    except OSError as exc:
+        logger.warning(f"Auto-Remediation audit trail write failed (non-fatal): {exc}")
+
 
 class AutoRemediation:
     """Autonomous Auto-Remediation Loop.
@@ -125,7 +192,44 @@ class AutoRemediation:
         fixed_code = await self._get_ai_patch(safe_path, original_code, line_number, issue)
 
         if not fixed_code:
+            _append_audit_trail({
+                "decision": "rejected",
+                "reason": "patch_generation_failed",
+                "file": file_path,
+                "line": line_number,
+                "severity": severity,
+                "tenant_id": tenant_id,
+            })
             return {"success": False, "error": "AI failed to generate a secure patch"}
+
+        # AUDIT-FIX (#1698): masking guard — a patch that only ADDS silent
+        # exception swallowing (bare/broad except with a pass-only body) hides
+        # the root cause instead of fixing it. Such patches are rejected here;
+        # high/critical severity ones would anyway land in pending_review
+        # (HITL) inside RemediationPipeline, but the mask check runs first so
+        # a masking patch never even reaches the pipeline.
+        if _patch_masks_root_cause(original_code, fixed_code):
+            _append_audit_trail({
+                "decision": "rejected",
+                "reason": "masks_root_cause",
+                "file": file_path,
+                "line": line_number,
+                "severity": severity,
+                "tenant_id": tenant_id,
+                "detail": "patch adds bare/broad silent except handlers",
+            })
+            logger.warning(
+                f"Auto-Remediation rejected for {safe_path}: patch only adds "
+                "silent exception handling without addressing the root cause "
+                "(AUDIT-FIX #1698). Human review required."
+            )
+            return {
+                "success": False,
+                "rejected": True,
+                "reason": "masks_root_cause",
+                "human_review_required": True,
+                "error": "Patch masks the root cause (adds silent exception swallowing)",
+            }
 
         # Import inside function keeps tests isolated but also allows patching via module path.
         from core.health.self_healer import RemediationPipeline
@@ -137,6 +241,14 @@ class AutoRemediation:
         result = await pipeline.submit(tenant_id, issue, fixed_code, impact_score, [])
 
         if str(result).startswith("reject"):
+            _append_audit_trail({
+                "decision": "rejected",
+                "reason": str(result),
+                "file": file_path,
+                "line": line_number,
+                "severity": severity,
+                "tenant_id": tenant_id,
+            })
             return {"success": False, "error": f"Patch rejected by pipeline: {result}"}
 
         # AUDIT-FIX (#1693): Record successful remediation in dedup cache.
@@ -145,6 +257,18 @@ class AutoRemediation:
             "last_ts": now,
             "count": prior_count + 1,
         }
+        # AUDIT-FIX (#1698): permanent audit trail for the applied patch.
+        _append_audit_trail({
+            "decision": "applied",
+            "file": file_path,
+            "line": line_number,
+            "issue": issue,
+            "severity": severity,
+            "tenant_id": tenant_id,
+            "pipeline_id": str(result),
+            "impact_score": impact_score,
+            "remediation_count": prior_count + 1,
+        })
         # Cleanup very old entries (>1 day) to keep memory bounded
         cutoff = now - 86400
         stale = [k for k, v in self._remediation_history.items() if v.get("last_ts", 0) < cutoff]
