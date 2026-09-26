@@ -27,6 +27,11 @@ import { RateLimitManager } from '../security/RateLimitManager';
 import { InteractiveChatTab } from '../InteractiveChatTab';
 import { AdminAlertsTab } from '../AdminAlertsTab';
 import { ApprovalQueue } from '../../../commandcenter/modules/secure/ApprovalQueue';
+// Issue #1831: the Audit tab now mounts the WORKING commandcenter audit UI
+// (GET /admin-api/audit?limit= via useAuditLogs) — the old mapping pointed at
+// the never-fed liveLogs LiveLogs view that showed a perpetual
+// "Listening for incoming server logs..." placeholder.
+import { AuditExplorer } from '../../../commandcenter/modules/secure/AuditExplorer';
 import { GuardrailsPage } from '../../dashboard/GuardrailsPage';
 import { HealingLogPanel } from '../../dashboard/HealingLogPanel';
 import { SiteActionsPage } from '../../dashboard/SiteActionsPage';
@@ -81,7 +86,7 @@ const MODULE_MAP: Record<string, React.FC<any>> = {
   'service-explorer': CloudOrchestrator,
   'agents-swarm': EnhancedSkillMarketplace, // Or ModelRouter depending on context
   'security': SecurityDashboard,
-  'audit': LiveLogs,
+  'audit': AuditExplorer,
   'incidents': AdminAlertsTab,
   'approvals': ApprovalQueue,
   'guardrails': GuardrailsPage,

@@ -2,13 +2,17 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
 import { useUpdateRules } from '../../data/hooks';
+import { useAuthStore } from '../../../store/authStore';
 import { JsonViewer, ConfirmModal, EmptyState } from '../../kit';
 
 export function RulesPolicy() {
+  // Issue #1831 fix: dead 'admin_token' localStorage gate (never written) →
+  // auth-store gate, same pattern as SecretsHealth.tsx.
+  const isAdminAuthenticated = useAuthStore((s) => s.role === 'admin' && s.status === 'loggedIn');
   const { data: rules, isLoading } = useQuery({
     queryKey: ['cmd', 'rules'],
     queryFn: () => apiClient.get<Record<string, unknown>>('/admin-api/rules'),
-    enabled: !!localStorage.getItem('admin_token'),
+    enabled: isAdminAuthenticated,
     staleTime: 60_000,
   });
   const updateRules = useUpdateRules();
