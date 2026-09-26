@@ -54,3 +54,18 @@ def test_origin_denylist_is_applied(monkeypatch):
 
 # The policy intentionally remains pure and dependency-free; app boot tests belong
 # in the API test suite and require the backend runtime dependencies.
+
+
+def test_production_frontend_origins_are_safe_defaults():
+    """Issues #1483/#1484/#1455 regression guard: the deployed user portal
+    (https://supremeai-a.web.app) and admin console (https://supremeai-admin.web.app)
+    must be preflight-able even when USER_CORS_ORIGINS / ADMIN_CORS_ORIGINS fail to
+    sync to the host. The module-level defaults are the last line of defense."""
+    assert "https://supremeai-a.web.app" in cors_policy.DEFAULT_USER_ALLOWED_ORIGINS
+    assert "https://supremeai-admin.web.app" in cors_policy.DEFAULT_ADMIN_ALLOWED_ORIGINS
+    # The effective module constants must never be empty in a clean environment —
+    # they fall back to the production defaults when no env var is set.
+    assert cors_policy.USER_ALLOWED_ORIGINS, "USER_ALLOWED_ORIGINS must not be empty"
+    assert cors_policy.ADMIN_ALLOWED_ORIGINS, "ADMIN_ALLOWED_ORIGINS must not be empty"
+    assert "https://supremeai-a.web.app" in cors_policy.USER_ALLOWED_ORIGINS
+    assert "https://supremeai-admin.web.app" in cors_policy.ADMIN_ALLOWED_ORIGINS
