@@ -1,34 +1,53 @@
 version: '1.0'
 slots:
 - slot: agent-1
-  tool: Z.ai Code (sleep)
-  maintainer: '@SaifulHaqueNiloy'
-  assigned_on: '2026-09-20'
-  expires_on: '2026-09-27'
-  active: false
-  notes: Limit reached — inactive/sleep mode
-- slot: agent-5
-  tool: planner-and-issues
+  tool: planner-and-auditor
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Plan + issue create. Founder discusses → planner formalizes → assigns to
-    solver
-- slot: agent-6
+  branch: agent-1-planner
+  notes: 'Planner & Full Codebase Auditor. Owns comprehensive architectural audits, gap
+    identification, implementation planning, and backlog issue creation. FORBIDDEN
+    from modifying CI workflows or authoring business feature code unless Admin explicitly orders role change.'
+- slot: agent-2
+  tool: pr-helper
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  branch: agent-2-pr-helper
+  notes: 'PR Gate & Diagnostics Verifier. Evaluates PR delta, regression risk, and performs
+    beneficial squash merges. FORBIDDEN from opening feature PRs or writing core code.'
+- slot: agent-3
   tool: solver-a
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Claims issue from queue, solves, opens PR. Parallel with solver-b
-- slot: agent-7
+  branch: agent-3-coder-1
+  notes: 'Primary Code Implementer. Claims assigned issues, performs local issue-scoped
+    audit to confirm validity, writes production code and unit tests. FORBIDDEN from
+    performing full codebase audits or refactoring outside issue scope.'
+- slot: agent-5
+  tool: ci-action
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-26'
+  expires_on: '2026-10-03'
+  active: true
+  branch: agent-5-ci-action
+  notes: 'CI/CD & Workflow Specialist. Owns .github/workflows/*, git pre-push hooks,
+    auto-sync engines, and artifact regeneration. FORBIDDEN from modifying business code.'
+- slot: agent-6
   tool: solver-b
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Claims issue from queue, solves, opens PR. Parallel with solver-a
+  branch: agent-6-coder-2
+  notes: 'Parallel Code Implementer. Claims assigned issues, performs local issue-scoped
+    audit to confirm validity, writes production code and unit tests. FORBIDDEN from
+    performing full codebase audits or refactoring outside issue scope.'
 - slot: agent-8
   tool: pr-verifier
   maintainer: '@SaifulHaqueNiloy'
