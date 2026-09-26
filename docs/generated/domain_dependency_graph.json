@@ -2272,7 +2272,7 @@
     {
       "evidence": [
         {
-          "line": 739,
+          "line": 737,
           "path": "backend/api/routes/auth.py"
         }
       ],
@@ -2682,7 +2682,7 @@
     {
       "evidence": [
         {
-          "line": 335,
+          "line": 334,
           "path": "backend/api/routes/memory.py"
         }
       ],

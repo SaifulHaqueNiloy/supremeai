@@ -943,11 +943,13 @@ async def health_aggregation_contract(admin: dict = Depends(get_current_admin)):
 
 class _ContractCloudNodeTarget(BaseModel):
     """Body of POST /api/admin/traffic/kill-switch (same shape as cloud_mesh)."""
+
     target_node: str
 
 
 class _ContractSmellCheckRequest(BaseModel):
     """Body of POST /api/admin/cloud-mesh/smell-check (same shape as tools_ops)."""
+
     path: str
     thresholds: dict[str, int] | None = None
 

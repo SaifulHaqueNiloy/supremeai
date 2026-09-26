@@ -179,6 +179,7 @@ async def command_events(limit: int = 50):
         logger.warning(f"[commandcenter] events fetch failed: {exc}")
         return {"count": 0, "events": [], "error": str(exc)[:100]}
 
+
 # FIX (CI red 36219425476): the sub-router inclusion block that used to sit
 # here duplicated the mounts at the top of this file (#1499, issue #1495).
 # include_router on the same router twice registers every /admin-api/
