@@ -83,6 +83,11 @@ def test_tier0_unknown_pattern():
 
 
 def test_tier0_pypi_search(monkeypatch):
+    # Issue #1843: AUDIT-FIX #1695 (SSRF guard) changed the HTTP boundary from
+    # urllib.request.urlopen to build_opener(_NoRedirectHandler).open(...) —
+    # the old urlopen patch went dead and the test hit LIVE pypi (version
+    # drift: '2.34.2' != '2.31.0'). Mock at the new boundary (build_opener)
+    # so no live network happens and the pinned payload is deterministic.
     fake_payload = {
         "info": {
             "name": "requests",
@@ -99,10 +104,18 @@ def test_tier0_pypi_search(monkeypatch):
         def __exit__(self, *a):
             return False
 
+        def geturl(self):
+            # AUDIT-FIX #1695 host verification reads this — must look like pypi.
+            return "https://pypi.org/pypi/requests/json"
+
         def read(self):
             return json.dumps(fake_payload).encode()
 
-    with patch.object(urllib.request, "urlopen", return_value=FakeResp()):
+    class FakeOpener:
+        def open(self, req, timeout=3):  # noqa: ARG002
+            return FakeResp()
+
+    with patch.object(urllib.request, "build_opener", return_value=FakeOpener()):
         result = Tier0Dispatcher.execute("pypi_search", "search pypi for requests")
     assert result["name"] == "requests"
     assert result["version"] == "2.31.0"
@@ -110,14 +123,13 @@ def test_tier0_pypi_search(monkeypatch):
 
 
 def test_tier0_pypi_search_failure_isolated():
-    class Boom:
-        def __enter__(self):
+    # Issue #1843: failure injected at the post-#1695 boundary (opener.open)
+    # — the dispatcher must isolate the failure into an {"error": ...} entry.
+    class BoomOpener:
+        def open(self, req, timeout=3):  # noqa: ARG002
             raise RuntimeError("network down")
 
-        def __exit__(self, *a):
-            return False
-
-    with patch.object(urllib.request, "urlopen", return_value=Boom()):
+    with patch.object(urllib.request, "build_opener", return_value=BoomOpener()):
         result = Tier0Dispatcher.execute("pypi_search", "search pypi for numpy")
     assert "error" in result
 
@@ -131,6 +143,11 @@ def test_tier0_list_files(tmp_path, monkeypatch):
     monkeypatch.setenv("SUPREMEAI_TIER0_SANDBOX_ROOT", str(tmp_path))
     # issue #1688: default-deny gate — explicit opt-in ছাড়া চলে না।
     monkeypatch.setenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", "1")
+    # Issue #1843: AUDIT-FIX #1688-এর দ্বিতীয় স্তর — sandbox-এর ভিতরেও strict
+    # top-level whitelist (SUPREMEAI_TIER0_ALLOWED_DIRS, default = docs সীমিত
+    # সেট)। "." লিস্ট করতে হলে টেস্টে সেটিকেই sanctioned opt-in হিসেবে যোগ করতে
+    # হয় — নাহলে "directory not in Tier0 whitelist" ব্লক আসে।
+    monkeypatch.setenv("SUPREMEAI_TIER0_ALLOWED_DIRS", ".")
     result = Tier0Dispatcher.execute("list_files", "list files in .")
     assert result["count"] >= 2
     assert any(f["name"] == "a.txt" for f in result["files"])
@@ -190,6 +207,8 @@ def test_tier0_list_files_symlink_entry_meta_not_followed(tmp_path, monkeypatch)
     os.symlink(str(outside_file), str(sandbox / "link.txt"))
     monkeypatch.setenv("SUPREMEAI_TIER0_SANDBOX_ROOT", str(sandbox))
     monkeypatch.setenv("SUPREMEAI_TIER0_ALLOW_LIST_FILES", "1")
+    # Issue #1843: #1688 whitelist স্তর — sandbox root-এর জন্য explicit opt-in।
+    monkeypatch.setenv("SUPREMEAI_TIER0_ALLOWED_DIRS", ".")
     result = Tier0Dispatcher.execute("list_files", "list files in .")
     assert "error" not in result
     by_name = {f["name"]: f for f in result["files"]}
