@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import time
 from datetime import datetime
 from typing import Any
@@ -259,32 +260,43 @@ async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
     conversation_id = req.conversation_id or f"conv_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
 
     try:
-        # Get or create conversation
-        conversation = await db.conversations.find_one({"_id": conversation_id})
+        # Issue #1472 fix: this endpoint previously called Mongo-style APIs
+        # (db.conversations.find_one/insert_one/update_one) on the
+        # TenantAwareFirestore dependency — AttributeError -> 500 on every
+        # call. Rewrite with the Firestore document API the dependency
+        # actually provides; the sync google-cloud-firestore calls run in a
+        # worker thread so the event loop is never blocked.
+        col = db.conversations  # tenant-scoped: tenants/<uid>/conversations
+        doc_ref = col.document(conversation_id)
+        snap = await asyncio.to_thread(doc_ref.get)
+        existing = snap.to_dict() if getattr(snap, "exists", False) else None
 
-        if not conversation:
-            await db.conversations.insert_one(
-                {
-                    "_id": conversation_id,
-                    "title": req.message.get("metadata", {}).get("source", "chat")
-                    + " conversation",
-                    "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow(),
-                    "messages": [],
-                    "tags": [],
-                }
-            )
+        now = datetime.utcnow()
+        message_doc = {**req.message, "saved_at": now}
 
-        # Append message
-        message_doc = {
-            **req.message,
-            "saved_at": datetime.utcnow(),
-        }
+        if existing:
+            messages = list(existing.get("messages") or [])
+            messages.append(message_doc)
+            doc = {
+                "_id": conversation_id,
+                "title": existing.get("title") or "chat conversation",
+                "created_at": existing.get("created_at") or now,
+                "updated_at": now,
+                "messages": messages,
+                "tags": list(existing.get("tags") or []),
+            }
+        else:
+            doc = {
+                "_id": conversation_id,
+                "title": req.message.get("metadata", {}).get("source", "chat")
+                + " conversation",
+                "created_at": now,
+                "updated_at": now,
+                "messages": [message_doc],
+                "tags": [],
+            }
 
-        await db.conversations.update_one(
-            {"_id": conversation_id},
-            {"$push": {"messages": message_doc}, "$set": {"updated_at": datetime.utcnow()}},
-        )
+        await asyncio.to_thread(doc_ref.set, doc)
 
         # If RAG is enabled, also index for retrieval
         if (
@@ -310,6 +322,8 @@ async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
             "message_id": req.message.get("id"),
         }
 
+    except HTTPException:
+        raise
     except Exception as e:
         logger.error(f"Failed to save message: {e}")
         raise HTTPException(status_code=500, detail=str(e)) from e
@@ -321,20 +335,31 @@ async def list_conversations(request: Request, db=Depends(get_tenant_db)):
     from core.logging_config import logger
 
     try:
-        # Using tenant isolation inherently from get_tenant_db
-        conversations = await db.conversations.find().sort("updated_at", -1).to_list(50)
+        # Issue #1472 fix: Mongo-style find().sort().to_list() on the
+        # Firestore-backed dependency always 500'd. Use the Firestore query
+        # API (tenant-scoped), offloaded to a worker thread.
+        snaps = await asyncio.to_thread(
+            lambda: list(
+                db.conversations.order_by("updated_at", direction="DESCENDING")
+                .limit(50)
+                .stream()
+            )
+        )
 
         # Format for frontend
         result = []
-        for conv in conversations:
+        for snap in snaps:
+            conv = snap.to_dict() or {}
+            conv_id = conv.get("_id") or snap.id
+            messages = conv.get("messages") or []
             result.append(
                 {
-                    "id": conv["_id"],
+                    "id": conv_id,
                     "title": conv.get("title", "Untitled"),
-                    "messages": conv.get("messages", [])[-10:],  # Last 10 messages
+                    "messages": messages[-10:],  # Last 10 messages
                     "createdAt": conv.get("created_at"),
                     "updatedAt": conv.get("updated_at"),
-                    "messageCount": len(conv.get("messages", [])),
+                    "messageCount": len(messages),
                     "tags": conv.get("tags", []),
                 }
             )

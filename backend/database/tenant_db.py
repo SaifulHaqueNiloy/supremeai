@@ -52,6 +52,22 @@ class TenantAwareFirestore:
 
     @staticmethod
     def _create_mock_db():
+        class MockQuery:
+            """Minimal chainable query surface (order_by/limit/stream) so
+            tenant-scoped list endpoints can run in test environments."""
+
+            def order_by(self, *args, **kwargs):
+                return self
+
+            def limit(self, *args, **kwargs):
+                return self
+
+            def where(self, *args, **kwargs):
+                return self
+
+            def stream(self):
+                return iter(())
+
         class MockFirestore:
             def collection(self, *args, **kwargs):
                 class MockCol:
@@ -73,6 +89,20 @@ class TenantAwareFirestore:
                                 return MockCol()
 
                         return MockDoc()
+
+                    # Issue #1472: expose query methods so list endpoints can
+                    # be exercised in test mode without google-cloud-firestore.
+                    def order_by(self, *args, **kwargs):
+                        return MockQuery()
+
+                    def limit(self, *args, **kwargs):
+                        return MockQuery()
+
+                    def where(self, *args, **kwargs):
+                        return MockQuery()
+
+                    def stream(self):
+                        return iter(())
 
                 return MockCol()
 
@@ -101,6 +131,18 @@ class TenantAwareFirestore:
     def collection(self, collection_name: str):
         """ট্যানান্টের নিজস্ব সাব-কালেকশন রিটার্ন করবে"""
         return self.tenant_root.collection(collection_name)
+
+    @property
+    def conversations(self):
+        """Tenant-scoped ``conversations`` collection (issue #1472).
+
+        Previously the memory routes called ``db.conversations.<mongo-api>``
+        which raised AttributeError — 'TenantAwareFirestore' object has no
+        attribute 'conversations' — and GET /api/memory/conversations always
+        returned 500. The collection is addressed through the same hard
+        tenant-isolation path (tenants/<tenant_id>/conversations).
+        """
+        return self.collection("conversations")
 
     def get_tenant_profile(self):
         """ট্যানান্টের গ্লোবাল মেটাডাটা রিটার্ন করবে"""
