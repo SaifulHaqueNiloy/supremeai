@@ -2692,6 +2692,16 @@
     {
       "evidence": [
         {
+          "line": 40,
+          "path": "backend/api/routes/memory_mcp_http.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 30,
           "path": "backend/core/ai_memory/retention.py"
         }
