@@ -13,6 +13,22 @@ class SwarmAgentBase:
     বাংলা মন্তব্য: স্কিল-ভিত্তিক আর্কিটেকচারের জন্য আপডেট করা বেস এজেন্ট।
     """
 
+    # Issue #1702 (resource isolation): agents that run in the same parallel
+    # DAG batch previously wrote shared top-level keys of work_product — one
+    # agent's result could silently overwrite another's. Canonical results
+    # now live under a per-agent namespace work_product[<AgentClass>][key];
+    # the top-level key is still mirrored for every existing downstream
+    # reader (zero regression). বাংলা: প্রতিটি এজেন্টের ফলাফল এখন তার নিজস্ব
+    # namespace-এ থাকে, তাই প্যারালাল batch-এ একে অন্যের ফলাফল মুছে যায় না।
+    def _publish(self, workspace: "SharedWorkspace", key: str, value) -> None:
+        agent_ns = self.__class__.__name__
+        ns_slot = workspace.work_product.setdefault(agent_ns, {})
+        if not isinstance(ns_slot, dict):
+            ns_slot = {}
+            workspace.work_product[agent_ns] = ns_slot
+        ns_slot[key] = value
+        workspace.work_product[key] = value
+
     async def run(self, workspace: "SharedWorkspace", user_id: str, model_name: str) -> None:
         raise NotImplementedError(f"{self.__class__.__name__}.run() must be implemented")
 
@@ -71,7 +87,7 @@ class ArchitectureAgent(SwarmAgentBase):
             sys_prompt, user_prompt, user_id, model_name=model_name
         )
         # বাংলা মন্তব্য: ডোমেইন-অ্যাগনস্টিক work_product ব্যবহার করা হচ্ছে।
-        workspace.work_product["architecture_design"] = design_output
+        self._publish(workspace, "architecture_design", design_output)
         workspace.log("ArchitectureAgent: System design blueprint completed.")
 
     async def run(
@@ -88,7 +104,7 @@ class ArchitectureAgent(SwarmAgentBase):
             user_id=user_id,
             model_name=model_name,
         )
-        workspace.work_product["architecture_design"] = design_output
+        self._publish(workspace, "architecture_design", design_output)
 
 
 class CodeGeneratorAgent(SwarmAgentBase):
@@ -105,7 +121,7 @@ class CodeGeneratorAgent(SwarmAgentBase):
         code_output = await self.call_gateway(
             sys_prompt, user_prompt, user_id, model_name=model_name
         )
-        workspace.work_product["generated_code"] = {"main.py": code_output}
+        self._publish(workspace, "generated_code", {"main.py": code_output})
         workspace.log("CodeGeneratorAgent: Core files successfully generated.")
 
     async def refine(
@@ -123,7 +139,14 @@ class CodeGeneratorAgent(SwarmAgentBase):
         code_output = await self.call_gateway(
             sys_prompt, user_prompt, user_id, model_name=model_name
         )
-        workspace.work_product["generated_code"]["main.py"] = code_output
+        # Issue #1702: setdefault instead of []-index — the dict may not exist
+        # yet when a fix cycle runs ahead of generation in the same batch.
+        self._publish(
+            workspace,
+            "generated_code",
+            workspace.work_product.setdefault("generated_code", {})
+            | {"main.py": code_output},
+        )
         workspace.log("CodeGeneratorAgent: Code successfully refined.")
 
     async def run(
@@ -140,7 +163,7 @@ class CodeGeneratorAgent(SwarmAgentBase):
             user_id=user_id,
             model_name=model_name,
         )
-        workspace.work_product["generated_code"] = {"main.py": code_output}
+        self._publish(workspace, "generated_code", {"main.py": code_output})
 
 
 class QAAgent(SwarmAgentBase):
@@ -270,8 +293,8 @@ class GuardianAgent(SwarmAgentBase):
     ):
         logger.info("GuardianAgent: Using sub-agent swarm for compliance validation.")
         is_approved, feedback = await self.validate(workspace, user_id, model_name)
-        workspace.work_product["guardian_feedback"] = feedback
-        workspace.work_product["is_approved"] = is_approved
+        self._publish(workspace, "guardian_feedback", feedback)
+        self._publish(workspace, "is_approved", is_approved)
 
 
 class ResearchAgent(SwarmAgentBase):
@@ -291,7 +314,7 @@ class ResearchAgent(SwarmAgentBase):
         analysis_output = await self.call_gateway(
             sys_prompt, workspace.original_prompt, user_id, model_name=model_name
         )
-        workspace.work_product["research_summary"] = analysis_output
+        self._publish(workspace, "research_summary", analysis_output)
         workspace.log("ResearchAgent: Analysis complete.")
 
     async def run(
@@ -305,7 +328,7 @@ class ResearchAgent(SwarmAgentBase):
         analysis_output = await self._safe_skill_run(
             "ResearchSkill", workspace=workspace, user_id=user_id, model_name=model_name
         )
-        workspace.work_product["research_summary"] = analysis_output
+        self._publish(workspace, "research_summary", analysis_output)
 
 
 class ReflectionAgent(SwarmAgentBase):
@@ -394,7 +417,7 @@ class ToolSynthesizerAgent(SwarmAgentBase):
         import json
 
         tool_definition = json.loads(tool_definition_str)
-        workspace.work_product["synthesized_tool"] = tool_definition
+        self._publish(workspace, "synthesized_tool", tool_definition)
         workspace.log(
             f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized."
         )
@@ -413,7 +436,7 @@ class ToolSynthesizerAgent(SwarmAgentBase):
             user_id=user_id,
             model_name=model_name,
         )
-        workspace.work_product["synthesized_tool"] = tool_definition
+        self._publish(workspace, "synthesized_tool", tool_definition)
         workspace.log(
             f"ToolSynthesizerAgent: New tool '{tool_definition.get('name')}' synthesized."
         )
@@ -441,7 +464,7 @@ class ToolExecutorAgent(SwarmAgentBase):
         # A real implementation would involve a more complex selection and execution logic.
         tool_to_run = tools[0]
         workspace.log(f"ToolExecutorAgent: Executing tool '{tool_to_run}'...")
-        workspace.work_product["execution_result"] = f"Successfully executed tool: {tool_to_run}"
+        self._publish(workspace, "execution_result", f"Successfully executed tool: {tool_to_run}")
 
     async def run(
         self,
@@ -500,4 +523,4 @@ class IntegrationAgent(SwarmAgentBase):
                 "status": "error",
                 "message": f"Unknown integration intent {workspace.intent}",
             }
-        workspace.work_product["integration_result"] = result
+        self._publish(workspace, "integration_result", result)
