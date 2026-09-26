@@ -118,6 +118,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.sso", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.api_keys", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.ci_webhooks", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.merge_learning", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.n8n_webhooks", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.task_workspace",
