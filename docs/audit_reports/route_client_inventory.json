@@ -7,7 +7,7 @@
   ],
   "totals": {
     "backend_routes": 605,
-    "frontend_unique_refs": 148,
+    "frontend_unique_refs": 146,
     "matched": 273,
     "orphan_routes": 332
   },
@@ -2903,8 +2903,7 @@
       "resolved": "/api/v1/admin/trusted-browsers",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/dashboard/SettingsPage.tsx",
-        "frontend/src/components/dashboard/SettingsPage.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
@@ -2914,7 +2913,7 @@
       "resolved": "/api/v1/admin/trusted-browsers/:param",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/dashboard/SettingsPage.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
@@ -2924,8 +2923,7 @@
       "resolved": "/api/v1/admin/trusted-browsers",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/dashboard/SettingsPage.tsx",
-        "frontend/src/components/dashboard/SettingsPage.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
