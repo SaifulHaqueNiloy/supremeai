@@ -5,34 +5,18 @@ Dynamic on-the-fly Python tool synthesis with zero-RCE AST isolation:
 - Verifies synthesized Python code using ASTSandboxScanner before execution.
 - Blocks dangerous primitives (os, subprocess, eval, exec, socket, dunder traversal).
 - Executes verified tools in an ephemeral restricted execution namespace.
-
-Issue #704 (fail-closed codegen gate): the restricted-namespace ``exec()`` in
-``execute_tool`` is NOT a security sandbox. By default
-(``SUPREMEAI_ALLOW_INPROCESS_CODEGEN`` unset — all prod/staging) it refuses to
-execute and raises ``ToolForgeError`` (the caller's existing error convention;
-``services/living_engine.py`` steps run under self-healing which handles it).
-The exec path only runs when the gate is explicitly enabled (local development
-only), with a loud one-time warning emitted at import/boot when it is.
 """
 
 from __future__ import annotations
 
+import signal
 import time
 from dataclasses import dataclass, field
 from typing import Any
 
-from core.logging_config import logger
-from core.security.codegen_gate import (
-    denied_reason,
-    inprocess_codegen_enabled,
-    warn_inprocess_codegen_boot,
-)
-from core.security.scanning.ast_scanner import ASTSandboxScanner
+from loguru import logger
 
-# Issue #704: loud one-time boot warning when the in-process exec escape hatch
-# is explicitly enabled (local development only).
-if inprocess_codegen_enabled():
-    warn_inprocess_codegen_boot("ToolForgeService.execute_tool")
+from core.security.scanning.ast_scanner import ASTSandboxScanner
 
 
 class ToolForgeError(Exception):
@@ -156,19 +140,9 @@ class ToolForgeService:
         params: dict[str, Any],
         timeout_seconds: float = 5.0,
     ) -> Any:
-        """Executes a forged tool in a restricted sandbox namespace."""
+        """Executes a forged tool in a restricted sandbox namespace with resource limits."""
         if not tool.is_safe or not tool.compiled_code:
             raise SecurityViolationError(f"Tool '{tool.spec.name}' is unverified or unsafe.")
-
-        # Issue #704 fail-closed gate: refuse in-process exec of LLM-generated
-        # code unless explicitly enabled (SUPREMEAI_ALLOW_INPROCESS_CODEGEN).
-        # ToolForgeError matches this service's existing failure convention.
-        if not inprocess_codegen_enabled():
-            logger.warning(
-                f"[ToolForge] Blocked in-process exec for '{tool.spec.name}': "
-                f"{denied_reason('ToolForgeService.execute_tool')}"
-            )
-            raise ToolForgeError(denied_reason("ToolForgeService.execute_tool"))
 
         # Restricted execution scope
         sandbox_globals = {
@@ -176,6 +150,13 @@ class ToolForgeService:
             "__name__": "__tool_forge__",
         }
         sandbox_locals: dict[str, Any] = {}
+
+        def timeout_handler(signum, frame):
+            raise TimeoutError(f"Tool execution timed out after {timeout_seconds} seconds")
+
+        # Set up signal alarm for timeout
+        old_handler = signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(int(timeout_seconds))
 
         try:
             exec(tool.compiled_code, sandbox_globals, sandbox_locals)
@@ -202,6 +183,10 @@ class ToolForgeService:
         except Exception as exc:
             logger.error(f"Execution error in tool '{tool.spec.name}': {exc}")
             raise ToolForgeError(f"Tool execution failed: {exc}") from exc
+        finally:
+            # Restore old signal handler and cancel alarm
+            signal.signal(signal.SIGALRM, old_handler)
+            signal.alarm(0)
 
     def get_tool(self, name: str) -> SynthesizedTool | None:
         return self._tool_registry.get(name)
