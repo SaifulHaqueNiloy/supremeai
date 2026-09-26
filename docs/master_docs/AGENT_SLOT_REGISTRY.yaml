@@ -148,4 +148,6 @@ local_operators:
       Local IDE (Cline, Antigravity IDE, Cursor). Unlike cloud-based autonomous slots
       with single fixed roles, Local IDE represents the primary developer environment.
       It has no single fixed role; it operates with omni-role capability across all slots and tools.
+      MANDATORY: Local IDE is strictly bound by the 'No Claim, No Code' policy. Code must
+      NEVER be modified or committed without a dedicated, claimed GitHub Issue.
 
