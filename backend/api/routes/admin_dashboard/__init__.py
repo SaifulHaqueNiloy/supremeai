@@ -414,7 +414,6 @@ from .endpoints_backups import (  # noqa: E402  (registers routes + re-export)
     trigger_backup,
 )
 from .endpoints_flags import (  # noqa: E402  (registers routes + re-export)
-    _FEATURE_FLAGS,
     create_feature_flag,
     get_feature_flags,
     update_feature_flag,
