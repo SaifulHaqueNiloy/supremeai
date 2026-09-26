@@ -10,27 +10,32 @@ router = APIRouter(
 
 
 @router.get("/observe/metrics")
-async def get_metrics():
+# Issue #1665: these handlers return static/aggregated data with no
+# await — plain `def` routes (FastAPI runs them in the threadpool)
+# instead of `async def` coroutines that never await. HTTP contract
+# unchanged; only the event-loop scheduling semantics are corrected.
+
+def get_metrics():
     return {}
 
 
 @router.get("/observe/logs")
-async def get_logs():
+def get_logs():
     return []
 
 
 @router.get("/observe/events")
-async def get_events():
+def get_events():
     return []
 
 
 @router.get("/observe/ci")
-async def get_ci():
+def get_ci():
     return []
 
 
 @router.get("/observe/health")
-async def get_health():
+def get_health():
     return {
         "gcp": {"status": "unknown"},
         "railway": {"status": "unknown"},
@@ -40,5 +45,5 @@ async def get_health():
 
 
 @router.get("/observe/traffic")
-async def get_traffic():
+def get_traffic():
     return {"current_rps": 0, "window_30min": [], "distribution": {}}
