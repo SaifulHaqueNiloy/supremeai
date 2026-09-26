@@ -2282,6 +2282,16 @@
     {
       "evidence": [
         {
+          "line": 739,
+          "path": "backend/api/routes/auth.py"
+        }
+      ],
+      "source": "identity",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/models/agent_session.py"
         }
@@ -2672,7 +2682,7 @@
     {
       "evidence": [
         {
-          "line": 257,
+          "line": 258,
           "path": "backend/api/routes/memory.py"
         }
       ],
@@ -2682,7 +2692,7 @@
     {
       "evidence": [
         {
-          "line": 321,
+          "line": 335,
           "path": "backend/api/routes/memory.py"
         }
       ],
@@ -3162,7 +3172,7 @@
     {
       "evidence": [
         {
-          "line": 91,
+          "line": 122,
           "path": "backend/api/routes/admin_dashboard/endpoints_metrics.py"
         }
       ],
@@ -3172,7 +3182,7 @@
     {
       "evidence": [
         {
-          "line": 92,
+          "line": 123,
           "path": "backend/api/routes/admin_dashboard/endpoints_metrics.py"
         }
       ],
@@ -3592,7 +3602,7 @@
     {
       "evidence": [
         {
-          "line": 649,
+          "line": 659,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3602,7 +3612,7 @@
     {
       "evidence": [
         {
-          "line": 704,
+          "line": 714,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -3612,7 +3622,7 @@
     {
       "evidence": [
         {
-          "line": 849,
+          "line": 859,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -4002,7 +4012,7 @@
     {
       "evidence": [
         {
-          "line": 50,
+          "line": 60,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -4012,7 +4022,7 @@
     {
       "evidence": [
         {
-          "line": 350,
+          "line": 360,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -4022,7 +4032,7 @@
     {
       "evidence": [
         {
-          "line": 826,
+          "line": 836,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
@@ -4032,7 +4042,7 @@
     {
       "evidence": [
         {
-          "line": 827,
+          "line": 837,
           "path": "backend/api/routes/browser_routes.py"
         }
       ],
