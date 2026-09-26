@@ -917,46 +917,15 @@ async def health_aggregation_contract(admin: dict = Depends(get_current_admin)):
     return await get_health_aggregation()
 
 
-@router.post("/api/admin/traffic/kill-switch")
-async def traffic_kill_switch_contract_alias(
-    payload: "CloudNodeTarget", admin: dict = Depends(get_current_admin)
-):
-    """Issue #1493 contract alias: POST /api/admin/traffic/kill-switch.
-
-    The real implementation lives at /api/admin/cloud-mesh/kill-switch
-    (api.routes.cloud_mesh). This prefix-less router carries the absolute
-    contract path and delegates to the very same handler under the same
-    admin guard, so both URLs stay in lockstep."""
-    from api.routes.cloud_mesh import kill_switch as _real_kill_switch
-
-    return await _real_kill_switch(payload)
-
-
-@router.get("/api/admin/tenant-limits")
-async def list_tenant_limits_contract_alias(
-    include_usage: bool = True, admin: dict = Depends(get_current_admin)
-):
-    """Issue #1493 contract alias: GET /api/admin/tenant-limits.
-
-    The real implementation lives at /admin-api/tenant-limits
-    (api.routes.tenant_admin.list_tenants) — same data, same admin gate."""
-    from api.routes.tenant_admin import list_tenants as _real_list_tenants
-
-    return await _real_list_tenants(include_usage=include_usage)
-
-
-@router.put("/api/admin/tenant-limits/{tenant_id}")
-async def update_tenant_limits_contract_alias(
-    tenant_id: str,
-    payload: "TenantLimitUpdate",
-    admin: dict = Depends(get_current_admin),
-):
-    """Issue #1493 contract alias: PUT /api/admin/tenant-limits/{tenant_id}.
-
-    Delegates to api.routes.tenant_admin.update_tenant (real handler)."""
-    from api.routes.tenant_admin import update_tenant as _real_update_tenant
-
-    return await _real_update_tenant(tenant_id=tenant_id, payload=payload)
+# FIX (CI red 36219425476, follow-up of #1510): the three #1493 contract
+# aliases below (traffic/kill-switch, tenant-limits GET/PUT) were RE-ADDED by
+# #1510 with quoted annotations ("CloudNodeTarget"/"TenantLimitUpdate") that
+# are not importable in this module's namespace — ruff F821 ×2, OpenAPI
+# ForwardRef blow-up (test_app_contract) AND a full ×2 double registration
+# (test_router_mount_hygiene). The canonical, self-contained versions live
+# further down this file (classes _ContractCloudNodeTarget + local imports).
+# Keep exactly one definition of each — this block is the duplicate, so it is
+# removed, not the original.
 
 
 class _ContractCloudNodeTarget(BaseModel):
@@ -979,8 +948,8 @@ async def cloud_mesh_smell_check_contract_alias(
     The codebase's real smell-check implementation is POST /tools/smell-check
     (api.routes.tools_ops, admin-gated). Route the contract path to it instead
     of leaving a misleading 404."""
-    from api.routes.tools_ops import smell_check as _real_smell_check
     from api.routes.tools_ops import SmellCheckRequest as _RealRequest
+    from api.routes.tools_ops import smell_check as _real_smell_check
 
     return await _real_smell_check(_RealRequest(path=payload.path, thresholds=payload.thresholds))
 
