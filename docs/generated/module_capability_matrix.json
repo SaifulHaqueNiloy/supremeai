@@ -20334,7 +20334,10 @@
       "path": "frontend/src/hooks/useAdminApi.ts"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory",
+        "register"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "ts",
