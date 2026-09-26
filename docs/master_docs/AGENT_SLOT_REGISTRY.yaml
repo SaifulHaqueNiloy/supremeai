@@ -133,3 +133,15 @@ usage:
 - 'PR title: ''chore(agents): assign agent-N to <tool>'''
 - Previous slot holder MUST be notified via @mention in PR description
 - If slot is being transferred, old assignment's expires_on MUST be set to today
+
+local_operators:
+  local_ide:
+    client_id: local_ide
+    role: omni-role (admin)
+    scopes: ['*']
+    protocol: stdio
+    notes: >-
+      Local IDE (Cline, Antigravity IDE, Cursor). Unlike cloud-based autonomous slots
+      with single fixed roles, Local IDE represents the primary developer environment.
+      It has no single fixed role; it operates with omni-role capability across all slots and tools.
+
