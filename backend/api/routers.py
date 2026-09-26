@@ -292,7 +292,11 @@ ALL_ROUTERS = [
     {"path": "api.routes.traffic_monitor", "prefix": "", "is_admin": True, "is_critical": False},
     {
         "path": "api.routes.admin_librarian",
-        "prefix": "/api",
+        # Issue #1492: the router already declares its own `/api/admin/librarian`
+        # prefix — adding "/api" here produced `/api/api/admin/librarian/...`
+        # (live-verified: only the double-prefixed path resolved). Empty prefix
+        # matches every other self-prefixed admin router in this registry.
+        "prefix": "",
         "is_admin": True,
         "is_critical": False,
     },

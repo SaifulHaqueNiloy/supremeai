@@ -19,12 +19,34 @@ from collections.abc import Iterable
 from core.config_parsers import parse_origin_list
 
 
+def _vault_origin_env(env_var: str) -> str:
+    """Vault-backed fallback for origin env vars (issues #1483/#1484/#1455).
+
+    বাংলা মন্তব্য: 12-factor ক্রম — প্রসেস env সবসময় আগে; সেখানে না থাকলে
+    settings-এর Infisical vault cache থেকে পড়া হয়। Production deploy-গুলোতে
+    CORS_ORIGINS/USER_CORS_ORIGINS/ADMIN_CORS_ORIGINS vault-এ আছে কিন্তু
+    Render env-এ না থাকলে আগে এখানে খালি দেখাত → সব browser preflight 400।
+
+    Guarded by design: কোনো ব্যর্থতা (import cycle, vault নিচে, tests/CI) চুপচাপ
+    "" ফেরত দেয় — এই মডিউলের dependency-free নীতি অটুট থাকে এবং কখনো raise করে না।
+    """
+    try:
+        from core.config import settings
+
+        if settings._is_test_environment():
+            return ""
+        return settings.get_secret(env_var) or ""
+    except Exception:  # pragma: no cover — defensive: boot must never crash here
+        return ""
+
+
 def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
     # Roadmap 1.4 (issue #1173): canonical single parser — JSON-array বা
     # comma-separated যেভাবেই operator লিখুক, একই stripped/filtered ফলাফল।
     # core.config_parsers শুধু json/typing import করে, তাই এই মডিউলের
     # "dependency-free (no pydantic)" নীতি অটুট।
-    val = os.getenv(env_var)
+    # Issues #1483/#1484/#1455: os.getenv → vault-cache fallback যোগ হলো।
+    val = os.getenv(env_var) or _vault_origin_env(env_var)
     if val:
         return tuple(parse_origin_list(val))
     return default
