@@ -40,11 +40,18 @@ _DB_FLAG_NAMES: dict[str, str] = {
 _TRUTHY: frozenset[str] = frozenset({"1", "true", "yes", "on"})
 
 
-def _env_flag(name: str, default: bool = False) -> bool:
-    """Read a boolean feature-flag from the environment (zero-cost, no DB)."""
+def _env_flag(name: str) -> bool | None:
+    """Tri-state env flag reader (issue #1818 bug-2 fix).
+
+    Returns:
+        True/False — the EXPLICIT env value. The env-var-first contract means
+        an explicit ``false`` is a hard kill-switch that the DB layer can
+        NEVER override.
+        None — env unset (or empty) → caller may fall through to the DB layer.
+    """
     raw = os.getenv(name)
-    if raw is None:
-        return default
+    if raw is None or raw.strip() == "":
+        return None
     return raw.strip().lower() in _TRUTHY
 
 
@@ -58,9 +65,14 @@ def _db_flag(name: str, user_id: str | None = None) -> bool | None:
 
         if not db or not getattr(db, "client", None):
             return None
-        return db.client.is_feature_enabled(_DB_FLAG_NAMES.get(name, name), user_id)
+        # Issue #1818 bug-1 fix: is_feature_enabled lives on the SupabaseDB
+        # WRAPPER (database/supabase_client.py), not on the raw supabase-py
+        # ``db.client`` — the old call raised AttributeError on every lookup
+        # and the swallow-all handler turned it into a silent permanent None,
+        # so DB flags could never enable anything.
+        return db.is_feature_enabled(_DB_FLAG_NAMES.get(name, name), user_id)
     except Exception as exc:
-        logger.debug(f"feature_flags: DB lookup for '{name}' failed (non-fatal): {exc}")
+        logger.warning(f"feature_flags: DB lookup for '{name}' failed (non-fatal): {exc}")
         return None
 
 
@@ -102,14 +114,21 @@ class FeatureFlags:
         return self._check(OPENHANDS_FLAG, user_id)
 
     def _check(self, flag_name: str, user_id: str | None = None) -> bool:
-        """Two-tier check: env-var → DB, cache result."""
+        """Env-var-first tri-state check, then DB, cache result (issue #1818).
+
+        Contract (restored per the module docstring — it was previously
+        inverted): an EXPLICIT env value always wins, including ``false``.
+        The DB layer is consulted ONLY when the env var is unset, so
+        ``SUPREMEAI_MEM0_ENABLED=false`` + DB-true → False (kill-switch pins).
+        """
         if flag_name in self._cache:
             return self._cache[flag_name]
-        result = _env_flag(flag_name, default=False)
-        if not result:
+        env_result = _env_flag(flag_name)
+        if env_result is not None:
+            result = env_result
+        else:
             db_result = _db_flag(flag_name, user_id)
-            if db_result is True:
-                result = True
+            result = db_result is True
         self._cache[flag_name] = result
         return result
 

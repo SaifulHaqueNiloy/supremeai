@@ -11,7 +11,7 @@ report করে। Enable/disable সব settings layer (env vars) এর ম�
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from typing import Any, Optional
 
@@ -327,13 +327,44 @@ def _build_registry() -> None:
 def list_integrations() -> list[IntegrationInfo]:
     """সব registered integration-এর তালিকা (current state)।"""
     _build_registry()
-    return list(_INTEGRATIONS.values())
+    return [_apply_feature_flag_override(i) for i in _INTEGRATIONS.values()]
 
 
 def get_integration(key: str) -> IntegrationInfo | None:
     """একটি specific integration-এর info।"""
     _build_registry()
-    return _INTEGRATIONS.get(key)
+    info = _INTEGRATIONS.get(key)
+    return _apply_feature_flag_override(info) if info else None
+
+
+# Issue #1818 (island 4): these OPTIONAL_PROVIDER adapters gate premium
+# runtimes. Their enabled/status previously read ONLY settings/env — the
+# unified feature_flags layer (env → DB) was never consulted, so admin DB
+# toggles could not influence the registry surface. The override applies at
+# accessor time (never at import) so registry imports stay DB-free.
+_FLAG_CONSULTED_KEYS: frozenset[str] = frozenset(
+    {"mem0", "graphiti", "browser_use", "e2b", "openhands"}
+)
+
+
+def _apply_feature_flag_override(info: IntegrationInfo) -> IntegrationInfo:
+    """Re-evaluate premium-adapter state through core.feature_flags (env → DB)."""
+    if info.key not in _FLAG_CONSULTED_KEYS:
+        return info
+    try:
+        from core.feature_flags import feature_flags
+
+        enabled = bool(getattr(feature_flags, f"{info.key}_enabled")())
+    except Exception:
+        # The flag checker is fail-closed; the registry reporter must never raise.
+        return info
+    if enabled == info.enabled:
+        return info
+    return replace(
+        info,
+        enabled=enabled,
+        status=IntegrationStatus.ENABLED if enabled else IntegrationStatus.DISABLED,
+    )
 
 
 def is_enabled(key: str) -> bool:

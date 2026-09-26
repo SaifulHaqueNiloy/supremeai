@@ -975,6 +975,49 @@ class SupabaseDB:
 
         return True
 
+    # --- Feature Flags (admin surface, issue #1818) ---
+    def list_feature_flags(self) -> list[dict[str, Any]]:
+        """All rows from the feature_flags table (admin surface reader)."""
+        res = self.client.table("feature_flags").select("*").order("feature_name").execute()
+        return list(res.data or [])
+
+    def upsert_feature_flag(
+        self,
+        feature_name: str,
+        *,
+        enabled: bool | None = None,
+        rollout_percentage: int | None = None,
+    ) -> dict[str, Any]:
+        """Create-or-update one flag row keyed on the unique feature_name column.
+
+        Read-modify-write (not blind PostgREST upsert) so unspecified columns
+        keep their stored values instead of being reset to defaults.
+        """
+        res = (
+            self.client.table("feature_flags")
+            .select("*")
+            .eq("feature_name", feature_name)
+            .execute()
+        )
+        existing = (res.data or [None])[0]
+        payload: dict[str, Any] = {"feature_name": feature_name}
+        if enabled is not None:
+            payload["enabled"] = enabled
+        if rollout_percentage is not None:
+            payload["rollout_percentage"] = rollout_percentage
+        if existing:
+            updated = (
+                self.client.table("feature_flags")
+                .update(payload)
+                .eq("feature_name", feature_name)
+                .execute()
+            )
+            return dict((updated.data or [{}])[0])
+        payload.setdefault("enabled", False)
+        payload.setdefault("rollout_percentage", 100)
+        inserted = self.client.table("feature_flags").insert(payload).execute()
+        return dict((inserted.data or [{}])[0])
+
     # --- GitHub Repos ---
     def add_github_repo(
         self, repo_name: str, owner: str, description: str = "", language: str = ""

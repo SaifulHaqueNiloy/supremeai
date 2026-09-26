@@ -20,12 +20,40 @@ def test_env_flag_truthy(monkeypatch):
     assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is True
 
 
-def test_env_flag_falsy_and_default(monkeypatch):
+def test_env_flag_tri_state(monkeypatch):
+    """Issue #1818 bug-2: unset/empty → None (caller falls through to DB),
+    explicit value → bool. An explicit 'false' is a hard kill-switch."""
     monkeypatch.delenv("SUPREMEAI_MEM0_ENABLED", raising=False)
-    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is False
-    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED", default=True) is True
+    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is None
+    monkeypatch.setenv("SUPREMEAI_MEM0_ENABLED", "")
+    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is None
     monkeypatch.setenv("SUPREMEAI_MEM0_ENABLED", "no")
     assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is False
+    monkeypatch.setenv("SUPREMEAI_MEM0_ENABLED", "true")
+    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is True
+
+
+def test_env_false_pins_even_when_db_true(monkeypatch):
+    """ACCEPTANCE #1818: env=false + db=true → False. The env kill-switch must
+    stick — the DB layer is consulted ONLY when the env var is unset."""
+    monkeypatch.setenv("SUPREMEAI_MEM0_ENABLED", "false")
+    feature_flags.reset_cache()
+    consulted = {"called": False}
+
+    def _spy_db_flag(name, user_id=None):
+        consulted["called"] = True
+        return True
+
+    monkeypatch.setattr(ff_module, "_db_flag", _spy_db_flag)
+    assert feature_flags.mem0_enabled() is False
+    assert consulted["called"] is False, "DB must not even be consulted when env is explicit"
+
+
+def test_db_consulted_only_when_env_unset(monkeypatch):
+    monkeypatch.delenv("SUPREMEAI_MEM0_ENABLED", raising=False)
+    feature_flags.reset_cache()
+    monkeypatch.setattr(ff_module, "_db_flag", lambda name, user_id=None: True)
+    assert feature_flags.mem0_enabled() is True
 
 
 def test_mem0_enabled_reads_env(monkeypatch):
