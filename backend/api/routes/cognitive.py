@@ -36,6 +36,7 @@ async def route_cognitive(
     if not user_id:
         # নিরাপত্তা সর্বদা fail-closed — কোনো silent fallback নয়।
         from fastapi import HTTPException
+
         raise HTTPException(status_code=401, detail="Invalid token: missing subject")
 
     economic_optimizer = await get_economic_optimizer()

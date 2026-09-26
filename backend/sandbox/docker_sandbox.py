@@ -183,9 +183,7 @@ class DockerSandbox:
         # এখন Path.resolve() দিয়ে symlink resolve করে whitelist validate হয়।
         bind_whitelist = _resolve_bind_whitelist()
         if not _is_path_in_whitelist(bind_source, bind_whitelist):
-            logger.critical(
-                f"Bind source path rejected (not in whitelist): {bind_source!r}"
-            )
+            logger.critical(f"Bind source path rejected (not in whitelist): {bind_source!r}")
             return {
                 "exit_code": 1,
                 "stdout": "",
@@ -195,10 +193,12 @@ class DockerSandbox:
             # bind_target is the in-container path, but it still must not
             # contain traversal patterns. We apply a weaker check here —
             # the more important check is bind_source (host path).
-            if ".." in bind_target or bind_target.startswith("/etc") or bind_target.startswith("/proc"):
-                logger.critical(
-                    f"Bind target path rejected (suspicious): {bind_target!r}"
-                )
+            if (
+                ".." in bind_target
+                or bind_target.startswith("/etc")
+                or bind_target.startswith("/proc")
+            ):
+                logger.critical(f"Bind target path rejected (suspicious): {bind_target!r}")
                 return {
                     "exit_code": 1,
                     "stdout": "",
