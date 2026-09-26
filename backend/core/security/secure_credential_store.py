@@ -21,6 +21,31 @@ def generate_key() -> str:
     return Fernet.generate_key().decode()
 
 
+class CredentialEncryptionUnavailableError(RuntimeError):
+    """ISSUE-1570: raised when credential encryption is unavailable or fails.
+
+    Fail-Closed policy — callers must NEVER fall back to plaintext persistence;
+    abort the operation instead so no secret ever lands on disk unencrypted.
+    """
+
+    pass
+
+
+def _resolve_fail_closed(fail_closed: bool | None) -> bool:
+    """Resolve the fail-closed toggle (default TRUE per issue #1570).
+
+    Opt-out (legacy fail-open behaviour) requires an explicit
+    ``BROWSER_CREDENTIALS_FAIL_CLOSED=false`` / ``0`` environment variable.
+    """
+    if fail_closed is not None:
+        return bool(fail_closed)
+    return os.getenv("BROWSER_CREDENTIALS_FAIL_CLOSED", "true").strip().lower() not in {
+        "0",
+        "false",
+        "no",
+    }
+
+
 class RotatingFernet:
     """
     বাংলা মন্তব্য: P0 Fix — Fernet key rotation with multiple-key decryption support.
@@ -91,9 +116,12 @@ class EncryptionProvider(ABC):
 
 
 class LocalFernetProvider(EncryptionProvider):
-    def __init__(self, encryption_key: str | None = None) -> None:
+    def __init__(self, encryption_key: str | None = None, fail_closed: bool | None = None) -> None:
         self.enabled = False
         self.rotating_fernet: RotatingFernet | None = None
+        # ISSUE-1570: default fail-closed — encryption unavailable হলে plaintext
+        # fallback নিষিদ্ধ; পুরোনো fail-open আচরণ পেতে env flag দিয়ে opt-out।
+        self.fail_closed = _resolve_fail_closed(fail_closed)
         if CRYPTO_AVAILABLE:
             raw_key = (
                 encryption_key
@@ -110,37 +138,69 @@ class LocalFernetProvider(EncryptionProvider):
                 except Exception as exc:
                     logger.error(f"Failed to initialize Fernet: {exc}")
 
+    def _guard(self, action: str) -> None:
+        if self.fail_closed and (not self.enabled or not self.rotating_fernet):
+            raise CredentialEncryptionUnavailableError(
+                f"Credential encryption is unavailable ({action}) — failing closed; "
+                "plaintext fallback is forbidden (issue #1570)."
+            )
+
     def encrypt(self, plaintext: str) -> tuple[str, str | None]:
+        self._guard("encrypt")
         if not self.enabled or not self.rotating_fernet:
+            # fail-open legacy mode (explicit opt-out only)
             return plaintext, None
         try:
             token = self.rotating_fernet.encrypt(plaintext.encode())
             ciphertext = base64.urlsafe_b64encode(token).decode()
             return ciphertext, None
         except Exception as exc:
+            if self.fail_closed:
+                raise CredentialEncryptionUnavailableError(
+                    f"Fernet encryption failed: {exc} — refusing plaintext fallback."
+                ) from exc
             logger.error(f"Encryption failed: {exc}")
             return plaintext, None
 
     def decrypt(self, ciphertext: str, key_ref: str | None = None, ttl: int | None = None) -> str:
+        self._guard("decrypt")
         if not self.enabled or not self.rotating_fernet:
+            # fail-open legacy mode (explicit opt-out only)
             return ciphertext
         try:
             token = base64.urlsafe_b64decode(ciphertext.encode())
             plaintext = self.rotating_fernet.decrypt(token, ttl=ttl)
             return plaintext.decode()
         except InvalidToken:
+            if self.fail_closed:
+                raise CredentialEncryptionUnavailableError(
+                    "Token expired or invalid — decryption failed (fail-closed)."
+                )
             logger.warning("Token expired or invalid — decryption failed")
             return ciphertext
         except Exception as exc:
+            if self.fail_closed:
+                raise CredentialEncryptionUnavailableError(
+                    f"Decryption failed: {exc} — refusing to return ciphertext as plaintext."
+                ) from exc
             logger.error(f"Decryption failed: {exc}")
             return ciphertext
 
 
 class CloudKMSProvider(EncryptionProvider):
-    def __init__(self) -> None:
+    def __init__(self, fail_closed: bool | None = None) -> None:
         self.kms_client = None
         self.key_name = os.getenv("KMS_KEY_NAME", "")
+        # ISSUE-1570: KMS-unavailable অবস্থাতেও plaintext fallback নিষিদ্ধ।
+        self.fail_closed = _resolve_fail_closed(fail_closed)
         self._init_kms()
+
+    def _guard(self, action: str) -> None:
+        if self.fail_closed and (not self.kms_client or not self.key_name):
+            raise CredentialEncryptionUnavailableError(
+                f"Cloud KMS is unavailable ({action}) — failing closed; "
+                "plaintext fallback is forbidden (issue #1570)."
+            )
 
     def _init_kms(self) -> None:
         if not self.key_name:
@@ -156,6 +216,7 @@ class CloudKMSProvider(EncryptionProvider):
             logger.error(f"Failed to initialize Cloud KMS: {exc}")
 
     def encrypt(self, plaintext: str) -> tuple[str, str | None]:
+        self._guard("encrypt")
         if not self.kms_client or not self.key_name:
             logger.warning("KMS not configured; returning plaintext.")
             return plaintext, None
@@ -166,10 +227,15 @@ class CloudKMSProvider(EncryptionProvider):
             ciphertext = base64.b64encode(response.ciphertext).decode()
             return ciphertext, self.key_name
         except Exception as exc:
+            if self.fail_closed:
+                raise CredentialEncryptionUnavailableError(
+                    f"KMS encrypt failed: {exc} — refusing plaintext fallback."
+                ) from exc
             logger.error(f"KMS encrypt failed: {exc}")
             return plaintext, None
 
     def decrypt(self, ciphertext: str, key_ref: str | None) -> str:
+        self._guard("decrypt")
         if not self.kms_client or not (key_ref or self.key_name):
             logger.warning("KMS not configured or missing key_ref; returning ciphertext as-is.")
             return ciphertext
@@ -182,15 +248,36 @@ class CloudKMSProvider(EncryptionProvider):
             )
             return response.plaintext.decode()
         except Exception as exc:
+            if self.fail_closed:
+                raise CredentialEncryptionUnavailableError(
+                    f"KMS decrypt failed: {exc} — failing closed."
+                ) from exc
             logger.error(f"KMS decrypt failed: {exc}")
             return ciphertext
 
 
 class SecureCredentialStore:
-    def __init__(self, provider: EncryptionProvider | None = None) -> None:
+    def __init__(
+        self,
+        provider: EncryptionProvider | None = None,
+        fail_closed: bool | None = None,
+    ) -> None:
+        self.fail_closed = _resolve_fail_closed(fail_closed)
         self.provider: EncryptionProvider = provider or (
-            CloudKMSProvider() if os.getenv("KMS_KEY_NAME") else LocalFernetProvider()
+            CloudKMSProvider(fail_closed=self.fail_closed)
+            if os.getenv("KMS_KEY_NAME")
+            else LocalFernetProvider(fail_closed=self.fail_closed)
         )
+
+    @property
+    def encryption_available(self) -> bool:
+        """ISSUE-1570: browser context setup gates on this before persisting secrets."""
+        provider = self.provider
+        if isinstance(provider, LocalFernetProvider):
+            return provider.enabled and provider.rotating_fernet is not None
+        if isinstance(provider, CloudKMSProvider):
+            return provider.kms_client is not None and bool(provider.key_name)
+        return bool(getattr(provider, "enabled", True))
 
     def encrypt(self, plaintext: str) -> tuple[str, str | None]:
         return self.provider.encrypt(plaintext)
