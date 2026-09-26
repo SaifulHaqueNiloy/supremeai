@@ -20,6 +20,7 @@ from cryptography.fernet import Fernet, InvalidToken
 import core.security.secure_credential_store as scs_module
 from core.security.secure_credential_store import (
     CloudKMSProvider,
+    CredentialEncryptionUnavailableError,
     EncryptionProvider,
     LocalFernetProvider,
     RotatingFernet,
@@ -188,26 +189,58 @@ class TestLocalFernetProvider:
         provider = LocalFernetProvider(encryption_key=f"{KEY1},{KEY2}, {KEY3} ")
         assert len(provider.rotating_fernet._fernets) == 3
 
-    def test_encrypt_failure_returns_plaintext(self):
-        provider = LocalFernetProvider(encryption_key=KEY1)
+    def test_encrypt_failure_fails_open_only_in_legacy_mode(self):
+        # ISSUE-1570: default policy is fail-closed — runtime encryption failure
+        # must raise instead of returning plaintext. Legacy fail-open behaviour
+        # requires an explicit opt-out.
+        provider = LocalFernetProvider(encryption_key=KEY1, fail_closed=False)
         provider.rotating_fernet.encrypt = MagicMock(side_effect=RuntimeError("boom"))
         plaintext, key_ref = provider.encrypt("value")
         assert plaintext == "value"
         assert key_ref is None
 
-    def test_decrypt_invalid_token_returns_ciphertext(self):
+    def test_encrypt_failure_fails_closed_by_default(self):
         provider = LocalFernetProvider(encryption_key=KEY1)
+        provider.rotating_fernet.encrypt = MagicMock(side_effect=RuntimeError("boom"))
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.encrypt("value")
+
+    def test_decrypt_invalid_token_fails_open_only_in_legacy_mode(self):
+        provider = LocalFernetProvider(encryption_key=KEY1, fail_closed=False)
         alien = Fernet.generate_key()
         token = base64.urlsafe_b64encode(Fernet(alien).encrypt(b"mystery")).decode()
         # InvalidToken branch: the original ciphertext is returned unchanged
         assert provider.decrypt(token) == token
 
-    def test_decrypt_generic_failure_returns_ciphertext(self):
+    def test_decrypt_invalid_token_fails_closed_by_default(self):
         provider = LocalFernetProvider(encryption_key=KEY1)
+        alien = Fernet.generate_key()
+        token = base64.urlsafe_b64encode(Fernet(alien).encrypt(b"mystery")).decode()
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.decrypt(token)
+
+    def test_decrypt_generic_failure_fails_open_only_in_legacy_mode(self):
+        provider = LocalFernetProvider(encryption_key=KEY1, fail_closed=False)
         # Not valid base64 -> binascii.Error (not InvalidToken) -> error branch
         assert provider.decrypt("!!!not-base64!!!") == "!!!not-base64!!!"
 
-    def test_disabled_encrypt_decrypt_passthrough(self, monkeypatch):
+    def test_decrypt_generic_failure_fails_closed_by_default(self):
+        provider = LocalFernetProvider(encryption_key=KEY1)
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.decrypt("!!!not-base64!!!")
+
+    def test_disabled_encrypt_decrypt_passthrough_is_legacy_optout(self, monkeypatch):
+        for var in (
+            "BROWSER_CREDENTIALS_ENCRYPTION_KEY",
+            "SUPREMEAI_CREDENTIAL_ENC_KEY",
+            "ENCRYPTION_KEY",
+        ):
+            monkeypatch.delenv(var, raising=False)
+        provider = LocalFernetProvider(fail_closed=False)
+        assert provider.encrypt("plain") == ("plain", None)
+        assert provider.decrypt("cipher") == "cipher"
+
+    def test_disabled_provider_fails_closed_by_default(self, monkeypatch):
         for var in (
             "BROWSER_CREDENTIALS_ENCRYPTION_KEY",
             "SUPREMEAI_CREDENTIAL_ENC_KEY",
@@ -215,8 +248,10 @@ class TestLocalFernetProvider:
         ):
             monkeypatch.delenv(var, raising=False)
         provider = LocalFernetProvider()
-        assert provider.encrypt("plain") == ("plain", None)
-        assert provider.decrypt("cipher") == "cipher"
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.encrypt("plain")
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.decrypt("cipher")
 
     def test_init_failure_disables_provider(self, monkeypatch):
         # RotatingFernet construction blowing up must be caught (error log,
@@ -273,10 +308,16 @@ class TestCloudKMSProvider:
         provider = CloudKMSProvider()
         assert provider.kms_client is None
 
-    def test_encrypt_without_client_returns_plaintext(self, monkeypatch):
+    def test_encrypt_without_client_fails_open_only_in_legacy_mode(self, monkeypatch):
+        monkeypatch.delenv("KMS_KEY_NAME", raising=False)
+        provider = CloudKMSProvider(fail_closed=False)
+        assert provider.encrypt("data") == ("data", None)
+
+    def test_encrypt_without_client_fails_closed_by_default(self, monkeypatch):
         monkeypatch.delenv("KMS_KEY_NAME", raising=False)
         provider = CloudKMSProvider()
-        assert provider.encrypt("data") == ("data", None)
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.encrypt("data")
 
     def test_encrypt_success_returns_base64_and_key_ref(self, monkeypatch):
         monkeypatch.setenv("KMS_KEY_NAME", "projects/p/locations/l/keyRings/r/cryptoKeys/k")
@@ -290,24 +331,46 @@ class TestCloudKMSProvider:
         assert base64.b64decode(ciphertext.encode()) == raw_ciphertext
         client.encrypt.assert_called_once()
 
-    def test_encrypt_failure_returns_plaintext(self, monkeypatch):
+    def test_encrypt_failure_fails_open_only_in_legacy_mode(self, monkeypatch):
+        monkeypatch.setenv("KMS_KEY_NAME", "projects/p/locations/l/keyRings/r/cryptoKeys/k")
+        client = MagicMock()
+        client.encrypt.side_effect = RuntimeError("KMS down")
+        self._install_fake_kms_module(monkeypatch, client_factory=lambda: client)
+        provider = CloudKMSProvider(fail_closed=False)
+        assert provider.encrypt("value") == ("value", None)
+
+    def test_encrypt_failure_fails_closed_by_default(self, monkeypatch):
         monkeypatch.setenv("KMS_KEY_NAME", "projects/p/locations/l/keyRings/r/cryptoKeys/k")
         client = MagicMock()
         client.encrypt.side_effect = RuntimeError("KMS down")
         self._install_fake_kms_module(monkeypatch, client_factory=lambda: client)
         provider = CloudKMSProvider()
-        assert provider.encrypt("value") == ("value", None)
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.encrypt("value")
 
-    def test_decrypt_without_client_returns_ciphertext(self, monkeypatch):
+    def test_decrypt_without_client_fails_open_only_in_legacy_mode(self, monkeypatch):
         monkeypatch.delenv("KMS_KEY_NAME", raising=False)
-        provider = CloudKMSProvider()
+        provider = CloudKMSProvider(fail_closed=False)
         assert provider.decrypt("cipher", None) == "cipher"
 
-    def test_decrypt_without_key_ref_returns_ciphertext(self, monkeypatch):
+    def test_decrypt_without_client_fails_closed_by_default(self, monkeypatch):
+        monkeypatch.delenv("KMS_KEY_NAME", raising=False)
+        provider = CloudKMSProvider()
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.decrypt("cipher", None)
+
+    def test_decrypt_without_key_ref_fails_open_only_in_legacy_mode(self, monkeypatch):
+        monkeypatch.delenv("KMS_KEY_NAME", raising=False)
+        provider = CloudKMSProvider(fail_closed=False)
+        provider.kms_client = MagicMock()
+        assert provider.decrypt("cipher", None) == "cipher"
+
+    def test_decrypt_without_key_ref_fails_closed_by_default(self, monkeypatch):
         monkeypatch.delenv("KMS_KEY_NAME", raising=False)
         provider = CloudKMSProvider()
         provider.kms_client = MagicMock()
-        assert provider.decrypt("cipher", None) == "cipher"
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.decrypt("cipher", None)
 
     def test_decrypt_success(self, monkeypatch):
         monkeypatch.setenv("KMS_KEY_NAME", "projects/p/locations/l/keyRings/r/cryptoKeys/k")
@@ -321,7 +384,7 @@ class TestCloudKMSProvider:
 
     def test_decrypt_uses_explicit_key_ref(self, monkeypatch):
         monkeypatch.delenv("KMS_KEY_NAME", raising=False)
-        provider = CloudKMSProvider()
+        provider = CloudKMSProvider(fail_closed=False)
         provider.kms_client = MagicMock()
         provider.key_name = ""
         client = MagicMock()
@@ -331,13 +394,22 @@ class TestCloudKMSProvider:
         assert provider.decrypt(ciphertext, key_ref="projects/x/keys/y") == "value"
         assert client.decrypt.call_args.kwargs["request"]["name"] == "projects/x/keys/y"
 
-    def test_decrypt_failure_returns_ciphertext(self, monkeypatch):
+    def test_decrypt_failure_fails_open_only_in_legacy_mode(self, monkeypatch):
+        monkeypatch.setenv("KMS_KEY_NAME", "projects/p/locations/l/keyRings/r/cryptoKeys/k")
+        client = MagicMock()
+        client.decrypt.side_effect = RuntimeError("boom")
+        self._install_fake_kms_module(monkeypatch, client_factory=lambda: client)
+        provider = CloudKMSProvider(fail_closed=False)
+        assert provider.decrypt("cipher", None) == "cipher"
+
+    def test_decrypt_failure_fails_closed_by_default(self, monkeypatch):
         monkeypatch.setenv("KMS_KEY_NAME", "projects/p/locations/l/keyRings/r/cryptoKeys/k")
         client = MagicMock()
         client.decrypt.side_effect = RuntimeError("boom")
         self._install_fake_kms_module(monkeypatch, client_factory=lambda: client)
         provider = CloudKMSProvider()
-        assert provider.decrypt("cipher", None) == "cipher"
+        with pytest.raises(CredentialEncryptionUnavailableError):
+            provider.decrypt("cipher", None)
 
 
 class TestSecureCredentialStore:
