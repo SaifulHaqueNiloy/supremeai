@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3401,
+  "edge_count": 3407,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -2846,6 +2846,10 @@
     {
       "from": "api.routes.memory",
       "to": "memory.sliding_window"
+    },
+    {
+      "from": "api.routes.memory_mcp_http",
+      "to": "core.logging_config"
     },
     {
       "from": "api.routes.mesh",
@@ -9364,6 +9368,22 @@
       "to": "core.app"
     },
     {
+      "from": "tests.api.routes.test_admin_route_consolidation",
+      "to": "api.routes.admin"
+    },
+    {
+      "from": "tests.api.routes.test_admin_route_consolidation",
+      "to": "api.routes.admin_dashboard.endpoints_command"
+    },
+    {
+      "from": "tests.api.routes.test_admin_route_consolidation",
+      "to": "api.routes.admin_routes"
+    },
+    {
+      "from": "tests.api.routes.test_admin_route_consolidation",
+      "to": "api.routes.internal"
+    },
+    {
       "from": "tests.api.routes.test_admin_routes_full",
       "to": "core.cache.redis_manager"
     },
@@ -9390,6 +9410,10 @@
     {
       "from": "tests.api.routes.test_mcp_hub_contract",
       "to": "database.session"
+    },
+    {
+      "from": "tests.api.routes.test_memory_mcp_http",
+      "to": "api.routes.memory_mcp_http"
     },
     {
       "from": "tests.api.routes.test_mesh_heartbeat",
@@ -13608,7 +13632,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1958,
+  "module_count": 1961,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13916,6 +13940,7 @@
     "api.routes.mcp_marketplace",
     "api.routes.media",
     "api.routes.memory",
+    "api.routes.memory_mcp_http",
     "api.routes.mesh",
     "api.routes.mesh_mailbox",
     "api.routes.mesh_tasks",
@@ -14816,6 +14841,7 @@
     "tests.api.routes.commandcenter.test_overview",
     "tests.api.routes.commandcenter.test_secure",
     "tests.api.routes.commandcenter.test_system",
+    "tests.api.routes.test_admin_route_consolidation",
     "tests.api.routes.test_admin_routes_full",
     "tests.api.routes.test_admin_security_telemetry",
     "tests.api.routes.test_browser_routes_full",
@@ -14827,6 +14853,7 @@
     "tests.api.routes.test_knowledge_search_seed",
     "tests.api.routes.test_mcp_hub",
     "tests.api.routes.test_mcp_hub_contract",
+    "tests.api.routes.test_memory_mcp_http",
     "tests.api.routes.test_mesh_heartbeat",
     "tests.api.routes.test_mesh_mailbox",
     "tests.api.routes.test_mesh_tasks",
