@@ -4,12 +4,12 @@
 
 | metric | value |
 |---|---|
-| backend routes | 859 |
+| backend routes | 860 |
 | routes with frontend consumer | 297 |
 | unique frontend `/api/...` refs | 147 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
-| orphan routes (unclassified) | 0 |
-| orphan families | 0 |
+| orphan routes (unclassified) | 1 |
+| orphan families | 1 |
 | api-only routes (allowlisted) | 304 |
 | api-only families | 158 |
 
@@ -22,11 +22,13 @@
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 304 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
-| `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
+| `orphaned` | 1 | no consumer and no classification — CI fails on NEW orphans |
 
-## Orphan families
+## Orphan families (actionable — wire, classify or deprecate)
 
-None — every route is classified or allowlisted. New orphans fail `tests/test_route_consumer_contract.py`.
+| family | orphan routes |
+|---|---|
+| `/render-ticket` | 1 |
 
 ## Intentionally API-only families (allowlisted — owner to prune as wiring lands)
 
@@ -1014,6 +1016,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/payments/checkout` | `backend/api/routes/payments.py` | api-only | NONE |
 | GET | `/payments/plans` | `backend/api/routes/payments.py` | api-only | NONE |
 | POST | `/payments/webhook` | `backend/api/routes/payments.py` | internal | NONE |
+| POST | `/render-ticket` | `backend/api/routes/browser/_render_proxy.py` | orphaned | NONE |
 | GET | `/repos` | `backend/api/routes/repos.py` | api-only | NONE |
 | POST | `/repos` | `backend/api/routes/repos.py` | api-only | NONE |
 | DELETE | `/repos/:param` | `backend/api/routes/repos.py` | api-only | NONE |
