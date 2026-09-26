@@ -310,8 +310,12 @@ class TestGetMetrics:
         assert result["cpu_usage_percent"] is None
         assert result["memory_usage_percent"] is None
         assert result["gpu_usage_percent"] is None
-        # সাথে ভুয়া throughput/latency/cost সংখ্যাগুলোও সৎ None
-        assert result["requests_per_second"] is None
+        # CONTRACT UPDATE (CI red 36219425476, issue #1474 follow-up): the real
+        # instrumentation pipeline (#1510) reports requests_per_second from the
+        # genuine 60s rolling window — an idle process is an HONEST 0.0, not a
+        # fabricated number, so None no longer applies to this field.
+        # latency/cost/24h fields still have no data in a fresh process → None.
+        assert result["requests_per_second"] == 0.0
         assert result["latency_p50_ms"] is None
         assert result["total_requests_24h"] is None
         assert result["cost_per_hour"] is None

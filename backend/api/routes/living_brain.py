@@ -34,7 +34,6 @@ from typing import Any
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from core.logging_config import logger
 # Issue #1496: this router used core.security.authentication.rbac's
 # get_current_admin, whose token extraction ONLY trusts AuthMiddleware-injected
 # request.state.user — it never decodes the Authorization header itself. Admin
@@ -44,6 +43,7 @@ from core.logging_config import logger
 # used across the admin surface (decodes the Bearer token + enforces the admin
 # role) — use it so /api/living-brain/* behaves like the rest.
 from api.dependencies import get_current_admin
+from core.logging_config import logger
 
 # Import brain components
 # UNIFY FIX: removed 'backend.' prefix from imports — they were silently
