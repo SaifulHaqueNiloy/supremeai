@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3500,
+  "edge_count": 3503,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -2193,6 +2193,10 @@
     },
     {
       "from": "api.routes.cognitive",
+      "to": "api.deps"
+    },
+    {
+      "from": "api.routes.cognitive",
       "to": "brain.cognitive_router"
     },
     {
@@ -3642,6 +3646,10 @@
     {
       "from": "api.routes.workspaces_route",
       "to": "tools.social.telegram_security"
+    },
+    {
+      "from": "api.routes.zero_cost",
+      "to": "api.deps"
     },
     {
       "from": "api.routes.zero_cost",
@@ -5998,6 +6006,10 @@
     {
       "from": "core.orchestration.swarm_orchestrator",
       "to": "core.intelligence.manual_tasks"
+    },
+    {
+      "from": "core.orchestration.swarm_orchestrator",
+      "to": "core.logging_config"
     },
     {
       "from": "core.orchestration.swarm_orchestrator",
