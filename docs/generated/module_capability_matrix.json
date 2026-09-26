@@ -8254,12 +8254,76 @@
     {
       "capability_signals": [
         "browser",
+        "capability",
+        "dispatch",
+        "register"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/external_agents/control/policy_engine.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "dispatch",
+        "execute",
+        "mcp"
+      ],
+      "classification": "canonical",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/external_agents/control/router.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
         "memory"
       ],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
       "kind": "py",
       "path": "backend/external_agents/control/state_manager.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/external_agents/providers/__init__.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/external_agents/providers/chatgpt.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/external_agents/providers/gemini.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "capability",
+        "dispatch",
+        "mcp",
+        "register"
+      ],
+      "classification": "canonical",
+      "entrypoints": [
+        "register"
+      ],
+      "kind": "py",
+      "path": "backend/external_agents/providers/registry.py"
     },
     {
       "capability_signals": [
@@ -26221,5 +26285,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3004
+  "source_file_count": 3010
 }

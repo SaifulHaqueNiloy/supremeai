@@ -4432,6 +4432,26 @@
     {
       "evidence": [
         {
+          "line": 31,
+          "path": "backend/external_agents/control/policy_engine.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
+          "line": 124,
+          "path": "backend/external_agents/control/policy_engine.py"
+        }
+      ],
+      "source": "security",
+      "target": "execution"
+    },
+    {
+      "evidence": [
+        {
           "line": 43,
           "path": "backend/tests/api/routes/test_admin_security_telemetry.py"
         }

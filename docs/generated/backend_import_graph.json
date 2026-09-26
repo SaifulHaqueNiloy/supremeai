@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3449,
+  "edge_count": 3465,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -7576,7 +7576,71 @@
       "to": "external_agents.control.state_manager"
     },
     {
+      "from": "external_agents.control.policy_engine",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.control.policy_engine",
+      "to": "external_agents.providers.registry"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.contracts.architecture_artifact"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.contracts.planner_artifact"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.control.policy_engine"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.providers.chatgpt"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.providers.gemini"
+    },
+    {
+      "from": "external_agents.control.router",
+      "to": "external_agents.providers.registry"
+    },
+    {
       "from": "external_agents.control.state_manager",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers",
+      "to": "external_agents.providers.registry"
+    },
+    {
+      "from": "external_agents.providers.chatgpt",
+      "to": "external_agents.contracts.planner_artifact"
+    },
+    {
+      "from": "external_agents.providers.chatgpt",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers.gemini",
+      "to": "external_agents.contracts.architecture_artifact"
+    },
+    {
+      "from": "external_agents.providers.gemini",
+      "to": "external_agents.contracts.planner_artifact"
+    },
+    {
+      "from": "external_agents.providers.gemini",
+      "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers.registry",
       "to": "external_agents.contracts.task_contract"
     },
     {
@@ -13800,7 +13864,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1987,
+  "module_count": 1993,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14725,7 +14789,13 @@
     "external_agents.contracts.task_contract",
     "external_agents.control",
     "external_agents.control.job_api",
+    "external_agents.control.policy_engine",
+    "external_agents.control.router",
     "external_agents.control.state_manager",
+    "external_agents.providers",
+    "external_agents.providers.chatgpt",
+    "external_agents.providers.gemini",
+    "external_agents.providers.registry",
     "integrations",
     "integrations._flags",
     "integrations.browser_use_adapter",
