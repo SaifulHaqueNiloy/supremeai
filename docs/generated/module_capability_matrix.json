@@ -6706,7 +6706,8 @@
     },
     {
       "capability_signals": [
-        "health"
+        "health",
+        "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
