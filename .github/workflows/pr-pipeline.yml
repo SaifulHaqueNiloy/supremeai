@@ -773,10 +773,14 @@ jobs:
             [[ "$AUTH_BOUNDARY_B" == "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
             [[ "$HITL_BYPASS_B" == "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
             [[ "$PRESERVATION_OK_B" != "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + DELETED_PROTECTED_INT))
+            # AUDIT-FIX (#1991): "NO CLAIM, NO CODE" (Rule #2) — PR without issue reference is BLOCKED.
+            # ISSUE_LINKED_B was computed but never added to BLOCK_COUNT — advisory-only.
+            # Now it blocks: a PR with no `#issue` reference cannot merge.
+            [[ "$ISSUE_LINKED_B" != "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
 
             if [[ $BLOCK_COUNT -gt 0 ]]; then
               STATUS="BLOCK"
-              REASON="New evidence-backed violations: secrets=$SECRET_LEAKS_INT, dangerous_shell=$SHELL_VIOLATIONS_INT, auth_boundary_regression=$AUTH_BOUNDARY_B, hitl_bypass=$HITL_BYPASS_B, protected_deletions=$DELETED_PROTECTED_INT (SG-01/SG-04/SG-07/SG-09)"
+              REASON="New evidence-backed violations: secrets=$SECRET_LEAKS_INT, dangerous_shell=$SHELL_VIOLATIONS_INT, auth_boundary_regression=$AUTH_BOUNDARY_B, hitl_bypass=$HITL_BYPASS_B, protected_deletions=$DELETED_PROTECTED_INT, issue_linked=$ISSUE_LINKED_B (SG-01/SG-04/SG-07/SG-09 + Rule #2 NO CLAIM NO CODE #1991)"
             elif [[ "$SELF_MOD_B" == "true" ]]; then
               STATUS="REVIEW"
               REASON="Self-modification of Guardian/PR-Helper logic detected (SG-11 Bootstrap Trust) — mandatory human review, auto-merge disabled"
