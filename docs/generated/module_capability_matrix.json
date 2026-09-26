@@ -18105,7 +18105,10 @@
       "path": "frontend/src/commandcenter/modules/observe/HealthMap.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health",
+        "realtime"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
@@ -18199,7 +18202,9 @@
       "path": "frontend/src/commandcenter/modules/secure/RateLimits.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
@@ -18495,13 +18500,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/AdminDashboardHome.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/AuditLogsPanel.tsx"
     },
     {
       "capability_signals": [],
@@ -19103,15 +19101,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/shared/AdminTopNav.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/shared/DynamicPanel.tsx"
     },
     {
       "capability_signals": [
@@ -26604,5 +26593,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3042
+  "source_file_count": 3040
 }
