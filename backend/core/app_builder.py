@@ -465,6 +465,15 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     app.include_router(browser_router)
 
+    # Issue #1669: the iframe render proxy moves OFF the header-guarded router —
+    # iframes cannot attach Authorization headers. Auth is now a single-use,
+    # 60s-TTL ticket issued via POST /api/browser/render-ticket (header-authed,
+    # on `browser_router` itself). This dependency-free router only serves
+    # GET /render with a valid consumed ticket; SSRF hardening unchanged.
+    from api.routes.browser._render_proxy import render_public_router
+
+    app.include_router(render_public_router)
+
     # Issue #1490: the browser integration /health probe must be reachable
     # without credentials (ServiceHealthMonitor + audit contract). It lives on
     # a dependency-free router inside api.routes.browser_routes — mounted here

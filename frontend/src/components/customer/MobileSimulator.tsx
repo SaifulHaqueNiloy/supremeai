@@ -1,8 +1,28 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, Badge } from '../ui';
 import { Smartphone, Tablet, RefreshCw } from 'lucide-react';
 import { getApiBaseUrl } from '../../utils/api';
-import { getAdminToken } from '../../services/tokenStorage';
+import { getAuthHeaders } from '../../services/apiClient';
+
+// Issue #1669 (CRITICAL): JWT কখনো iframe URL-এ যায় না। প্রতিটি external
+// render-এর আগে header-auth দিয়ে POST /api/browser/render-ticket কল হয়;
+// ফেরত পাওয়া এক-ব্যবহারযোগ্য 60s-TTL টিকেটই iframe src-তে যায় — URL-এ
+// JWT/history/log-leak-এর কোনো পথ নেই।
+const fetchRenderTicket = async (): Promise<string | null> => {
+  try {
+    const headers = await getAuthHeaders();
+    const res = await fetch(`${getApiBaseUrl()}/api/browser/render-ticket`, {
+      method: 'POST',
+      headers,
+    });
+    if (!res.ok) return null;
+    const data: unknown = await res.json();
+    const t = (data as { ticket?: unknown })?.ticket;
+    return typeof t === 'string' && t.length > 0 ? t : null;
+  } catch {
+    return null;
+  }
+};
 
 interface MobileSimulatorProps {
   html?: string;
@@ -20,16 +40,24 @@ type Orientation = 'portrait' | 'landscape';
 export function MobileSimulator({ html, url = '' }: MobileSimulatorProps) {
   const [selectedDevice, setSelectedDevice] = useState(DEVICES[0]);
   const [orientation, setOrientation] = useState<Orientation>('portrait');
+  const [ticket, setTicket] = useState<string | null>(null);
 
-  const proxied = (src: string): string => {
-    if (/^https?:\/\//i.test(src)) {
-      // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept);
-      // 'adminToken' stays a legacy read-only key.
-      const token = getAdminToken() || localStorage.getItem('adminToken') || '';
-      return `${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(src)}&token=${token}`;
+  const needsProxy = /^https?:\/\//i.test(url.trim()) && !html;
+
+  useEffect(() => {
+    if (!needsProxy) {
+      setTicket(null);
+      return;
     }
-    return src;
-  };
+    let cancelled = false;
+    setTicket(null);
+    fetchRenderTicket().then(t => {
+      if (!cancelled) setTicket(t);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [needsProxy, url]);
 
   const currentWidth = orientation === 'portrait' ? selectedDevice.width : selectedDevice.height;
   const currentHeight = orientation === 'portrait' ? selectedDevice.height : selectedDevice.width;
@@ -78,8 +106,17 @@ export function MobileSimulator({ html, url = '' }: MobileSimulatorProps) {
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-6 bg-slate-900 rounded-b-xl z-10" />
               {html ? (
                 <iframe srcDoc={html} title={selectedDevice.name} className="w-full h-full" sandbox="allow-scripts allow-forms" />
+              ) : ticket ? (
+                <iframe
+                  src={`${getApiBaseUrl()}/api/browser/render?url=${encodeURIComponent(url)}&ticket=${ticket}`}
+                  title={selectedDevice.name}
+                  className="w-full h-full"
+                  sandbox="allow-scripts allow-forms"
+                />
               ) : (
-                <iframe src={proxied(url)} title={selectedDevice.name} className="w-full h-full" sandbox="allow-scripts allow-forms" />
+                <div className="w-full h-full flex items-center justify-center text-[11px] text-slate-500 font-mono">
+                  {needsProxy ? 'Preparing secure render session…' : 'Enter a URL to preview'}
+                </div>
               )}
             </div>
           </div>
