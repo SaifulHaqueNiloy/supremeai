@@ -212,12 +212,44 @@ async def get_fixes(
     admin_user: dict = Depends(get_current_admin),
     healer: SelfHealerService = Depends(get_healer_service),
 ):
-    """Fetch all fixes for a tenant with a specific status."""
-    tenant_id = require_tenant_id(tenant_id)
-    db = get_firestore_db()
-    fixes_ref = db.collection("tenants").document(tenant_id).collection("fixes")
-    query = fixes_ref.where("status", "==", status)
+    """Fetch fixes with a specific status (admin read model).
 
+    Issue #1470 (HIGH): GET /api/admin/fixes used to hard-fail with
+    400 "Tenant context required" whenever no tenant_id was supplied — the
+    admin fixes view was unusable even for authenticated admins. Admins hold
+    god-level visibility, so the read endpoint now supports both modes:
+
+    - ``tenant_id`` given → tenant-scoped query (behaviour unchanged);
+    - no ``tenant_id``    → cross-tenant collectionGroup('fixes') query,
+      each fix tagged with its owning tenant.
+
+    Mutating endpoints (apply/approve/reject) still require an explicit
+    tenant_id — a mass mutation must never be implicit.
+    """
+    db = get_firestore_db()
+    if not db:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+
+    if tenant_id:
+        tenant_id = require_tenant_id(tenant_id)
+        fixes_ref = db.collection("tenants").document(tenant_id).collection("fixes")
+        query = fixes_ref.where("status", "==", status)
+        try:
+            results = await query.get()
+        except TypeError:
+            # Fallback for sync mock
+            results = query.get()
+
+        fixes = []
+        for doc in results:
+            fix_data = doc.to_dict()
+            fix_data["id"] = doc.id
+            fixes.append(fix_data)
+
+        return {"fixes": fixes}
+
+    # Cross-tenant read: tenants/<tid>/fixes/<fid> via collectionGroup.
+    query = db.collection_group("fixes").where("status", "==", status)
     try:
         results = await query.get()
     except TypeError:
@@ -228,6 +260,15 @@ async def get_fixes(
     for doc in results:
         fix_data = doc.to_dict()
         fix_data["id"] = doc.id
+        # Owning tenant lives two levels up the doc path
+        # (…/tenants/<tid>/fixes/<doc>); resolve defensively so simple
+        # mocks without a reference chain still serialize.
+        reference = getattr(doc, "reference", None)
+        fixes_collection = getattr(reference, "parent", None)
+        tenant_doc = getattr(fixes_collection, "parent", None)
+        owning_tenant = getattr(tenant_doc, "id", None)
+        if owning_tenant:
+            fix_data["tenant_id"] = owning_tenant
         fixes.append(fix_data)
 
     return {"fixes": fixes}
