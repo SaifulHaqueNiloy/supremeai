@@ -6,9 +6,9 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 607,
+    "backend_routes": 606,
     "frontend_unique_refs": 147,
-    "matched": 274,
+    "matched": 273,
     "orphan_routes": 333
   },
   "orphan_by_family": {
@@ -3070,16 +3070,6 @@
       "classification": "admin-only",
       "frontend": [
         "frontend/src/utils/api.ts"
-      ]
-    },
-    {
-      "file": "backend/api/routes/admin_v1.py",
-      "method": "GET",
-      "declared": "/api/v1/agents",
-      "resolved": "/api/v1/agents",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/services/agentService.ts"
       ]
     },
     {
