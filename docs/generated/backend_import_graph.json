@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3500,
+  "edge_count": 3501,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -10368,6 +10368,10 @@
       "to": "core.security.secure_credential_store"
     },
     {
+      "from": "tests.core.startup.test_orchestrator_tick_agent",
+      "to": "core.startup.agents"
+    },
+    {
       "from": "tests.core.test_admin_dashboard_full",
       "to": "api.routes.admin_dashboard"
     },
@@ -14004,7 +14008,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2006,
+  "module_count": 2007,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -15381,6 +15385,7 @@
     "tests.core.security.test_secret_scanner_full",
     "tests.core.security.test_secret_vault_full",
     "tests.core.security.test_secure_credential_store_full",
+    "tests.core.startup.test_orchestrator_tick_agent",
     "tests.core.test_admin_dashboard_full",
     "tests.core.test_admin_god",
     "tests.core.test_admin_god_security",
