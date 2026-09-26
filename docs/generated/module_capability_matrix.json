@@ -1655,7 +1655,10 @@
       "path": "backend/api/routes/admin_dashboard/endpoints_events.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "capability",
+        "execute"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -11039,6 +11042,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/routes/test_deep_research_full.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_feature_flags_endpoint.py"
     },
     {
       "capability_signals": [
@@ -26549,5 +26561,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3036
+  "source_file_count": 3037
 }
