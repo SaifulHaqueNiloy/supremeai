@@ -16,10 +16,10 @@ And the ERR-H08 execution semantics of ``POST /api/v1/agents/execute``:
 
 from __future__ import annotations
 
+import importlib
 from collections.abc import Iterator
 from unittest.mock import patch
 
-import importlib
 import jwt as pyjwt
 import pytest
 from fastapi import FastAPI
