@@ -15,7 +15,7 @@
   ],
   "totals": {
     "backend_routes": 859,
-    "frontend_unique_refs": 148,
+    "frontend_unique_refs": 146,
     "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
     "orphan_routes": 1,
