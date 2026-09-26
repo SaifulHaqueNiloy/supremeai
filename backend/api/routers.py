@@ -464,6 +464,10 @@ ALL_ROUTERS = [
     # messaging (/api/v1/mesh/messages/*, /subscriptions)। Core নিজস্ব prefix
     # সহ আসে, তাই registry prefix ""। Core: backend/core/agent_mailbox.py।
     {"path": "api.routes.mesh_mailbox", "prefix": "", "is_admin": False, "is_critical": False},
+    # ── #1150 Phase 1: Agent Registry — admin-defined roles + AI provider per
+    # agent (/api/v1/agents/*)। রাউটার নিজস্ব prefix সহ আসে, তাই registry prefix
+    # ""। Reads are inert (no privileged resource); writes are admin-only.
+    {"path": "api.routes.agent_registry", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "integrations.github_webhook", "prefix": "", "is_admin": False, "is_critical": False},
 ]
 
