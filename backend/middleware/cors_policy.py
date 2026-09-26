@@ -61,9 +61,15 @@ def _load_origins(env_var: str, default: tuple[str, ...]) -> tuple[str, ...]:
 # env var was missing/stale on the host, the frontend got zero CORS headers
 # (login/chat 100% broken). The known production browser origins are now
 # safe code-level defaults; explicit env vars still win when present.
+#
+# Issue #1491 (LOW): https://supremeai-lac.vercel.app is dead in production
+# (verified HTTP 404 on 2026-09-26) — removed from the defaults so we stop
+# advertising an origin that can no longer serve the portal. It stays in
+# hardcode_config_scanner.py's banned-domain list, so any reintroduction
+# gets flagged. Operators who still need it can re-add it via
+# USER_CORS_ORIGINS (env values can only ADD origins — see #1518 floor).
 DEFAULT_USER_ALLOWED_ORIGINS: tuple[str, ...] = (
     "https://supremeai-a.web.app",  # Firebase Hosting user portal (production)
-    "https://supremeai-lac.vercel.app",  # Vercel portal
     "https://supremeai-studio.vercel.app",  # Vercel studio
 )
 
