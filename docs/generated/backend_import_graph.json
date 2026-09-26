@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3405,
+  "edge_count": 3401,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -4592,10 +4592,6 @@
       "to": "core.circles.contracts"
     },
     {
-      "from": "core.circles.evolution",
-      "to": "core.circles.contracts"
-    },
-    {
       "from": "core.circles.execution",
       "to": "core.circles.contracts"
     },
@@ -4926,18 +4922,6 @@
     {
       "from": "core.errors.error_remediation",
       "to": "core.resilience.circuit_breaker"
-    },
-    {
-      "from": "core.evolution.evolution_orchestrator",
-      "to": "core.evolution.learning_pipeline"
-    },
-    {
-      "from": "core.evolution.evolution_orchestrator",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.evolution.learning_pipeline",
-      "to": "core.logging_config"
     },
     {
       "from": "core.execution_adapters",
@@ -7488,6 +7472,14 @@
       "to": "core.logging_config"
     },
     {
+      "from": "evolution.evolution_orchestrator",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "evolution.learning_pipeline",
+      "to": "core.logging_config"
+    },
+    {
       "from": "evolution.performance_monitor",
       "to": "core.logging_config"
     },
@@ -9854,14 +9846,6 @@
     {
       "from": "tests.core.contracts.test_policy_event_bus",
       "to": "core.contracts.policy"
-    },
-    {
-      "from": "tests.core.evolution.test_learning_pipeline",
-      "to": "core.evolution.evolution_orchestrator"
-    },
-    {
-      "from": "tests.core.evolution.test_learning_pipeline",
-      "to": "core.evolution.learning_pipeline"
     },
     {
       "from": "tests.core.health.test_uptime_tracker_observability",
@@ -13624,7 +13608,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1961,
+  "module_count": 1958,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14117,7 +14101,6 @@
     "core.circles.contracts",
     "core.circles.envelopes",
     "core.circles.event_journal",
-    "core.circles.evolution",
     "core.circles.execution",
     "core.circles.governance",
     "core.circles.governance_core",
@@ -14173,9 +14156,6 @@
     "core.errors.error_handler",
     "core.errors.error_pattern_db",
     "core.errors.error_remediation",
-    "core.evolution",
-    "core.evolution.evolution_orchestrator",
-    "core.evolution.learning_pipeline",
     "core.evolution_module",
     "core.exceptions",
     "core.execution_adapters",
@@ -14531,7 +14511,9 @@
     "evolution.benchmark_runner",
     "evolution.canary_manager",
     "evolution.change_proposal",
+    "evolution.evolution_orchestrator",
     "evolution.fitness_evaluator",
+    "evolution.learning_pipeline",
     "evolution.memory_consolidator",
     "evolution.performance_monitor",
     "evolution.strategy_optimizer",
@@ -14936,8 +14918,6 @@
     "tests.core.contracts.test_redaction",
     "tests.core.contracts.test_security_policy",
     "tests.core.contracts.test_sqlite_store",
-    "tests.core.evolution",
-    "tests.core.evolution.test_learning_pipeline",
     "tests.core.health.test_uptime_tracker_observability",
     "tests.core.intelligence.test_control_plane",
     "tests.core.intelligence.test_synaptic_risk",
@@ -15084,6 +15064,7 @@
     "tests.core.test_knowledge_facade",
     "tests.core.test_language_directive",
     "tests.core.test_learning_loop_sprint34",
+    "tests.core.test_learning_pipeline",
     "tests.core.test_learning_store",
     "tests.core.test_lifespan",
     "tests.core.test_llm_gateway_completion",
