@@ -65,7 +65,13 @@ class TestEvolutionSelfImprovement:
         agent._consecutive_penalties["Skill_A"] = 3
         await agent._evaluate_skill("Skill_A")
         mock_auto_skill_creator.generate_and_deploy_skill.assert_called_once()
-        assert agent._consecutive_penalties["Skill_A"] == 0
+        # Issue #1686 (CRITICAL infinite-loop fix): reset-to-0 was REMOVED on
+        # purpose — post-refactor the counter now DECAYS by 1, never hard-resets.
+        # Trace: 3 (pre-set) → +1 (score < refactor_penalty_threshold) → 4 ≥
+        # max_consecutive_penalties → refactor triggered → decay → 3.
+        # The real loop guard is the lineage refactor-budget freeze in
+        # _maybe_trigger_refactor (max_refactors_per_skill → _frozen_skills).
+        assert agent._consecutive_penalties["Skill_A"] == 3
 
     @pytest.mark.asyncio
     async def test_evaluate_skill_skips_below_min_runs(self, agent, mock_fitness_engine):
@@ -94,9 +100,16 @@ class TestEvolutionSelfImprovement:
         assert agent.fitness_threshold == 0.5
 
     @pytest.mark.asyncio
-    async def test_consecutive_penalty_reset_after_refactor(self, agent, mock_auto_skill_creator):
+    async def test_consecutive_penalty_decay_after_refactor(self, agent, mock_auto_skill_creator):
+        """Issue #1686: post-refactor semantics are DECAY (−1), not reset-to-0.
+
+        The old name/assertions ("reset_after_refactor", == 0) pinned the
+        pre-#1686 behavior that caused the CRITICAL infinite refactor loop.
+        Trace for Skill_Y: 3 (pre-set) → +1 (bad score) → threshold hit →
+        refactor triggered → decay → 3. Skill_X must stay untouched at 2.
+        """
         agent._consecutive_penalties["Skill_X"] = 2
         agent._consecutive_penalties["Skill_Y"] = 3
         await agent._evaluate_skill("Skill_Y")
-        assert agent._consecutive_penalties["Skill_Y"] == 0
+        assert agent._consecutive_penalties["Skill_Y"] == 3
         assert agent._consecutive_penalties["Skill_X"] == 2
