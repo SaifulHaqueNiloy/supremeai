@@ -7,11 +7,28 @@ not fragile CSS/XPath syntax (e.g. 'click the checkout button', 'open user profi
 
 from __future__ import annotations
 
+import inspect
 import math
 from typing import Any
 
 from core.embeddings import EmbeddingEngine
 from core.logging_config import logger
+
+# ── Confidence Guardrails (issue #1570 Part 1) ────────────────────────────
+# score >= 0.85   → execute immediately
+# score 0.65–0.85 → secondary verification before acting
+# score <  0.65   → escalate to HITL (never blind-act)
+CONFIDENCE_EXECUTE = 0.85
+CONFIDENCE_VERIFY = 0.65
+
+
+def confidence_band(score: float) -> str:
+    """Map a raw match score onto the guardrail decision bands."""
+    if score >= CONFIDENCE_EXECUTE:
+        return "execute"
+    if score >= CONFIDENCE_VERIFY:
+        return "verify"
+    return "hitl"
 
 
 class ElementNotFoundSemantically(Exception):
@@ -47,7 +64,10 @@ class SemanticDOM:
             elements = elements_snapshot
         elif self.page is not None and hasattr(self.page, "evaluate"):
             try:
-                elements = await self.page.evaluate("""() => {
+                # ISSUE-1570: page হতে পারে sync Playwright Page অথবা async Page —
+                # sync page-এ evaluate() সরাসরি value দেয়, async page-এ coroutine.
+                # isawaitable guard দুই ধরনের page-কেই সাপোর্ট করে।
+                result = self.page.evaluate("""() => {
                     const results = [];
                     
                     const getXPath = (el) => {
@@ -84,6 +104,11 @@ class SemanticDOM:
                     
                     return results;
                 }""")
+                if inspect.isawaitable(result):
+                    result = await result
+                # ISSUE-1570: non-list result (যেমন mock page-এর string) গ্রহণ করা যাবে না —
+                # একে mock-fallback path-এ পাঠানো হয় যাতে build_index কখনো ক্র্যাশ না করে।
+                elements = result if isinstance(result, list) else []
             except Exception as exc:
                 logger.debug(f"[SemanticDOM] Page evaluation fallback: {exc}")
 
@@ -136,9 +161,17 @@ class SemanticDOM:
         return len(self._vectors)
 
     async def query(
-        self, natural_language: str, top_k: int = 3, threshold: float = 0.45
+        self,
+        natural_language: str,
+        top_k: int = 3,
+        threshold: float = CONFIDENCE_VERIFY,
     ) -> dict[str, Any]:
-        """Resolve a natural language intent ('the checkout button') to an element match."""
+        """Resolve a natural language intent ('the checkout button') to an element match.
+
+        ISSUE-1570: default threshold এখন CONFIDENCE_VERIFY (0.65) — 0.45-এর নিচের
+        দুর্বল ম্যাচ আর নীলচোখে execute হয় না। রেজাল্টে ``confidence_band`` ও
+        ``guardrail_action`` যুক্ত থাকে যাতে caller guardrail মানতে বাধ্য হয়।
+        """
         if not self._vectors:
             await self.build_index()
 
@@ -166,6 +199,18 @@ class SemanticDOM:
 
         best_match = scored[0][1].copy()
         best_match["semantic_confidence"] = scored[0][0]
+
+        # ISSUE-1570: guardrail metadata — caller এই band মেনে চলবে:
+        #   execute → সরাসরি act; verify → secondary verification; hitl → escalate.
+        band = confidence_band(scored[0][0])
+        best_match["confidence_band"] = band
+        best_match["guardrail_action"] = (
+            "execute"
+            if band == "execute"
+            else "secondary_verify"
+            if band == "verify"
+            else "escalate_hitl"
+        )
 
         # ✅ NEW: Add token and shadow DOM metadata
         best_match["is_shadow"] = best_match.get("is_shadow", False)

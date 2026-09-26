@@ -23,7 +23,11 @@ except ImportError:
     Page = Any  # type: ignore[assignment,misc]
 
 from brain.model_router import ModelRouter
-from core.security.secure_credential_store import SecureCredentialStore
+from browser.action_cascade import execute_click_cascade
+from core.security.secure_credential_store import (
+    CredentialEncryptionUnavailableError,
+    SecureCredentialStore,
+)
 from database.supabase_client import db
 from memory.long_term_memory import MemoryManager
 from tools.browser.browser_stealth import BrowserStealth
@@ -43,7 +47,24 @@ class PlaywrightBrowserAgent:
         self.browser = None
         self.memory = MemoryManager()
         self.secure_store = SecureCredentialStore()
+        self._bound_page: Any = None
         self.COOKIE_STORAGE_BASE.mkdir(parents=True, exist_ok=True)
+
+    # ------------------------------------------------------------------
+    # Stateful page binding (ISSUE-1570) — MCP wrappers can act on a live
+    # session page without re-creating a browser per call.
+    # ------------------------------------------------------------------
+    def bind_page(self, page: Any) -> None:
+        """Bind a live browser page for stateful cascade/typing operations."""
+        self._bound_page = page
+
+    def unbind_page(self) -> None:
+        self._bound_page = None
+
+    def _resolve_bound_page(self, session: Any = None) -> Any:
+        if session is not None:
+            return getattr(session, "page", None)
+        return self._bound_page
 
     def is_available(self) -> bool:
         import importlib.util
@@ -62,19 +83,15 @@ class PlaywrightBrowserAgent:
         try:
             raw = cookie_path.read_text()
             payload = json.loads(raw)
-            cookies = self.secure_store.decrypt(payload) if isinstance(payload, dict) else payload
-            if isinstance(cookies, dict) and cookies.get("__enc__"):
-                cookies = self.secure_store.decrypt(cookies)
-
-            if isinstance(cookies, list):
-                context.add_cookies(cookies)
-                logger.info(
-                    "Loaded Playwright cookies for session '%s' from %s",
-                    session_name,
-                    cookie_path,
-                )
-            else:
+            cookies = self._unwrap_cookie_payload(payload)
+            if not isinstance(cookies, list):
                 raise ValueError("Cookie payload is not a list")
+            context.add_cookies(cookies)
+            logger.info(
+                "Loaded Playwright cookies for session '%s' from %s",
+                session_name,
+                cookie_path,
+            )
         except Exception as exc:
             logger.warning(
                 "Failed to load cookies from %s: %s. Removing stale cookie file.",
@@ -84,17 +101,91 @@ class PlaywrightBrowserAgent:
             with contextlib.suppress(OSError):
                 cookie_path.unlink()
 
+    def _unwrap_cookie_payload(self, payload: Any) -> Any:
+        """ISSUE-1570: decrypt cookie envelope without ever emitting plaintext.
+
+        Handles three storage generations:
+          * envelope ``{"__enc__": True, "blob": <ciphertext str>}`` — real
+            Fernet store (tuple contract); blob is decrypted then JSON-parsed.
+          * envelope ``{"__enc__": True, "blob": <list>}`` — legacy mapping
+            contract (kept for existing persisted stores / test doubles).
+          * raw list — legacy PLAINTEXT artifact; loadable for migration but
+            always re-saved encrypted on the next ``_save_cookies`` call.
+        """
+        if isinstance(payload, dict) and payload.get("__enc__"):
+            blob = payload.get("blob", payload)
+            if isinstance(blob, str):
+                plain = self.secure_store.decrypt(blob)
+                if isinstance(plain, str):
+                    return json.loads(plain)
+                return plain
+            cookies = self.secure_store.decrypt(payload)
+            if isinstance(cookies, dict) and cookies.get("__enc__"):
+                cookies = self.secure_store.decrypt(cookies)
+            return cookies
+        if isinstance(payload, list):
+            # Legacy plaintext cookie file — migrate silently, never re-write plaintext.
+            logger.warning(
+                "Legacy plaintext cookie payload detected; it will be re-encrypted on next save."
+            )
+            return payload
+        # Unknown shape → let the store try once, then validate upstream.
+        return self.secure_store.decrypt(payload)
+
     def _save_cookies(self, context: Any, session_name: str) -> None:
+        """Persist cookies ENCRYPTED — fail closed instead of writing plaintext.
+
+        ISSUE-1570: the previous implementation passed the raw cookie list
+        straight into a bytes-oriented Fernet store, hit the type error and
+        silently fell back to PLAINTEXT on disk. Now: serialize once, encrypt
+        the serialized string, and refuse (raise) if encryption is unavailable
+        or a provider attempts a plaintext fallback.
+        """
         cookie_path = self._cookie_file_path(session_name)
         cookies = context.cookies()
-        payload = self.secure_store.encrypt(cookies)
-        cookie_path.write_text(json.dumps(payload, indent=2))
+        serialized = json.dumps(cookies)
+        try:
+            result = self.secure_store.encrypt(serialized)
+        except CredentialEncryptionUnavailableError:
+            raise
+        except Exception as exc:
+            raise CredentialEncryptionUnavailableError(
+                f"Cookie encryption failed for session '{session_name}': {exc} — "
+                "refusing to persist plaintext credentials (fail-closed)."
+            ) from exc
+
+        if isinstance(result, tuple):
+            ciphertext = result[0]
+        elif isinstance(result, dict) and result.get("__enc__"):
+            ciphertext = result  # legacy mapping contract (persisted as-is)
+        elif isinstance(result, str):
+            ciphertext = result
+        else:
+            raise CredentialEncryptionUnavailableError(
+                f"Cookie store returned unsupported payload type {type(result).__name__} "
+                "— refusing to persist credentials (fail-closed)."
+            )
+
+        if isinstance(ciphertext, str) and ciphertext == serialized:
+            # Provider fell back to plaintext — that is exactly what must NEVER land on disk.
+            raise CredentialEncryptionUnavailableError(
+                "Credential provider is unavailable (plaintext fallback detected) — "
+                "cookie save aborted (fail-closed)."
+            )
+
+        envelope = (
+            ciphertext if isinstance(ciphertext, dict) else {"__enc__": True, "blob": ciphertext}
+        )
+        cookie_path.write_text(json.dumps(envelope, indent=2, default=str))
         logger.info("Saved Playwright cookies for session '%s' to %s", session_name, cookie_path)
 
     def _human_like_type(self, page: Page, selector: str, text: str):
-        """Types text into a field character by character with random delays."""
+        """Types text into a field character by character with 30–100ms jitter."""
+        if not text:
+            return 0
         for char in text:
             page.type(selector, char, delay=random.uniform(30, 100))
+        return len(text)
 
     def _human_like_click(self, page: Page, selector: str, steps: int = 25):
         """
@@ -676,14 +767,106 @@ class PlaywrightBrowserAgent:
         """Async MCP wrapper for opening a URL."""
         return await asyncio.to_thread(self.open, url)
 
-    async def click_target(self, target: str, url: str | None = None) -> dict[str, Any]:
-        """Async MCP wrapper for clicking an element."""
-        if url:
-            return await asyncio.to_thread(self.click, url, target)
-        return {"success": True, "target": target}
+    def _click_cascade_in_fresh_context(self, url: str, target: str) -> dict[str, Any]:
+        """Run the guarded cascade on a fresh context inside a worker thread."""
+        context, stealth_manager = self._new_context()
+        page = context.new_page()
+        if hasattr(page, "set_default_timeout"):
+            page.set_default_timeout(self.timeout_ms)
+        try:
+            page.goto(url)
+            return asyncio.run(
+                execute_click_cascade(page, target, human_click=self._human_like_click)
+            )
+        finally:
+            page.close()
+            context.close()
+            asyncio.run(stealth_manager.close())
 
-    async def type_text(self, selector: str, text: str, url: str | None = None) -> dict[str, Any]:
-        """Async MCP wrapper for typing text."""
+    def _type_text_in_fresh_context(self, url: str, selector: str, text: str) -> dict[str, Any]:
+        """Perform TRUE keystroke insertion on a fresh context (worker thread)."""
+        context, stealth_manager = self._new_context()
+        page = context.new_page()
+        if hasattr(page, "set_default_timeout"):
+            page.set_default_timeout(self.timeout_ms)
+        try:
+            page.goto(url)
+            typed_chars = self._human_like_type(page, selector, text)
+            return {
+                "success": True,
+                "status": "success",
+                "selector": selector,
+                "typed": text,
+                "typed_chars": typed_chars,
+                "method": "human_like_type",
+            }
+        finally:
+            page.close()
+            context.close()
+            asyncio.run(stealth_manager.close())
+
+    async def click_target(
+        self,
+        target: str,
+        url: str | None = None,
+        session: Any = None,
+    ) -> dict[str, Any]:
+        """Async MCP wrapper — REAL click dispatch via the 5-step cascade.
+
+        ISSUE-1570: the previous implementation returned ``{"success": True}``
+        when no URL was supplied WITHOUT executing any click — a fake success.
+        Now: a bound page (session or ``bind_page``) runs the cascade directly;
+        a URL spins a fresh context in a worker thread; and with neither, the
+        call FAILS HONESTLY instead of pretending.
+        """
+        page = self._resolve_bound_page(session)
+        if page is not None:
+            return await execute_click_cascade(page, target, human_click=self._human_like_click)
         if url:
-            return await asyncio.to_thread(self.text, url, selector)
-        return {"success": True, "typed": text}
+            return await asyncio.to_thread(self._click_cascade_in_fresh_context, url, target)
+        return {
+            "success": False,
+            "status": "PAUSED_HITL",
+            "method": "hitl",
+            "target": target,
+            "reason": (
+                "click_target requires a URL or an active browser session/page — "
+                "refusing to report success without executing a click."
+            ),
+        }
+
+    async def type_text(
+        self,
+        selector: str,
+        text: str,
+        url: str | None = None,
+        session: Any = None,
+    ) -> dict[str, Any]:
+        """Async MCP wrapper — TRUE human-like keystroke insertion.
+
+        ISSUE-1570: the previous implementation mapped typing to ``self.text()``
+        (a READ operation) and fake-succeeded without a URL. Now typing always
+        performs real per-character insertion with 30–100ms jitter.
+        """
+        page = self._resolve_bound_page(session)
+        if page is not None:
+            typed_chars = self._human_like_type(page, selector, text)
+            return {
+                "success": True,
+                "status": "success",
+                "selector": selector,
+                "typed": text,
+                "typed_chars": typed_chars,
+                "method": "human_like_type",
+            }
+        if url:
+            return await asyncio.to_thread(self._type_text_in_fresh_context, url, selector, text)
+        return {
+            "success": False,
+            "status": "error",
+            "selector": selector,
+            "error": (
+                "type_text requires a URL or an active browser session/page — "
+                "refusing to fake success without typing."
+            ),
+        }
