@@ -10,35 +10,40 @@ router = APIRouter(
 
 
 @router.get("/secure/threats")
-async def get_threats():
+# Issue #1665: these handlers return static/aggregated data with no
+# await — plain `def` routes (FastAPI runs them in the threadpool)
+# instead of `async def` coroutines that never await. HTTP contract
+# unchanged; only the event-loop scheduling semantics are corrected.
+
+def get_threats():
     return {"scan_time": "", "findings": [], "total_findings": 0}
 
 
 @router.get("/secure/audit")
-async def get_audit():
+def get_audit():
     return []
 
 
 @router.get("/secure/approvals")
-async def get_approvals():
+def get_approvals():
     return []
 
 
 @router.get("/secure/rules")
-async def get_rules():
+def get_rules():
     return {}
 
 
 @router.post("/secure/rules")
-async def update_rules(payload: dict):
+def update_rules(payload: dict):
     return {"message": "updated"}
 
 
 @router.get("/secure/secrets")
-async def get_secrets():
+def get_secrets():
     return {"status": "unknown", "secrets": []}
 
 
 @router.get("/secure/ratelimits")
-async def get_rate_limits():
+def get_rate_limits():
     return {"current_429_events": 0, "per_ip": {}, "per_tenant": {}}
