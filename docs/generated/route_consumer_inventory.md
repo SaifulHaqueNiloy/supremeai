@@ -6,7 +6,7 @@
 |---|---|
 | backend routes | 859 |
 | routes with frontend consumer | 296 |
-| unique frontend `/api/...` refs | 148 |
+| unique frontend `/api/...` refs | 146 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 1 |
 | orphan families | 1 |
