@@ -1,4 +1,6 @@
-version: '2.1'
+version: '2.2'
+# v2.2 (issue #1924, founder directive 2026-09-27):
+#   + super pool — omni-lane executor (union of all specialist lanes)
 # v2.1 (plan: docs/plans/ROLE_BASED_AGENT_ECOSYSTEM_PLAN.md, issue #1439):
 #   + browser pool (agent-13's lane, promoted from coder side-duty)
 #   + acquisition_rules — 15-min activity rule, CAS branch-claim protocol
@@ -32,6 +34,13 @@ role_pools:
     branch_pattern: 'browser-{N}'   # e.g., browser-1 ... browser-100
     description: 'Browser E2E Exploration & Frontend Verification Pool (agent-13 lane, promoted
       from coder side-duty per founder directive 2026-09-27). Fixed App, Fixed Rules.'
+  super:
+    app: super-agent
+    branch_pattern: 'super-{N}'     # e.g., super-1 ... super-100
+    description: 'SUPER AGENT — Omni-Lane Executor Pool (founder directive 2026-09-27, issue #1924).
+      Allowed scope = union of all six specialist lanes (planner/coder/ci/pr-helper/browser/platform).
+      Guardrails: universal invariants bind; handoff:<lane> issues stay with specialist lanes unless
+      explicitly assigned to super; works priority-first like every lane. Fixed App, Fixed Rules.'
 
 # ── Branch Slot Acquisition (15-minute activity rule — founder directive, issue #1439) ──
 # Algorithm (CAS, race-safe; CLI: scripts/git/acquire_lane_slot.sh — issue tracked in #1439):

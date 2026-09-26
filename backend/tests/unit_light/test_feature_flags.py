@@ -20,10 +20,13 @@ def test_env_flag_truthy(monkeypatch):
     assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is True
 
 
-def test_env_flag_falsy_and_default(monkeypatch):
+def test_env_flag_tri_state(monkeypatch):
+    """Issue #1818 bug-2: _env_flag is tri-state — None when unset, so an
+    explicit env kill-switch can be distinguished from "not configured"."""
     monkeypatch.delenv("SUPREMEAI_MEM0_ENABLED", raising=False)
-    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is False
-    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED", default=True) is True
+    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is None
+    monkeypatch.setenv("SUPREMEAI_MEM0_ENABLED", "")
+    assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is None
     monkeypatch.setenv("SUPREMEAI_MEM0_ENABLED", "no")
     assert ff_module._env_flag("SUPREMEAI_MEM0_ENABLED") is False
 
@@ -93,3 +96,43 @@ def test_status_structure():
         "openhands",
         "advanced_rollout",
     }
+
+
+def test_env_false_beats_db_true_acceptance(monkeypatch):
+    """Issue #1818 acceptance criterion: env=false + db=true → False.
+
+    The documented env-first contract: an explicit env kill-switch must
+    stick even when the DB row is enabled.
+    """
+    monkeypatch.setenv("SUPREMEAI_MEM0_ENABLED", "false")
+    feature_flags.reset_cache()
+    monkeypatch.setattr(ff_module, "_db_flag", lambda name, user_id=None: True)
+    assert feature_flags.mem0_enabled() is False
+
+
+def test_env_unset_db_true_enables(monkeypatch):
+    """Issue #1818: env unset → DB tier decides (true row enables)."""
+    monkeypatch.delenv("SUPREMEAI_MEM0_ENABLED", raising=False)
+    feature_flags.reset_cache()
+    monkeypatch.setattr(ff_module, "_db_flag", lambda name, user_id=None: True)
+    assert feature_flags.mem0_enabled() is True
+
+
+def test_db_lookup_uses_runtime_flag_name(monkeypatch):
+    """Issue #1818 acceptance criterion: flag names unified — the real DB
+    wrapper receives the canonical feature_name key ('mem0_enabled'), not
+    the env var name (bug-1 path: db.is_feature_enabled on the WRAPPER)."""
+    monkeypatch.delenv("SUPREMEAI_MEM0_ENABLED", raising=False)
+    feature_flags.reset_cache()
+    seen: dict = {}
+
+    class FakeDB:
+        def is_feature_enabled(self, feature_name, user_id=None):
+            seen["name"] = feature_name
+            return False
+
+    import database.supabase_client as supabase_module
+
+    monkeypatch.setattr(supabase_module, "db", FakeDB())
+    assert feature_flags.mem0_enabled() is False
+    assert seen["name"] == "mem0_enabled"

@@ -57,6 +57,12 @@ class IntegrationInfo:
 # ── Integration definitions ───────────────────────────────────────────────────
 # Plan Section 2 ও 40 অনুযায়ী সব integration। প্রতিটির scope ও fallback স্পষ্ট।
 
+# Issue #1818 (island-4 fix): premium integration gating now flows through the
+# unified feature-flag checker (env tri-state → Supabase feature_flags table)
+# instead of plain env-settings, so admin-managed DB flags affect runtime
+# gating. Non-premium integrations (n8n, appwrite, ...) stay env-only.
+from core.feature_flags import feature_flags as _premium_flags
+
 _INTEGRATIONS: dict[str, IntegrationInfo] = {}
 
 
@@ -213,9 +219,9 @@ def _build_registry() -> None:
             name="Mem0 Memory",
             category="memory",
             scope=IntegrationScope.OPTIONAL_PROVIDER,
-            enabled=_bool_setting("mem0_enabled"),
+            enabled=_premium_flags.mem0_enabled(),
             status=IntegrationStatus.ENABLED
-            if _bool_setting("mem0_enabled")
+            if _premium_flags.mem0_enabled()
             else IntegrationStatus.DISABLED,
             required_for_core=False,
             fallback="in-memory fallback (not durable — Plan Section 18)",
@@ -230,9 +236,9 @@ def _build_registry() -> None:
             name="Graphiti Temporal Knowledge Graph",
             category="memory",
             scope=IntegrationScope.OPTIONAL_PROVIDER,
-            enabled=_bool_setting("graphiti_enabled"),
+            enabled=_premium_flags.graphiti_enabled(),
             status=IntegrationStatus.ENABLED
-            if _bool_setting("graphiti_enabled")
+            if _premium_flags.graphiti_enabled()
             else IntegrationStatus.DISABLED,
             required_for_core=False,
             fallback="none (Plan Section 19: fix async before broad enable)",
@@ -247,9 +253,9 @@ def _build_registry() -> None:
             name="Browser-Use Agentic Browser",
             category="browser",
             scope=IntegrationScope.OPTIONAL_PROVIDER,
-            enabled=_bool_setting("browser_use_enabled"),
+            enabled=_premium_flags.browser_use_enabled(),
             status=IntegrationStatus.ENABLED
-            if _bool_setting("browser_use_enabled")
+            if _premium_flags.browser_use_enabled()
             else IntegrationStatus.DISABLED,
             required_for_core=False,
             fallback="existing Playwright browser stack (Plan Section 20)",
@@ -264,9 +270,9 @@ def _build_registry() -> None:
             name="E2B Sandbox",
             category="sandbox",
             scope=IntegrationScope.OPTIONAL_PROVIDER,
-            enabled=_bool_setting("e2b_enabled"),
+            enabled=_premium_flags.e2b_enabled(),
             status=IntegrationStatus.ENABLED
-            if _bool_setting("e2b_enabled")
+            if _premium_flags.e2b_enabled()
             else IntegrationStatus.DISABLED,
             required_for_core=False,
             fallback="existing local/server sandbox (Plan Section 21)",
@@ -281,9 +287,9 @@ def _build_registry() -> None:
             name="OpenHands Coding Agent",
             category="coding_agent",
             scope=IntegrationScope.OPTIONAL_PROVIDER,
-            enabled=_bool_setting("openhands_enabled"),
+            enabled=_premium_flags.openhands_enabled(),
             status=IntegrationStatus.ENABLED
-            if _bool_setting("openhands_enabled")
+            if _premium_flags.openhands_enabled()
             else IntegrationStatus.DISABLED,
             required_for_core=False,
             fallback="SupremeAI native code agent (Plan Section 22)",
