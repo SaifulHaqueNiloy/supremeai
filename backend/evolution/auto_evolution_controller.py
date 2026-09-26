@@ -181,9 +181,7 @@ class AutoEvolutionController:
                 "resolve the underlying degradation, then call reset_circuit_breaker()."
             )
 
-        recent = sum(
-            1 for ts in self._cycle_timestamps if now - ts < 3600
-        )
+        recent = sum(1 for ts in self._cycle_timestamps if now - ts < 3600)
         if recent >= self.max_cycles_per_hour:
             self.stats["cycles_gated"] += 1
             raise RuntimeError(

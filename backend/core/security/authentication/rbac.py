@@ -291,13 +291,12 @@ def get_current_user_token(request: Any = None) -> dict[str, Any]:
         if user:
             return user
     try:
-        from utils.environment import is_test_environment
-
         # বাংলা মন্তব্য (issue #1662 root-cause parity fix): আগে শুধু
         # `"pytest" in sys.modules` দেখে এখানে role=admin ফেরত দেওয়া হতো —
         # production প্রসেসে ভুল করে pytest লোড হলেই পুরো admin API খুলে যেত।
         # এখন canonical dependency-র মতোই explicit bypass opt-in লাগবে।
         from core.config import settings
+        from utils.environment import is_test_environment
 
         if is_test_environment() and settings.is_bypass_allowed:
             admin_email = os.getenv("ADMIN_EMAIL", "test_admin@supremeai.com")

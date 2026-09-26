@@ -5,9 +5,9 @@ role_pools:
     branch_pattern: 'planner-{N}'  # e.g., planner-1 ... planner-100 (constant role, dynamic number)
     description: 'Planning & Codebase Architecture Auditor Pool. Fixed App, Fixed Rules.'
   coder:
-    app: coder-solver
+    app: coder
     branch_pattern: 'coder-{N}'    # e.g., coder-1 ... coder-100 (constant role, dynamic number)
-    description: 'Code Implementers & Issue Solvers Pool. Fixed App, Fixed Rules.'
+    description: 'Code Implementers Pool (coder-1, coder-2, coder-3...). Fixed App, Fixed Rules.'
   pr-helper:
     app: pr-helper
     branch_pattern: 'pr-helper-{N}' # e.g., pr-helper-1 ... pr-helper-10
@@ -47,13 +47,13 @@ slots:
   notes: 'PR Gate & Diagnostics Verifier. Evaluates PR delta, regression risk, and performs
     beneficial squash merges. FORBIDDEN from opening feature PRs or writing core code.'
 - slot: agent-3
-  tool: coder-solver-1
+  tool: coder-1
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
   branch: agent-3-coder-1
-  notes: 'Code Implementer & Issue Solver (Worker 1). Claims assigned backlog issues, performs
+  notes: 'Code Implementer (Worker 1). Claims assigned backlog issues, performs
     local issue-scoped audit to confirm validity, writes production code and unit tests. FORBIDDEN from
     performing full codebase audits or refactoring outside issue scope. FORBIDDEN from
     modifying any files without an atomically claimed Issue (status:in-progress).'
@@ -67,29 +67,27 @@ slots:
   notes: 'CI/CD & Workflow Specialist. Owns .github/workflows/*, git pre-push hooks,
     auto-sync engines, and artifact regeneration. FORBIDDEN from modifying business code.'
 - slot: agent-6
-  tool: coder-solver-2
+  tool: coder-2
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
   branch: agent-6-coder-2
-  notes: 'Code Implementer & Issue Solver (Worker 2 - Parallel). 99% identical role and scope
-    to Worker 1. Claims assigned backlog issues, performs local issue-scoped audit, writes
+  notes: 'Code Implementer (Worker 2 - Parallel). Claims assigned backlog issues, performs local issue-scoped audit, writes
     production code and unit tests. FORBIDDEN from performing full codebase audits or
     modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-7
-  tool: coder-solver-3
+  tool: coder-3
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  branch: agent-7-solver-b
-  notes: 'Code Implementer & Issue Solver (Worker 3 - Parallel). 99% identical role and scope
-    to Workers 1 & 2. Claims backlog issues, implements scoped fixes and unit tests,
+  branch: agent-7-coder-3
+  notes: 'Code Implementer (Worker 3 - Parallel). Claims backlog issues, implements scoped fixes and unit tests,
     opens focused PRs. FORBIDDEN from touching .github/workflows or modifying any files
     without an atomically claimed Issue (status:in-progress).'
 - slot: agent-8
-  tool: pr-verifier
+  tool: pr-helper
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
@@ -129,25 +127,20 @@ slots:
     agent-11-longrun/issue-<N>-<slug> branches (OPS-06 naming guard), applies
     platform-side config changes (owner approval for destructive/billing).'
 - slot: agent-12
-  tool: ci-fixer
+  tool: ci-action
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: 'CI fixer (renamed from browser-tester + log watcher per owner directive
-    2026-09-26). Watches CI/Actions logs on failure (handoff:log-fix), diagnoses,
-    fixes, re-verifies. Creates issues on repeated failures. FORBIDDEN from
-    modifying any files without an atomically claimed Issue (status:in-progress).
-    Browser testing split out to agent-13 — two different agents'' jobs'
+  notes: 'CI pipeline maintenance & failure triage (part of ci pool). Watches CI/Actions logs on failure (handoff:ci), diagnoses,
+    fixes, re-verifies. Creates blocker issues on repeated failures.'
 - slot: agent-13
-  tool: browser-tester
+  tool: coder-4
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
   active: true
-  notes: Post-merge browser testing (handoff:browser-test). Split from agent-12
-    per owner directive 2026-09-26 — browser test and CI fix are two different
-    agents' jobs
+  notes: Browser testing & verification specialist (part of coder pool, handoff:coder).
 validation_rules:
 - 'slot MUST match pattern: agent-[0-9]+'
 - tool MUST be a non-empty string
