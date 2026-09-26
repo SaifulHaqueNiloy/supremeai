@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3493,
+  "edge_count": 3495,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -6761,6 +6761,10 @@
     },
     {
       "from": "core.self_evolution.self_evolution_agent",
+      "to": "core.messaging.event_bus"
+    },
+    {
+      "from": "core.self_evolution.self_evolution_agent",
       "to": "models.evolution"
     },
     {
@@ -11332,6 +11336,10 @@
       "to": "core.self_evolution.self_evolution_agent"
     },
     {
+      "from": "tests.core.test_self_evolution_loop_guard",
+      "to": "core.self_evolution.self_evolution_agent"
+    },
+    {
       "from": "tests.core.test_self_healer",
       "to": "core.health.self_healer"
     },
@@ -13976,7 +13984,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2003,
+  "module_count": 2004,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -15539,6 +15547,7 @@
     "tests.core.test_self_benchmark_reliability",
     "tests.core.test_self_evolution_agent",
     "tests.core.test_self_evolution_lock",
+    "tests.core.test_self_evolution_loop_guard",
     "tests.core.test_self_healer",
     "tests.core.test_skill_execution_pipeline",
     "tests.core.test_skill_manager",
