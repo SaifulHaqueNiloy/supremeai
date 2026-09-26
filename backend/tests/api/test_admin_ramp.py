@@ -389,9 +389,33 @@ class TestFixesLifecycle:
         assert resp.status_code == 200
         assert resp.json()["fixes"] == [{"status": "pending_review", "id": "f2"}]
 
-    def test_get_fixes_missing_tenant_400(self, client):
+    def test_get_fixes_no_firestore_503(self, client, monkeypatch):
+        # Issue #1470: the read endpoint now surfaces a clean 503 instead of
+        # crashing on a None db when Firestore is unavailable.
+        monkeypatch.setattr(ar, "get_firestore_db", lambda: None)
         resp = client.get("/api/admin/fixes")
-        assert resp.status_code == 400
+        assert resp.status_code == 503
+
+    def test_get_fixes_cross_tenant_when_no_tenant_given(self, client, monkeypatch):
+        # Issue #1470 (HIGH): GET /api/admin/fixes used to hard-fail with
+        # 400 "Tenant context required" for authenticated admins. The read
+        # endpoint now falls back to a cross-tenant collectionGroup('fixes')
+        # query, tagging each fix with its owning tenant. Mutations still
+        # require an explicit tenant_id.
+        ref = SimpleNamespace(parent=SimpleNamespace(parent=SimpleNamespace(id="t9")))
+        doc = SimpleNamespace(
+            id="f3", to_dict=lambda: {"status": "pending_review"}, reference=ref
+        )
+        cg = SimpleNamespace(
+            where=lambda *_: SimpleNamespace(get=AsyncMock(return_value=[doc]))
+        )
+        db = SimpleNamespace(collection_group=lambda *_: cg)
+        monkeypatch.setattr(ar, "get_firestore_db", lambda: db)
+        resp = client.get("/api/admin/fixes")
+        assert resp.status_code == 200
+        assert resp.json()["fixes"] == [
+            {"status": "pending_review", "id": "f3", "tenant_id": "t9"}
+        ]
 
     def test_apply_fixes_no_firestore_returns_zero(self, client, monkeypatch):
         monkeypatch.setattr(ar, "get_firestore_db", lambda: None)

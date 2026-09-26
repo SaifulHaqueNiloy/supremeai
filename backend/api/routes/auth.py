@@ -704,3 +704,52 @@ async def set_user_role(
             save_users(users)
             return user
     raise HTTPException(status_code=404, detail=f"user not found: {user_id}")
+
+
+# ---------------------------------------------------------------------------
+# Issue #1476 — TOTP verify compatibility endpoint
+# ---------------------------------------------------------------------------
+
+
+class TotpVerifyCompatRequest(BaseModel):
+    """Contract for POST /api/v1/auth/totp/verify.
+
+    Accepts both field spellings the audit contract and the admin dashboard
+    use (``totp_code`` / ``otp``) plus the Firebase ID token that identifies
+    the admin whose TOTP secret is being checked.
+    """
+
+    id_token: str = Field(..., description="Firebase ID token")
+    totp_code: str | None = Field(default=None, description="6-digit TOTP code")
+    otp: str | None = Field(default=None, description="alias of totp_code")
+    remember_browser: bool = Field(
+        default=False, description="Trust this browser for seven days"
+    )
+
+
+@router.post("/totp/verify")
+async def totp_verify_compat(payload: TotpVerifyCompatRequest, response: Response) -> Any:
+    """Issue #1476: TOTP verification was only reachable at
+    /api/admin/firebase-totp-verify, so /api/v1/auth/totp/verify answered 404
+    and the audit contract flagged TOTP 2FA as unregistered. This alias
+    delegates to the very same handler (same lockout counters, same JWT
+    minting) after mapping the alternate field spelling — no second
+    verification path to keep secure, just a second URL for the same one."""
+    from api.routes.admin_routes import admin_firebase_totp_verify
+    from models.admin import AdminFirebaseTotpVerifyRequest
+
+    code = (payload.totp_code or payload.otp or "").strip()
+    if not code:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="totp_code is required",
+        )
+
+    return await admin_firebase_totp_verify(
+        AdminFirebaseTotpVerifyRequest(
+            id_token=payload.id_token,
+            otp=code,
+            remember_browser=payload.remember_browser,
+        ),
+        response,
+    )
