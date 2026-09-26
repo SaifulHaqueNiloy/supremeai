@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3488,
+  "edge_count": 3492,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -2401,6 +2401,10 @@
     },
     {
       "from": "api.routes.evolution",
+      "to": "api.deps"
+    },
+    {
+      "from": "api.routes.evolution",
       "to": "core.config"
     },
     {
@@ -2530,6 +2534,10 @@
     {
       "from": "api.routes.healing",
       "to": "api.routes.healing_stats"
+    },
+    {
+      "from": "api.routes.healing_stats",
+      "to": "api.deps"
     },
     {
       "from": "api.routes.healing_stats",
@@ -2782,6 +2790,10 @@
     {
       "from": "api.routes.markdown",
       "to": "tools.knowledge.codebase_exporter"
+    },
+    {
+      "from": "api.routes.marketplace_endpoints",
+      "to": "api.deps"
     },
     {
       "from": "api.routes.marketplace_endpoints",
@@ -3318,6 +3330,10 @@
     {
       "from": "api.routes.stream_voice_sse",
       "to": "services.voice_service"
+    },
+    {
+      "from": "api.routes.swarm_stream",
+      "to": "api.deps"
     },
     {
       "from": "api.routes.swarm_stream",
