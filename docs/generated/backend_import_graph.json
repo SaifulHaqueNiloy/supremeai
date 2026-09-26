@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3410,
+  "edge_count": 3418,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -7548,6 +7548,26 @@
       "to": "integrations._flags"
     },
     {
+      "from": "integrations.telegram_bot",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "integrations.telegram_config"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "integrations.telegram_handlers"
+    },
+    {
+      "from": "integrations.telegram_handlers",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.telegram_handlers",
+      "to": "integrations.telegram_config"
+    },
+    {
       "from": "learning",
       "to": "learning.experience"
     },
@@ -11272,6 +11292,18 @@
       "to": "services.hitl.engine"
     },
     {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_bot"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_config"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_handlers"
+    },
+    {
       "from": "tests.learning.test_learning",
       "to": "learning.experience"
     },
@@ -13644,7 +13676,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1961,
+  "module_count": 1965,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14563,6 +14595,9 @@
     "integrations.graphiti_adapter",
     "integrations.mem0_adapter",
     "integrations.openhands_adapter",
+    "integrations.telegram_bot",
+    "integrations.telegram_config",
+    "integrations.telegram_handlers",
     "learning",
     "learning.evidence_analyzer",
     "learning.evolution_bridge",
@@ -15206,6 +15241,7 @@
     "tests.hitl.test_hitl_approval_contract",
     "tests.hitl.test_hitl_engine",
     "tests.integration.test_integration_suite",
+    "tests.integrations.test_telegram_bot",
     "tests.learning.test_learning",
     "tests.learning.test_pattern_and_hypothesis",
     "tests.llm.test_advanced_model_router",
