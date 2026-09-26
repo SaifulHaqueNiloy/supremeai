@@ -962,8 +962,10 @@ class TestWorkspaceMCPExtended:
         symlink_path = tmp_path / "symlink.txt"
         try:
             symlink_path.symlink_to(test_file)
-        except OSError:
-            pass  # TODO(#1011): was skipped — investigate
+        except OSError as exc:
+            # #1409: was silent `pass` (TODO(#1011)) — an env without symlink
+            # support must SKIP visibly, not continue into a broken fixture.
+            pytest.skip(f"symlink not supported on this filesystem: {exc}")
 
         params = ScopedFilePathInput(relative_path=str(symlink_path))
         result = await workspace_get_scoped_path(params)

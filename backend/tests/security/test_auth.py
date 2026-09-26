@@ -756,25 +756,21 @@ class TestTokenManagement:
     @pytest.mark.asyncio
     async def test_reject_expired_token(self, auth_service: MockAuthService):
         """Should reject expired tokens."""
-        try:
-            import jwt
+        import jwt
 
-            # Create already-expired token
-            expired_payload = {
-                "sub": "user-123",
-                "email": "test@example.com",
-                "role": "user",
-                "exp": datetime.now(UTC) - timedelta(hours=1),
-                "iat": datetime.now(UTC) - timedelta(hours=2),
-            }
+        # Create already-expired token
+        expired_payload = {
+            "sub": "user-123",
+            "email": "test@example.com",
+            "role": "user",
+            "exp": datetime.now(UTC) - timedelta(hours=1),
+            "iat": datetime.now(UTC) - timedelta(hours=2),
+        }
 
-            expired_token = jwt.encode(expired_payload, TEST_SECRET_KEY, algorithm=TEST_ALGORITHM)
+        expired_token = jwt.encode(expired_payload, TEST_SECRET_KEY, algorithm=TEST_ALGORITHM)
 
-            with pytest.raises(ValueError, match="expired"):
-                await auth_service.validate_token(expired_token)
-
-        except ImportError:
-            pass  # TODO(#1011): was skipped — investigate
+        with pytest.raises(ValueError, match="expired"):
+            await auth_service.validate_token(expired_token)
 
     @pytest.mark.unit
     @pytest.mark.asyncio
@@ -795,30 +791,26 @@ class TestTokenManagement:
     @pytest.mark.asyncio
     async def test_reject_tampered_token(self, auth_service: MockAuthService):
         """Should reject tampered tokens."""
-        try:
-            import jwt
+        import jwt
 
-            # Create valid token
-            valid_payload = {
-                "sub": "user-123",
-                "role": "user",
-                "exp": datetime.now(UTC) + timedelta(hours=1),
-            }
+        # Create valid token
+        valid_payload = {
+            "sub": "user-123",
+            "role": "user",
+            "exp": datetime.now(UTC) + timedelta(hours=1),
+        }
 
-            valid_token = jwt.encode(valid_payload, TEST_SECRET_KEY, algorithm=TEST_ALGORITHM)
+        valid_token = jwt.encode(valid_payload, TEST_SECRET_KEY, algorithm=TEST_ALGORITHM)
 
-            # Tamper by changing role
-            parts = valid_token.split(".")
-            # Just modify slightly to break signature
-            tampered_token = (
-                parts[0] + "." + "tampered" + "." + parts[2] if len(parts) >= 3 else "tampered"
-            )
+        # Tamper by changing role
+        parts = valid_token.split(".")
+        # Just modify slightly to break signature
+        tampered_token = (
+            parts[0] + "." + "tampered" + "." + parts[2] if len(parts) >= 3 else "tampered"
+        )
 
-            with pytest.raises(ValueError, match="signature|invalid"):
-                await auth_service.validate_token(tampered_token)
-
-        except ImportError:
-            pass  # TODO(#1011): was skipped — investigate
+        with pytest.raises(ValueError, match="signature|invalid"):
+            await auth_service.validate_token(tampered_token)
 
     @pytest.mark.unit
     @pytest.mark.asyncio
