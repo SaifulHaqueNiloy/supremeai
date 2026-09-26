@@ -206,9 +206,7 @@ class ToolForgeService:
 
             # Defense-in-depth (#1589): reject dunder-level globals injected by
             # the executed code itself (sandbox-escape staging attempts).
-            staged_dunders = [
-                k for k in sandbox_locals if k.startswith("__") and k.endswith("__")
-            ]
+            staged_dunders = [k for k in sandbox_locals if k.startswith("__") and k.endswith("__")]
             if staged_dunders:
                 raise SecurityViolationError(
                     f"Tool '{tool.spec.name}' staged dunder-level globals: {staged_dunders}"
