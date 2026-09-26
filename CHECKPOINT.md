@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-26 16:49 UTC
+- **Date:** 2026-09-26 17:05 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,7 +10,6 @@
   - (see git log for details)
 
 ## Files Changed
-  - `CHECKPOINT.md`
   - `docs/agents/AGENT_WORK_BOUNDARIES_CHARTER.md`
   - `AGENTS.md`
 
