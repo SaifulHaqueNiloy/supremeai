@@ -46,7 +46,7 @@ export const RegisterPage: React.FC = () => {
 
       <div className="z-10 w-full max-w-md p-8 bg-[var(--supremeai-color-bg-elevated-light)] dark:bg-[var(--supremeai-color-bg-elevated-dark)] border border-[var(--supremeai-color-border-accent-light)] dark:border-[var(--supremeai-color-border-accent-dark)] shadow-2xl rounded-3xl">
         <h1 className="text-4xl font-bold text-center mb-2 bg-gradient-to-r from-accent-primary to-neon-purple bg-clip-text text-transparent">
-          ⚡ SUPREME AI
+          SupremeAI
         </h1>
 
         {isSuccess ? (
@@ -88,7 +88,7 @@ export const RegisterPage: React.FC = () => {
               <div>
                 <input
                   type="email"
-                  placeholder="Email / Identity"
+                  placeholder="Email address"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"
@@ -97,7 +97,7 @@ export const RegisterPage: React.FC = () => {
               <div>
                 <input
                   type="password"
-                  placeholder="Passphrase"
+                  placeholder="Password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="w-full bg-[var(--supremeai-color-bg-void-light)] dark:bg-[var(--supremeai-color-bg-void-dark)] border border-[var(--supremeai-color-border-default-light)] dark:border-[var(--supremeai-color-border-default-dark)] focus:border-neon-blue rounded-xl px-4 py-3 text-[var(--supremeai-color-text-primary-light)] dark:text-[var(--supremeai-color-text-primary-dark)] placeholder:text-[var(--supremeai-color-neutral-500)] outline-none transition-all"

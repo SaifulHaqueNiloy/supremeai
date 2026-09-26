@@ -229,11 +229,16 @@ export const ServiceHealthBar: React.FC = () => {
           ? 'bg-amber-400 shadow-amber-400/40'
           : 'bg-rose-500 shadow-rose-500/40';
 
+  // Issue #1463: the detail slot once fell back to 'Synced' in unknown/error
+  // states, so the chip could read "Connecting... · Synced" at the same time.
+  // Now: measured latency when we have it, 'Synced' only when healthy, and an
+  // empty string (nothing rendered) in every transitional/degraded state.
+  // The '<50ms' fallback was also a fabricated number — removed.
   const avgLatency = data?.total_response_time_ms
     ? `${Math.round(data.total_response_time_ms)}ms`
     : isHealthy
-      ? '<50ms'
-      : 'Synced';
+      ? 'Synced'
+      : '';
 
   return (
     <div className="relative flex flex-col items-center select-none">
@@ -255,9 +260,11 @@ export const ServiceHealthBar: React.FC = () => {
           {publicStatusLabel}
         </span>
 
-        <span className="border-l border-[var(--sa-border)] pl-2 text-[10px] font-mono text-[var(--sa-ink-muted)] transition-colors group-hover:text-[var(--sa-primary)]">
-          {data?.summary ? `${data.summary.healthy}/${data.summary.total_checks}` : avgLatency}
-        </span>
+        {(data?.summary || avgLatency) && (
+          <span className="border-l border-[var(--sa-border)] pl-2 text-[10px] font-mono text-[var(--sa-ink-muted)] transition-colors group-hover:text-[var(--sa-primary)]">
+            {data?.summary ? `${data.summary.healthy}/${data.summary.total_checks}` : avgLatency}
+          </span>
+        )}
       </motion.button>
 
       {/* 🔍 Secret Diagnostics Modal/Dropdown for those who know */}

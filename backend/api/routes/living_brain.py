@@ -35,7 +35,15 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
 from core.logging_config import logger
-from core.security.authentication.rbac import get_current_admin
+# Issue #1496: this router used core.security.authentication.rbac's
+# get_current_admin, whose token extraction ONLY trusts AuthMiddleware-injected
+# request.state.user — it never decodes the Authorization header itself. Admin
+# JWTs minted by the admin-auth flow (the dashboard's getAdminToken()) were
+# therefore rejected with 401 even though the same token works on every other
+# admin route. api.dependencies.get_current_admin is the canonical dependency
+# used across the admin surface (decodes the Bearer token + enforces the admin
+# role) — use it so /api/living-brain/* behaves like the rest.
+from api.dependencies import get_current_admin
 
 # Import brain components
 # UNIFY FIX: removed 'backend.' prefix from imports — they were silently
