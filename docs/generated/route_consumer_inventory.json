@@ -14,7 +14,7 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 858,
+    "backend_routes": 859,
     "frontend_unique_refs": 148,
     "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
@@ -24,7 +24,7 @@
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 166,
-      "admin-only": 346,
+      "admin-only": 347,
       "internal": 38,
       "deprecated": 4,
       "api-only": 303,
@@ -1018,6 +1018,20 @@
       "mounted": true,
       "is_admin": true,
       "operation": "update_commandcenter_rules",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/secrets-health",
+      "declared": "/admin-api/secrets-health",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_dashboard/endpoints_secrets_health.py",
+      "module": "api.routes.admin_dashboard.endpoints_secrets_health",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_secrets_health",
       "frontend_consumers": [],
       "classification": "admin-only"
     },

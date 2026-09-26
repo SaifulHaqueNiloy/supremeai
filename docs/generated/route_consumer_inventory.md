@@ -4,7 +4,7 @@
 
 | metric | value |
 |---|---|
-| backend routes | 858 |
+| backend routes | 859 |
 | routes with frontend consumer | 296 |
 | unique frontend `/api/...` refs | 148 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
@@ -18,7 +18,7 @@
 | classification | count | meaning |
 |---|---|---|
 | `user-facing` | 166 | frontend consumer matched |
-| `admin-only` | 346 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 38 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
@@ -256,6 +256,7 @@
 | GET | `/admin-api/roles` | `backend/api/routes/admin_dashboard/endpoints_crud.py` | admin-only | NONE |
 | GET | `/admin-api/rules` | `backend/api/routes/admin_dashboard/endpoints_command.py` | admin-only | NONE |
 | POST | `/admin-api/rules` | `backend/api/routes/admin_dashboard/endpoints_command.py` | admin-only | NONE |
+| GET | `/admin-api/secrets-health` | `backend/api/routes/admin_dashboard/endpoints_secrets_health.py` | admin-only | NONE |
 | GET | `/admin-api/security-scan` | `backend/api/routes/admin_dashboard/endpoints_security.py` | admin-only | NONE |
 | POST | `/admin-api/security-scan` | `backend/api/routes/admin_dashboard/endpoints_security.py` | admin-only | NONE |
 | GET | `/admin-api/security-scan/findings` | `backend/api/routes/admin_dashboard/endpoints_security.py` | admin-only | NONE |
