@@ -26,7 +26,7 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 
 ## Cross-document consistency (skip-registry ↔ tree ↔ checkpoint)
 
-- ✅ `active_skip_markers=26` → tree reality: **26**
+- ✅ `active_skip_markers=27` → tree reality: **27**
 
 Live/runtime evidence: CI Pipeline summaries, `QA — Live Production Smoke` run summaries
 (fail-closed যতক্ষণ না `vars.PRODUCTION_URL` কনফিগার করা হয়)।
