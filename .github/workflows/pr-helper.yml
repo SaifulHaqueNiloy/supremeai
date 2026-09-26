@@ -446,6 +446,7 @@ jobs:
     outputs:
       conflicts: ${{ steps.conflict.outputs.conflicts }}
       lint: ${{ steps.lint.outputs.verdict }}
+      self_merge_risk: ${{ steps.self_merge_check.outputs.risk }}
     steps:
       - name: Checkout HEAD
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -453,6 +454,33 @@ jobs:
           ref: ${{ needs.guard.outputs.head_sha }}
           fetch-depth: 1
           persist-credentials: false
+
+      # AUDIT-FIX (#2005): Rule #12 — NO SELF-MERGE
+      # Check if PR author has reviewed/approved their own PR.
+      # GitHub's native review enforcement doesn't cover self-review in all cases.
+      - name: Self-merge check (Rule #12)
+        id: self_merge_check
+        env:
+          GH_TOKEN: ${{ secrets.SELF_HEAL_PAT || github.token }}
+          GH_REPO: ${{ github.repository }}
+          PR: ${{ needs.guard.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+          PR_AUTHOR=$(gh pr view "$PR" --json author -q .author.login 2>/dev/null || echo "")
+          REVIEWS=$(gh pr view "$PR" --json reviews -q '.reviews[].author.login' 2>/dev/null || echo "")
+          SELF_REVIEW=false
+          if echo "$REVIEWS" | grep -qFx "$PR_AUTHOR"; then
+            SELF_REVIEW=true
+          fi
+          echo "risk=$SELF_REVIEW" >> "$GITHUB_OUTPUT"
+          if [ "$SELF_REVIEW" = "true" ]; then
+            echo "::error::Self-review detected — PR author '$PR_AUTHOR' reviewed their own PR (Rule #12: NO SELF-MERGE). PR is blocked."
+            gh pr comment "$PR" --body "❌ **Self-merge blocked** (Rule #12): PR author cannot review their own PR. Request review from another agent or human." 2>/dev/null || true
+            gh pr edit "$PR" --add-label "self-merge-blocked" 2>/dev/null || true
+            exit 1
+          else
+            echo "✅ No self-review detected — Rule #12 compliant"
+          fi
 
       - name: Merge conflict check + behind-branch rebase nudge
         id: conflict

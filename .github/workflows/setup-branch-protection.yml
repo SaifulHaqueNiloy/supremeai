@@ -1,0 +1,161 @@
+name: Setup Branch Protection on main
+
+# AUDIT-FIX (#2005, #2007, #1993): Enforce Rules #1, #12, #15 mechanically
+# via GitHub Branch Protection API.
+#
+# Rule #1:  NEVER TOUCH main DIRECTLY — enforce_admins: true
+# Rule #12: NO SELF-MERGE — required_approving_review_count: 1
+# Rule #15: NO FORCE-PUSH — allow_force_pushes: false
+#
+# This workflow runs:
+# - On push to main (after merge — ensures protection stays active)
+# - On workflow_dispatch (manual trigger for initial setup or re-apply)
+#
+# Requirements:
+# - SELF_HEAL_PAT secret must be set (GitHub PAT with admin:repo_hook scope)
+# - If SELF_HEAL_PAT is not set, the workflow will skip with a warning
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Dry run (log what would be applied without making changes)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+permissions:
+  contents: read
+  administration: write
+
+concurrency:
+  group: branch-protection-setup
+  cancel-in-progress: false
+
+jobs:
+  setup-protection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check for admin token
+        id: token-check
+        env:
+          SELF_HEAL_PAT: ${{ secrets.SELF_HEAL_PAT }}
+        run: |
+          if [ -z "$SELF_HEAL_PAT" ]; then
+            echo "::warning::SELF_HEAL_PAT secret not set — branch protection cannot be applied. Set it in repo Settings → Secrets."
+            echo "has_token=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_token=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply branch protection to main
+        if: steps.token-check.outputs.has_token == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.SELF_HEAL_PAT }}
+          GH_REPO: ${{ github.repository }}
+          DRY_RUN: ${{ inputs.dry-run || 'false' }}
+        run: |
+          set -euo pipefail
+
+          echo "=== Branch Protection Setup for main ==="
+          echo "Repository: $GH_REPO"
+          echo "Dry run: $DRY_RUN"
+          echo ""
+
+          # AUDIT-FIX (#2005): Rule #12 — NO SELF-MERGE
+          # At least 1 approving review from a different user is required.
+          # dismiss_stale_reviews: true — if code changes after review, old reviews are dismissed.
+          # require_code_owner_reviews: false — we don't use CODEOWNERS yet (can enable later)
+
+          # AUDIT-FIX (#2007): Rule #15 — NO FORCE-PUSH
+          # allow_force_pushes: false — nobody can force-push to main.
+          # This also prevents branch deletion.
+
+          # AUDIT-FIX (#1993): Rule #1 — NEVER TOUCH main DIRECTLY
+          # enforce_admins: true — even admins must follow the rules.
+          # required_status_checks: strict — branch must be up to date with main before merge.
+
+          PROTECTION_CONFIG=$(cat <<'JSON'
+          {
+            "required_status_checks": {
+              "strict": true,
+              "contexts": []
+            },
+            "enforce_admins": true,
+            "required_pull_request_reviews": {
+              "required_approving_review_count": 1,
+              "dismiss_stale_reviews": true,
+              "require_code_owner_reviews": false
+            },
+            "restrictions": null,
+            "allow_force_pushes": false,
+            "allow_deletions": false,
+            "required_linear_history": false,
+            "block_creations": false
+          }
+          JSON
+          )
+
+          echo "Protection config to apply:"
+          echo "$PROTECTION_CONFIG" | python3 -m json.tool
+          echo ""
+
+          if [ "$DRY_RUN" == "true" ]; then
+            echo "[DRY-RUN] Would apply the above protection config to main."
+            echo "[DRY-RUN] No changes made."
+            exit 0
+          fi
+
+          echo "Applying branch protection..."
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X PUT \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GH_REPO/branches/main/protection" \
+            -d "$PROTECTION_CONFIG")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          if [ "$HTTP_CODE" = "200" ]; then
+            echo "✅ Branch protection applied successfully"
+            echo ""
+            echo "Active protection rules:"
+            echo "$BODY" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+print(f'  enforce_admins: {d.get(\"enforce_admins\", {}).get(\"enabled\", \"?\")}')
+print(f'  allow_force_pushes: {d.get(\"allow_force_pushes\", {}).get(\"enabled\", \"?\")}')
+print(f'  allow_deletions: {d.get(\"allow_deletions\", {}).get(\"enabled\", \"?\")}')
+print(f'  required_reviews: {d.get(\"required_pull_request_reviews\", {}).get(\"required_approving_review_count\", \"?\")}')
+print(f'  dismiss_stale_reviews: {d.get(\"required_pull_request_reviews\", {}).get(\"dismiss_stale_reviews\", \"?\")}')
+print(f'  strict_status_checks: {d.get(\"required_status_checks\", {}).get(\"strict\", \"?\")}')
+"
+          elif [ "$HTTP_CODE" = "403" ]; then
+            echo "❌ HTTP 403: SELF_HEAL_PAT does not have admin permission on this repo."
+            echo "   Required scope: admin:repo_hook (or repo + administration:write)"
+            exit 1
+          elif [ "$HTTP_CODE" = "422" ]; then
+            echo "⚠️ HTTP 422: Protection may already be applied or config is invalid."
+            echo "   Response: $BODY"
+            # Non-fatal — protection might already exist with different settings
+            exit 0
+          else
+            echo "❌ HTTP $HTTP_CODE: Failed to apply branch protection"
+            echo "   Response: $BODY"
+            exit 1
+          fi
+
+      - name: Skip (no admin token)
+        if: steps.token-check.outputs.has_token != 'true'
+        run: |
+          echo "::warning::Branch protection skipped — SELF_HEAL_PAT not set."
+          echo "To enable: Settings → Secrets → Actions → New secret → SELF_HEAL_PAT"
+          echo "The PAT needs admin:repo_hook scope on this repository."
