@@ -19,6 +19,9 @@ core/maintenance_pipeline.py keep resolving to the same objects.
 
 from __future__ import annotations
 
+import threading
+import time as _time
+from collections import deque
 from typing import Any
 
 from core.config import settings
@@ -136,6 +139,11 @@ except ImportError:
 
 
 def record_request(method: str, path: str, status: int) -> None:
+    # Issue #1474: feed the real in-process rolling window so the admin
+    # dashboard can report measured rps/error-rate instead of honest nulls.
+    # Deliberately in-memory (no Redis writes) — the Upstash federation quota
+    # is exhausted (issue #1430) and per-request Redis calls would worsen it.
+    _note_request_outcome(status)
     if _PROMETHEUS_AVAILABLE:
         try:
             http_requests_total.labels(method=method, endpoint=path, status=str(status)).inc()
@@ -175,3 +183,60 @@ def record_model_call(provider: str, model: str) -> None:
             model_calls_total.labels(provider=provider, model=model).inc()
         except Exception as exc:
             logger.exception(f"Failed to record model call metric: {exc}")
+
+
+# ---------------------------------------------------------------------------
+# Issue #1474 — real rolling-window request/error counters
+# ---------------------------------------------------------------------------
+
+_WINDOW_SECONDS = 60.0
+_WINDOW_RETENTION_SECONDS = 300.0
+_WINDOW_MAX_EVENTS = 100_000  # burst guard — drop oldest beyond this
+
+_window_lock = threading.Lock()
+_window_events: deque[tuple[float, bool]] = deque()  # (monotonic_ts, is_5xx)
+_lifetime_requests = 0
+_lifetime_errors = 0
+
+
+def _note_request_outcome(status: int) -> None:
+    """Record one finished request into the rolling window (thread-safe)."""
+    global _lifetime_requests, _lifetime_errors
+    now = _time.monotonic()
+    is_error = status >= 500
+    with _window_lock:
+        _window_events.append((now, is_error))
+        # Trim: hard cap first, then age-based retention.
+        while len(_window_events) > _WINDOW_MAX_EVENTS:
+            _window_events.popleft()
+        while _window_events and now - _window_events[0][0] > _WINDOW_RETENTION_SECONDS:
+            _window_events.popleft()
+        _lifetime_requests += 1
+        if is_error:
+            _lifetime_errors += 1
+
+
+def get_window_metrics() -> dict[str, Any]:
+    """Real, measured traffic statistics for the admin metrics endpoint.
+
+    - ``requests_per_second``: mean rps over the last 60s (0.0 when genuinely
+      quiet — a real measurement, not a fabricated number).
+    - ``error_rate``: percentage of 5xx over the same window; ``None`` when
+      no traffic was observed in the window (undefined, not zero).
+    - ``total_requests_since_boot``: lifetime counter; callers may only map
+      it onto a "24h" field once the process has actually been up 24h.
+    """
+    now = _time.monotonic()
+    with _window_lock:
+        while _window_events and now - _window_events[0][0] > _WINDOW_SECONDS:
+            _window_events.popleft()
+        total = len(_window_events)
+        errors = sum(1 for _, is_err in _window_events if is_err)
+    return {
+        "window_seconds": _WINDOW_SECONDS,
+        "requests_in_window": total,
+        "requests_per_second": round(total / _WINDOW_SECONDS, 3),
+        "error_rate": round(errors / total * 100, 2) if total else None,
+        "total_requests_since_boot": _lifetime_requests,
+        "total_errors_since_boot": _lifetime_errors,
+    }

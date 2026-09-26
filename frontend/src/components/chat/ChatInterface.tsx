@@ -68,6 +68,17 @@ export const ChatInterface: React.FC = () => {
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  // Issue #1457/#1486 (HIGH): chat failure affordances — offline banner,
+  // retry button for the last failed message, auto-retry on reconnect.
+  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [failedPrompt, setFailedPrompt] = useState<string | null>(null);
+  // Ref mirror so event listeners can read/act on the latest failed prompt
+  // without stale closures (and without side effects inside state updaters).
+  const failedPromptRef = useRef<string | null>(null);
+  const setFailed = (prompt: string | null) => {
+    failedPromptRef.current = prompt;
+    setFailedPrompt(prompt);
+  };
   // M14 P-C: zero-cost ব্রাউজার-TTS playback (capability-detection সহ)।
   const playbackRef = useRef<AudioPlaybackService | null>(null);
   useEffect(() => {
@@ -194,11 +205,10 @@ export const ChatInterface: React.FC = () => {
     }
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMessage = input.trim();
-    setInput('');
+  const handleSend = async (retryPrompt?: string) => {
+    const userMessage = (retryPrompt ?? input).trim();
+    if (!userMessage) return;
+    if (!retryPrompt) setInput('');
 
     // M10 বাংলা: প্রথম মেসেজেই স্থায়ী conversation identity তৈরি হয় এবং
     // পরের প্রতিটি কলে একই id বজায় থাকে।
@@ -263,10 +273,14 @@ export const ChatInterface: React.FC = () => {
         });
       }
     } catch (error: unknown) {
+      const detail = error instanceof Error ? error.message : 'Failed to get response';
       addMessage({
         role: 'assistant',
-        content: error instanceof Error ? `Error: ${error.message}` : 'Error: Failed to get response'
+        content: `⚠️ ${detail} — your message was not delivered.`,
       });
+      // Issue #1457: keep the failed prompt so the user gets an explicit
+      // Retry affordance (and auto-retry when the connection restores).
+      setFailed(userMessage);
     } finally {
       triggerOrchestration(false);
     }
@@ -278,6 +292,27 @@ export const ChatInterface: React.FC = () => {
       handleSend();
     }
   };
+
+  // Issue #1457: track connectivity; auto-retry the failed message when the
+  // connection restores (single-message queue — the last failed prompt).
+  useEffect(() => {
+    const goOnline = () => {
+      setIsOffline(false);
+      const prompt = failedPromptRef.current;
+      if (prompt) {
+        setFailed(null);
+        void handleSend(prompt);
+      }
+    };
+    const goOffline = () => setIsOffline(true);
+    window.addEventListener('online', goOnline);
+    window.addEventListener('offline', goOffline);
+    return () => {
+      window.removeEventListener('online', goOnline);
+      window.removeEventListener('offline', goOffline);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="flex flex-col h-full">
@@ -351,6 +386,19 @@ export const ChatInterface: React.FC = () => {
         </button>
       </div>
 
+      {/* Issue #1457: prominent offline banner — the user must know WHY the
+          chat is silent instead of guessing. */}
+      {isOffline && (
+        <div
+          role="status"
+          className="flex items-center gap-2 border-b border-amber-700/40 bg-amber-500/10 px-4 py-2 text-sm text-amber-300"
+          data-testid="chat-offline-banner"
+        >
+          <span aria-hidden>📡</span>
+          You are offline — messages cannot be sent right now. They will retry automatically when the connection returns.
+        </div>
+      )}
+
       {/* Messages Area + S3 Artifacts side panel */}
       <div className="flex flex-1 min-h-0">
         <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -408,6 +456,24 @@ export const ChatInterface: React.FC = () => {
 
       {/* Input Area */}
       <div className="p-4 border-t border-slate-800">
+        {failedPrompt && !isOffline && (
+          <div
+            className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-red-800/60 bg-red-500/10 px-3 py-2 text-sm text-red-300"
+            data-testid="chat-retry-bar"
+          >
+            <span className="truncate">Last message failed to send.</span>
+            <button
+              onClick={() => {
+                const prompt = failedPromptRef.current;
+                setFailed(null);
+                void handleSend(prompt ?? undefined);
+              }}
+              className="shrink-0 rounded-md bg-red-600 px-3 py-1 text-xs font-semibold text-white transition hover:bg-red-500"
+            >
+              ↻ Retry
+            </button>
+          </div>
+        )}
         <div className="flex gap-2">
           {/* S4: Image Upload */}
           <ImageUploadButton
