@@ -3,6 +3,16 @@
 from api.routes.admin_dashboard import router
 from core.config import settings
 from core.logging_config import logger
+from core.monitoring import get_metrics_collector
+from core.observability.metrics_registry import get_window_metrics, metrics_engine
+
+
+def _percentile_ms(sorted_seconds: list[float], pct: float) -> float | None:
+    """Percentile of the real latency buffer, reported in ms (None = no data)."""
+    if not sorted_seconds:
+        return None
+    idx = min(len(sorted_seconds) - 1, max(0, round(pct / 100 * (len(sorted_seconds) - 1))))
+    return round(sorted_seconds[idx] * 1000.0, 1)
 
 
 @router.get("/metrics")
@@ -53,21 +63,42 @@ def get_metrics():
         cpu_usage = None
         memory_usage = None
 
-    # বাংলা মন্তব্য (Wave-1 honesty fix): requests_per_second / latency / error_rate /
-    # total_requests_24h / cost — এই সবগুলো আগে ১০০% hardcoded ভুয়া সংখ্যা ছিল
-    # (12, 180/320/650, 0.00, 124, 0.01, 7.20) যা প্রতি ২ সেকেন্ডে অ্যাডমিন
-    # ড্যাশবোর্ডে লাইভ স্ট্রিম হত। রিয়েল কাউন্টার/ট্রেসিং পাইপলাইন এখনো নেই বলে
-    # সৎ None — UI খালি ("—") দেখাবে, বানানো সংখ্যা নয়। key-গুলো রাখা হচ্ছে
-    # যাতে ফ্রন্টএন্ড কনজিউমার null-safe ভাবে খালি অবস্থা রেন্ডার করতে পারে।
+    # Issue #1474 (HIGH): this endpoint used to report null for every traffic
+    # metric because the Wave-1 honesty fix removed the old hardcoded fakes
+    # before any real counter existed. The real instrumentation pipeline now
+    # exists and is fed by the mounted ObservabilityMiddleware, so wire it in
+    # (in-memory only — Upstash quota is exhausted, issue #1430):
+    #   - requests_per_second / error_rate: 60s rolling window (metrics_registry)
+    #   - latency_p50/p95/p99: real latency buffer (last 1000 requests)
+    #   - cost fields: MetricsCollector LLM cost gauge ÷ real uptime
+    #   - total_requests_24h: only reported once the process has genuinely
+    #     been up 24h (before that a lifetime counter would mislabel itself);
+    #     stays None until then — still never a fabricated number.
+    window = get_window_metrics()
+    latency_sorted = sorted(metrics_engine.latency_history)
+    collector_summary = get_metrics_collector().get_summary()
+    uptime_seconds = float(collector_summary.get("uptime_seconds") or 0.0)
+    llm_cost_usd = float(collector_summary.get("llm_total_cost_usd") or 0.0)
+
+    cost_per_hour: float | None = None
+    cost_projected_monthly: float | None = None
+    if llm_cost_usd > 0 and uptime_seconds > 0:
+        cost_per_hour = round(llm_cost_usd / (uptime_seconds / 3600.0), 4)
+        cost_projected_monthly = round(cost_per_hour * 730.0, 2)
+
+    total_requests_24h: int | None = None
+    if uptime_seconds >= 86400.0:
+        total_requests_24h = int(window["total_requests_since_boot"])
+
     return {
-        "requests_per_second": None,
-        "latency_p50_ms": None,
-        "latency_p95_ms": None,
-        "latency_p99_ms": None,
-        "error_rate": None,
-        "total_requests_24h": None,
-        "cost_per_hour": None,
-        "cost_projected_monthly": None,
+        "requests_per_second": window["requests_per_second"],
+        "latency_p50_ms": _percentile_ms(latency_sorted, 50),
+        "latency_p95_ms": _percentile_ms(latency_sorted, 95),
+        "latency_p99_ms": _percentile_ms(latency_sorted, 99),
+        "error_rate": window["error_rate"],
+        "total_requests_24h": total_requests_24h,
+        "cost_per_hour": cost_per_hour,
+        "cost_projected_monthly": cost_projected_monthly,
         "active_providers": active_providers,
         "model_call_distribution": distribution,
         "cpu_usage_percent": round(cpu_usage, 1) if cpu_usage is not None else None,

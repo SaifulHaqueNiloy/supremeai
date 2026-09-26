@@ -465,6 +465,14 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     app.include_router(browser_router)
 
+    # Issue #1490: the browser integration /health probe must be reachable
+    # without credentials (ServiceHealthMonitor + audit contract). It lives on
+    # a dependency-free router inside api.routes.browser_routes — mounted here
+    # explicitly because the ALL_ROUTERS entry for that module is admin-gated.
+    from api.routes.browser_routes import public_router as browser_public_router
+
+    app.include_router(browser_public_router)
+
     # বাংলা মন্তব্ব্য: মেট্রিক্স এন্ডপয়েন্ট যোগ করা
     if settings.MONITORING_DETAILED:
         from fastapi.responses import PlainTextResponse

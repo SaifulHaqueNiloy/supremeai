@@ -35,6 +35,7 @@ the submodule imports run."""
 import asyncio
 import json
 import os
+import time
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -94,6 +95,19 @@ def save_users(users: list[dict[str, Any]]):
         json.dump(users, f, indent=4)
 
 
+# Issue #1471 (HIGH): the SSE log stream never sent anything while the log
+# file was quiet, so intermediate proxies/LB silently killed the idle
+# connection ("connection timeout") and the EventSource never reconnected
+# cleanly. Two guards:
+#   - heartbeat: an SSE comment ping every _SSE_HEARTBEAT_INTERVAL seconds of
+#     silence (comment lines keep EventSource happy and are ignored by
+#     consumers)
+#   - max duration: the generator closes cleanly after _SSE_MAX_STREAM_SECONDS
+#     with an explicit `stream-end` event, so no connection hangs forever
+_SSE_HEARTBEAT_INTERVAL = 15.0
+_SSE_MAX_STREAM_SECONDS = 30 * 60.0
+
+
 @router.get("/logs/stream")
 def logs_stream():
     async def log_generator():
@@ -111,19 +125,34 @@ def logs_stream():
                 yield f"data: Error reading logs: {e}\n\n"
 
         file_obj = None
+        started_at = time.monotonic()
+        last_output = time.monotonic()
         try:
             if os.path.exists(log_file):
                 file_obj = open(log_file)  # noqa: SIM115 - handle persists across generator yields, closed in finally
                 file_obj.seek(0, os.SEEK_END)
 
             while True:
+                # Hard lifetime cap: always close cleanly, never hang forever.
+                if time.monotonic() - started_at >= _SSE_MAX_STREAM_SECONDS:
+                    yield "event: stream-end\ndata: log stream reached max duration; reconnecting\n\n"
+                    break
+
                 if file_obj:
                     line = file_obj.readline()
                     if line:
                         yield f"data: {line.strip()}\n\n"
+                        last_output = time.monotonic()
                     else:
+                        if time.monotonic() - last_output >= _SSE_HEARTBEAT_INTERVAL:
+                            # SSE comment ping — proxies see traffic, browsers ignore it.
+                            yield ": ping\n\n"
+                            last_output = time.monotonic()
                         await asyncio.sleep(0.5)
                 else:
+                    if time.monotonic() - last_output >= _SSE_HEARTBEAT_INTERVAL:
+                        yield ": ping\n\n"
+                        last_output = time.monotonic()
                     if os.path.exists(log_file):
                         file_obj = open(log_file)  # noqa: SIM115 - handle persists across generator yields, closed in finally
                         file_obj.seek(0, os.SEEK_END)
