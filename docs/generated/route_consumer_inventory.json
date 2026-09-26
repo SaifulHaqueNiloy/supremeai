@@ -14,20 +14,20 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 832,
-    "frontend_unique_refs": 145,
-    "routes_with_frontend_consumer": 269,
+    "backend_routes": 854,
+    "frontend_unique_refs": 147,
+    "routes_with_frontend_consumer": 292,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
-    "api_only_routes": 303,
+    "api_only_routes": 304,
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 161,
-      "admin-only": 330,
+      "admin-only": 351,
       "internal": 38,
       "deprecated": 0,
-      "api-only": 303,
+      "api-only": 304,
       "orphaned": 0
     }
   },
@@ -124,7 +124,7 @@
     "/api/tts/voices": 1,
     "/api/v1/agent_review_workflow": 2,
     "/api/v1/analytics": 3,
-    "/api/v1/auth": 4,
+    "/api/v1/auth": 5,
     "/api/v1/browse": 1,
     "/api/v1/cache": 1,
     "/api/v1/circles": 3,
@@ -2007,6 +2007,22 @@
     },
     {
       "method": "POST",
+      "path": "/api/admin/cloud-mesh/smell-check",
+      "declared": "/api/admin/cloud-mesh/smell-check",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_routes.py",
+      "module": "api.routes.admin_routes",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "cloud_mesh_smell_check_contract_alias",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "POST",
       "path": "/api/admin/configs/refresh",
       "declared": "/api/admin/configs/refresh",
       "deprecated": false,
@@ -2356,6 +2372,38 @@
       "mounted": true,
       "is_admin": true,
       "operation": "get_integration_health",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/librarian/process",
+      "declared": "/api/admin/librarian/process",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_librarian.py",
+      "module": "api.routes.admin_librarian",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "process_skill_action",
+      "frontend_consumers": [
+        "frontend/src/components/admin/EnhancedSkillMarketplace.tsx"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/librarian/queue",
+      "declared": "/api/admin/librarian/queue",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_librarian.py",
+      "module": "api.routes.admin_librarian",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_quarantine_queue",
       "frontend_consumers": [
         "frontend/src/utils/api.ts"
       ],
@@ -2733,6 +2781,54 @@
     },
     {
       "method": "GET",
+      "path": "/api/admin/tenant-limits",
+      "declared": "/api/admin/tenant-limits",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_routes.py",
+      "module": "api.routes.admin_routes",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_tenant_limits_contract_alias",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/tenant-limits/:param",
+      "declared": "/api/admin/tenant-limits/{tenant_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_routes.py",
+      "module": "api.routes.admin_routes",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "update_tenant_limits_contract_alias",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/traffic/kill-switch",
+      "declared": "/api/admin/traffic/kill-switch",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_routes.py",
+      "module": "api.routes.admin_routes",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "traffic_kill_switch_contract_alias",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
       "path": "/api/admin/traffic/live",
       "declared": "/api/admin/traffic/live",
       "deprecated": false,
@@ -3044,34 +3140,6 @@
         "frontend/src/components/dashboard/SecretsPage.tsx"
       ],
       "classification": "user-facing"
-    },
-    {
-      "method": "POST",
-      "path": "/api/api/admin/librarian/process",
-      "declared": "/api/api/admin/librarian/process",
-      "deprecated": false,
-      "router_file": "backend/api/routes/admin_librarian.py",
-      "module": "api.routes.admin_librarian",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "process_skill_action",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/api/admin/librarian/queue",
-      "declared": "/api/api/admin/librarian/queue",
-      "deprecated": false,
-      "router_file": "backend/api/routes/admin_librarian.py",
-      "module": "api.routes.admin_librarian",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "get_quarantine_queue",
-      "frontend_consumers": [],
-      "classification": "admin-only"
     },
     {
       "method": "POST",
@@ -5136,6 +5204,22 @@
       "classification": "api-only"
     },
     {
+      "method": "GET",
+      "path": "/api/health-aggregation",
+      "declared": "/api/health-aggregation",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_routes.py",
+      "module": "api.routes.admin_routes",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "health_aggregation_contract",
+      "frontend_consumers": [
+        "frontend/src/utils/apiInterceptor.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
       "method": "POST",
       "path": "/api/knowledge/ask",
       "declared": "/api/knowledge/ask",
@@ -5408,7 +5492,8 @@
       "is_admin": false,
       "operation": "list_conversations",
       "frontend_consumers": [
-        "frontend/src/components/admin/MemoryBrowser.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -5424,7 +5509,8 @@
       "is_admin": false,
       "operation": "save_message",
       "frontend_consumers": [
-        "frontend/src/components/admin/MemoryBrowser.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -5526,7 +5612,8 @@
       "frontend_consumers": [
         "frontend/src/contexts/ThemeProvider.tsx",
         "frontend/src/i18n/I18nProvider.tsx",
-        "frontend/src/pages/ProfilePage.tsx"
+        "frontend/src/pages/ProfilePage.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -5544,7 +5631,8 @@
       "frontend_consumers": [
         "frontend/src/contexts/ThemeProvider.tsx",
         "frontend/src/i18n/I18nProvider.tsx",
-        "frontend/src/pages/ProfilePage.tsx"
+        "frontend/src/pages/ProfilePage.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -5562,7 +5650,8 @@
       "frontend_consumers": [
         "frontend/src/contexts/ThemeProvider.tsx",
         "frontend/src/i18n/I18nProvider.tsx",
-        "frontend/src/pages/ProfilePage.tsx"
+        "frontend/src/pages/ProfilePage.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -6679,6 +6768,22 @@
       "classification": "user-facing"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/admin/agents",
+      "declared": "/api/v1/admin/agents",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_agents_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/admin/alerts",
       "declared": "/api/v1/admin/alerts",
@@ -6696,6 +6801,54 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/admin/analytics",
+      "declared": "/api/v1/admin/analytics",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_analytics_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/api-keys",
+      "declared": "/api/v1/admin/api-keys",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_api_keys_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/audit",
+      "declared": "/api/v1/admin/audit",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_audit_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/admin/audit-logs",
       "declared": "/api/v1/admin/audit-logs",
       "deprecated": false,
@@ -6705,6 +6858,38 @@
       "mounted": true,
       "is_admin": false,
       "operation": "audit_logs_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/billing",
+      "declared": "/api/v1/admin/billing",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_billing_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/config",
+      "declared": "/api/v1/admin/config",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_config_v1",
       "frontend_consumers": [
         "frontend/src/utils/api.ts"
       ],
@@ -6839,6 +7024,86 @@
       "classification": "admin-only"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/admin/dashboard",
+      "declared": "/api/v1/admin/dashboard",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_dashboard_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/deployments",
+      "declared": "/api/v1/admin/deployments",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_deployments_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/health",
+      "declared": "/api/v1/admin/health",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_health_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/metrics",
+      "declared": "/api/v1/admin/metrics",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_metrics_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/notifications",
+      "declared": "/api/v1/admin/notifications",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_notifications_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/admin/render/accounts/:param/override",
       "declared": "/api/v1/admin/render/accounts/{role}/override",
@@ -6920,6 +7185,38 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/admin/security",
+      "declared": "/api/v1/admin/security",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_security_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/skills",
+      "declared": "/api/v1/admin/skills",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_skills_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/admin/stats",
       "declared": "/api/v1/admin/stats",
       "deprecated": false,
@@ -6936,6 +7233,38 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/admin/system-status",
+      "declared": "/api/v1/admin/system-status",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_system_status_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tiers",
+      "declared": "/api/v1/admin/tiers",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_tiers_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/admin/users",
       "declared": "/api/v1/admin/users",
       "deprecated": false,
@@ -6945,6 +7274,22 @@
       "mounted": true,
       "is_admin": false,
       "operation": "list_users_v1",
+      "frontend_consumers": [
+        "frontend/src/utils/api.ts"
+      ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/webhooks",
+      "declared": "/api/v1/admin/webhooks",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_v1.py",
+      "module": "api.routes.admin_v1",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "admin_webhooks_v1",
       "frontend_consumers": [
         "frontend/src/utils/api.ts"
       ],
@@ -7196,6 +7541,7 @@
       "is_admin": false,
       "operation": "login",
       "frontend_consumers": [
+        "frontend/src/pages/PublicPages.tsx",
         "frontend/src/services/apiClient.test.ts",
         "frontend/src/store/authStore.ts"
       ],
@@ -7263,9 +7609,24 @@
       "is_admin": false,
       "operation": "register",
       "frontend_consumers": [
+        "frontend/src/pages/PublicPages.tsx",
         "frontend/src/store/authStore.ts"
       ],
       "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/auth/totp/verify",
+      "declared": "/api/v1/auth/totp/verify",
+      "deprecated": false,
+      "router_file": "backend/api/routes/auth.py",
+      "module": "api.routes.auth",
+      "registry_prefix": "/api/v1",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "totp_verify_compat",
+      "frontend_consumers": [],
+      "classification": "api-only"
     },
     {
       "method": "GET",
@@ -8500,7 +8861,7 @@
       "is_admin": false,
       "operation": "deep_health_check",
       "frontend_consumers": [
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "internal"
     },
@@ -8516,7 +8877,7 @@
       "is_admin": false,
       "operation": "health_check",
       "frontend_consumers": [
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "internal"
     },
@@ -8532,7 +8893,7 @@
       "is_admin": false,
       "operation": "agents_health_check",
       "frontend_consumers": [
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "internal"
     },
@@ -8548,7 +8909,7 @@
       "is_admin": false,
       "operation": "agents_health_check",
       "frontend_consumers": [
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "internal"
     },
@@ -8564,7 +8925,7 @@
       "is_admin": false,
       "operation": "get_predictions",
       "frontend_consumers": [
-        "frontend/src/utils/apiInterceptor.ts"
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "internal"
     },
