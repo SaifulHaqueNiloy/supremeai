@@ -2,6 +2,7 @@ import sqlite3
 import threading
 import time
 from pathlib import Path
+from typing import Any
 
 from core.degraded_mode import sqlite_fallback_allowed
 from core.logging_config import logger
@@ -159,6 +160,53 @@ class AdminGodLayer:
                 cur = conn.execute("SELECT value FROM rules WHERE key = ?", (key,))
                 row = cur.fetchone()
                 return row[0] if row else default
+
+    def list_rules(self) -> list[dict[str, Any]]:
+        """All constitutional rules as [{"key", "value", "updated_at"}].
+
+        Issue #1489/#1469: `GET /api/admin/rules` (api/routes/admin.py) and
+        `GET /api/admin/llm/rules` (api/routes/admin_llm.py) call this method,
+        which never existed on the layer — `AttributeError` → 500 on every
+        admin rules read. Firestore is the primary store; the SQLite fallback
+        applies only where degradation is allowed (production refuses the
+        ephemeral file, matching get_rule/set_rule policy).
+        """
+        rules: dict[str, dict[str, Any]] = {}
+
+        if self._db:
+            try:
+                for doc in self._db.collection(self.collection_name).stream():
+                    data = doc.to_dict() or {}
+                    rules[doc.id] = {
+                        "key": doc.id,
+                        "value": str(data.get("value", "")),
+                        "updated_at": data.get("updated_at"),
+                    }
+            except Exception as e:
+                logger.error(f"list_rules: Firestore read failed: {e}")
+
+        if not rules and not self._sqlite_refused:
+            from contextlib import closing
+
+            try:
+                with self.sqlite_lock:
+                    with closing(
+                        sqlite3.connect(self.db_path, check_same_thread=False)
+                    ) as conn:
+                        conn.row_factory = sqlite3.Row
+                        rows = conn.execute(
+                            "SELECT key, value, updated_at FROM rules"
+                        ).fetchall()
+                for row in rows:
+                    rules[row["key"]] = {
+                        "key": row["key"],
+                        "value": row["value"],
+                        "updated_at": row["updated_at"],
+                    }
+            except Exception as e:
+                logger.warning(f"list_rules: SQLite read failed: {e}")
+
+        return list(rules.values())
 
     def set_rule(self, key: str, value: str) -> None:
         if self._db:
