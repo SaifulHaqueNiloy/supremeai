@@ -17,6 +17,7 @@ Key features:
 from __future__ import annotations
 
 import re
+import threading
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -68,6 +69,56 @@ PROVIDER_TOKEN_BUDGETS: dict[str, dict[str, int]] = {
 
 # Rough chars-per-token ratio (average English text ≈ 4 chars/token)
 _CHARS_PER_TOKEN: float = 4.0
+
+
+# ---------------------------------------------------------------------------
+# Local in-memory fallback budget tracker (issue #1687)
+# ---------------------------------------------------------------------------
+# Redis অনুপলব্ধ হলে production/staging-এ ব্যবহৃত degraded-mode কাউন্টার —
+# conservative limit = Redis দৈনিক সীমার ১০% (সর্বনিম্ন ১,০০০)।
+_LOCAL_FALLBACK_RATIO: float = 0.1
+_LOCAL_FALLBACK_MIN: int = 1_000
+_LOCAL_TRACKER_MAX_USERS: int = 10_000
+
+
+class _LocalBudgetTracker:
+    """Thread-safe in-memory per-user daily token counter (issue #1687).
+
+    Redis down হলে check_user_budget এই ট্র্যাকারের উপর conservative cap
+    প্রয়োগ করে: সার্ভিস সম্পূর্ণ deny-outage হয় না (আগের B-V2-03 আচরণ),
+    আবার unlimited spend-ও হয় না (মূল নীরব fail-open)। record_user_usage
+    সর্বদা এই মিররটি আপডেট রাখে যাতে Redis মাঝপথে মরলে আজকের ব্যবহার জানা
+    থাকে (আগে Redis-fail = usage রেকর্ড চুপচাপ হারানো)।
+    """
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._counts: dict[str, int] = {}
+
+    @staticmethod
+    def _key(user_id: str) -> str:
+        return f"{user_id}:{time.strftime('%Y-%m-%d')}"
+
+    def record(self, user_id: str, tokens: int) -> None:
+        if tokens <= 0:
+            return
+        with self._lock:
+            if len(self._counts) > _LOCAL_TRACKER_MAX_USERS:
+                # Opportunistic prune: শুধু আজকের এন্ট্রি রাখি (date rollover)
+                today = time.strftime("%Y-%m-%d")
+                self._counts = {k: v for k, v in self._counts.items() if k.endswith(f":{today}")}
+            key = self._key(user_id)
+            self._counts[key] = self._counts.get(key, 0) + tokens
+
+    def get_today(self, user_id: str) -> int:
+        with self._lock:
+            return self._counts.get(self._key(user_id), 0)
+
+    def fallback_limit(self, daily_limit: int) -> int:
+        """Conservative degraded-mode cap: Redis দৈনিক সীমার ১০%
+        (সর্বনিম্ন _LOCAL_FALLBACK_MIN) — Redis ছাড়া এর বেশি spend
+        কোনো অবস্থাতেই অনুমোদিত নয়।"""
+        return max(_LOCAL_FALLBACK_MIN, int(daily_limit * _LOCAL_FALLBACK_RATIO))
 
 
 def estimate_tokens(text: str) -> int:
@@ -192,6 +243,7 @@ class TokenBudgetManager:
         self._budgets = {**PROVIDER_TOKEN_BUDGETS, **(custom_budgets or {})}
         self._stats: dict[str, TokenBudgetStats] = {}
         self._redis = None
+        self._local = _LocalBudgetTracker()
 
     async def _get_redis(self):
         if not self._redis:
@@ -257,15 +309,37 @@ class TokenBudgetManager:
                 f"{type(e).__name__}: {e}"
             )
             if current_env in {"production", "prod", "staging"}:
-                return False  # fail-closed: যাচাই ছাড়া spend অনুমোদিত নয়
+                # Issue #1687: সরাসরি deny নয় — আগে লোকাল in-memory fallback
+                # দেখা হয় (conservative cap)। Redis-down outage-এ সার্ভিস
+                # চলে, কিন্তু spend capped — unlimited fail-open নয়, আবার
+                # 100% deny-outage-ও নয়।
+                fallback_cap = self._local.fallback_limit(daily_limit)
+                local_used = self._local.get_today(user_id)
+                if local_used >= fallback_cap:
+                    logger.warning(
+                        f"User {user_id} exceeded LOCAL fallback budget "
+                        f"({local_used}/{fallback_cap}) while Redis is "
+                        f"unavailable — denying (fail-closed on cap)"
+                    )
+                    return False  # fail-closed: local conservative cap ভাঙা যাবে না
+                logger.warning(
+                    f"Redis unavailable — LOCAL fallback budget active for "
+                    f"{user_id}: {local_used}/{fallback_cap} (degraded mode)"
+                )
+                return True
             return True  # dev/test: fail-open (উপরের error log-এ স্পষ্ট)
 
     async def record_user_usage(self, user_id: str, tokens: int) -> None:
         """
         Record tokens used by a user in Redis.
+
+        Issue #1687: সর্বদা local mirror-ও আপডেট হয় — Redis মাঝপথে ডাউন
+        হলে check_user_budget-এর degraded fallback অন্তত আজকের ব্যবহার
+        জানবে (আগে Redis-fail = usage রেকর্ড সম্পূর্ণ হারানো)।
         """
         if tokens <= 0:
             return
+        self._local.record(user_id, tokens)
         try:
             redis = await self._get_redis()
             today = time.strftime("%Y-%m-%d")
@@ -274,7 +348,10 @@ class TokenBudgetManager:
             if current == tokens:
                 await redis.expire(key, 86400)  # 24 hours
         except Exception as e:
-            logger.error(f"Redis user budget record failed: {e}")
+            logger.error(
+                "Redis user budget record failed (local fallback mirror "
+                f"kept {self._local.get_today(user_id)} tokens for today): {e}"
+            )
 
     # ------------------------------------------------------------------
     # Public API
