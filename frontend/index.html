@@ -4,6 +4,11 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Issue #1462: PWA installability — without a manifest link the browser
+         never offers "Add to Home Screen". Icon paths point at files that
+         actually exist in public/ (the referenced logo-*.png did not). -->
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="theme-color" content="#0F172A" />
     <!--
       FE-05 (Issue #522): the <meta http-equiv="Content-Security-Policy"> tag was
       REMOVED. A meta CSP cannot express frame-ancestors, is bypassable by
