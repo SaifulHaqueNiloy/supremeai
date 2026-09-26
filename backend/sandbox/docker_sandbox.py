@@ -1,10 +1,67 @@
 # backend/sandbox/docker_sandbox.py
+import os
 import re
 import subprocess
 from pathlib import Path
 from typing import Any
 
 from core.logging_config import logger
+
+# AUDIT-FIX (#1696 HIGH): আগে শুধু `".." in bind_source` স্ট্রিং চেক ছিল —
+# `/etc/./shadow` বা symlink-ভায়া `/tmp/innocent → /etc` দিয়ে bypass হতো।
+# এখন Path.resolve() দিয়ে symlink resolution করে whitelist-এ validate
+# করা হয়। Pattern: microvm_sandbox._validate_sandbox_root থেকে নেওয়া।
+# Whitelist env var দিয়ে extend করা যায় — ডিফল্ট নিরাপদ।
+_DEFAULT_BIND_WHITELIST: tuple[str, ...] = (
+    "/tmp/sandboxes",
+    "/var/tmp/sandboxes",
+    "/run/sandboxes",
+)
+
+
+def _resolve_bind_whitelist() -> frozenset[str]:
+    """Build the active bind-mount whitelist at call time.
+
+    Combines the default safe set with env-supplied extras (comma-separated).
+    All paths are resolved via Path.resolve() so symlink-supplied env values
+    can't smuggle in /etc paths.
+    """
+    extras_raw = os.environ.get("DOCKER_SANDBOX_BIND_WHITELIST", "")
+    paths: list[str] = list(_DEFAULT_BIND_WHITELIST)
+    for entry in extras_raw.split(","):
+        entry = entry.strip()
+        if entry:
+            paths.append(entry)
+    resolved: set[str] = set()
+    for p in paths:
+        try:
+            resolved.add(str(Path(p).resolve()))
+        except (OSError, ValueError):
+            # Path may not exist yet on this worker; keep literal form so
+            # future-create paths still match. Path.resolve() on a
+            # non-existent path still normalizes the string in 3.6+.
+            resolved.add(str(Path(p).absolute()))
+    return frozenset(resolved)
+
+
+def _is_path_in_whitelist(path_str: str, whitelist: frozenset[str]) -> bool:
+    """Return True iff path_str resolves to a path inside the whitelist.
+
+    Uses Path.resolve() which follows symlinks — so a symlink pointing
+    outside the whitelist (e.g. /tmp/innocent → /etc) is resolved to its
+    real target (/etc) and then rejected.
+    """
+    if not path_str:
+        return False
+    try:
+        resolved = str(Path(path_str).resolve())
+    except (OSError, ValueError):
+        return False
+    # Exact match OR is a subdirectory of an allowed root
+    for allowed in whitelist:
+        if resolved == allowed or resolved.startswith(allowed + os.sep):
+            return True
+    return False
 
 
 class DockerSandbox:
@@ -121,14 +178,32 @@ class DockerSandbox:
             }
 
         # 🛡️ ডকার সিকিউরিটি এবং আইসোলেশন ফ্ল্যাগস এনফোর্সমেন্ট
-        # অতিরিক্ত সুরক্ষা: bind_source-এর path traversal প্রতিরোধ
-        if ".." in bind_source or ".." in bind_target:
-            logger.critical(f"Suspicious path detected in bind mount: {bind_source}")
+        # AUDIT-FIX (#1696 HIGH): আগে শুধু `".." in bind_source` চেক ছিল —
+        # `/etc/./shadow`, symlink `/tmp/innocent → /etc` দিয়ে bypass হতো।
+        # এখন Path.resolve() দিয়ে symlink resolve করে whitelist validate হয়।
+        bind_whitelist = _resolve_bind_whitelist()
+        if not _is_path_in_whitelist(bind_source, bind_whitelist):
+            logger.critical(
+                f"Bind source path rejected (not in whitelist): {bind_source!r}"
+            )
             return {
                 "exit_code": 1,
                 "stdout": "",
-                "stderr": "Invalid bind mount path detected.",
+                "stderr": "Invalid bind mount path detected: source not in allowed sandbox whitelist.",
             }
+        if not _is_path_in_whitelist(bind_target, bind_whitelist):
+            # bind_target is the in-container path, but it still must not
+            # contain traversal patterns. We apply a weaker check here —
+            # the more important check is bind_source (host path).
+            if ".." in bind_target or bind_target.startswith("/etc") or bind_target.startswith("/proc"):
+                logger.critical(
+                    f"Bind target path rejected (suspicious): {bind_target!r}"
+                )
+                return {
+                    "exit_code": 1,
+                    "stdout": "",
+                    "stderr": "Invalid bind mount target path detected.",
+                }
 
         docker_command = [
             "docker",
