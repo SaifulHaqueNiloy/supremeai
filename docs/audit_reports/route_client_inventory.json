@@ -6,9 +6,9 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 604,
+    "backend_routes": 607,
     "frontend_unique_refs": 147,
-    "matched": 271,
+    "matched": 274,
     "orphan_routes": 333
   },
   "orphan_by_family": {
@@ -3293,6 +3293,44 @@
       "classification": "unclassified-orphan",
       "frontend": [
         "frontend/src/hooks/useDynamicDock.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/agent_registry.py",
+      "method": "GET",
+      "declared": "/api/v1/agents/{agent_id}",
+      "resolved": "/api/v1/agents/:param",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/pages/user/AgentWorkspace.tsx",
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/agent_registry.py",
+      "method": "POST",
+      "declared": "/api/v1/agents/{agent_id}/ownership",
+      "resolved": "/api/v1/agents/:param/ownership",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.ts",
+        "frontend/src/services/apiClient.test.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/agent_registry.py",
+      "method": "DELETE",
+      "declared": "/api/v1/agents/{agent_id}",
+      "resolved": "/api/v1/agents/:param",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/pages/user/AgentWorkspace.tsx",
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.test.ts",
+        "frontend/src/services/agentService.ts"
       ]
     },
     {

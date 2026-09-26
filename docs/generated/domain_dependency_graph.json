@@ -3312,7 +3312,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 26,
           "path": "backend/browser/autonomous_browser.py"
         }
       ],
@@ -3332,7 +3332,7 @@
     {
       "evidence": [
         {
-          "line": 41,
+          "line": 68,
           "path": "backend/browser/vision_grounding.py"
         }
       ],
@@ -3592,7 +3592,7 @@
     {
       "evidence": [
         {
-          "line": 27,
+          "line": 31,
           "path": "backend/tools/browser/playwright_browser_agent.py"
         }
       ],
@@ -3652,7 +3652,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 14,
           "path": "backend/browser/semantic_dom.py"
         }
       ],
@@ -3662,7 +3662,7 @@
     {
       "evidence": [
         {
-          "line": 28,
+          "line": 32,
           "path": "backend/tools/browser/playwright_browser_agent.py"
         }
       ],
@@ -3752,7 +3752,17 @@
     {
       "evidence": [
         {
-          "line": 17,
+          "line": 30,
+          "path": "backend/browser/action_cascade.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 29,
           "path": "backend/browser/autonomous_browser.py"
         }
       ],
@@ -3772,7 +3782,7 @@
     {
       "evidence": [
         {
-          "line": 14,
+          "line": 15,
           "path": "backend/browser/semantic_dom.py"
         }
       ],
@@ -3792,7 +3802,7 @@
     {
       "evidence": [
         {
-          "line": 13,
+          "line": 27,
           "path": "backend/browser/vision_grounding.py"
         }
       ],
@@ -3814,6 +3824,16 @@
         {
           "line": 16,
           "path": "backend/core/browser_session_manager.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 35,
+          "path": "backend/core/browser_session_vault.py"
         }
       ],
       "source": "research",
@@ -4142,7 +4162,7 @@
     {
       "evidence": [
         {
-          "line": 26,
+          "line": 27,
           "path": "backend/tools/browser/playwright_browser_agent.py"
         }
       ],
@@ -5112,7 +5132,7 @@
     {
       "evidence": [
         {
-          "line": 227,
+          "line": 314,
           "path": "backend/core/security/secure_credential_store.py"
         }
       ],
