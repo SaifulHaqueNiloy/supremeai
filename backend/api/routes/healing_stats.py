@@ -11,12 +11,17 @@ from __future__ import annotations
 from collections import Counter
 from typing import Any
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
+from api.deps import get_current_user_token
 from core.health.proactive_healer import get_proactive_healer
 from services.auto_healer import get_healer
 
-router = APIRouter(tags=["healing"])
+# Issue #1648: healing endpoints leak system state to anonymous callers.
+# The /api/v1/health prefix is intentionally public for liveness probes, which
+# silently exposed /api/v1/health/predictions as well — so auth is enforced
+# HERE at the router level, independent of where the router is mounted.
+router = APIRouter(tags=["healing"], dependencies=[Depends(get_current_user_token)])
 
 _NON_NORMAL_BREAKER_STATES = ("open", "half_open")
 
