@@ -1,3 +1,4 @@
+import base64
 import os
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -47,8 +48,10 @@ def test_api_email_endpoints(mock_imap_ssl):
     # the post-login credential persist raises
     # CredentialEncryptionUnavailableError, which the route honestly reports
     # as 500. A successful IMAP connect must persist the (encrypted) password,
-    # so supply a throwaway Fernet key for this test context only.
-    fernet_test_key = "k_pGkUvSa1XWZb3R7Qq2Lm8Tzv4xYcN6wJh5EuOsAdfBg"
+    # so supply a throwaway key for this test context only. Generated at
+    # runtime (32-byte urlsafe-b64) so no static key material lives in the
+    # repo — the secrets scanner and the credential store are both satisfied.
+    fernet_test_key = base64.urlsafe_b64encode(os.urandom(32)).decode()
     with patch.dict(os.environ, {"SUPREMEAI_CREDENTIAL_ENC_KEY": fernet_test_key}):
         resp2 = client.post(
             "/integrations/email/imap",
