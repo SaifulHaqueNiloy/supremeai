@@ -12,12 +12,21 @@ from __future__ import annotations
 
 import asyncio
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
+
+from api.deps import get_current_user_token
 
 from core.swarm_pubsub import get_swarm_streamer
 
-router = APIRouter(prefix="/api/v1/swarm", tags=["swarm"])
+# Issue #1652: the deprecated unauthenticated /execute-healing surface is
+# gone; the remaining stream endpoint is middleware-gated, and the explicit
+# router-level dependency keeps it that way regardless of allowlist changes.
+router = APIRouter(
+    prefix="/api/v1/swarm",
+    tags=["swarm"],
+    dependencies=[Depends(get_current_user_token)],
+)
 
 _PING_INTERVAL_SECONDS = 15.0
 
