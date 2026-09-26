@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3410,
+  "edge_count": 3423,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -1442,6 +1442,14 @@
     {
       "from": "api.routes.agent_breeding",
       "to": "models.meta_ai"
+    },
+    {
+      "from": "api.routes.agent_registry",
+      "to": "api.dependencies"
+    },
+    {
+      "from": "api.routes.agent_registry",
+      "to": "core.agent_registry"
     },
     {
       "from": "api.routes.agent_tasks",
@@ -4021,6 +4029,10 @@
     },
     {
       "from": "core.agent_mailbox",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.agent_registry",
       "to": "core.logging_config"
     },
     {
@@ -7548,6 +7560,26 @@
       "to": "integrations._flags"
     },
     {
+      "from": "integrations.telegram_bot",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "integrations.telegram_config"
+    },
+    {
+      "from": "integrations.telegram_bot",
+      "to": "integrations.telegram_handlers"
+    },
+    {
+      "from": "integrations.telegram_handlers",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "integrations.telegram_handlers",
+      "to": "integrations.telegram_config"
+    },
+    {
       "from": "learning",
       "to": "learning.experience"
     },
@@ -9492,6 +9524,14 @@
       "to": "core.config"
     },
     {
+      "from": "tests.api.test_agent_registry",
+      "to": "api.routes.agent_registry"
+    },
+    {
+      "from": "tests.api.test_agent_registry",
+      "to": "core.agent_registry"
+    },
+    {
       "from": "tests.api.test_api",
       "to": "core"
     },
@@ -11270,6 +11310,18 @@
     {
       "from": "tests.hitl.test_hitl_engine",
       "to": "services.hitl.engine"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_bot"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_config"
+    },
+    {
+      "from": "tests.integrations.test_telegram_bot",
+      "to": "integrations.telegram_handlers"
     },
     {
       "from": "tests.learning.test_learning",
@@ -13644,7 +13696,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1961,
+  "module_count": 1968,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13854,6 +13906,7 @@
     "api.routes.agent",
     "api.routes.agent_action",
     "api.routes.agent_breeding",
+    "api.routes.agent_registry",
     "api.routes.agent_tasks",
     "api.routes.agent_workspace",
     "api.routes.agents",
@@ -14068,6 +14121,7 @@
     "core.agent_factory",
     "core.agent_heartbeat",
     "core.agent_mailbox",
+    "core.agent_registry",
     "core.agent_review_workflow",
     "core.agent_supervisor",
     "core.agents",
@@ -14563,6 +14617,9 @@
     "integrations.graphiti_adapter",
     "integrations.mem0_adapter",
     "integrations.openhands_adapter",
+    "integrations.telegram_bot",
+    "integrations.telegram_config",
+    "integrations.telegram_handlers",
     "learning",
     "learning.evidence_analyzer",
     "learning.evolution_bridge",
@@ -14878,6 +14935,7 @@
     "tests.api.test_admin_ramp",
     "tests.api.test_admin_routes",
     "tests.api.test_agent_execute_contract",
+    "tests.api.test_agent_registry",
     "tests.api.test_api",
     "tests.api.test_api_bootstrap",
     "tests.api.test_api_chat",
@@ -15206,6 +15264,7 @@
     "tests.hitl.test_hitl_approval_contract",
     "tests.hitl.test_hitl_engine",
     "tests.integration.test_integration_suite",
+    "tests.integrations.test_telegram_bot",
     "tests.learning.test_learning",
     "tests.learning.test_pattern_and_hypothesis",
     "tests.llm.test_advanced_model_router",

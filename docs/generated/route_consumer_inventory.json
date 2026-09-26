@@ -14,16 +14,16 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 854,
+    "backend_routes": 859,
     "frontend_unique_refs": 147,
-    "routes_with_frontend_consumer": 292,
+    "routes_with_frontend_consumer": 297,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
     "api_only_routes": 304,
     "api_only_families": 158,
     "by_classification": {
-      "user-facing": 161,
+      "user-facing": 166,
       "admin-only": 347,
       "internal": 38,
       "deprecated": 4,
@@ -7402,6 +7402,86 @@
         "frontend/src/services/agentService.ts"
       ],
       "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/agents",
+      "declared": "/api/v1/agents",
+      "deprecated": false,
+      "router_file": "backend/api/routes/agent_registry.py",
+      "module": "api.routes.agent_registry",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_agents",
+      "frontend_consumers": [
+        "frontend/src/services/agentService.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/agents",
+      "declared": "/api/v1/agents",
+      "deprecated": false,
+      "router_file": "backend/api/routes/agent_registry.py",
+      "module": "api.routes.agent_registry",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "upsert_agent",
+      "frontend_consumers": [
+        "frontend/src/services/agentService.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/agents/:param",
+      "declared": "/api/v1/agents/{agent_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/agent_registry.py",
+      "module": "api.routes.agent_registry",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "remove_agent",
+      "frontend_consumers": [
+        "frontend/src/services/agentService.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/agents/:param",
+      "declared": "/api/v1/agents/{agent_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/agent_registry.py",
+      "module": "api.routes.agent_registry",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_agent",
+      "frontend_consumers": [
+        "frontend/src/services/agentService.ts"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/agents/:param/ownership",
+      "declared": "/api/v1/agents/{agent_id}/ownership",
+      "deprecated": false,
+      "router_file": "backend/api/routes/agent_registry.py",
+      "module": "api.routes.agent_registry",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "assign_ownership",
+      "frontend_consumers": [
+        "frontend/src/services/agentService.ts"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",
