@@ -75,6 +75,58 @@ def _get_token_from_query(scope: ASGIScope) -> str | None:
     return None
 
 
+# JWT-COOKIE-MIGRATION (issue #1668, ধাপ ২/২): must stay in sync with
+# api/routes/auth.py ACCESS_COOKIE_NAME / CSRF_COOKIE_NAME. The httpOnly
+# access-token cookie set at login now counts as an auth source, so the
+# frontend can stop persisting JS-readable tokens (XSS exfiltration path).
+# বাংলা: login-এ সেট হওয়া httpOnly access-token cookie এখন অথেনটিকেশনের
+# উৎস হিসেবে গ্রহণ করা হয় — Bearer header-এর পরে fallback হিসেবে।
+ACCESS_COOKIE_NAME = "supreme_access_token"
+CSRF_COOKIE_NAME = "supreme_csrf_token"
+_CSRF_EXEMPT_METHODS = {"GET", "HEAD", "OPTIONS", "TRACE"}
+
+
+def _parse_cookies(scope: ASGIScope) -> dict[str, str]:
+    """Parse the Cookie header of an ASGI scope into a dict."""
+    cookies: dict[str, str] = {}
+    for key, value in scope.get("headers", []):
+        if key.lower() == b"cookie":
+            raw = value.decode("utf-8", errors="replace")
+            for part in raw.split(";"):
+                name, _, val = part.strip().partition("=")
+                if name:
+                    cookies[name] = val
+    return cookies
+
+
+def _get_cookie_token(scope: ASGIScope) -> str | None:
+    """Extract the httpOnly access-token cookie set by /auth login/register.
+
+    Priority order in AuthMiddleware.__call__: Authorization header →
+    httpOnly cookie → (SSE-only) query param. The cookie is JS-unreadable,
+    so this is the XSS-safe source the JWT-COOKIE-MIGRATION builds toward.
+    """
+    return _parse_cookies(scope).get(ACCESS_COOKIE_NAME) or None
+
+
+def _cookie_csrf_ok(scope: ASGIScope) -> bool:
+    """Double-submit CSRF check for cookie-authenticated state-changing
+    requests: the X-CSRF-Token header must match the CSRF cookie.
+    বাংলা: cookie থেকে অথেনটিকেট হওয়া state-changing request-এ CSRF হেডার ও
+    cookie মিলতে হবে (double-submit pattern)।"""
+    method = (scope.get("method") or "GET").upper()
+    if method in _CSRF_EXEMPT_METHODS:
+        return True
+    cookies = _parse_cookies(scope)
+    csrf_cookie = cookies.get(CSRF_COOKIE_NAME)
+    if not csrf_cookie:
+        return False
+    for key, value in scope.get("headers", []):
+        if key.lower() == b"x-csrf-token":
+            return hmac.compare_digest(value.decode("utf-8", errors="replace"), csrf_cookie)
+    return False
+
+
 def _decode_jwt(token: str) -> dict[str, Any] | None:
     """Decode and validate a JWT token.
 
@@ -221,7 +273,16 @@ class AuthMiddleware:
             return
 
         headers: Headers = scope.get("headers", [])
-        token = _get_bearer_token(headers) or _get_token_from_query(scope)
+        # JWT-COOKIE-MIGRATION (issue #1668, ধাপ ২/২): Bearer header first
+        # (existing clients), then the httpOnly access cookie, then the
+        # SSE-only query param (most leak-prone, stays last).
+        cookie_token = _get_cookie_token(scope)
+        token = (
+            _get_bearer_token(headers)
+            or cookie_token
+            or _get_token_from_query(scope)
+        )
+        cookie_csrf_verified = cookie_token is not None and _cookie_csrf_ok(scope)
 
         # বাংলা: is_bypass_allowed production guard সহ check করে (ENV=production → always False)
         allow_bypass = settings.is_bypass_allowed
@@ -249,6 +310,20 @@ class AuthMiddleware:
                 status_code=401,
                 body={"detail": "Missing authentication token"},
                 headers={"WWW-Authenticate": "Bearer"},
+            )
+            return
+
+        # JWT-COOKIE-MIGRATION (issue #1668): a cookie-authenticated
+        # state-changing request must pass the double-submit CSRF check —
+        # otherwise a cross-site form could ride the session cookie.
+        if cookie_token is not None and not cookie_csrf_verified and not _get_bearer_token(headers):
+            logger.warning(
+                f"Cookie-auth request rejected: CSRF double-submit check failed for path: {path}"
+            )
+            await _send_json_response(
+                send,
+                status_code=403,
+                body={"detail": "CSRF validation failed for cookie-authenticated request"},
             )
             return
 
