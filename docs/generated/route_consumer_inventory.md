@@ -8,10 +8,10 @@
 | routes with frontend consumer | 296 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
-| orphan routes (unclassified) | 2 |
-| orphan families | 2 |
-| api-only routes (allowlisted) | 302 |
-| api-only families | 158 |
+| orphan routes (unclassified) | 1 |
+| orphan families | 1 |
+| api-only routes (allowlisted) | 303 |
+| api-only families | 159 |
 
 ## Classification legend
 
@@ -21,14 +21,13 @@
 | `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 40 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 302 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
-| `orphaned` | 2 | no consumer and no classification — CI fails on NEW orphans |
+| `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `orphaned` | 1 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families (actionable — wire, classify or deprecate)
 
 | family | orphan routes |
 |---|---|
-| `/api/merge-learning/reports` | 1 |
 | `/render-ticket` | 1 |
 
 ## Intentionally API-only families (allowlisted — owner to prune as wiring lands)
@@ -99,6 +98,7 @@
 | `/api/memory/recall` | 3 |
 | `/api/memory/save` | 1 |
 | `/api/memory/session` | 1 |
+| `/api/merge-learning/reports` | 1 |
 | `/api/mobile/bff` | 1 |
 | `/api/reasoning/think` | 2 |
 | `/api/research/:param` | 1 |
@@ -559,7 +559,7 @@
 | POST | `/api/memory/recall` | `backend/api/routes/memory.py` | api-only | NONE |
 | POST | `/api/memory/save` | `backend/api/routes/memory.py` | api-only | NONE |
 | POST | `/api/memory/session` | `backend/api/routes/memory.py` | api-only | NONE |
-| GET | `/api/merge-learning/reports` | `backend/api/routes/merge_learning.py` | orphaned | NONE |
+| GET | `/api/merge-learning/reports` | `backend/api/routes/merge_learning.py` | api-only | NONE |
 | POST | `/api/merge-learning/webhook` | `backend/api/routes/merge_learning.py` | internal | NONE |
 | POST | `/api/mobile/bff/orchestrate` | `backend/api/routes/mobile_bff.py` | api-only | NONE |
 | GET | `/api/preferences` | `backend/api/routes/preferences.py` | user-facing | `frontend/src/contexts/ThemeProvider.tsx`, `frontend/src/i18n/I18nProvider.tsx`, `frontend/src/pages/ProfilePage.tsx` (+1 more) |
