@@ -60,7 +60,7 @@ interface SubTabContentProps {
   /** Per-service health snapshot: { "<service>": { status, region, latency, ... } } */
   healthMap: Record<
     string,
-    { status?: string; region?: string; latency?: number; [key: string]: unknown }
+    { status?: string; region?: string; latency?: string | number; [key: string]: unknown }
   >;
   newUsername: string;
   setNewUsername: (val: string) => void;
