@@ -1,14 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import time
-from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
-from api.dependencies import get_current_user_token, get_tenant_db
+from api.dependencies import get_current_user_token
 from memory.checkpoint_resume import CheckpointResume
 from memory.sliding_window import SlidingWindowConfig, SlidingWindowMemory
 
@@ -17,12 +15,6 @@ router = APIRouter(
     tags=["memory"],
     dependencies=[Depends(get_current_user_token)],
 )
-
-
-# Model for message persistence
-class MessageCreate(BaseModel):
-    conversation_id: str | None = None
-    message: dict
 
 
 class ConversationCreate(BaseModel):
@@ -248,121 +240,12 @@ async def save_session(req: SessionSaveRequest, user: dict = Depends(get_current
     return result
 
 
-@router.post("/conversations/messages")
-async def save_message(req: MessageCreate, db=Depends(get_tenant_db)):
-    """
-    Save a chat message to conversation history.
-    Creates conversation if doesn't exist.
-    """
-    from core.config import settings
-    from core.logging_config import logger
 
-    conversation_id = req.conversation_id or f"conv_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}"
-
-    try:
-        # Issue #1472 fix: this endpoint previously called Mongo-style APIs
-        # (db.conversations.find_one/insert_one/update_one) on the
-        # TenantAwareFirestore dependency — AttributeError -> 500 on every
-        # call. Rewrite with the Firestore document API the dependency
-        # actually provides; the sync google-cloud-firestore calls run in a
-        # worker thread so the event loop is never blocked.
-        col = db.conversations  # tenant-scoped: tenants/<uid>/conversations
-        doc_ref = col.document(conversation_id)
-        snap = await asyncio.to_thread(doc_ref.get)
-        existing = snap.to_dict() if getattr(snap, "exists", False) else None
-
-        now = datetime.utcnow()
-        message_doc = {**req.message, "saved_at": now}
-
-        if existing:
-            messages = list(existing.get("messages") or [])
-            messages.append(message_doc)
-            doc = {
-                "_id": conversation_id,
-                "title": existing.get("title") or "chat conversation",
-                "created_at": existing.get("created_at") or now,
-                "updated_at": now,
-                "messages": messages,
-                "tags": list(existing.get("tags") or []),
-            }
-        else:
-            doc = {
-                "_id": conversation_id,
-                "title": req.message.get("metadata", {}).get("source", "chat") + " conversation",
-                "created_at": now,
-                "updated_at": now,
-                "messages": [message_doc],
-                "tags": [],
-            }
-
-        await asyncio.to_thread(doc_ref.set, doc)
-
-        # If RAG is enabled, also index for retrieval
-        if (
-            hasattr(settings, "RAG_ENABLED")
-            and settings.RAG_ENABLED
-            and req.message.get("role") == "user"
-        ):
-            try:
-                from services.memory_service import save_memory
-
-                await save_memory(
-                    session_id=conversation_id,
-                    summary=req.message["content"],
-                    task_type="chat",
-                    metadata={"timestamp": req.message.get("timestamp", time.time())},
-                )
-            except Exception as e:
-                logger.warning(f"RAG indexing failed for message: {e}")
-
-        return {
-            "success": True,
-            "conversation_id": conversation_id,
-            "message_id": req.message.get("id"),
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        logger.error(f"Failed to save message: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
-
-
-@router.get("/conversations")
-async def list_conversations(request: Request, db=Depends(get_tenant_db)):
-    """Get all conversations for authenticated user."""
-    from core.logging_config import logger
-
-    try:
-        # Issue #1472 fix: Mongo-style find().sort().to_list() on the
-        # Firestore-backed dependency always 500'd. Use the Firestore query
-        # API (tenant-scoped), offloaded to a worker thread.
-        snaps = await asyncio.to_thread(
-            lambda: list(
-                db.conversations.order_by("updated_at", direction="DESCENDING").limit(50).stream()
-            )
-        )
-
-        # Format for frontend
-        result = []
-        for snap in snaps:
-            conv = snap.to_dict() or {}
-            conv_id = conv.get("_id") or snap.id
-            messages = conv.get("messages") or []
-            result.append(
-                {
-                    "id": conv_id,
-                    "title": conv.get("title", "Untitled"),
-                    "messages": messages[-10:],  # Last 10 messages
-                    "createdAt": conv.get("created_at"),
-                    "updatedAt": conv.get("updated_at"),
-                    "messageCount": len(messages),
-                    "tags": conv.get("tags", []),
-                }
-            )
-
-        return result
-
-    except Exception as e:
-        logger.error(f"Failed to list conversations: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) from e
+# ── #1823 conversation-history split-brain retirement ────────────────────────
+# The Firestore-backed conversation endpoints that lived here
+# (POST /conversations/messages + GET /conversations) are RETIRED:
+# no chat flow ever wrote them, so they surfaced phantom/empty histories.
+# **ai_memory (pgvector) is the single conversation source of truth** —
+# read it via GET /api/v1/conversations/ (read-projection in
+# api/routes/conversations.py). Session summarization still goes through
+# POST /session above (summarize_and_save_session → ai_memory).
