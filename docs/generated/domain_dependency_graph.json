@@ -3292,7 +3292,7 @@
     {
       "evidence": [
         {
-          "line": 198,
+          "line": 292,
           "path": "backend/api/routes/browser/_crown_jewel.py"
         }
       ],
@@ -4702,7 +4702,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 20,
           "path": "backend/core/middleware/security.py"
         }
       ],

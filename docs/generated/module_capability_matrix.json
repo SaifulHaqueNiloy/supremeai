@@ -11025,6 +11025,16 @@
     {
       "capability_signals": [
         "browser",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_browser_package_request_models.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
         "capability",
         "health",
         "memory"
@@ -25756,7 +25766,9 @@
     {
       "capability_signals": [],
       "classification": "dormant_or_dynamic",
-      "entrypoints": [],
+      "entrypoints": [
+        "main"
+      ],
       "kind": "py",
       "path": "scripts/git/push_as_agent.py"
     },
@@ -26737,5 +26749,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3054
+  "source_file_count": 3055
 }
