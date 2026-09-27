@@ -81,7 +81,8 @@ _CRITICAL_TEST_PARTS = (
     ("services", "usage"),
     ("services", "memory"),
     ("tools", "checkpoint_manager"),
-    ("tools", "parallel_agent_executor"),
+    # #2248: parallel_agent_executor retired (0 production callers)
+    # ("tools", "parallel_agent_executor"),  — REMOVED
     ("database",),
     # ── PR-CI integrity fix (hardening-2 round 2) ──────────────────────────
     # CI's PR marker filter runs only (critical or important); everything
@@ -96,7 +97,8 @@ _CRITICAL_TEST_PARTS = (
     ("core", "test_auth_middleware*"),  # core/security/authentication/auth_middleware.py
     ("core", "test_memory_service*"),  # services/memory_service.py
     ("core", "test_token_budget*"),  # core/llm/token_budget.py
-    ("agents", "test_parallel_agent_executor*"),  # tools/parallel_agent_executor.py
+    # #2248: test_parallel_agent_executor retired with the module
+    # ("agents", "test_parallel_agent_executor*"),  — REMOVED
     ("api", "test_billing*"),  # api/routes/billing_api.py
     # ── PR-CI integrity fix (hardening-2 round 4) ──────────────────
     # The critical entry above for api/routes/api_keys ("api", "routes",
