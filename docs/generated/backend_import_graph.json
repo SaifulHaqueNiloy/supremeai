@@ -14048,7 +14048,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2024,
+  "module_count": 2025,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -15722,6 +15722,7 @@
     "tests.scout_tests.test_telemetry_persistence",
     "tests.scout_tests.test_web_crawler_agent",
     "tests.scripts.test_adapt_coldstart_knowledge",
+    "tests.scripts.test_agent_dashboard",
     "tests.scripts.test_atomic_claim_postverify",
     "tests.scripts.test_billing_fraud_detector",
     "tests.scripts.test_billing_quota_enforcer",
