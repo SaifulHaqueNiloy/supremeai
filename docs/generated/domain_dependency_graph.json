@@ -1299,6 +1299,16 @@
     {
       "evidence": [
         {
+          "line": 25,
+          "path": "backend/services/billing/billing_plans.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/tools/billing/monthly_cost_reporter.py"
         }
@@ -1639,7 +1649,7 @@
     {
       "evidence": [
         {
-          "line": 23,
+          "line": 82,
           "path": "scripts/agents/dispatch_task_all_agents.py"
         }
       ],
@@ -2681,26 +2691,6 @@
         {
           "line": 15,
           "path": "backend/api/routes/knowledge.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 258,
-          "path": "backend/api/routes/memory.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 334,
-          "path": "backend/api/routes/memory.py"
         }
       ],
       "source": "knowledge",

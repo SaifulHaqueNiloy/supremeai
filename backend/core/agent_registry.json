@@ -36,9 +36,9 @@
     },
     "description": "ArXiv / Semantic Scholar paper search, summarization, and citation extraction."
   },
-  "z_ai_git_pr_merge_regration": {
-    "agent_name": "z_ai_git_pr_merge_regration",
-    "system_prompt": "You are z.ai git pr merge and regration \u2014 the GitHub PR merge + regression-watch agent. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
+  "z_ai_git_pr_regression_watch": {
+    "agent_name": "z_ai_git_pr_regression_watch",
+    "system_prompt": "You are a GitHub PR regression-watch agent. You follow AGENTS.md core loop: Understand \u2192 Inspect \u2192 Check Other Work \u2192 Act \u2192 Verify \u2192 Report.",
     "tools": [
       "filesystem_read",
       "shell_exec",
@@ -52,7 +52,6 @@
     "permissions": [
       "read_codebase",
       "open_pull_requests",
-      "merge_pull_requests",
       "comment_on_issues"
     ],
     "model_temp": 0.2,
@@ -60,15 +59,7 @@
       "max_tokens_per_task": 8192,
       "max_api_calls_per_hour": 500
     },
-    "description": "z.ai git pr merge and regration \u2014 watches open PRs, merges green ones, files regressions with failed CI logs. Persistent branch: agent-7. Registered 2026-09-26.",
-    "metadata": {
-      "slot": "agent-7",
-      "tool_label": "z.ai git pr merge and regration",
-      "maintainer": "@SaifulHaqueNiloy",
-      "assigned_on": "2026-09-26",
-      "expires_on": "2026-10-03",
-      "active": true
-    }
+    "description": "Watches open PRs and files regressions with failed CI logs. Slot assignment, branch, and merge authority are governed exclusively by docs/master_docs/AGENT_SLOT_REGISTRY.yaml (#1821)."
   },
   "z_ai_full_stack_longrun": {
     "agent_name": "z_ai_full_stack_longrun",
@@ -90,15 +81,7 @@
       "max_tokens_per_task": 8192,
       "max_api_calls_per_hour": 500
     },
-    "description": "z.ai 5.4 flash. full stack+longrun \u2014 full-stack runtime + long-run autonomous work; hosts the /api/agents heartbeat dashboard. Persistent branch: agent-8. Registered 2026-09-26.",
-    "metadata": {
-      "slot": "agent-8",
-      "tool_label": "z.ai 5.4 flash. full stack+longrun",
-      "maintainer": "@SaifulHaqueNiloy",
-      "assigned_on": "2026-09-26",
-      "expires_on": "2026-10-03",
-      "active": true
-    }
+    "description": "z.ai 5.4 flash. full stack+longrun \u2014 full-stack runtime + long-run autonomous work; hosts the /api/agents heartbeat dashboard. Slot assignment and branch are governed exclusively by docs/master_docs/AGENT_SLOT_REGISTRY.yaml (#1821)."
   },
   "zai_fullstack": {
     "agent_name": "zai_fullstack",
@@ -120,15 +103,7 @@
       "max_tokens_per_task": 16384,
       "max_api_calls_per_hour": 800
     },
-    "description": "Z.ai 5.2 Full Stack \u2014 full-stack Next.js 16 / TypeScript / Prisma agent. Persistent branch: agent-11.",
-    "metadata": {
-      "slot": "agent-11",
-      "tool_label": "Z.ai 5.2 Full Stack",
-      "maintainer": "@SaifulHaqueNiloy",
-      "assigned_on": "2026-09-26",
-      "expires_on": "2026-10-03",
-      "active": true
-    }
+    "description": "Z.ai 5.2 Full Stack \u2014 full-stack Next.js 16 / TypeScript / Prisma agent. Slot assignment and branch are governed exclusively by docs/master_docs/AGENT_SLOT_REGISTRY.yaml (#1821)."
   },
   "zai_issue_solver": {
     "agent_name": "zai_issue_solver",
@@ -151,15 +126,7 @@
       "max_tokens_per_task": 16384,
       "max_api_calls_per_hour": 800
     },
-    "description": "z.ai issue solver \u2014 reads GitHub issues, debugs, fixes, opens PR. Persistent branch: agent-5.",
-    "metadata": {
-      "slot": "agent-5",
-      "tool_label": "z.ai issue solver",
-      "maintainer": "@SaifulHaqueNiloy",
-      "assigned_on": "2026-09-26",
-      "expires_on": "2026-10-03",
-      "active": true
-    }
+    "description": "z.ai issue solver \u2014 reads GitHub issues, debugs, fixes, opens PR. Slot assignment and branch are governed exclusively by docs/master_docs/AGENT_SLOT_REGISTRY.yaml (#1821)."
   },
   "zai_platform_watchdog": {
     "agent_name": "zai_platform_watchdog",
@@ -182,15 +149,7 @@
       "max_tokens_per_task": 16384,
       "max_api_calls_per_hour": 800
     },
-    "description": "z.ai platform watchdog \u2014 monitors 3rd party platforms, fixes issues, creates issues. Persistent branch: agent-6.",
-    "metadata": {
-      "slot": "agent-6",
-      "tool_label": "z.ai platform watchdog",
-      "maintainer": "@SaifulHaqueNiloy",
-      "assigned_on": "2026-09-26",
-      "expires_on": "2026-10-03",
-      "active": true
-    }
+    "description": "z.ai platform watchdog \u2014 monitors 3rd party platforms, fixes issues, creates issues. Slot assignment and branch are governed exclusively by docs/master_docs/AGENT_SLOT_REGISTRY.yaml (#1821)."
   },
   "zai_action_log_watcher": {
     "agent_name": "zai_action_log_watcher",
@@ -213,14 +172,6 @@
       "max_tokens_per_task": 16384,
       "max_api_calls_per_hour": 800
     },
-    "description": "z.ai action log watcher \u2014 watches GitHub Actions logs, detects failures, reports + creates issues. Persistent branch: agent-12.",
-    "metadata": {
-      "slot": "agent-12",
-      "tool_label": "z.ai action log watcher",
-      "maintainer": "@SaifulHaqueNiloy",
-      "assigned_on": "2026-09-26",
-      "expires_on": "2026-10-03",
-      "active": true
-    }
+    "description": "z.ai action log watcher \u2014 watches GitHub Actions logs, detects failures, reports + creates issues. Slot assignment and branch are governed exclusively by docs/master_docs/AGENT_SLOT_REGISTRY.yaml (#1821)."
   }
 }
