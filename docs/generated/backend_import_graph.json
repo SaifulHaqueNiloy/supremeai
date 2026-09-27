@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3532,
+  "edge_count": 3525,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -4356,22 +4356,6 @@
       "to": "core.resilience.circuit_breaker"
     },
     {
-      "from": "core.behavioral_intelligence.policy",
-      "to": "core.action_policy"
-    },
-    {
-      "from": "core.behavioral_intelligence.state_estimator",
-      "to": "core.behavioral_intelligence.schema"
-    },
-    {
-      "from": "core.behavioral_intelligence.strategy_router",
-      "to": "core.behavioral_intelligence.policy"
-    },
-    {
-      "from": "core.behavioral_intelligence.strategy_router",
-      "to": "core.behavioral_intelligence.schema"
-    },
-    {
       "from": "core.browser_session_manager",
       "to": "core.effective_policy"
     },
@@ -7618,14 +7602,6 @@
     {
       "from": "evolution.change_proposal",
       "to": "core.logging_config"
-    },
-    {
-      "from": "evolution.evolution_orchestrator",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "evolution.evolution_orchestrator",
-      "to": "evolution.learning_pipeline"
     },
     {
       "from": "evolution.learning_pipeline",
@@ -11085,10 +11061,6 @@
     },
     {
       "from": "tests.core.test_learning_pipeline",
-      "to": "evolution.evolution_orchestrator"
-    },
-    {
-      "from": "tests.core.test_learning_pipeline",
       "to": "evolution.learning_pipeline"
     },
     {
@@ -14132,7 +14104,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2039,
+  "module_count": 2033,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14597,11 +14569,6 @@
     "core.automation.registry",
     "core.autonoguard_engine",
     "core.base",
-    "core.behavioral_intelligence",
-    "core.behavioral_intelligence.policy",
-    "core.behavioral_intelligence.schema",
-    "core.behavioral_intelligence.state_estimator",
-    "core.behavioral_intelligence.strategy_router",
     "core.browser_compat_store",
     "core.browser_session_catalog",
     "core.browser_session_manager",
@@ -15053,7 +15020,6 @@
     "evolution.benchmark_runner",
     "evolution.canary_manager",
     "evolution.change_proposal",
-    "evolution.evolution_orchestrator",
     "evolution.fitness_evaluator",
     "evolution.learning_pipeline",
     "evolution.memory_consolidator",
