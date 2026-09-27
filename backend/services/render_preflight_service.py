@@ -302,5 +302,9 @@ class RenderPreflightService:
                         )
                         results.append(res)
             except Exception:
+                logger.debug(
+                    "Exception swallowed in render_preflight_service (deliberate fallback)",
+                    exc_info=True,
+                )
                 continue
         return results

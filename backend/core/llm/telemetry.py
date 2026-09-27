@@ -80,6 +80,7 @@ def _error_fingerprint(exc: BaseException | None) -> str:
 
         return make_fingerprint(exc)
     except Exception:
+        logger.debug("Exception swallowed in telemetry (deliberate fallback)", exc_info=True)
         return ""
 
 

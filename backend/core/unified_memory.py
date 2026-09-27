@@ -68,6 +68,7 @@ def _extract_json_object(text: str) -> dict[str, Any] | None:
         obj = json.loads(match.group(0))
         return obj if isinstance(obj, dict) else None
     except Exception:
+        logger.debug("Exception swallowed in unified_memory (deliberate fallback)", exc_info=True)
         return None
 
 

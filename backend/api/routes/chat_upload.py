@@ -106,6 +106,7 @@ def _validate_image_header(content: bytes, mime_type: str) -> bool:
                         return False
             return True
         except Exception:
+            logger.debug("Exception swallowed in chat_upload (deliberate fallback)", exc_info=True)
             return False
     # BMP starts with "BM"
     if mime_type == "image/bmp" and header[:2] == b"BM":

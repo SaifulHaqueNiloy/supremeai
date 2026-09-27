@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from pathlib import Path
 
@@ -9,6 +10,8 @@ from pyerrorfix.core.issue import Issue, ScanResult
 from pyerrorfix.detectors import ALL_DETECTORS
 from pyerrorfix.fixers import ALL_FIXERS
 from pyerrorfix.pyerrorfix_config import load_config
+
+logger = logging.getLogger(__name__)
 
 
 class Scanner:
@@ -28,6 +31,7 @@ class Scanner:
                 issues.extend(det.run())
             except Exception:
                 # detectors must never crash the pipeline
+                logger.debug("Exception swallowed in scanner (deliberate fallback)", exc_info=True)
                 continue
         fixed = None
         if self.apply_fixers:
@@ -78,6 +82,7 @@ class Scanner:
                 fixer = fixer_cls(source=current, issues=current_issues)
                 new_source = fixer.apply()
             except Exception:
+                logger.debug("Exception swallowed in scanner (deliberate fallback)", exc_info=True)
                 continue
             if new_source != current:
                 current = new_source
@@ -92,6 +97,7 @@ class Scanner:
                 det = detector_cls(source=source, filename="<fixed>", config=self.config)
                 fresh.extend(det.run())
             except Exception:
+                logger.debug("Exception swallowed in scanner (deliberate fallback)", exc_info=True)
                 continue
         fresh.sort(key=lambda i: (i.line, _sev_weight(i.severity), i.rule_id))
         return fresh

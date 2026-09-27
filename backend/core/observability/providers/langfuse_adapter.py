@@ -146,4 +146,7 @@ class LangfuseAdapter(AIObservabilityProvider):
         try:
             return self._langfuse.auth_check()
         except Exception:
+            logger.debug(
+                "Exception swallowed in langfuse_adapter (deliberate fallback)", exc_info=True
+            )
             return False

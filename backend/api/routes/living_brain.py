@@ -440,6 +440,7 @@ def _get_avg_confidence(engine) -> float:
         conn.close()
         return round(result, 3)
     except Exception:
+        logger.debug("Exception swallowed in living_brain (deliberate fallback)", exc_info=True)
         return 0.0
 
 

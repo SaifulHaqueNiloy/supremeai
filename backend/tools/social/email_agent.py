@@ -164,6 +164,7 @@ class EmailAgent:
                 else ""
             )
         except Exception:
+            logger.debug("Exception swallowed in email_agent (deliberate fallback)", exc_info=True)
             return ""
 
     def extract_otp(self, email_body: str) -> str:
