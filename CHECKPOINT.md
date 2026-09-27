@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 19:25 UTC
+- **Date:** 2026-09-27 19:32 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,10 +10,17 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.devcontainer/Dockerfile`
-  - `.devcontainer/devcontainer.json`
-  - `.devcontainer/setup.sh`
   - `CHECKPOINT.md`
+  - `.devcontainer/setup.sh`
+  - `backend/core/sandbox/base.py`
+  - `backend/core/sandbox/cloud_sandbox_provider.py`
+  - `backend/tests/core/sandbox/test_sandbox_provider.py`
+  - `.devcontainer/devcontainer.json`
+  - `.devcontainer/Dockerfile`
+  - `backend/core/sandbox/__init__.py`
+  - `backend/core/sandbox/registry.py`
+  - `backend/core/sandbox/local_dev_provider.py`
+  - `.agents/rules/GROUND_TRUTH_AUDITING_DISCIPLINE.md`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
