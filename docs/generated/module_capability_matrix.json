@@ -22677,6 +22677,16 @@
       "path": "infrastructure/mcp-control-plane/src/registry/mcp.contracts.ts"
     },
     {
+      "capability_signals": [
+        "browser",
+        "dispatch"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/registry/orchestrator_dispatch.ts"
+    },
+    {
       "capability_signals": [],
       "classification": "adapter",
       "entrypoints": [],
@@ -22883,6 +22893,7 @@
     },
     {
       "capability_signals": [
+        "dispatch",
         "mcp",
         "memory",
         "register"
@@ -22943,6 +22954,17 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "infrastructure/mcp-control-plane/src/tools/notify.tools.ts"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/src/tools/orchestrator.tools.ts"
     },
     {
       "capability_signals": [
@@ -23154,6 +23176,16 @@
       "entrypoints": [],
       "kind": "ts",
       "path": "infrastructure/mcp-control-plane/test_memory_fallback.ts"
+    },
+    {
+      "capability_signals": [
+        "dispatch",
+        "mcp"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "ts",
+      "path": "infrastructure/mcp-control-plane/test_orchestrator_dispatch.ts"
     },
     {
       "capability_signals": [],
@@ -26660,5 +26692,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3047
+  "source_file_count": 3050
 }
