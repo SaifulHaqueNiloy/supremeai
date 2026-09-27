@@ -1299,6 +1299,16 @@
     {
       "evidence": [
         {
+          "line": 25,
+          "path": "backend/services/billing/billing_plans.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/tools/billing/monthly_cost_reporter.py"
         }
