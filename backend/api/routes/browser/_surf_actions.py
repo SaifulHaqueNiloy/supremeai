@@ -58,6 +58,18 @@ class KeyRequest(BaseModel):
     key: str
 
 
+class SimulateActivityRequest(BaseModel):
+    """Typed body for the RETIRED /simulate-activity route (issue #1657).
+
+    The handler still fails loudly with 501, but the request is now validated
+    by a Pydantic model instead of a bare ``dict``. Extras stay ignored — the
+    retirement contract test posts arbitrary legacy payloads and pins the 501.
+    """
+
+    # No declared fields: the endpoint does no work and reads nothing from
+    # the body. Extras are silently ignored (Pydantic default).
+
+
 def _retired() -> HTTPException:
     return HTTPException(status_code=501, detail=_REAL_AUTOMATION)
 
@@ -105,6 +117,6 @@ def get_accessibility_tree():
 
 
 @router.post("/simulate-activity")
-def simulate_activity(body: dict):
+def simulate_activity(body: SimulateActivityRequest):
     """Retired: previously let callers inject fabricated activity entries."""
     raise _retired()

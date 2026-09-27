@@ -148,6 +148,10 @@ from ._credentials import (  # noqa: F401,E402  (re-exports)
     use_credential,
 )
 from ._crown_jewel import (  # noqa: F401,E402  (re-exports)
+    AIActionRequest,
+    BrowseSessionRequest,
+    ScreenshotRequest,
+    SecurityScanRequest,
     ai_action,
     browse_session,
     capture_screenshot,
@@ -156,6 +160,7 @@ from ._crown_jewel import (  # noqa: F401,E402  (re-exports)
 )
 from ._learning import (  # noqa: F401,E402  (re-exports)
     SYSTEM_LEARNING,
+    ToggleLearningRequest,
     get_system_learning,
     toggle_learning,
 )
@@ -208,6 +213,7 @@ from ._surf_actions import (  # noqa: F401,E402  (re-exports)
     FillRequest,
     KeyRequest,
     NavigateRequest,
+    SimulateActivityRequest,
     click,
     click_at,
     fill,
@@ -219,6 +225,7 @@ from ._surf_actions import (  # noqa: F401,E402  (re-exports)
 )
 from ._surf_controls import (  # noqa: F401,E402  (re-exports)
     PAUSED_STATE,
+    SurfControlRequest,
     get_paused_state,
     pause_manual,
     resume_surf,
