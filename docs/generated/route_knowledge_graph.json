@@ -1,5 +1,5 @@
 {
-  "edge_count": 1816,
+  "edge_count": 1822,
   "edges": [
     {
       "relation": "defines",
@@ -1699,6 +1699,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:6b762ba15adfb8b66160"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:6b76aed214ee331857ad"
     },
     {
@@ -1855,6 +1860,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:73e523abfb2be5e2f572"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:73fffe0e50a7b95ad2c8"
     },
     {
       "relation": "defines",
@@ -3490,6 +3500,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:d32582e9114aa970625a"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:d3481d9841bcf80cd97a"
     },
     {
       "relation": "defines",
@@ -6193,6 +6208,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:6b762ba15adfb8b66160",
+      "target": "capability:23c258e01ba33f22e1b7"
+    },
+    {
+      "relation": "exposes",
       "source": "route:6b76aed214ee331857ad",
       "target": "capability:f007deed71db690a50ee"
     },
@@ -6355,6 +6375,11 @@
       "relation": "exposes",
       "source": "route:73e523abfb2be5e2f572",
       "target": "capability:75439a8e077189d31fd2"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:73fffe0e50a7b95ad2c8",
+      "target": "capability:23c258e01ba33f22e1b7"
     },
     {
       "relation": "exposes",
@@ -8158,6 +8183,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:d3481d9841bcf80cd97a",
+      "target": "capability:23c258e01ba33f22e1b7"
+    },
+    {
+      "relation": "exposes",
       "source": "route:d3596f081c6ef01832b6",
       "target": "capability:7c9e50d25eb42729ca81"
     },
@@ -9082,7 +9112,7 @@
       "target": "control:8beb2443d48d78613952"
     }
   ],
-  "node_count": 1012,
+  "node_count": 1016,
   "nodes": [
     {
       "id": "capability:0304e05cfc30a6eece57",
@@ -9183,6 +9213,11 @@
       "id": "capability:223b7358f0f4eef50645",
       "kind": "capability",
       "label": "User Conversations"
+    },
+    {
+      "id": "capability:23c258e01ba33f22e1b7",
+      "kind": "capability",
+      "label": "external-agents"
     },
     {
       "id": "capability:2a03c0d6c37e1a6864fa",
@@ -13220,6 +13255,16 @@
       }
     },
     {
+      "id": "route:6b762ba15adfb8b66160",
+      "kind": "route",
+      "label": "POST /api/v1/external-agents/jobs",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "delegate_job_api_v1_external_agents_jobs_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:6b76aed214ee331857ad",
       "kind": "route",
       "label": "GET /api/browser/health",
@@ -13536,6 +13581,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "api_image_to_code_tools_image_to_code_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:73fffe0e50a7b95ad2c8",
+      "kind": "route",
+      "label": "GET /api/v1/external-agents/jobs/{job_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_job_api_v1_external_agents_jobs__job_id__get",
         "owner": "unassigned"
       }
     },
@@ -16810,6 +16865,16 @@
       }
     },
     {
+      "id": "route:d3481d9841bcf80cd97a",
+      "kind": "route",
+      "label": "DELETE /api/v1/external-agents/jobs/{job_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "cancel_job_api_v1_external_agents_jobs__job_id__delete",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:d3596f081c6ef01832b6",
       "kind": "route",
       "label": "GET /api/v1/ecosystem/tasks",
@@ -18462,5 +18527,5 @@
   ],
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "6021fa754d33040c38f3077b62cdf6f7d17816587c2dd2c1bc01a746858067b4"
+  "source_sha256": "dc13e058136296c78c1ec3c867ecad2850c343d17f166fa297660694c8c9b2b8"
 }
