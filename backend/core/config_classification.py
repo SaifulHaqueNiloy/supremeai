@@ -828,6 +828,27 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Auto-classified by CI drift remediation (P4) — heuristic default, needs manual review.",
     ),
     ConfigSpec(
+        "MERGE_LEARNING_CLEAN_REWARD",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="Success weight multiplier for clean merges in SkillFitness (#1939).",
+    ),
+    ConfigSpec(
+        "MERGE_LEARNING_HOLD_PENALTY",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="Failure weight multiplier for held merges in SkillFitness (#1939).",
+    ),
+    ConfigSpec(
+        "MERGE_LEARNING_LOOKBACK_DAYS",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend"}),
+        description="Lookback window in days for reading merge_learning_reports in evolution tick (#1939).",
+    ),
+    ConfigSpec(
         "MESSAGING_PROVIDER",
         frozenset({ConfigClass.OPTIONAL}),
         frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),

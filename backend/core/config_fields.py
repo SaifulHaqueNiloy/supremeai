@@ -523,6 +523,18 @@ class SettingsFieldsMixin:
     enable_evolution_learning: bool = Field(
         default=False, validation_alias="ENABLE_EVOLUTION_LEARNING"
     )
+    # #1939: merge-learning signal weights (config-driven, no magic numbers).
+    # When enable_evolution_learning=True, the evolution tick reads
+    # merge_learning_reports and feeds these signals into FitnessEngine.
+    merge_learning_lookback_days: int = Field(
+        default=7, validation_alias="MERGE_LEARNING_LOOKBACK_DAYS"
+    )
+    merge_learning_hold_penalty: float = Field(
+        default=1.0, validation_alias="MERGE_LEARNING_HOLD_PENALTY"
+    )
+    merge_learning_clean_reward: float = Field(
+        default=0.5, validation_alias="MERGE_LEARNING_CLEAN_REWARD"
+    )
     voice_didi_confidence: float = Field(default=0.6, validation_alias="VOICE_DIDI_CONFIDENCE")
     voice_didi_max_duration: int = Field(default=30, validation_alias="VOICE_DIDI_MAX_DURATION")
     voice_didi_intents: str = Field(
