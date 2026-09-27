@@ -396,16 +396,27 @@ async def takeover_session_websocket(websocket: WebSocket, session_id: str):
 
     logger.info(f"WebSocket takeover initiated for session {session_id}")
 
-    # ✅ Get Playwright page for this session
+    # ✅ Resolve the Playwright page via the canonical session manager (#2253).
+    # The previous code called PlaywrightBrowserAgent.get_or_create_session(),
+    # a method that never existed on that class — every takeover died with an
+    # unhandled AttributeError at this exact line. The canonical,
+    # lifespan-owned session store is core/browser_session_manager.py; HITL
+    # takeover uses the privileged admin lookup (the takeover token above has
+    # already authenticated the admin, who is by definition not the session's
+    # original owner).
     try:
-        from tools.browser.playwright_browser_agent import PlaywrightBrowserAgent
-    except ImportError:
-        logger.error("Could not import PlaywrightBrowserAgent")
-        await websocket.close(code=5003, reason="Cannot create browser session: Agent missing")
+        from core.browser_session_manager import session_manager
+
+        session = await session_manager.get_for_admin(session_id)
+    except KeyError:
+        await websocket.close(code=5003, reason="Browser session not found or expired")
+        return
+    except Exception as e:
+        logger.error(f"Takeover session resolution failed for {session_id}: {e}")
+        await websocket.close(code=5003, reason="Cannot resolve browser session")
         return
 
-    agent = PlaywrightBrowserAgent()
-    page = await agent.get_or_create_session(session_name=session_id)
+    page = session.page
 
     if not page:
         await websocket.close(code=5003, reason="Cannot create browser session")
