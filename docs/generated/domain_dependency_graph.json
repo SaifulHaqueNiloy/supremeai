@@ -1,12 +1,5 @@
 {
-  "boundary_violations": [
-    {
-      "line": 23,
-      "reason": "private cross-domain import",
-      "source": "backend/tests/security/test_render_ticket_auth.py",
-      "target": "backend/api/routes/browser/_render_proxy.py"
-    }
-  ],
+  "boundary_violations": [],
   "cycles": [],
   "domain_count": 9,
   "domains": [
