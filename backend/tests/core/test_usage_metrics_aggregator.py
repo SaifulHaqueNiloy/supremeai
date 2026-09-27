@@ -48,7 +48,9 @@ def aggregator():
 class TestCollectSnapshot:
     @pytest.mark.asyncio
     async def test_row_shape_and_math(self, aggregator):
-        snap = await aggregator.collect_usage_snapshot("tenant-supremeai", FakeCollector(), redis=None, last_totals={})
+        snap = await aggregator.collect_usage_snapshot(
+            "tenant-supremeai", FakeCollector(), redis=None, last_totals={}
+        )
         assert set(aggregator.USAGE_METRICS_DIMENSIONS) <= set(snap.keys())
         assert snap["total_requests"] == 40
         assert snap["total_tokens"] == 120
@@ -68,7 +70,9 @@ class TestCollectSnapshot:
 
     @pytest.mark.asyncio
     async def test_honest_zeros_without_sources(self, aggregator):
-        snap = await aggregator.collect_usage_snapshot("t1", FakeCollector(), redis=None, last_totals={})
+        snap = await aggregator.collect_usage_snapshot(
+            "t1", FakeCollector(), redis=None, last_totals={}
+        )
         assert snap["unique_users"] == 0
         assert snap["avg_latency_ms"] == 0
 
@@ -85,7 +89,9 @@ class TestCollectSnapshot:
             async def get_client_async(self):
                 return FakeRedisClient()
 
-        snap = await aggregator.collect_usage_snapshot("t1", FakeCollector(), redis=FakeRedis(), last_totals={})
+        snap = await aggregator.collect_usage_snapshot(
+            "t1", FakeCollector(), redis=FakeRedis(), last_totals={}
+        )
         assert snap["total_cost"] == pytest.approx(1.62)  # 0.12 model cost + 1.5 spend
 
 
@@ -107,14 +113,20 @@ class TestAggregationCycle:
                 raise RuntimeError("db down")
 
         snap = await aggregator.run_aggregation_cycle(
-            tenant_id="t1", collector=FakeCollector(), store=BrokenStore(), redis=None, last_totals={}
+            tenant_id="t1",
+            collector=FakeCollector(),
+            store=BrokenStore(),
+            redis=None,
+            last_totals={},
         )
         assert snap is None, "failed cycle is logged and swallowed (never kills the loop)"
 
 
 class TestStartupWiring:
     def test_supervisor_agent_registered(self):
-        source = (Path(__file__).resolve().parents[2] / "core" / "startup" / "agents.py").read_text(encoding="utf-8")
+        source = (Path(__file__).resolve().parents[2] / "core" / "startup" / "agents.py").read_text(
+            encoding="utf-8"
+        )
         assert "usage-metrics-aggregator" in source
         assert "ENABLE_USAGE_METRICS_AGGREGATOR" in source
         assert "USAGE_METRICS_INTERVAL_HOURS" in source

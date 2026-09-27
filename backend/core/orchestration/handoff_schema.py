@@ -49,12 +49,16 @@ _ROLE_ALIASES = {
 
 
 class HandoffTask(BaseModel):
-    issue: str = Field(..., pattern=r"^#?\d+$", description="GitHub issue number, optional '#' prefix")
+    issue: str = Field(
+        ..., pattern=r"^#?\d+$", description="GitHub issue number, optional '#' prefix"
+    )
     status: Literal["completed", "in-progress", "blocked", "failed"] = "completed"
 
 
 class HandoffMeta(BaseModel):
-    next_agent: str = Field(..., min_length=1, description="Target lane (validated against VALID_ROLES)")
+    next_agent: str = Field(
+        ..., min_length=1, description="Target lane (validated against VALID_ROLES)"
+    )
     trigger: str = Field(..., min_length=1, description="What triggers the next agent")
 
 
@@ -90,7 +94,9 @@ def normalize_role(raw: str) -> str:
     value = str(raw).strip().lower()
     value = _ROLE_ALIASES.get(value, value)
     if value not in VALID_ROLES:
-        raise HandoffRejection("unknown_role", f"'{raw}' is not a valid lane: {sorted(VALID_ROLES)}")
+        raise HandoffRejection(
+            "unknown_role", f"'{raw}' is not a valid lane: {sorted(VALID_ROLES)}"
+        )
     return value
 
 

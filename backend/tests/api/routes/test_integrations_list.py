@@ -77,7 +77,15 @@ class TestIntegrationsList:
         assert res.status_code == 200
         body = res.json()
         assert isinstance(body, list) and len(body) == 2
-        assert set(body[0].keys()) == {"id", "name", "platform", "connected", "lastAccessed", "permissions", "status"}
+        assert set(body[0].keys()) == {
+            "id",
+            "name",
+            "platform",
+            "connected",
+            "lastAccessed",
+            "permissions",
+            "status",
+        }
 
     def test_rows_scoped_to_caller_recent_first(self, client):
         tc, fake_db = client

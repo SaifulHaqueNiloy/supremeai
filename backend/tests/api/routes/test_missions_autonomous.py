@@ -15,7 +15,9 @@ import pytest
 
 
 class FakeMission:
-    def __init__(self, mission_id: str = "m-1", phases: int = 3, goal: str = "Build the thing") -> None:
+    def __init__(
+        self, mission_id: str = "m-1", phases: int = 3, goal: str = "Build the thing"
+    ) -> None:
         self.id = mission_id
         self.goal_text = goal
         self.created_by = "user-1"
@@ -121,7 +123,9 @@ class TestAssignerRouting:
         assert "MissionService(assigner=_llm_assigner)" in source
 
     def test_start_route_spawns_executor(self, wired):
-        source = (wired[0].__file__ and __import__("pathlib").Path(wired[0].__file__).read_text(encoding="utf-8"))  # noqa: SIM115
+        source = wired[0].__file__ and __import__("pathlib").Path(wired[0].__file__).read_text(
+            encoding="utf-8"
+        )  # noqa: SIM115
         assert "asyncio.create_task(_execute_mission_goal" in source, (
             "start endpoints must enqueue the autonomous executor"
         )

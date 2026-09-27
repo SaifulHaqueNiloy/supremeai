@@ -28,8 +28,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.dependencies import get_current_user_token
 from core.logging_config import logger
 from database.session import get_db_session, get_db_session_context
-from missions.models import MissionTraceEvent
-from missions.models import Mission
+from missions.models import Mission, MissionTraceEvent
 from missions.schemas import MissionCreate, MissionOut, TraceEventOut, TransitionRequest
 from missions.service import MissionNotFound, MissionService
 from missions.state_machine import STATES, IllegalTransition
@@ -88,7 +87,9 @@ async def _execute_mission_goal(mission_id: str) -> None:
                     session, mission_id, reason=str(exc)[:500], actor="auto-executor"
                 )
         except Exception as fail_exc:  # noqa: BLE001
-            logger.error(f"❌ [missions] failed to record FAILED state for {mission_id}: {fail_exc}")
+            logger.error(
+                f"❌ [missions] failed to record FAILED state for {mission_id}: {fail_exc}"
+            )
 
 
 def _spawn_autonomous_executor(mission_id: str) -> None:
