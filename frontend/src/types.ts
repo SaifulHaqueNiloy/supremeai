@@ -41,15 +41,20 @@ export interface GcpHealth {
 }
 
 export interface HealthMap {
+  /** Named known services — additional dynamic services use the index signature. */
   gcp: { status: string; latency: string; region: string };
   railway: { status: string; latency: string; region: string };
   render: { status: string; latency: string; region: string };
+  /** Index signature required for compatibility with SubTabContentProps.healthMap */
+  [key: string]: { status?: string; latency?: string | number; region?: string; [k: string]: unknown };
 }
 
 export interface AdminUser {
   username: string;
   role: string;
   permissions: string[];
+  /** Index signature for assignability to SubTabContentProps.adminUsers */
+  [key: string]: unknown;
 }
 
 export interface SystemAlert {
