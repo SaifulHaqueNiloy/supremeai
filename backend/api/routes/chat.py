@@ -4,7 +4,6 @@ from pydantic import BaseModel, Field
 
 from api.dependencies import get_tenant_db
 from api.deps import get_current_user_token
-from brain.supreme_learning_engine import get_learning_engine
 from context_engine import ContextBlock, ContextEngine, Section
 from context_engine.budget import context_engine_enabled
 from core.cache.multi_layer_cache import multi_layer_cache
@@ -346,36 +345,12 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
     """High-Concurrency Async SSE Streamer."""
     logger.info(f"🌊 SSE Stream Initiated for tenant: {db.tenant_id}")
 
-    learning_engine = get_learning_engine()
-
-    try:
-        # Step 1: Check if learning engine can answer independently
-        pre_check = await learning_engine.process_chat_message(
-            query=payload.prompt,
-            user_id=db.tenant_id,
-        )
-
-        if pre_check.get("was_self_sufficient"):
-            logger.info(f"🎯 Self-sufficient response (confidence: {pre_check['confidence']:.2f})")
-
-            async def generate_learned():
-                yield f"data: {pre_check['response']}\n\n"
-                yield "data: [DONE]\n\n"
-
-            return StreamingResponse(
-                generate_learned(),
-                media_type="text/event-stream",
-                headers={
-                    "X-Learning-Source": "independent",
-                    "X-Confidence": str(pre_check["confidence"]),
-                    "Cache-Control": "no-cache, no-transform",
-                    "Connection": "keep-alive",
-                    "X-Accel-Buffering": "no",
-                    "Content-Encoding": "identity",
-                },
-            )
-    except Exception as e:
-        logger.warning(f"Learning Engine pre-check failed: {e}")
+    # বাংলা (#2259 D1): পুরনো self-sufficiency pre-check বাদ —
+    # UnifiedLearningEngine-এ `process_chat_message` মেথডই ছিল না, ফলে
+    # প্রতিটি /stream_chat রিকোয়েস্টেই AttributeError → warning log হতো এবং
+    # fast-path কখনোই কাজ করত না (dead path)। Semantic recall fast-path
+    # canonical Experience store-এর উপর দিয়ে #2259 D2-তে (query verification
+    # সহ) ফিরে আসবে।
 
     async def async_generator():
         try:
@@ -534,6 +509,11 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
 
 @router.get("/learning/stats")
 async def get_learning_stats(db=Depends(get_tenant_db)):
-    """Get statistics about the learning engine."""
-    engine = get_learning_engine()
-    return engine.get_stats()
+    """Learning telemetry stats from the canonical LearningStore (#2259 D1).
+
+    বাংলা: আগে এটি UnifiedLearningEngine-এর async `get_stats()`-কে await না
+    করে coroutine রিটার্ন করত → endpoint কখনোই কাজ করত না। এখন সরাসরি
+    durable LearningStore-এর বাস্তব stats।"""
+    from core.learning import get_learning_store
+
+    return get_learning_store().get_stats()

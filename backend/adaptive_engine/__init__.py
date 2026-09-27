@@ -25,10 +25,11 @@ from adaptive_engine.registry import PlatformRegistry
 
 # VERIFY FIX: removed broken imports of LearningCycleResult, LearningInsight,
 # create_learning_loop — these were defined in the OLD learning_loop.py before
-# Phase 2 Learning Consolidation refactored it to delegate to core.unified_learning.
-# Keeping them in __all__ would cause ImportError at package import time, which
-# blocks ExperienceDatabase and all auto-learning from working.
-# Callers needing these should import from core.unified_learning directly.
+# Phase 2 Learning Consolidation refactored it. Keeping them in __all__ would
+# cause ImportError at package import time, which blocks ExperienceDatabase
+# and all auto-learning from working.
+# (#2259 D1: core.unified_learning has since been retired — learn/telemetry go
+# through core.learning LearningStore; semantic recall via ExperienceDatabase.)
 
 __all__ = [
     "Experience",
