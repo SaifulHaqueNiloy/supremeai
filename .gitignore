@@ -710,3 +710,9 @@ backend/uploads/
 # (vault/env), never committed. See docs/deployment/SUPABASE_CA_CERT.md
 supabase-ca.crt
 vault.env
+
+# Issue #1748: backend/openapi.json is a 1.1MB generated artifact (FastAPI emits
+# /openapi.json at runtime; offline export goes to packages/shared-types/openapi.json
+# via backend/core/schema_exporter.py). Tracking it here bloated diffs on every API
+# change while the file rotted stale. Source of truth = the routes themselves.
+backend/openapi.json
