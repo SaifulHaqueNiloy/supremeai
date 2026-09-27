@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3521,
+  "edge_count": 3532,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -6372,6 +6372,46 @@
       "to": "core.ip_blocklist_manager"
     },
     {
+      "from": "core.sandbox",
+      "to": "core.sandbox.base"
+    },
+    {
+      "from": "core.sandbox",
+      "to": "core.sandbox.cloud_sandbox_provider"
+    },
+    {
+      "from": "core.sandbox",
+      "to": "core.sandbox.local_dev_provider"
+    },
+    {
+      "from": "core.sandbox",
+      "to": "core.sandbox.registry"
+    },
+    {
+      "from": "core.sandbox.cloud_sandbox_provider",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.sandbox.cloud_sandbox_provider",
+      "to": "core.sandbox.base"
+    },
+    {
+      "from": "core.sandbox.local_dev_provider",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.sandbox.local_dev_provider",
+      "to": "core.sandbox.base"
+    },
+    {
+      "from": "core.sandbox.registry",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.sandbox.registry",
+      "to": "core.sandbox.base"
+    },
+    {
       "from": "core.scheduled_task_sweep",
       "to": "core.logging_config"
     },
@@ -10372,6 +10412,10 @@
       "to": "core.queue.task_queue"
     },
     {
+      "from": "tests.core.sandbox.test_sandbox_provider",
+      "to": "core.sandbox"
+    },
+    {
       "from": "tests.core.security.test_ast_scanner_full",
       "to": "core.security.scanning.ast_scanner"
     },
@@ -14088,7 +14132,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2034,
+  "module_count": 2040,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14855,6 +14899,11 @@
     "core.retry_handler",
     "core.routing.cloudflare_edge_pool",
     "core.rules_mutator",
+    "core.sandbox",
+    "core.sandbox.base",
+    "core.sandbox.cloud_sandbox_provider",
+    "core.sandbox.local_dev_provider",
+    "core.sandbox.registry",
     "core.scheduled_task_sweep",
     "core.schema_exporter",
     "core.schema_validator",
@@ -15474,6 +15523,7 @@
     "tests.core.queue.test_task_queue_enhanced",
     "tests.core.queue.test_task_queue_enhanced_full",
     "tests.core.queue.test_task_queue_full",
+    "tests.core.sandbox.test_sandbox_provider",
     "tests.core.security.test_ast_scanner_full",
     "tests.core.security.test_behavioral_analyzer_full",
     "tests.core.security.test_compliance_bot_full",
