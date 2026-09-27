@@ -4274,15 +4274,6 @@
     },
     {
       "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/cache_manager.py"
-    },
-    {
-      "capability_signals": [
         "capability",
         "health"
       ],
@@ -11103,6 +11094,15 @@
       "path": "backend/tests/api/routes/test_global_memory_stats.py"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_integrations_list.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -12497,13 +12497,6 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/tests/core/test_cache_manager_coverage.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/tests/core/test_cache_optimization.py"
     },
     {
@@ -13676,6 +13669,17 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_reasoning_orchestrator.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_redis_budget_guard.py"
     },
     {
       "capability_signals": [],
