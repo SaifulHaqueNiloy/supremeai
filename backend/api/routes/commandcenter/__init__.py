@@ -98,18 +98,9 @@ async def command_metrics():
         "token_juice_enabled": os.getenv("TOKEN_JUICE_ENABLED", "true").lower() == "true",
     }
 
-    # 3. WebSocket connection count — best-effort
-    try:
-        from api.routes.websocket_agent import manager as _ws_manager
-
-        ws_count = sum(len(conns) for conns in _ws_manager.active_connections.values())
-        metrics["websocket"] = {
-            "total_connections": ws_count,
-            "unique_users": len(_ws_manager.active_connections),
-            "max_allowed": getattr(_ws_manager, "MAX_TOTAL_CONNECTIONS", 50),
-        }
-    except Exception as exc:
-        metrics["websocket"] = {"error": f"manager unavailable: {type(exc).__name__}"}
+    # 3. WebSocket connection metric — REMOVED (#1832): the websocket_agent
+    # manager is unmounted (replaced by the SSE transports); its counts were
+    # structurally always zero, a fake metric on the admin dashboard.
 
     # 4. Maintenance pipeline health — best-effort
     try:
