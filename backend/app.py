@@ -76,7 +76,9 @@ app.include_router(chat_stream_legacy_router)
 # singleton (used by `core.app:app` uvicorn boot, all tests, and the audit
 # contract) kept answering 404 for /api/browser/health. Mount it here too; the
 # admin-gated browser surface itself stays registry-only.
-from api.routes.browser_routes import public_router as browser_public_router
+# (#2258) the probe moved into the canonical package (browser/_health.py) when
+# the legacy double-mounted api/routes/browser_routes.py was retired.
+from api.routes.browser import public_router as browser_public_router
 
 app.include_router(browser_public_router)
 

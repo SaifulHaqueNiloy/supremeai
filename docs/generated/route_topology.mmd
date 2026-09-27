@@ -445,7 +445,6 @@ flowchart LR
   n_route_5e3308226a0331b76de3["GET /api/admin/traffic/live"]
   n_route_5f40578f8dd3ec360532["GET /health/live"]
   n_route_5f4e928c41a18e2acc0a["POST /tools/smell-check"]
-  n_route_5fdb54cf7120509d4fd9["GET /api/browser/browse-sessions"]
   n_route_5fed0122af9e22d4a964["POST /api/knowledge/seed"]
   n_route_600fa5a20cc6b1b6d186["POST /api/v1/agent/execute"]
   n_route_601427a606a0fc38a9b5["POST /api/browser/browse"]
@@ -1311,7 +1310,6 @@ flowchart LR
   n_contract_9337269577d524de529e -->|defines| n_route_5e3308226a0331b76de3
   n_contract_9337269577d524de529e -->|defines| n_route_5f40578f8dd3ec360532
   n_contract_9337269577d524de529e -->|defines| n_route_5f4e928c41a18e2acc0a
-  n_contract_9337269577d524de529e -->|defines| n_route_5fdb54cf7120509d4fd9
   n_contract_9337269577d524de529e -->|defines| n_route_5fed0122af9e22d4a964
   n_contract_9337269577d524de529e -->|defines| n_route_600fa5a20cc6b1b6d186
   n_contract_9337269577d524de529e -->|defines| n_route_601427a606a0fc38a9b5
@@ -1888,7 +1886,7 @@ flowchart LR
   n_route_0131450e6e715fd6b083 -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_014e8cd546f68f1182bd -->|exposes| n_capability_c511f5cb3ae7a78be246
   n_route_017bb8882c6e7ff18d87 -->|exposes| n_capability_223b7358f0f4eef50645
-  n_route_0187c3f16a02e1caad95 -->|exposes| n_capability_f007deed71db690a50ee
+  n_route_0187c3f16a02e1caad95 -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_0191355dd926cc743591 -->|exposes| n_capability_a43b0ca14c88d4f2694d
   n_route_0191355dd926cc743591 -->|requires| n_control_8beb2443d48d78613952
   n_route_01de7213527f83cce3d6 -->|exposes| n_capability_be0643d29a4e69b5771e
@@ -2209,7 +2207,6 @@ flowchart LR
   n_route_5e3308226a0331b76de3 -->|exposes| n_capability_04a2bea49c7bc423a567
   n_route_5f40578f8dd3ec360532 -->|exposes| n_capability_ebbc4104642881464a4e
   n_route_5f4e928c41a18e2acc0a -->|exposes| n_capability_482b7110d31bdc8b0bfa
-  n_route_5fdb54cf7120509d4fd9 -->|exposes| n_capability_f007deed71db690a50ee
   n_route_5fed0122af9e22d4a964 -->|exposes| n_capability_e1b18f25e71b58912541
   n_route_601427a606a0fc38a9b5 -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_601427a606a0fc38a9b5 -->|requires| n_control_8beb2443d48d78613952
@@ -2547,9 +2544,9 @@ flowchart LR
   n_route_b8867d185fe6704ad9a0 -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_b9517a401cdd7954d582 -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_b9517a401cdd7954d582 -->|requires| n_control_8beb2443d48d78613952
-  n_route_b96fef22f0e1ba82856e -->|exposes| n_capability_f007deed71db690a50ee
+  n_route_b96fef22f0e1ba82856e -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_b9e152c85f9d6aec2ee4 -->|exposes| n_capability_e8d45e28b9f99f76daf1
-  n_route_b9e193ef1a4fcad90486 -->|exposes| n_capability_f007deed71db690a50ee
+  n_route_b9e193ef1a4fcad90486 -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_ba32b1180f95c1af08b1 -->|exposes| n_capability_be0643d29a4e69b5771e
   n_route_ba60184d6fc232982411 -->|exposes| n_capability_53912f4d757c6e29aab3
   n_route_ba9248407da4ebc662b6 -->|exposes| n_capability_873cd4c050768f3aa94a
@@ -2624,7 +2621,7 @@ flowchart LR
   n_route_c9d443b0bdd883f32028 -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_c9d705bd37e66f9cad44 -->|exposes| n_capability_694feb872c40bb7b24c2
   n_route_ca213d76f78a100648fe -->|exposes| n_capability_8844832fd69d152a37eb
-  n_route_cbfa2dffeb5f4a83f5fa -->|exposes| n_capability_f007deed71db690a50ee
+  n_route_cbfa2dffeb5f4a83f5fa -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_cc20507db8df7ebf0adf -->|exposes| n_capability_654aa14b05faffbe9b54
   n_route_cc522b329105561789f3 -->|exposes| n_capability_be0643d29a4e69b5771e
   n_route_cc8eb6cfe3c925b6f9b7 -->|exposes| n_capability_e8d45e28b9f99f76daf1
@@ -2832,7 +2829,7 @@ flowchart LR
   n_route_fdf73b4742a1dc010cec -->|requires| n_control_8beb2443d48d78613952
   n_route_fdff687b740611cb6ec2 -->|exposes| n_capability_b0788f5d6ff1856e9c1c
   n_route_fe34c3b2678b10113f06 -->|exposes| n_capability_0304e05cfc30a6eece57
-  n_route_ff62343bd0746b8bd928 -->|exposes| n_capability_f007deed71db690a50ee
+  n_route_ff62343bd0746b8bd928 -->|exposes| n_capability_e8d45e28b9f99f76daf1
   n_route_ff629b86434487f0ed1c -->|exposes| n_capability_3ae8b9bca5770ec8ca97
   n_route_ffa01f1d194ebd7032c5 -->|exposes| n_capability_a43b0ca14c88d4f2694d
   n_route_ffa01f1d194ebd7032c5 -->|requires| n_control_8beb2443d48d78613952
