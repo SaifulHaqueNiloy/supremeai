@@ -468,9 +468,11 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     # Issue #1490: the browser integration /health probe must be reachable
     # without credentials (ServiceHealthMonitor + audit contract). It lives on
-    # a dependency-free router inside api.routes.browser_routes — mounted here
-    # explicitly because the ALL_ROUTERS entry for that module is admin-gated.
-    from api.routes.browser_routes import public_router as browser_public_router
+    # the dependency-free public_router inside the canonical api.routes.browser
+    # package (#2258: ported there when the legacy double-mounted
+    # api/routes/browser_routes.py module was retired) — mounted here
+    # explicitly because the package's main router is user-token gated.
+    from api.routes.browser import public_router as browser_public_router
 
     app.include_router(browser_public_router)
 

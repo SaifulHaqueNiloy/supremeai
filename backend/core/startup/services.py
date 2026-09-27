@@ -243,11 +243,11 @@ async def initialize_independent_services(app):
         try:
             from brain.economic_optimizer import get_economic_optimizer
             from brain.model_registry import ModelRegistry
-            from core.resilience.circuit_breaker import sync_from_db as sync_circuit_breaker
             from core.health.health_monitor import get_health_monitor
             from core.middleware.health_aware_middleware import (
                 sync_from_db as sync_health_middleware,
             )
+            from core.resilience.circuit_breaker import sync_from_db as sync_circuit_breaker
             from database.session import get_db_session_context
             from utils.branding import sync_from_db as sync_branding
 

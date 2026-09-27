@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3516,
+  "edge_count": 3489,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -396,12 +396,12 @@
       "to": "agents.user_retention_risk_agent"
     },
     {
-      "from": "agents.churn_prophet",
-      "to": "services.llm.llm_router"
+      "from": "agents.code_vulnerability_scanner_agent",
+      "to": "api.dependencies"
     },
     {
       "from": "agents.code_vulnerability_scanner_agent",
-      "to": "api.dependencies"
+      "to": "brain.model_router"
     },
     {
       "from": "agents.code_vulnerability_scanner_agent",
@@ -416,8 +416,8 @@
       "to": "core.logging_config"
     },
     {
-      "from": "agents.code_vulnerability_scanner_agent",
-      "to": "services.llm.llm_router"
+      "from": "agents.data_trend_anomaly_agent",
+      "to": "brain.model_router"
     },
     {
       "from": "agents.data_trend_anomaly_agent",
@@ -434,10 +434,6 @@
     {
       "from": "agents.data_trend_anomaly_agent",
       "to": "database.tenant_db"
-    },
-    {
-      "from": "agents.data_trend_anomaly_agent",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "agents.devops.cloud_watchman",
@@ -457,6 +453,10 @@
     },
     {
       "from": "agents.domain.bangla_nlp_agent",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "agents.domain.bangla_nlp_agent",
       "to": "core.cache"
     },
     {
@@ -472,10 +472,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "agents.domain.bangla_nlp_agent",
-      "to": "services.llm.llm_router"
-    },
-    {
       "from": "agents.evolution_agents.adversarial_defense_agent",
       "to": "core.cache"
     },
@@ -489,6 +485,10 @@
     },
     {
       "from": "agents.evolution_agents.multi_agent_collaboration_agent",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "agents.evolution_agents.multi_agent_collaboration_agent",
       "to": "core.cache"
     },
     {
@@ -498,10 +498,6 @@
     {
       "from": "agents.evolution_agents.multi_agent_collaboration_agent",
       "to": "core.logging_config"
-    },
-    {
-      "from": "agents.evolution_agents.multi_agent_collaboration_agent",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "agents.governance.bias_detection_agent",
@@ -521,6 +517,10 @@
     },
     {
       "from": "agents.governance.ethics_monitor_agent",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "agents.governance.ethics_monitor_agent",
       "to": "core.cache"
     },
     {
@@ -530,10 +530,6 @@
     {
       "from": "agents.governance.ethics_monitor_agent",
       "to": "core.errors.error_bus"
-    },
-    {
-      "from": "agents.governance.ethics_monitor_agent",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "agents.governance.explainability_agent",
@@ -573,6 +569,10 @@
     },
     {
       "from": "agents.headless_terminal_agent",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "agents.headless_terminal_agent",
       "to": "core.cache"
     },
     {
@@ -586,10 +586,6 @@
     {
       "from": "agents.headless_terminal_agent",
       "to": "core.logging_config"
-    },
-    {
-      "from": "agents.headless_terminal_agent",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "agents.ide",
@@ -709,15 +705,15 @@
     },
     {
       "from": "agents.monitoring.competitor_analysis_agent",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "agents.monitoring.competitor_analysis_agent",
       "to": "core.cache"
     },
     {
       "from": "agents.monitoring.competitor_analysis_agent",
       "to": "core.logging_config"
-    },
-    {
-      "from": "agents.monitoring.competitor_analysis_agent",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "agents.monitoring.compliance_monitor_agent",
@@ -737,6 +733,10 @@
     },
     {
       "from": "agents.monitoring.technology_radar_agent",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "agents.monitoring.technology_radar_agent",
       "to": "core.cache"
     },
     {
@@ -744,12 +744,12 @@
       "to": "core.config_cache"
     },
     {
-      "from": "agents.monitoring.technology_radar_agent",
-      "to": "services.llm.llm_router"
-    },
-    {
       "from": "agents.morphic_adapter",
       "to": "core.config_cache"
+    },
+    {
+      "from": "agents.performance_guardian",
+      "to": "brain.model_router"
     },
     {
       "from": "agents.performance_guardian",
@@ -762,10 +762,6 @@
     {
       "from": "agents.performance_guardian",
       "to": "core.logging_config"
-    },
-    {
-      "from": "agents.performance_guardian",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "agents.sentinel_agent",
@@ -841,6 +837,10 @@
     },
     {
       "from": "agents.user_retention_risk_agent",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "agents.user_retention_risk_agent",
       "to": "core.cache"
     },
     {
@@ -854,10 +854,6 @@
     {
       "from": "agents.user_retention_risk_agent",
       "to": "database.tenant_db"
-    },
-    {
-      "from": "agents.user_retention_risk_agent",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "agents.ux.accessibility_agent",
@@ -1840,6 +1836,10 @@
       "to": "api.routes.browser"
     },
     {
+      "from": "api.routes.browser._health",
+      "to": "core.logging_config"
+    },
+    {
       "from": "api.routes.browser._learning",
       "to": "api.routes.admin_dashboard"
     },
@@ -1988,22 +1988,6 @@
       "to": "core.degraded_mode"
     },
     {
-      "from": "api.routes.browser_routes",
-      "to": "api.dependencies"
-    },
-    {
-      "from": "api.routes.browser_routes",
-      "to": "core.config_cache"
-    },
-    {
-      "from": "api.routes.browser_routes",
-      "to": "core.llm.llm_gateway.context"
-    },
-    {
-      "from": "api.routes.browser_routes",
-      "to": "core.logging_config"
-    },
-    {
       "from": "api.routes.byoc_api",
       "to": "api.dependencies"
     },
@@ -2085,10 +2069,6 @@
     },
     {
       "from": "api.routes.chat",
-      "to": "core.circuit_breaker"
-    },
-    {
-      "from": "api.routes.chat",
       "to": "core.i18n.language_directive"
     },
     {
@@ -2106,6 +2086,10 @@
     {
       "from": "api.routes.chat",
       "to": "core.orchestration.conversation_orchestrator"
+    },
+    {
+      "from": "api.routes.chat",
+      "to": "core.resilience.circuit_breaker"
     },
     {
       "from": "api.routes.chat_export",
@@ -3713,7 +3697,7 @@
     },
     {
       "from": "app",
-      "to": "api.routes.browser_routes"
+      "to": "api.routes.browser"
     },
     {
       "from": "app",
@@ -4702,14 +4686,6 @@
     {
       "from": "core.circles.registry",
       "to": "core.circles.event_journal"
-    },
-    {
-      "from": "core.circuit_breaker",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.circuit_breaker",
-      "to": "services.config_service"
     },
     {
       "from": "core.clients",
@@ -6281,10 +6257,6 @@
     },
     {
       "from": "core.resilience",
-      "to": "core.circuit_breaker"
-    },
-    {
-      "from": "core.resilience",
       "to": "core.resilience.safety_rollback_manager"
     },
     {
@@ -6689,6 +6661,10 @@
     },
     {
       "from": "core.self_evolution.daily_learner",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "core.self_evolution.daily_learner",
       "to": "core.cache"
     },
     {
@@ -6702,10 +6678,6 @@
     {
       "from": "core.self_evolution.daily_learner",
       "to": "services.config_service"
-    },
-    {
-      "from": "core.self_evolution.daily_learner",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "core.self_evolution.digital_twin",
@@ -9045,6 +9017,10 @@
     },
     {
       "from": "services.diagram_parser_service",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "services.diagram_parser_service",
       "to": "core.cache"
     },
     {
@@ -9054,10 +9030,6 @@
     {
       "from": "services.diagram_parser_service",
       "to": "services.config_service"
-    },
-    {
-      "from": "services.diagram_parser_service",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "services.dynamic_ai.circuit_breaker",
@@ -9264,66 +9236,6 @@
       "to": "services.tool_forge"
     },
     {
-      "from": "services.llm.llm_router",
-      "to": "core.cache"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "core.config"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "core.exceptions"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "core.llm.free_tier_tracker"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "core.llm.llm_gateway"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "core.resilience.circuit_breaker"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "core.resilience.circuit_breaker_manager"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "monitoring.logging"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "monitoring.metrics"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "services.dynamic_ai.orchestrator"
-    },
-    {
-      "from": "services.llm.llm_router",
-      "to": "services.llm.providers"
-    },
-    {
-      "from": "services.llm.providers",
-      "to": "core.config"
-    },
-    {
-      "from": "services.llm.providers",
-      "to": "core.resilience.circuit_breaker"
-    },
-    {
-      "from": "services.llm.providers",
-      "to": "monitoring.logging"
-    },
-    {
-      "from": "services.llm.providers",
-      "to": "monitoring.metrics"
-    },
-    {
       "from": "services.memory_service",
       "to": "core.config"
     },
@@ -9449,6 +9361,10 @@
     },
     {
       "from": "services.video_to_code_pipeline",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "services.video_to_code_pipeline",
       "to": "core.cache"
     },
     {
@@ -9462,10 +9378,6 @@
     {
       "from": "services.video_to_code_pipeline",
       "to": "services.config_service"
-    },
-    {
-      "from": "services.video_to_code_pipeline",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "services.vision_service",
@@ -9550,6 +9462,10 @@
     {
       "from": "tests.adaptive_engine.test_platform_learner",
       "to": "adaptive_engine.registry"
+    },
+    {
+      "from": "tests.adaptive_engine.test_supabase_vector_backend",
+      "to": "adaptive_engine.supabase_vector_backend"
     },
     {
       "from": "tests.agents.test_agent_department",
@@ -9726,14 +9642,6 @@
     {
       "from": "tests.api.routes.test_admin_routes_full",
       "to": "core.cache.redis_manager"
-    },
-    {
-      "from": "tests.api.routes.test_browser_routes_full",
-      "to": "api.routes.browser_routes"
-    },
-    {
-      "from": "tests.api.routes.test_browser_routes_full",
-      "to": "core.security.protection.ssrf_protection"
     },
     {
       "from": "tests.api.routes.test_deep_research_full",
@@ -11073,15 +10981,7 @@
     },
     {
       "from": "tests.core.test_llm_gateway_consolidation",
-      "to": "core.resilience.circuit_breaker"
-    },
-    {
-      "from": "tests.core.test_llm_gateway_consolidation",
       "to": "core.resilience.circuit_breaker_manager"
-    },
-    {
-      "from": "tests.core.test_llm_gateway_consolidation",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "tests.core.test_log_batcher",
@@ -12225,7 +12125,7 @@
     },
     {
       "from": "tests.services.test_expert_router",
-      "to": "services.llm.llm_router"
+      "to": "core.llm.llm_gateway"
     },
     {
       "from": "tests.services.test_factory_wiring",
@@ -12300,16 +12200,8 @@
       "to": "services.living_engine"
     },
     {
-      "from": "tests.services.test_llm_providers_full",
-      "to": "services.llm"
-    },
-    {
-      "from": "tests.services.test_llm_providers_full",
-      "to": "services.llm.providers"
-    },
-    {
-      "from": "tests.services.test_llm_router",
-      "to": "services.llm.llm_router"
+      "from": "tests.services.test_memory_cosine_dim_tolerance",
+      "to": "services.memory_service"
     },
     {
       "from": "tests.services.test_memory_service",
@@ -13549,6 +13441,10 @@
     },
     {
       "from": "tools.learning.skill_recommender",
+      "to": "brain.model_router"
+    },
+    {
+      "from": "tools.learning.skill_recommender",
       "to": "core.cache"
     },
     {
@@ -13566,10 +13462,6 @@
     {
       "from": "tools.learning.skill_recommender",
       "to": "database.supabase_client"
-    },
-    {
-      "from": "tools.learning.skill_recommender",
-      "to": "services.llm.llm_router"
     },
     {
       "from": "tools.learning.style_learner",
@@ -14068,7 +13960,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2025,
+  "module_count": 2021,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14297,6 +14189,7 @@
     "api.routes.browser._cognitive",
     "api.routes.browser._credentials",
     "api.routes.browser._crown_jewel",
+    "api.routes.browser._health",
     "api.routes.browser._learning",
     "api.routes.browser._legacy_status",
     "api.routes.browser._policy",
@@ -14309,7 +14202,6 @@
     "api.routes.browser._tasks",
     "api.routes.browser._url_permissions",
     "api.routes.browser_action_registry",
-    "api.routes.browser_routes",
     "api.routes.byoc_api",
     "api.routes.cache_predictions",
     "api.routes.capabilities",
@@ -14570,7 +14462,6 @@
     "core.circles.infrastructure",
     "core.circles.manifests",
     "core.circles.registry",
-    "core.circuit_breaker",
     "core.clients",
     "core.clients.render_api",
     "core.code_indexer",
@@ -15245,9 +15136,6 @@
     "services.internet_monitor_service",
     "services.knowledge_qa",
     "services.living_engine",
-    "services.llm",
-    "services.llm.llm_router",
-    "services.llm.providers",
     "services.memory_service",
     "services.minio_client",
     "services.project_context_service",
@@ -15284,6 +15172,7 @@
     "test_db",
     "test_imports",
     "tests.adaptive_engine.test_platform_learner",
+    "tests.adaptive_engine.test_supabase_vector_backend",
     "tests.agents.test_agent_department",
     "tests.agents.test_agent_departments",
     "tests.agents.test_agent_factory",
@@ -15799,8 +15688,7 @@
     "tests.services.test_knowledge_qa",
     "tests.services.test_language_router",
     "tests.services.test_living_engine",
-    "tests.services.test_llm_providers_full",
-    "tests.services.test_llm_router",
+    "tests.services.test_memory_cosine_dim_tolerance",
     "tests.services.test_memory_service",
     "tests.services.test_minio_client",
     "tests.services.test_model_router_unit",
