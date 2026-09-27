@@ -280,11 +280,19 @@ async def get_service_uptime(service: str = Query(...), hours: int = Query(24, g
     }
 
 
-@router.get("/health-map")
+@router.get("/service-health-map")
 async def get_health_map():
     """
-    Simplified health map for quick status checks.
-    Used by HealthBanner component.
+    Service-level health map (per-provider service status).
+
+    Distinct from ``/admin-api/health-map`` (admin_dashboard.endpoints_health)
+    which returns infrastructure-component status (DB/Redis/CF/Render).
+    This endpoint returns service-level status grouped by provider
+    (render/cloudflare/railway/other) — used by the HealthBanner component.
+
+    #2114: previously registered at ``/health-map``, silently shadowing
+    the established admin_dashboard.endpoints_health handler (Resolves #778).
+    Moved to ``/service-health-map`` so both surfaces are reachable.
     """
     services = await check_all_services()
     overall_status, _ = calculate_overall_status(services)
