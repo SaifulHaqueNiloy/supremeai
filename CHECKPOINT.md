@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 15:11 UTC
+- **Date:** 2026-09-27 15:31 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,12 +10,13 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/workflows/nightly-ops.yml`
-  - `infrastructure/mcp-control-plane/src/tools/misc.tools.ts`
-  - `scripts/agents/create_discovery_issue.py`
+  - `backend/core/config_classification.py`
+  - `CHECKPOINT.md`
   - `backend/tests/scripts/test_create_discovery_issue.py`
   - `LESSONS_LEARNED.md`
-  - `.github/workflows/integration-gate.yml`
+  - `docs/archive/lessons_2026-09.md`
+  - `.env.example`
+  - `scripts/agents/create_discovery_issue.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
