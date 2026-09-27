@@ -259,8 +259,11 @@ ALL_ROUTERS = [
     {"path": "api.routes.billing_api", "prefix": "", "is_admin": False, "is_critical": True},
     # ---- Admin & Health Routes ----
     {
+        # #1833: the router carries its own /admin-api prefix — a previous
+        # /api mount here produced a double-prefixed /api/admin-api/... path
+        # that no docstring or frontend consumer ever called.
         "path": "api.routes.health_aggregation",
-        "prefix": "/api",
+        "prefix": "",
         "is_admin": False,
         "is_critical": False,
     },
