@@ -46,7 +46,9 @@ async def get_merge_learning_reports(
     x_ci_webhook_secret: str = Header(..., alias="X-CI-Webhook-Secret"),
     lane: str | None = Query(default=None, description="Filter by agent lane"),
     risk_class: str | None = Query(default=None, description="Filter by gate risk class"),
-    held_only: bool = Query(default=False, description="Only merges that were held (mistake trail)"),
+    held_only: bool = Query(
+        default=False, description="Only merges that were held (mistake trail)"
+    ),
     limit: int = Query(default=50, ge=1, le=200),
     offset: int = Query(default=0, ge=0),
 ) -> dict:

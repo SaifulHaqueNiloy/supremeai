@@ -18,11 +18,12 @@ import importlib.util
 import re
 import uuid
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 import httpx
 from fastapi import HTTPException, Response
+from pydantic import BaseModel, ConfigDict, field_validator
 
 from api.routes.browser import router
 
@@ -89,11 +90,11 @@ def _scan_headers(url: str, headers: httpx.Headers) -> dict[str, Any]:
     return {"success": True, "score": score, "issues": issues, "criticalIssues": critical}
 
 
-def _require_context(body: dict[str, Any]) -> str:
+def _require_context(context: str) -> str:
     """Return trimmed page context or raise 422 — an AI action with no page
     context cannot be answered honestly."""
-    context = str(body.get("context") or "").strip()
-    if not context:
+    trimmed = str(context or "").strip()
+    if not trimmed:
         raise HTTPException(
             status_code=422,
             detail=(
@@ -101,14 +102,108 @@ def _require_context(body: dict[str, Any]) -> str:
                 "text ('context') or at least a reachable URL to be useful."
             ),
         )
-    return context[:_MAX_CONTEXT_CHARS]
+    return trimmed[:_MAX_CONTEXT_CHARS]
+
+
+# ──────────────────────────────────────────────
+# Issue #1657 (P1 security audit): typed request models. These four
+# endpoints previously accepted ``body: dict[str, Any]`` — unvalidated,
+# arbitrary payloads. Models below pin the exact contract, validate URLs at
+# the edge and keep ``extra`` permissive ONLY where real clients send extra
+# keys (browse-session callers add ``timestamp``/``tabId``).
+# ──────────────────────────────────────────────
+
+
+def _reject_non_http_url(value: str) -> str:
+    """Shared field validator: require an absolute http(s) URL.
+
+    Mirrors the handler-level scheme checks (which stay as defense in depth)
+    so malformed URLs now fail at the Pydantic validation layer with 422.
+    """
+    if not value.startswith(("http://", "https://")):
+        raise ValueError(f"Invalid URL: {value!r} — must be an absolute http(s) URL")
+    return value
+
+
+class BrowseSessionRequest(BaseModel):
+    """Body for POST /browse-session (create a real session record).
+
+    Frontend callers (CrownJewelBrowser.tsx) also send ``timestamp`` and
+    ``tabId`` which the server never persisted, so extras stay ignored
+    (Pydantic default) — turning them forbidden would break live clients.
+    """
+
+    url: str = ""
+    title: str | None = None
+
+    @field_validator("url")
+    @classmethod
+    def _url_must_be_http(cls, v: str) -> str:
+        # Sessions may be created for a not-yet-navigated tab (empty url is
+        # rendered as the title); anything non-empty must be a real URL.
+        if v and not v.startswith(("http://", "https://")):
+            raise ValueError(f"Invalid URL: {v!r} — must be an absolute http(s) URL")
+        return v
+
+
+class AIActionRequest(BaseModel):
+    """Body for POST /ai-action (real LLM-backed page analysis).
+
+    ``action`` is now a closed Literal instead of a free-form string: the
+    unsupported-action 422 previously came from inside the handler, it now
+    comes from request validation itself. ``context`` stays handler-validated
+    so the "No page context provided" 422 detail is unchanged.
+    """
+
+    action: Literal["summarize", "explain", "extract_links", "find_issues", "interact"] = (
+        "summarize"
+    )
+    url: str = ""
+    payload: dict[str, Any] | None = None
+    context: str = ""
+
+    @field_validator("url")
+    @classmethod
+    def _url_must_be_http(cls, v: str) -> str:
+        if v:
+            return _reject_non_http_url(v)
+        return v
+
+
+class SecurityScanRequest(BaseModel):
+    """Body for POST /security-scan (real passive header scan).
+
+    ``url`` is required and must be an absolute http(s) URL — enforced by
+    the validator in addition to the pre-existing handler checks.
+    """
+
+    url: str
+
+    @field_validator("url")
+    @classmethod
+    def _url_must_be_http(cls, v: str) -> str:
+        return _reject_non_http_url(v)
+
+
+class ScreenshotRequest(BaseModel):
+    """Body for POST /screenshot (real Playwright capture)."""
+
+    model_config = ConfigDict(extra="ignore")
+
+    url: str
+    full_page: bool = False
+
+    @field_validator("url")
+    @classmethod
+    def _url_must_be_http(cls, v: str) -> str:
+        return _reject_non_http_url(v)
 
 
 # --- Crown Jewel Endpoints ---
 
 
 @router.post("/browse-session")
-def browse_session(body: dict[str, Any]):
+def browse_session(body: BrowseSessionRequest):
     """Create a REAL browser session record.
 
     ERR-G06 FIX: previously returned ``sess_<sha256(url)[:16]>`` — a
@@ -120,14 +215,13 @@ def browse_session(body: dict[str, Any]):
     """
     from api.routes.browser._session_store import SESSIONS
 
-    raw_url = str(body.get("url") or "")
     session_id = f"sess_{uuid.uuid4().hex[:16]}"
     now = datetime.now(UTC).isoformat()
     SESSIONS[session_id] = {
         "id": session_id,
-        "title": str(body.get("title") or raw_url or "Browser session"),
+        "title": str(body.title or body.url or "Browser session"),
         "status": "running",
-        "url": raw_url,
+        "url": body.url,
         "created_at": now,
         "updated_at": now,
         "messages": [],
@@ -136,7 +230,7 @@ def browse_session(body: dict[str, Any]):
 
 
 @router.post("/ai-action")
-def ai_action(body: dict[str, Any]):
+def ai_action(body: AIActionRequest):
     """Run a real LLM-backed browser AI action over the provided page context.
 
     ERR-D03 FIX: previously returned a canned string ("This is a mock summary
@@ -144,9 +238,9 @@ def ai_action(body: dict[str, Any]):
     context to the platform ModelRouter (LLM gateway with free-tier fallback)
     and surfaces real model output — or an explicit error, never a fake one.
     """
-    action = str(body.get("action") or "summarize")
-    url = str(body.get("url") or "")
-    context = _require_context(body)
+    action: str = body.action
+    url: str = body.url
+    context = _require_context(body.context)
 
     if action == "extract_links":
         # Deterministic, real extraction — no model needed.
@@ -187,7 +281,7 @@ def ai_action(body: dict[str, Any]):
         "interact": (
             "Given this page content and the user's requested interaction, describe "
             "clearly what should be done next.\n"
-            f"Requested interaction: {body.get('payload')}\n\nPage content:\n{context}"
+            f"Requested interaction: {body.payload}\n\nPage content:\n{context}"
         ),
     }
     prompt = prompts.get(action)
@@ -228,7 +322,7 @@ def ai_action(body: dict[str, Any]):
 
 
 @router.post("/security-scan")
-def security_scan(body: dict[str, Any]):
+def security_scan(body: SecurityScanRequest):
     """Perform a REAL passive security scan of the target URL.
 
     ERR-G03 FIX: previously returned an unconditional
@@ -237,7 +331,7 @@ def security_scan(body: dict[str, Any]):
     real response headers (CSP, HSTS, X-Frame-Options, cookie flags, TLS) and
     reports the actual findings and score. Fetch failures are explicit 502s.
     """
-    url = str(body.get("url") or "").strip()
+    url = body.url.strip()
     if not url:
         raise HTTPException(status_code=422, detail="A 'url' is required for a security scan.")
     if not url.startswith(("http://", "https://")):
@@ -259,7 +353,7 @@ def security_scan(body: dict[str, Any]):
 
 
 @router.post("/screenshot")
-def capture_screenshot(body: dict[str, Any]):
+def capture_screenshot(body: ScreenshotRequest):
     """Capture a REAL viewport screenshot via Playwright (when available).
 
     ERR-D02 FIX: previously returned a hardcoded 1x1 blank transparent PNG —
@@ -267,7 +361,7 @@ def capture_screenshot(body: dict[str, Any]):
     page in a headless Chromium. If Playwright or its browser binary is not
     installed, it fails loudly with 503 instead of returning a blank image.
     """
-    url = str(body.get("url") or "").strip()
+    url = body.url.strip()
     if not url or not url.startswith(("http://", "https://")):
         raise HTTPException(status_code=422, detail=f"Invalid or missing 'url': {url!r}")
 
@@ -289,7 +383,7 @@ def capture_screenshot(body: dict[str, Any]):
             try:
                 page = browser.new_page(viewport={"width": 1280, "height": 800})
                 page.goto(url, wait_until="networkidle", timeout=30000)
-                png_bytes: bytes = page.screenshot(full_page=bool(body.get("full_page")))
+                png_bytes: bytes = page.screenshot(full_page=body.full_page)
             finally:
                 browser.close()
     except Exception as exc:  # noqa: BLE001 — honest error propagation

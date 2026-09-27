@@ -19,6 +19,12 @@ related_docs:
 source_issue: 1850
 ---
 
+> **STATUS (2026-09-27, epic #1850 Phase F truth-sync):** historical planning document.
+> The final locked architecture (19 workflow files: 6 pipelines + 2 retained + 11
+> libraries) landed via epic #1850 — see `integration-gate.yml`, `pr-gate.yml`,
+> `nightly-ops.yml`, `ci.yml`, `ops-console.yml`, `issue-ops.yml` for the live state.
+> Workflow names referenced below may differ from the final state.
+
 # 🏗️ CI Workflow Consolidation — 38 → 5
 
 > **Status:** `implementing` · **Owner:** Planning & Audit Circle (Agent-1) · **Source:** Issue #1850 (founder directive)

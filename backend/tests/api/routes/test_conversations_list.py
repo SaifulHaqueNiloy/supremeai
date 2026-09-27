@@ -22,7 +22,9 @@ class FakeVectorStore:
         self.sessions = sessions or []
         self.calls: list[tuple] = []
 
-    async def list_conversation_sessions(self, user_id: str, limit: int = 50, **_: Any) -> list[dict]:
+    async def list_conversation_sessions(
+        self, user_id: str, limit: int = 50, **_: Any
+    ) -> list[dict]:
         self.calls.append(("list", user_id, limit))
         return self.sessions[:limit]
 

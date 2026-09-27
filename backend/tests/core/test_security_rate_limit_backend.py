@@ -17,7 +17,19 @@ from core.middleware.security import RequestValidationMiddleware
 # বাংলা: core.cache.__init__ নিজেই 'redis_manager' নামে ইনস্ট্যান্স রি-এক্সপোর্ট
 # করে, তাই 'import core.cache.redis_manager as m' মডিউল নয় ইনস্ট্যান্স দেয়।
 # মডিউল অবজেক্ট সরাসরি নিতে হয়।
-redis_manager_module = import_module("core.cache.redis_manager")
+#
+# FIX (#2088 fallout): resolve the module LAZILY (per call), never once at
+# module/collection time. Other suite members (test_redis_budget_guard)
+# legitimately swap the core.cache.redis_manager module object in sys.modules
+# mid-session; a collection-time import_module() captures a STALE object whose
+# monkeypatches then silently no-op against the live module the middleware
+# imports — exactly the CI-only "Event loop is closed" failures (the REAL
+# singleton was reached instead of the FakeRedis) that pass in isolation.
+
+
+def _redis_manager_module():
+    """The LIVE core.cache.redis_manager module object (never a stale copy)."""
+    return import_module("core.cache.redis_manager")
 
 
 class _FakeRedis:
@@ -56,7 +68,7 @@ def fake_redis(monkeypatch):
     # বাংলা: core.cache.redis_manager হলো মডিউল — সেখানেই module-level
     # redis_manager ভেরিয়েবল প্যাচ করতে হয় (core.cache থেকে ইমপোর্ট করলে
     # ইনস্ট্যান্স পাওয়া যায়, মডিউল নয়)।
-    monkeypatch.setattr(redis_manager_module, "redis_manager", _Manager())
+    monkeypatch.setattr(_redis_manager_module(), "redis_manager", _Manager())
     return fake
 
 
@@ -99,7 +111,7 @@ async def test_fallback_when_redis_unavailable(mw, monkeypatch):
         async def get_client_async(self):
             return None
 
-    monkeypatch.setattr(redis_manager_module, "redis_manager", _NoneManager())
+    monkeypatch.setattr(_redis_manager_module(), "redis_manager", _NoneManager())
 
     results = []
     for _ in range(3):
@@ -117,7 +129,7 @@ async def test_fallback_memory_is_per_instance():
         async def get_client_async(self):
             return None
 
-    with patch.object(redis_manager_module, "redis_manager", _NoneManager()):
+    with patch.object(_redis_manager_module(), "redis_manager", _NoneManager()):
         a = RequestValidationMiddleware(app=None)
         b = RequestValidationMiddleware(app=None)
         # both allow the first request; state is independent per instance
@@ -133,7 +145,7 @@ async def test_old_entries_ignored_in_fallback(mw, monkeypatch):
         async def get_client_async(self):
             return None
 
-    monkeypatch.setattr(redis_manager_module, "redis_manager", _NoneManager())
+    monkeypatch.setattr(_redis_manager_module(), "redis_manager", _NoneManager())
     # seed stale timestamps far outside the window
     mw._request_log["6.6.6.6"] = [time.time() - 10_000] * 500
     assert await mw._check_rate_limit("6.6.6.6", "/api/v1/anything") is True

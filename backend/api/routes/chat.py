@@ -150,18 +150,11 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
             ContextBlock(section=Section.USER, text=payload.prompt, priority=0, block_id="user")
         ]
 
-        # Retrieve long-term memory facts for tenant/user context
-        try:
-            from memory.long_term_memory import LongTermMemory
-
-            ltm = LongTermMemory(session_id=session_id or f"default_{db.tenant_id}")
-            mem_facts = ltm.build_context()
-            if mem_facts and mem_facts != "No memory available.":
-                context_blocks.append(
-                    ContextBlock(section=Section.MEMORY, text=mem_facts, priority=0, block_id="ltm")
-                )
-        except Exception as mem_err:
-            logger.debug(f"Memory retrieval bypassed: {mem_err}")
+        # (#1834) মৃত LTM no-op block মুছে ফেলা হয়েছে (instance-local facts কখনো persist হতো না)
+        # build_context()
+        # সবসময় "No memory available." ফেরত দিত, আর প্রতি cache-miss চ্যাটে
+        # অপ্রয়োজনীয় একটি Supabase client তৈরি হতো। আসল recall নিচের
+        # recall_memories (pgvector ai_memory) — সেটিই একমাত্র memory path।
 
         # Retrieve System Knowledge Base (Cold-Start RAG)
         try:

@@ -28,12 +28,18 @@ class MergeLearningPayload(BaseModel):
     title: str = Field(..., description="PR title")
     author: str = Field(..., description="PR author (login)")
     merged_by: str | None = Field(default=None, description="Who merged (login)")
-    lane: str | None = Field(default=None, description="Agent lane inferred from branch (planner/coder/ci/...)")
+    lane: str | None = Field(
+        default=None, description="Agent lane inferred from branch (planner/coder/ci/...)"
+    )
     branch: str = Field(..., description="Head branch name")
     merge_sha: str | None = Field(default=None, description="Squash-merge commit SHA")
     merged_at: int = Field(..., description="Merge time (epoch seconds)")
-    risk_class: str | None = Field(default=None, description="Unified PR Gate risk class (LOW/MEDIUM/HIGH/CRITICAL)")
-    gate_status: str | None = Field(default=None, description="Unified PR Gate verdict (PASS/BLOCKED/NEEDS-REVIEW)")
+    risk_class: str | None = Field(
+        default=None, description="Unified PR Gate risk class (LOW/MEDIUM/HIGH/CRITICAL)"
+    )
+    gate_status: str | None = Field(
+        default=None, description="Unified PR Gate verdict (PASS/BLOCKED/NEEDS-REVIEW)"
+    )
     why_allowed: str | None = Field(
         default=None,
         description="Why this merge was allowed as an improvement (gate decision rationale)",
@@ -46,11 +52,15 @@ class MergeLearningPayload(BaseModel):
         default=None,
         description="Mistake/blocker trail: every queue:hold / hold:merge-conflict / queue:failed event with timestamps",
     )
-    linked_issues: list[int] | None = Field(default=None, description="Issues closed/linked by the PR")
+    linked_issues: list[int] | None = Field(
+        default=None, description="Issues closed/linked by the PR"
+    )
     files: list[str] | None = Field(default=None, description="Files changed")
     additions: int = Field(default=0, description="Lines added")
     deletions: int = Field(default=0, description="Lines deleted")
-    lessons_ref: str | None = Field(default=None, description="LESSONS_LEARNED.md reference if a lesson was logged")
+    lessons_ref: str | None = Field(
+        default=None, description="LESSONS_LEARNED.md reference if a lesson was logged"
+    )
 
 
 async def upsert_merge_learning(payload: MergeLearningPayload) -> dict[str, Any] | None:

@@ -1,11 +1,11 @@
 {
-  "functional_module_count": 194,
+  "functional_module_count": 190,
   "functional_module_inventory": "MODULES_LIST.md",
   "functional_status_counts": {
-    "broken": 1,
+    "broken": 3,
     "env_dependent": 3,
-    "operational": 127,
-    "partially_wired": 63,
+    "operational": 124,
+    "partially_wired": 60,
     "planned": 0
   },
   "inventory_type": "source_file_capability",
@@ -11015,6 +11015,25 @@
     },
     {
       "capability_signals": [
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_api_contract_docs.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_browser_package_request_models.py"
+    },
+    {
+      "capability_signals": [
         "browser",
         "capability",
         "health",
@@ -11122,6 +11141,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/routes/test_mcp_hub_contract.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_memory_feedback_path.py"
     },
     {
       "capability_signals": [
@@ -24806,7 +24834,8 @@
     },
     {
       "capability_signals": [
-        "browser"
+        "browser",
+        "dispatch"
       ],
       "classification": "human_review",
       "entrypoints": [
@@ -25737,7 +25766,9 @@
     {
       "capability_signals": [],
       "classification": "dormant_or_dynamic",
-      "entrypoints": [],
+      "entrypoints": [
+        "main"
+      ],
       "kind": "py",
       "path": "scripts/git/push_as_agent.py"
     },
@@ -26168,7 +26199,9 @@
       "path": "scripts/quality/docs_drift_check.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "browser"
+      ],
       "classification": "human_review",
       "entrypoints": [
         "main"
@@ -26716,5 +26749,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3052
+  "source_file_count": 3055
 }

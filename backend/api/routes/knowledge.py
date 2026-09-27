@@ -299,9 +299,33 @@ async def record_feedback(
     request: LearningUpload,
     user: dict = Depends(get_current_user_token),
 ):
-    """Record suggestion feedback in the learning loop (real persistence)."""
+    """Record suggestion feedback in the learning loop (real persistence).
+
+    #1834: একই RAG-quality rating এখন EvolutionEngine.record_feedback-এও যায় —
+    feedback_loop টেবিল আর খালি থাকবে না। EvolutionEngine-এর sqlite লেখা sync,
+    তাই event loop ব্লক না করতে worker thread-এ চলে; ব্যর্থ হলে learning-signal
+    ingestion অক্ষত থাকে (fail-open, warning log)।
+    """
     _validate_learning_type(request.type, _FEEDBACK_ROUTE_TYPES)
     signal_id = _record_learning_signal(request.type, request)
+
+    try:
+        import asyncio
+
+        from core.self_evolution.evolution_engine import EvolutionEngine
+
+        data = request.data or {}
+        engine = EvolutionEngine()
+        await asyncio.to_thread(
+            engine.record_feedback,
+            request.sessionId,
+            str(data.get("query", "")),
+            str(data.get("retrieved_chunks", data.get("content", ""))),
+            float(data.get("rating", 0.0) or 0.0),
+        )
+    except Exception as exc:  # noqa: BLE001 — dual-write must never 500 the route
+        logger.warning(f"[knowledge] feedback_loop write skipped: {exc}")
+
     return {
         "success": True,
         "message": f"feedback signal recorded ({signal_id})",

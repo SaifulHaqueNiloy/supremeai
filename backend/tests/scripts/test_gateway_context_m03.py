@@ -146,8 +146,9 @@ class TestGatewayContextGate:
     def test_current_tree_has_zero_violations(self):
         violations, total = context_gate.scan()
         assert violations == []
-        # ১৩ serving route-ফাইলে ১৪টি inference কল-সাইট — সব context-বহন।
-        assert total >= 14
+        # ৮ serving route-ফাইলে ১২টি inference কল-সাইট — সব context-বহন।
+        # (#1832: websocket_agent.py orphan route removed — call-sites dropped 14→12.)
+        assert total >= 12
 
     def test_baseline_is_zero(self):
         assert context_gate.BASELINE == 0
@@ -213,6 +214,5 @@ class TestGatewayContextGate:
             "scheduled_tasks.py",
             "browser_routes.py",
             "deep_research.py",
-            "websocket_agent.py",
         }
         assert expected == files_with_calls
