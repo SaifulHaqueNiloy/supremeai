@@ -662,7 +662,9 @@ class AsyncCircuitBreaker:
 CIRCUITS: dict[str, AsyncCircuitBreaker] = {
     "gemini_api": AsyncCircuitBreaker("gemini_api", failure_threshold=5, recovery_timeout=30),
     "groq_api": AsyncCircuitBreaker("groq_api", failure_threshold=5, recovery_timeout=30),
-    "openrouter_api": AsyncCircuitBreaker("openrouter_api", failure_threshold=5, recovery_timeout=30),
+    "openrouter_api": AsyncCircuitBreaker(
+        "openrouter_api", failure_threshold=5, recovery_timeout=30
+    ),
     "database": AsyncCircuitBreaker("database", failure_threshold=3, recovery_timeout=15),
     "external_http": AsyncCircuitBreaker("external_http", failure_threshold=5, recovery_timeout=20),
 }
