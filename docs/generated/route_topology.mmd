@@ -97,7 +97,6 @@ flowchart LR
   n_capability_b2b0c95bad700e8de047["Reasoning"]
   n_capability_b2ce51b893bd4a0e6308["missions"]
   n_capability_b8af85aecacde4df0938["payments"]
-  n_capability_bcb7708af85d83f32beb["SSE Voice Stream"]
   n_capability_be0643d29a4e69b5771e["Command Center"]
   n_capability_c21872abe21d3abd2e21["tenants"]
   n_capability_c39d858cfc27b6b5f01e["SSE Chat Stream (Legacy)"]
@@ -778,7 +777,6 @@ flowchart LR
   n_route_d8771367c87f76f05f04["GET /api/admin/infrastructure/auto-scaling/status"]
   n_route_d8ec95d1f30527a1663c["GET /api/v1/health/live"]
   n_route_d9e6162e59f08cbbb2f9["POST /admin-api/config"]
-  n_route_da2ab71a5825c335601c["GET /api/v1/stream/voice"]
   n_route_da41d06e9c54b8eba11f["GET /api/v1/live"]
   n_route_da51ee24ac7212a0201f["POST /admin-api/tenant-limits/admin-api/tenants/{tenant_id}/reset"]
   n_route_daa669cf0bbf10d176be["GET /api/preferences/memory/"]
@@ -1540,7 +1538,6 @@ flowchart LR
   n_contract_9337269577d524de529e -->|defines| n_route_d8771367c87f76f05f04
   n_contract_9337269577d524de529e -->|defines| n_route_d8ec95d1f30527a1663c
   n_contract_9337269577d524de529e -->|defines| n_route_d9e6162e59f08cbbb2f9
-  n_contract_9337269577d524de529e -->|defines| n_route_da2ab71a5825c335601c
   n_contract_9337269577d524de529e -->|defines| n_route_da41d06e9c54b8eba11f
   n_contract_9337269577d524de529e -->|defines| n_route_da51ee24ac7212a0201f
   n_contract_9337269577d524de529e -->|defines| n_route_daa669cf0bbf10d176be
@@ -2360,7 +2357,6 @@ flowchart LR
   n_route_d8ec95d1f30527a1663c -->|exposes| n_capability_ebbc4104642881464a4e
   n_route_d9e6162e59f08cbbb2f9 -->|exposes| n_capability_a43b0ca14c88d4f2694d
   n_route_d9e6162e59f08cbbb2f9 -->|requires| n_control_8beb2443d48d78613952
-  n_route_da2ab71a5825c335601c -->|exposes| n_capability_bcb7708af85d83f32beb
   n_route_da51ee24ac7212a0201f -->|exposes| n_capability_654aa14b05faffbe9b54
   n_route_da51ee24ac7212a0201f -->|exposes| n_capability_c21872abe21d3abd2e21
   n_route_daa669cf0bbf10d176be -->|exposes| n_capability_221f4abc23701d2ed343

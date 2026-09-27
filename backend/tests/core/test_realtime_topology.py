@@ -56,7 +56,9 @@ class TestZombieAgentManager:
         assert offenders == [], f"zombie references remain: {offenders}"
 
     def test_commandcenter_reports_no_fake_ws_metric(self):
-        cc = (BACKEND / "api" / "routes" / "commandcenter" / "__init__.py").read_text(encoding="utf-8")
+        cc = (BACKEND / "api" / "routes" / "commandcenter" / "__init__.py").read_text(
+            encoding="utf-8"
+        )
         assert "active_connections" not in cc, "structurally-always-zero metric must stay removed"
 
 
@@ -88,7 +90,9 @@ class TestTaskCompletionNotifications:
             return {"ok": True}
 
         queue._handlers["unit"] = handler
-        await queue._process_task({"task_id": "t-1", "type": "unit", "task_type": "unit", "user_id": "u-1", "payload": {}})
+        await queue._process_task(
+            {"task_id": "t-1", "type": "unit", "task_type": "unit", "user_id": "u-1", "payload": {}}
+        )
 
         assert published, "completion must publish to dashboard_events"
         channel, message = published[0]

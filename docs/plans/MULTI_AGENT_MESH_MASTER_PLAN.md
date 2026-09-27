@@ -20,6 +20,12 @@ related_docs:
   - docs/master_docs/AGENT_SLOT_REGISTRY.yaml
 ---
 
+> **STATUS (2026-09-27, epic #1850 Phase F truth-sync):** historical planning document.
+> The final locked architecture (19 workflow files: 6 pipelines + 2 retained + 11
+> libraries) landed via epic #1850 — see `integration-gate.yml`, `pr-gate.yml`,
+> `nightly-ops.yml`, `ci.yml`, `ops-console.yml`, `issue-ops.yml` for the live state.
+> Workflow names referenced below may differ from the final state.
+
 # 🏛️ SupremeAI Distributed Multi-Agent Mesh — Master Plan
 
 > **একটি সেন্ট্রালাইজড কন্ট্রোল প্লেন (MCP Tower), ডায়নামিক এআই ফ্লিট, ক্লাউড ওয়েব টুলস এবং ২টি লোকাল পিসির সমন্বয়ে গঠিত জিরো-কস্ট ডিস্ট্রিবিউটেড হাইব্রিড সিস্টেমের পূর্ণাঙ্গ আর্কিটেকচার।**

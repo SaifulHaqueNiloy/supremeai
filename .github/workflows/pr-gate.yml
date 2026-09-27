@@ -1,11 +1,33 @@
-name: PR Pipeline (Unified Orchestrator)
+# PR Gate — the ONE PR-side pipeline (epic #1850 Phase E / W1, issue #1857)
+# ==============================================================================================
+# Rename-by-addition from pr-pipeline.yml (kept whole, verbatim gate logic; the old file is a
+# dispatch-only husk pending Tier-3 deletion). REQUIRED-CHECK STABILITY (branch protection):
+#   - job `branch-naming-guard` name: "Branch Naming Guard"            (byte-identical)
+#   - job `pr-gate` name: "🚦 Unified PR Gate (Security, Scope & Policy Orchestrator)"  (byte-identical)
+# Absorbed (each body verbatim from its source file, trigger domain preserved):
+#   branch-naming-guard.yml   -> job `branch-naming-guard` (Stage 0, ~10s, check-run emitter)
+#   cross-pr-collision-guard.yml -> job `check-collisions` (strict mode #2002)
+#   e2e-suites.yml            -> `pr-changes` filter + `e2e-guest` (PR arm, paths self-skip)
+#                                + `e2e-customer`/`e2e-admin` (dispatch arms, legacy 06/07 semantics)
+#   merge-learning-recorder.yml -> job `record-on-merge` (PR closed+merged / dispatch backfill)
+#   constitution-governance.yml -> job `constitution` (PR paths arm; weekly arm already in
+#                                  nightly-ops since Phase B)
+# SG-11 lockstep: self-mod + constitution regexes inside `pr-gate` now track pr-gate.yml.
+name: PR Gate (Unified Orchestrator)
 on:
   pull_request:
+    # epic #1850 Phase E / #1857: labeled/unlabeled re-evaluate the gate after label
+    # transitions (queue/pr-gate labels — the gate's own label writes are idempotent,
+    # so the re-run stabilizes after one pass); closed drives record-on-merge only
+    # (every other job is closed-guarded).
     types:
       - opened
       - synchronize
       - reopened
       - ready_for_review
+      - labeled
+      - unlabeled
+      - closed
     branches:
       - main
       - develop
@@ -15,11 +37,37 @@ on:
         description: PR number to analyze (manual test)
         required: true
         type: string
+      # ── on-demand E2E arms (absorbed from e2e-suites.yml dispatch semantics) ──
+      run_e2e_guest:
+        description: 'Run the guest suite (local preview build)'
+        required: false
+        default: false
+        type: boolean
+      run_e2e_customer:
+        description: 'Run the customer suite (staging)'
+        required: false
+        default: false
+        type: boolean
+      run_e2e_admin:
+        description: 'Run the admin suite'
+        required: false
+        default: false
+        type: boolean
+      use_staging:
+        description: 'Guest/admin suites run against STAGING_URL instead of a local preview build'
+        required: false
+        default: false
+        type: boolean
+      e2e_base_url:
+        description: 'App under test for the admin suite (defaults to QA_BASE_URL env or local vite preview)'
+        required: false
+        default: ''
+        type: string
 
 concurrency:
   # workflow_dispatch has no PR number — use run_id (#1852 P1): github.ref made
   # concurrent manual dispatches cancel each other; branch-naming-guard already uses run_id.
-  group: pr-pipeline-${{ github.event.pull_request.number || github.run_id }}
+  group: pr-gate-${{ github.event.pull_request.number || github.run_id }}
   cancel-in-progress: true
 
 # Workflow-level permissions: contents: write is required for the reusable
@@ -42,6 +90,8 @@ jobs:
   # ============================================================================
   pr-gate:
     name: 🚦 Unified PR Gate (Security, Scope & Policy Orchestrator)
+    # closed-guard (epic #1850 Phase E): on PR-close only record-on-merge runs
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     # Job-level permissions: explicitly limit write scope so security scanning
@@ -215,13 +265,13 @@ jobs:
           frontend_changed     = any_match(r'^frontend/')
           constitution_changed = any_match(
               r'^(docs/security/SECURITY_GUARDIAN\.md|security/policies/|'
-              r'\.github/workflows/pr-pipeline\.yml|\.github/workflows/pr-helper\.yml|'
+              r'\.github/workflows/pr-gate\.yml|\.github/workflows/pr-helper\.yml|'
               r'\.github/scripts/pr_helper/)'
           )
 
           self_mod_patterns = [
               r'^\.github/workflows/pr-helper\.yml$',
-              r'^\.github/workflows/pr-pipeline\.yml$',
+              r'^\.github/workflows/pr-gate\.yml$',
               r'^\.github/scripts/pr_helper/',
               r'^docs/security/SECURITY_GUARDIAN\.md$',
               r'^security/policies/',
@@ -627,13 +677,17 @@ jobs:
           PR_TITLE="$(gh pr view "$PR" --json title -q .title 2>/dev/null || echo '')"
 
           ISSUE_REFS=$(printf '%s\n%s\n' "$PR_TITLE" "$PR_BODY" \
-            | grep -oE '(close[sd]?|fix(es|ed)?|resolve[sd]?|refs?|see)[[:space:]]+#[0-9]+' \
+            | grep -ioE '(close[sd]?|fix(es|ed)?|resolve[sd]?|refs?|see)[[:space:]]+#[0-9]+' \
             | grep -oE '#[0-9]+' | sort -u | tr '\n' ' ' | sed 's/ $//')
 
           if [[ -n "$ISSUE_REFS" ]]; then
             echo "issue_linked=true" >> "$GITHUB_OUTPUT"
             echo "issue_refs=$ISSUE_REFS" >> "$GITHUB_OUTPUT"
-            echo "::notice::PR linked to issue(s): $ISSUE_REFS"
+            # AUDIT-FIX (#2006 via PR #2016, folded with credit): count issue refs —
+            # Rule #4 "1 ISSUE = 1 PR" is enforced in the contract step's BLOCK_COUNT.
+            ISSUE_COUNT=$(printf '%s' "$ISSUE_REFS" | tr ' ' '\n' | grep -c '#' || true)
+            echo "issue_count=$ISSUE_COUNT" >> "$GITHUB_OUTPUT"
+            echo "::notice::PR linked to issue(s): $ISSUE_REFS (count=$ISSUE_COUNT)"
           else
             echo "issue_linked=false" >> "$GITHUB_OUTPUT"
             echo "issue_refs=" >> "$GITHUB_OUTPUT"
@@ -711,6 +765,7 @@ jobs:
           AUTO_MERGE_ELIGIBLE: ${{ steps.deps_classify.outputs.auto_merge_eligible }}
           ISSUE_LINKED: ${{ steps.agent_helper.outputs.issue_linked }}
           ISSUE_REFS: ${{ steps.agent_helper.outputs.issue_refs }}
+          ISSUE_COUNT: ${{ steps.agent_helper.outputs.issue_count }}
           PRESERVATION_OK: ${{ steps.agent_helper.outputs.preservation_guard_ok }}
           DELETED_PROTECTED_COUNT: ${{ steps.agent_helper.outputs.deleted_protected_count }}
         run: |
@@ -773,10 +828,18 @@ jobs:
             [[ "$AUTH_BOUNDARY_B" == "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
             [[ "$HITL_BYPASS_B" == "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
             [[ "$PRESERVATION_OK_B" != "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + DELETED_PROTECTED_INT))
+            # AUDIT-FIX (#1991 via PR #2014, folded here with credit — Phase E rename
+            # superseded that PR): "NO CLAIM, NO CODE" (Rule #2) — a PR without an
+            # issue reference is BLOCKED (ISSUE_LINKED_B was advisory-only before).
+            [[ "$ISSUE_LINKED_B" != "true" ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
+            # AUDIT-FIX (#2006 via PR #2016, folded here with credit): Rule #4
+            # "1 ISSUE = 1 PR" — multiple issue references in one PR are BLOCKED.
+            ISSUE_COUNT_NUM="${ISSUE_COUNT:-0}"
+            [[ "$ISSUE_COUNT_NUM" -gt 1 ]] && BLOCK_COUNT=$((BLOCK_COUNT + 1))
 
             if [[ $BLOCK_COUNT -gt 0 ]]; then
               STATUS="BLOCK"
-              REASON="New evidence-backed violations: secrets=$SECRET_LEAKS_INT, dangerous_shell=$SHELL_VIOLATIONS_INT, auth_boundary_regression=$AUTH_BOUNDARY_B, hitl_bypass=$HITL_BYPASS_B, protected_deletions=$DELETED_PROTECTED_INT (SG-01/SG-04/SG-07/SG-09)"
+              REASON="New evidence-backed violations: secrets=$SECRET_LEAKS_INT, dangerous_shell=$SHELL_VIOLATIONS_INT, auth_boundary_regression=$AUTH_BOUNDARY_B, hitl_bypass=$HITL_BYPASS_B, protected_deletions=$DELETED_PROTECTED_INT, issue_linked=$ISSUE_LINKED_B, issue_count=${ISSUE_COUNT:-0} (SG-01/SG-04/SG-07/SG-09 + Rule #2 NO CLAIM NO CODE #1991 + Rule #4 1-ISSUE-1-PR #2006)"
             elif [[ "$SELF_MOD_B" == "true" ]]; then
               STATUS="REVIEW"
               REASON="Self-modification of Guardian/PR-Helper logic detected (SG-11 Bootstrap Trust) — mandatory human review, auto-merge disabled"
@@ -826,7 +889,7 @@ jobs:
               protected_paths = []
 
           lines = [
-              f"# Security Decision Contract — synthesized by pr-pipeline.yml (pr-gate)",
+              f"# Security Decision Contract — synthesized by pr-gate.yml (pr-gate job)",
               f"# Generated: {os.environ.get('TIMESTAMP', '')}",
               f"# PR: #{os.environ.get('PR', '')}",
               f"# Repository: {os.environ.get('GITHUB_REPOSITORY', '')}",
@@ -904,7 +967,7 @@ jobs:
             printf '\n<details><summary>📄 Full Security Decision Contract (YAML)</summary>\n\n```yaml\n'
             cat "$CONTRACT_FILE"
             printf '\n```\n\n</details>\n'
-            printf '\n---\n_Auto-generated by `pr-pipeline.yml`. Edit this comment and it will be overwritten on the next run._\n'
+            printf '\n---\n_Auto-generated by `pr-gate.yml`. Edit this comment and it will be overwritten on the next run._\n'
           } > "$COMMENT_FILE"
 
           EXISTING_COMMENT_ID=$(gh pr view "$PR" --json comments \
@@ -1061,7 +1124,9 @@ jobs:
     name: 🤖 PR Lifecycle (PR Helper)
     needs: pr-gate
     if: >-
+      needs.pr-gate.result == 'success' &&
       needs.pr-gate.outputs.status != 'BLOCK' &&
+      (github.event_name != 'pull_request' || github.event.action != 'closed') &&
       (contains(github.event.pull_request.labels.*.name, 'merge-train:batch') ||
        (needs.pr-gate.outputs.enqueued != 'true' &&
         !contains(github.event.pull_request.labels.*.name, 'queue:pending-rollup') &&
@@ -1070,3 +1135,335 @@ jobs:
     with:
       pr_number: ${{ needs.pr-gate.outputs.pr_number }}
     secrets: inherit
+
+  # ============================================================================
+  # Stage 0 — Branch Naming Guard (absorbed from branch-naming-guard.yml, #1857).
+  # REQUIRED CHECK: job name byte-identical to branch protection. Emits the explicit
+  # check-run (PASS/FAIL) on the head SHA exactly like the standalone workflow did.
+  # ============================================================================
+  branch-naming-guard:
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    name: Branch Naming Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Resolve PR + branch metadata
+        id: meta
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${{ github.event.pull_request.number }}" ]]; then
+            PR_NUMBER="${{ github.event.pull_request.number }}"
+            HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+            BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          else
+            PR_NUMBER="${{ inputs.pr_number }}"
+            HEAD_SHA="$(gh pr view "$PR_NUMBER" --json headRefOid -q .headRefOid)"
+            BRANCH_NAME="$(gh pr view "$PR_NUMBER" --json headRefName -q .headRefName)"
+          fi
+          {
+            echo "pr_number=$PR_NUMBER"
+            echo "head_sha=$HEAD_SHA"
+            echo "branch_name=$BRANCH_NAME"
+          } >> "$GITHUB_OUTPUT"
+          echo "PR=$PR_NUMBER branch=$BRANCH_NAME sha=$HEAD_SHA"
+
+      - name: Validate branch name + emit check-run (PASS or FAIL)
+        id: validate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ steps.meta.outputs.head_sha }}
+          BRANCH_NAME: ${{ steps.meta.outputs.branch_name }}
+          PR_NUMBER: ${{ steps.meta.outputs.pr_number }}
+        run: |
+          set -euo pipefail
+
+          # OPS-06 Safeguard 4 regex (kept in sync with pr-pipeline.yml).
+          # AGENTS.md Sec 4 (persistent agent branch model, 90841db) defines bare
+          # slots agent-1..agent-9 as the workspaces - PRs originate from the
+          # assigned slot, so bare agent-N must pass. The legacy agent-X/issue-N-slug
+          # form stays for back-compat (cannot coexist as git refs with bare slots).
+          # Bot prefixes (dependabot/github-actions/renovate/pr-helper) are EXEMPT:
+          # এরা human developer নয়, নিজেদের convention-মানা branch বানায় — naming
+          # gate এদের block করলে dependency PR কখনোই auto-merge হতে পারে না।
+          VALID_PATTERN='^((planner|coder|pr-helper|ci|platform|browser|super)-[0-9]+(-[a-zA-Z0-9_-]+)?|agent-[a-zA-Z0-9_-]+/issue-[0-9]+-.+|agent-[0-9]+(-[a-zA-Z0-9_-]+)?|feat/.+|fix/.+|hotfix/.+|perf/.+|chore/.+|test/.+|docs/.+|refactor/.+|ci/.+|dependabot/.+|github-actions/.+|renovate/.+|pr-helper/.+|develop|main)$'
+
+          if [[ "$BRANCH_NAME" =~ $VALID_PATTERN ]]; then
+            echo "valid=true" >> "$GITHUB_OUTPUT"
+            echo "✅ Branch name '$BRANCH_NAME' matches OPS-06 pattern"
+
+            # Create a PASSING check-run so required_status_checks sees green
+            gh api "repos/$GH_REPO/check-runs" \
+              --method POST \
+              -f name="Branch Naming Guard" \
+              -f head_sha="$HEAD_SHA" \
+              -f status="completed" \
+              -f conclusion="success" \
+              -f "output[title]=Branch name matches OPS-06 convention" \
+              -f "output[summary]=Branch \`$BRANCH_NAME\` matches required pattern ✅" \
+              -f "details_url=https://github.com/$GH_REPO/actions/runs/${{ github.run_id }}"
+
+          else
+            echo "valid=false" >> "$GITHUB_OUTPUT"
+            echo "❌ Branch name '$BRANCH_NAME' does NOT match OPS-06 pattern"
+
+            # Create a FAILING check-run so required_status_checks blocks the merge
+            gh api "repos/$GH_REPO/check-runs" \
+              --method POST \
+              -f name="Branch Naming Guard" \
+              -f head_sha="$HEAD_SHA" \
+              -f status="completed" \
+              -f conclusion="failure" \
+              -f "output[title]=Branch name violates OPS-06 convention" \
+              -f "output[summary]=Branch '$BRANCH_NAME' doesn't match required pattern. Valid: agent-N (persistent slot, AGENTS.md Sec 4), agent-N/issue-N-<slug>, feat/, fix/, hotfix/, perf/, chore/, test/, docs/, refactor/, ci/ + bot prefixes (dependabot/, github-actions/, renovate/, pr-helper/)" \
+              -f "details_url=https://github.com/$GH_REPO/actions/runs/${{ github.run_id }}"
+
+            # Optional: ensure branch:invalid label exists (idempotent, non-fatal)
+            gh label create "branch:invalid" --color "D93F0B" \
+              --description "Branch name does not match OPS-06 regex" --force 2>/dev/null || true
+            gh pr edit "$PR_NUMBER" --add-label "branch:invalid" 2>/dev/null || true
+
+            echo "::error::Branch name '$BRANCH_NAME' violates OPS-06 naming convention"
+            exit 1
+          fi
+
+  # ============================================================================
+  # Stage 1 (parallel) — Cross-PR file collisions (absorbed from
+  # cross-pr-collision-guard.yml; strict mode #2002 — direct collisions BLOCK).
+  # ============================================================================
+  check-collisions:
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    name: Check Cross-PR File Collisions
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Run Collision Detector
+        id: collision_check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          PR_NUM="${{ github.event.pull_request.number }}"
+          HEAD_REF="${{ github.event.pull_request.head.ref }}"
+          echo "🔍 Evaluating Cross-PR file collisions for PR #$PR_NUM (branch: $HEAD_REF)..."
+
+          if [[ "$HEAD_REF" =~ ^(pr-helper-[0-9]+|agent-2(-pr-helper)?)$ ]]; then
+            echo "🚂 Merge-train rollup batch on PR-Helper slot detected — intra-batch members are intentionally merged."
+            echo '{"has_collision": false, "collisions": []}' > collision_output.json
+            echo "### ✅ Merge-Train Batch PR — intra-batch member merges are expected and verified." > collision_report.md
+            echo "has_collision=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          
+          # AUDIT-FIX (#2002): pass --strict flag so direct file collisions BLOCK the PR.
+          python scripts/git/cross_pr_collision_detector.py --pr "$PR_NUM" --format json --strict > collision_output.json 2>&1 || true
+          python scripts/git/cross_pr_collision_detector.py --pr "$PR_NUM" --format markdown > collision_report.md 2>/dev/null || true
+
+          # AUDIT-FIX (#2002): check for has_direct_collision (strict mode exit code)
+          HAS_DIRECT=$(python -c "import json; d=json.load(open('collision_output.json')); print('true' if d.get('has_direct_collision') or d.get('has_collision') else 'false')" 2>/dev/null || echo "false")
+          HAS_COLLISION=$(python -c "import json; d=json.load(open('collision_output.json')); print('true' if d.get('has_collision') else 'false')" 2>/dev/null || echo "false")
+          
+          echo "has_collision=$HAS_COLLISION" >> "$GITHUB_OUTPUT"
+          echo "has_direct_collision=$HAS_DIRECT" >> "$GITHUB_OUTPUT"
+          
+          echo "================ Collision Summary ================"
+          cat collision_report.md
+          echo "==================================================="
+          
+          # AUDIT-FIX (#2002): strict mode — direct collisions exit 1 (block PR)
+          if [ "$HAS_DIRECT" = "true" ]; then
+            echo "::error::Direct file collision detected with another open PR. PR is BLOCKED (Rule: cross-pr-collision strict mode, #2002)."
+            echo "has_collision=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+      - name: Update PR Status and Comments
+        if: always() && steps.collision_check.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          HAS_COLLISION: ${{ steps.collision_check.outputs.has_collision }}
+          PR_NUM: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          COMMENT_TAG="<!-- SUPREMEAI_COLLISION_GUARD -->"
+          REPORT_BODY=$(cat collision_report.md)
+          COMMENT_CONTENT="${COMMENT_TAG}\n${REPORT_BODY}"
+
+          # Find existing collision guard comment if present
+          EXISTING_COMMENT_ID=$(gh api "repos/$GH_REPO/issues/$PR_NUM/comments" --jq ".[] | select(.body | contains(\"$COMMENT_TAG\")) | .id" | head -n 1 || true)
+
+          if [ "$HAS_COLLISION" = "true" ]; then
+            echo "⚠️ Collision detected! Adding 'collision:warning' label..."
+            gh pr edit "$PR_NUM" --add-label "collision:warning" || true
+            gh pr edit "$PR_NUM" --add-label "collision:blocked" 2>/dev/null || true
+
+            if [ -n "$EXISTING_COMMENT_ID" ]; then
+              echo "Updating existing comment $EXISTING_COMMENT_ID..."
+              gh api -X PATCH "repos/$GH_REPO/issues/comments/$EXISTING_COMMENT_ID" -f body="$COMMENT_CONTENT" || true
+            else
+              echo "Posting new collision warning comment..."
+              gh pr comment "$PR_NUM" --body "$COMMENT_CONTENT" || true
+            fi
+          else
+            echo "✅ No collision detected. Removing 'collision:warning' label if present..."
+            gh pr edit "$PR_NUM" --remove-label "collision:warning" 2>/dev/null || true
+
+            if [ -n "$EXISTING_COMMENT_ID" ]; then
+              echo "Updating existing comment to clean status..."
+              gh api -X PATCH "repos/$GH_REPO/issues/comments/$EXISTING_COMMENT_ID" -f body="$COMMENT_CONTENT" || true
+            fi
+          fi
+
+  # ============================================================================
+  # Path relevance for the self-skipping arms (dorny/paths-filter on the PR's
+  # changed files — no checkout needed for pull_request events).
+  # ============================================================================
+  pr-changes:
+    name: 🎭 Path relevance (e2e + constitution)
+    if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    outputs:
+      e2e: ${{ steps.filter.outputs.e2e }}
+      constitution: ${{ steps.filter.outputs.constitution }}
+    steps:
+      - name: Detect e2e / constitution path relevance
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        id: filter
+        with:
+          filters: |
+            e2e:
+              - 'frontend/**'
+              - 'qa/**'
+              - '.github/workflows/reusable-e2e-runner.yml'
+            constitution:
+              - '.github/constitution/**'
+              - '.github/scripts/constitution/**'
+              - 'scripts/ci/validate_constitution_governance.py'
+
+  # e2e guest — PR arm with paths self-skip (frontend/qa only, old e2e-suites PR
+  # trigger semantics) + on-demand dispatch arm.
+  e2e-guest:
+    name: 🎭 Guest Suite
+    needs: [pr-changes]
+    if: >-
+      !cancelled() && (
+        (github.event_name == 'workflow_dispatch' && inputs.run_e2e_guest == true) ||
+        (github.event_name == 'pull_request' && github.event.action != 'closed' &&
+         needs.pr-changes.result == 'success' && needs.pr-changes.outputs.e2e == 'true'))
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-e2e-runner.yml
+    with:
+      project: guest
+      use_staging: ${{ github.event_name == 'workflow_dispatch' && inputs.use_staging == true }}
+      base_url: ''
+    secrets: inherit
+
+  # e2e customer / admin — on-demand arms only (legacy 06/07 dispatch semantics;
+  # the scheduled customer run lives in nightly-ops.yml since Phase B).
+  e2e-customer:
+    name: 🎭 Customer Suite
+    if: github.event_name == 'workflow_dispatch' && inputs.run_e2e_customer == true
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-e2e-runner.yml
+    with:
+      project: customer
+      use_staging: true
+      base_url: ''
+    secrets: inherit
+
+  e2e-admin:
+    name: 🎭 Admin Suite
+    if: github.event_name == 'workflow_dispatch' && inputs.run_e2e_admin == true
+    permissions:
+      contents: read
+    uses: ./.github/workflows/reusable-e2e-runner.yml
+    with:
+      project: admin
+      use_staging: ${{ github.event_name == 'workflow_dispatch' && inputs.use_staging == true }}
+      base_url: ${{ (github.event_name == 'workflow_dispatch' && inputs.e2e_base_url) || '' }}
+    secrets: inherit
+
+  # ============================================================================
+  # Constitution governance — PR paths arm (absorbed from
+  # constitution-governance.yml; weekly arm lives in nightly-ops since Phase B).
+  # ============================================================================
+  constitution:
+    needs: [pr-changes]
+    if: >-
+      github.event_name == 'pull_request' && github.event.action != 'closed' &&
+      needs.pr-changes.result == 'success' && needs.pr-changes.outputs.constitution == 'true'
+    name: Validate constitution governance
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.11'
+      - name: Install parser
+        run: python -m pip install --disable-pip-version-check pyyaml
+      - name: Validate exceptions and expiry
+        run: python scripts/ci/validate_constitution_governance.py
+      - name: Run constitution unit tests
+        env:
+          PYTHONPATH: .github/scripts
+        run: python -m unittest discover -s .github/scripts/constitution/tests -v
+
+  # ============================================================================
+  # record-on-merge — every merged PR becomes a DB learning report (absorbed from
+  # merge-learning-recorder.yml, founder directive #1929). Idempotent upsert on
+  # pr_number; the dispatch arm (pr_number) doubles as the backfill/recovery lever
+  # if a run is cancelled by a fast-follow label event on the just-closed PR.
+  # ============================================================================
+  record-on-merge:
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    name: Record merge learning report
+    # Fork PRs get no secrets — skip (same guard as merge-train).
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Record the merged PR as a learning report
+        env:
+          GH_TOKEN: ${{ secrets.SELF_HEAL_PAT || github.token }}
+          GH_REPO: ${{ github.repository }}
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
+          CI_WEBHOOK_SECRET: ${{ secrets.CI_WEBHOOK_SECRET }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
+        run: |
+          set -euo pipefail
+          python scripts/ci/record_merge_learning.py --pr "$PR_NUMBER"
+
