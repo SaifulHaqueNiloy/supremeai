@@ -3242,6 +3242,13 @@
       "path": "backend/api/routes/webhooks_ai.py"
     },
     {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/webhooks_github.py"
+    },
+    {
       "capability_signals": [
         "health",
         "memory",
@@ -6241,6 +6248,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/orchestration/crew_departments.py"
+    },
+    {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/orchestration/handoff_schema.py"
     },
     {
       "capability_signals": [
@@ -11225,6 +11241,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/routes/test_tenant_admin_isolation.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_webhooks_github.py"
     },
     {
       "capability_signals": [
@@ -26637,5 +26660,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3044
+  "source_file_count": 3047
 }
