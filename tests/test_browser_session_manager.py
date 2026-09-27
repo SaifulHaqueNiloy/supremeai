@@ -21,10 +21,9 @@ import asyncio
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
-import pytest
-
 import browser.session_manager as sm_module
 import browser.swarm_browser as sb_module
+import pytest
 from browser.autonomous_browser import AutonomousBrowserAgent
 from browser.browser_session import (
     IDLE_TIMEOUT_SECONDS,
@@ -33,7 +32,9 @@ from browser.browser_session import (
     SessionStatus,
 )
 from browser.session_manager import (
-    AUTOMATION_HOST,
+    AUTOMATION_BIND_ADDRESS as AUTOMATION_HOST,  # #2254: renamed in source; alias keeps test readable
+)
+from browser.session_manager import (
     BrowserSessionManager,
     chrome_launch_args,
     run_action_sequence,
