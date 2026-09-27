@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3532,
+  "edge_count": 3526,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -474,10 +474,6 @@
     {
       "from": "agents.domain.bangla_nlp_agent",
       "to": "services.llm.llm_router"
-    },
-    {
-      "from": "agents.ephemeral_executor",
-      "to": "core.logging_config"
     },
     {
       "from": "agents.evolution_agents.adversarial_defense_agent",
@@ -9617,10 +9613,6 @@
     },
     {
       "from": "tests.agents.test_agents_unified",
-      "to": "agents.ephemeral_executor"
-    },
-    {
-      "from": "tests.agents.test_agents_unified",
       "to": "agents.performance_guardian"
     },
     {
@@ -9640,10 +9632,6 @@
       "to": "tools.social.email_agent"
     },
     {
-      "from": "tests.agents.test_ephemeral_executor",
-      "to": "agents.ephemeral_executor"
-    },
-    {
       "from": "tests.agents.test_github_agent",
       "to": "tools.devops.github_agent"
     },
@@ -9654,10 +9642,6 @@
     {
       "from": "tests.agents.test_marketplace_agent",
       "to": "tools.social.marketplace_agent"
-    },
-    {
-      "from": "tests.agents.test_parallel_agent_executor",
-      "to": "tools.parallel_agent_executor"
     },
     {
       "from": "tests.agents.test_research_assistant",
@@ -10018,10 +10002,6 @@
     {
       "from": "tests.api.test_ecosystem_admin_contract",
       "to": "api.routes"
-    },
-    {
-      "from": "tests.api.test_ephemeral_executor",
-      "to": "core.logging_config"
     },
     {
       "from": "tests.api.test_errors",
@@ -13824,10 +13804,6 @@
       "to": "database.supabase_client"
     },
     {
-      "from": "tools.parallel_agent_executor",
-      "to": "core.logging_config"
-    },
-    {
       "from": "tools.plan_sorter",
       "to": "core.logging_config"
     },
@@ -14132,7 +14108,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2039,
+  "module_count": 2033,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14230,7 +14206,6 @@
     "agents.devops.multicloud_quota_monitor",
     "agents.domain",
     "agents.domain.bangla_nlp_agent",
-    "agents.ephemeral_executor",
     "agents.evolution_agents",
     "agents.evolution_agents.adversarial_defense_agent",
     "agents.evolution_agents.federated_learning_agent",
@@ -15370,11 +15345,9 @@
     "tests.agents.test_autonomous_agent",
     "tests.agents.test_compliance_bot",
     "tests.agents.test_email_agent",
-    "tests.agents.test_ephemeral_executor",
     "tests.agents.test_github_agent",
     "tests.agents.test_headless_terminal_agent",
     "tests.agents.test_marketplace_agent",
-    "tests.agents.test_parallel_agent_executor",
     "tests.agents.test_research_assistant",
     "tests.agents.test_sentinel_agent",
     "tests.agents.test_telegram_bot",
@@ -15446,8 +15419,6 @@
     "tests.api.test_deep_research_contract",
     "tests.api.test_e2e_chat",
     "tests.api.test_ecosystem_admin_contract",
-    "tests.api.test_ephemeral_executor",
-    "tests.api.test_ephemeral_lifecycle",
     "tests.api.test_errors",
     "tests.api.test_feedback",
     "tests.api.test_files_endpoint",
@@ -16120,7 +16091,6 @@
     "tools.media.voice",
     "tools.meta_architect",
     "tools.offline_mode",
-    "tools.parallel_agent_executor",
     "tools.plan_sorter",
     "tools.preference_memory",
     "tools.repo_discovery_agent",
