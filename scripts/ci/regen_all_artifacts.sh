@@ -82,10 +82,14 @@ echo ""
 export_openapi_schema() {
   (
     cd backend || exit 3
+    # PYTHONHASHSEED=0: @app.api_route("/", methods=["GET","HEAD"]) — FastAPI
+    # route.methods একটি set; hash randomization-এ iteration order প্রতি
+    # process-এ বদলায় → root path-এর operationId flip করে → source_sha256
+    # drift। Fixed seed = byte-identical export, প্রতিবার (issue #2203)।
     if [[ -x .venv/bin/python ]]; then
-      PYTHONPATH="." .venv/bin/python scripts/validate_openapi.py
+      PYTHONHASHSEED=0 PYTHONPATH="." .venv/bin/python scripts/validate_openapi.py
     elif command -v poetry >/dev/null 2>&1; then
-      PYTHONPATH="." poetry run python scripts/validate_openapi.py
+      PYTHONHASHSEED=0 PYTHONPATH="." poetry run python scripts/validate_openapi.py
     else
       echo "ERROR: cannot export backend/openapi.json — no backend/.venv and no poetry on PATH (issue #2203)" >&2
       exit 3

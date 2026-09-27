@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "c5cac08428d29f4480920e54f06e26f718882a8863736a9ceeb7a0f0211adbc4",
+  "source_sha256": "6021fa754d33040c38f3077b62cdf6f7d17816587c2dd2c1bc01a746858067b4",
   "route_count": 863,
   "routes": [
     {
       "method": "GET",
       "path": "/",
-      "operation_id": "root__head",
+      "operation_id": "root__get",
       "tags": [],
       "summary": "Root",
       "auth": {
@@ -23,7 +23,7 @@
     {
       "method": "HEAD",
       "path": "/",
-      "operation_id": "root__head",
+      "operation_id": "root__get",
       "tags": [],
       "summary": "Root",
       "auth": {

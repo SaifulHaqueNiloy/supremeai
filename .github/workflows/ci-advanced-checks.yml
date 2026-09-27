@@ -73,7 +73,9 @@ jobs:
 
       - name: Export OpenAPI schema fresh
         working-directory: ./backend
-        run: PYTHONPATH="." poetry run python scripts/validate_openapi.py
+        # PYTHONHASHSEED=0: deterministic set-iteration order (root route's
+        # GET+HEAD operationId would otherwise flip per-process → sha drift)
+        run: PYTHONHASHSEED=0 PYTHONPATH="." poetry run python scripts/validate_openapi.py
 
       # --- Section 1: Canonical Configuration Registry Checks (Trick 3) ---
       - name: Validate configuration registry structure
