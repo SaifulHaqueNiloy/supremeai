@@ -18,22 +18,20 @@
     "frontend_unique_refs": 145,
     "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
-    "orphan_routes": 1,
-    "orphan_families": 1,
-    "api_only_routes": 303,
-    "api_only_families": 159,
+    "orphan_routes": 0,
+    "orphan_families": 0,
+    "api_only_routes": 304,
+    "api_only_families": 160,
     "by_classification": {
       "user-facing": 166,
       "admin-only": 347,
       "internal": 40,
       "deprecated": 4,
-      "api-only": 303,
-      "orphaned": 1
+      "api-only": 304,
+      "orphaned": 0
     }
   },
-  "orphan_families": {
-    "/render-ticket": 1
-  },
+  "orphan_families": {},
   "api_only_families": {
     "/agent/plan": 1,
     "/api/artifacts": 1,
@@ -184,6 +182,7 @@
     "/pair/solve": 1,
     "/payments/checkout": 1,
     "/payments/plans": 1,
+    "/render-ticket": 1,
     "/repos": 2,
     "/repos/:param": 2,
     "/task/execute": 1,
@@ -12347,7 +12346,7 @@
       "is_admin": false,
       "operation": "issue_render_ticket",
       "frontend_consumers": [],
-      "classification": "orphaned"
+      "classification": "api-only"
     },
     {
       "method": "GET",
