@@ -4,9 +4,9 @@
 
 | metric | value |
 |---|---|
-| backend routes | 861 |
-| routes with frontend consumer | 296 |
-| unique frontend `/api/...` refs | 146 |
+| backend routes | 860 |
+| routes with frontend consumer | 295 |
+| unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 2 |
 | orphan families | 2 |
@@ -17,7 +17,7 @@
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 166 | frontend consumer matched |
+| `user-facing` | 165 | frontend consumer matched |
 | `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 39 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
@@ -554,8 +554,6 @@
 | GET | `/api/memory/checkpoints` | `backend/api/routes/memory.py` | user-facing | `frontend/src/hooks/useAdminApi.ts` |
 | POST | `/api/memory/chunk` | `backend/api/routes/memory.py` | api-only | NONE |
 | POST | `/api/memory/context` | `backend/api/routes/memory.py` | api-only | NONE |
-| GET | `/api/memory/conversations` | `backend/api/routes/memory.py` | user-facing | `frontend/src/components/admin/MemoryBrowser.tsx`, `frontend/src/pages/PublicPages.tsx` |
-| POST | `/api/memory/conversations/messages` | `backend/api/routes/memory.py` | user-facing | `frontend/src/components/admin/MemoryBrowser.tsx`, `frontend/src/pages/PublicPages.tsx` |
 | DELETE | `/api/memory/recall` | `backend/api/routes/memory.py` | api-only | NONE |
 | GET | `/api/memory/recall` | `backend/api/routes/memory.py` | api-only | NONE |
 | POST | `/api/memory/recall` | `backend/api/routes/memory.py` | api-only | NONE |
@@ -716,9 +714,10 @@
 | POST | `/api/v1/connections/register` | `backend/api/routes/connections.py` | user-facing | `frontend/src/services/connectionsApi.ts` |
 | GET | `/api/v1/control-plane/health` | `backend/api/routes/control_plane.py` | internal | `frontend/src/services/controlPlane.ts` |
 | GET | `/api/v1/control-plane/registry` | `backend/api/routes/control_plane.py` | user-facing | `frontend/src/services/controlPlane.test.ts`, `frontend/src/services/controlPlane.ts` |
-| GET | `/api/v1/conversations` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/customer/UserDashboard.tsx` |
-| POST | `/api/v1/conversations` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/customer/UserDashboard.tsx` |
-| POST | `/api/v1/conversations/:param/messages` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/customer/UserDashboard.tsx` |
+| GET | `/api/v1/conversations` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/admin/MemoryBrowser.tsx`, `frontend/src/components/customer/UserDashboard.tsx`, `frontend/src/pages/PublicPages.tsx` |
+| POST | `/api/v1/conversations` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/admin/MemoryBrowser.tsx`, `frontend/src/components/customer/UserDashboard.tsx`, `frontend/src/pages/PublicPages.tsx` |
+| GET | `/api/v1/conversations/:param/messages` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/admin/MemoryBrowser.tsx`, `frontend/src/components/customer/UserDashboard.tsx`, `frontend/src/pages/PublicPages.tsx` |
+| POST | `/api/v1/conversations/:param/messages` | `backend/api/routes/conversations.py` | user-facing | `frontend/src/components/admin/MemoryBrowser.tsx`, `frontend/src/components/customer/UserDashboard.tsx`, `frontend/src/pages/PublicPages.tsx` |
 | GET | `/api/v1/deep` | `backend/api/routes/health.py` | api-only | NONE |
 | POST | `/api/v1/ecosystem/admin/capabilities` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
 | DELETE | `/api/v1/ecosystem/admin/capabilities/:param` | `backend/api/routes/ecosystem_admin.py` | admin-only | NONE |
