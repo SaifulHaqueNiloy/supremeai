@@ -27,7 +27,18 @@ class BrowserSession:
     last_used_at: float
     label: str = "Browser session"
     saved_url: str | None = None
-    allowed_actions: tuple[str, ...] = ("navigate", "screenshot", "content", "extract")
+    # #2252 (MODULE_04 P-A): click/fill/type handlers exist in _automation.py
+    # but were missing from the allowlist → every interactive action
+    # returned 403. Frontend + API routes advertise these actions.
+    allowed_actions: tuple[str, ...] = (
+        "navigate",
+        "screenshot",
+        "content",
+        "extract",
+        "click",
+        "fill",
+        "type",
+    )
 
 
 class BrowserSessionManager:
