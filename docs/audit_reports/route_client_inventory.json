@@ -6,9 +6,9 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 607,
+    "backend_routes": 608,
     "frontend_unique_refs": 145,
-    "matched": 272,
+    "matched": 273,
     "orphan_routes": 335
   },
   "orphan_by_family": {
@@ -4519,6 +4519,16 @@
       "classification": "internal",
       "frontend": [
         "frontend/src/pages/PublicPages.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/integrations.py",
+      "method": "GET",
+      "declared": "/integrations",
+      "resolved": "/api/v1/integrations",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/components/dashboard/ConnectedPlatformsVault.tsx"
       ]
     },
     {
