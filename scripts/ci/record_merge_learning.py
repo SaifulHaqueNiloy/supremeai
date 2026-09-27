@@ -184,8 +184,12 @@ def main() -> None:
 
     pr = gh_api(f"/repos/{os.environ.get('GH_REPO', 'SaifulHaqueNiloy/supremeai')}/pulls/{args.pr}", token)
     if not pr.get("merged_at"):
-        print(f"PR #{args.pr} is not merged — nothing to learn from yet.", file=sys.stderr)
-        sys.exit(1)
+        # Benign no-op (pr-gate dispatch arm on an open PR — e.g. a manual gate
+        # re-run after a PR-body edit): a PR that is not merged is not an error
+        # condition. Exit 0 so the job stays green instead of painting a red X
+        # on the recovery lever.
+        print(f"PR #{args.pr} is not merged — nothing to learn from yet.")
+        sys.exit(0)
 
     payload = build_payload(pr, token)
     post_payload(payload, args.dry_run)
