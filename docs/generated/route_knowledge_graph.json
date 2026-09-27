@@ -1,6 +1,11 @@
 {
-  "edge_count": 1595,
+  "edge_count": 1816,
   "edges": [
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:005c18810eca7fa93f52"
+    },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
@@ -54,6 +59,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:03e029c6fa7b9e467a93"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:03ed192328b8a233bc0e"
     },
     {
@@ -90,6 +100,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:05dd4e53b96bd1d0e9ae"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:05dec0c196c487639106"
     },
     {
       "relation": "defines",
@@ -135,6 +150,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:0802e60c0b75778345d0"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:08d02f6db3523633f044"
     },
     {
       "relation": "defines",
@@ -249,6 +269,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:0f92e8229171384df04d"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:0fb3e96a054fe8c71594"
     },
     {
@@ -285,6 +310,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:135bddea2ca593b2120a"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:136f341e667c90d6d190"
     },
     {
       "relation": "defines",
@@ -344,6 +374,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:15d376595b602326c165"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:15e3d8de4cf6d6c4fb54"
     },
     {
@@ -369,7 +404,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:17ae6d63122550c6afd1"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:183a9353dfd04d9836fe"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:184413b0b6f2de21a96d"
     },
     {
       "relation": "defines",
@@ -474,6 +519,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:2215e5fe64795281e30d"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:227a294ee3ab98793b8a"
     },
     {
@@ -485,6 +535,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:2324bed3a37d06315e31"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:23d71aa974fbcd8bc51a"
     },
     {
       "relation": "defines",
@@ -519,6 +574,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:25c9994e428c170b0bd1"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:25d84187e8728bcb476d"
     },
     {
@@ -539,6 +599,16 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:26fdae980cd1b573910f"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:277a0234795cb7b2b564"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:27dca03ac1e3d8eed213"
     },
     {
@@ -549,17 +619,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:28d12afb193df48749eb"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:298e73b52019d3963ceb"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:2a10244cf4d293ccfb38"
+      "target": "route:29e03b4d3422bb0e86b7"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:2a72cad17085d2f610b4"
+      "target": "route:2a10244cf4d293ccfb38"
     },
     {
       "relation": "defines",
@@ -609,6 +684,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:2c83d1f707c7a990519d"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:2cbe0c75b8c737da74dd"
     },
     {
@@ -644,6 +724,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:2e0d129c52e55e51e970"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:2e309024f23bf58d03c8"
     },
     {
@@ -675,6 +760,16 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:2f8e1c83431a95eb8c73"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:30c3b14381032bac3763"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:30e412ad111f64604ded"
     },
     {
       "relation": "defines",
@@ -734,6 +829,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:341641de5ce0c795bb27"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:3445032c480ee0d6f122"
     },
     {
@@ -759,12 +859,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:37d7efca9e991d5df224"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:37f152d0d95a6ecdb8e3"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:38130e4686060fe64cdf"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:3835fee744ec998f8f84"
     },
     {
       "relation": "defines",
@@ -849,7 +959,7 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:40b41a4ff31dc63d9e11"
+      "target": "route:3fbba34a135ff6515dcd"
     },
     {
       "relation": "defines",
@@ -884,17 +994,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:4302b94e0afa4d7751b5"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:4364e6e0ed8724da534e"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:4429aea1e0fd04bcfcee"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
-      "target": "route:4442ac33bc259357b386"
     },
     {
       "relation": "defines",
@@ -949,6 +1059,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:470491a6ccf2caf205b5"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:47264068d2069900e331"
     },
     {
@@ -975,6 +1090,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:48f265c2de510249c58a"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:49270e0fc05dad68522b"
     },
     {
       "relation": "defines",
@@ -1024,6 +1144,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:4b7a5351ad1714ab73e4"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:4ba28ae9fa6b6dd6a6e2"
     },
     {
@@ -1064,7 +1189,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:4d87e2455bc8070740c8"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:4dfb6053b0a7f8ce4a15"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:4e146cf9cc36c5de078c"
     },
     {
       "relation": "defines",
@@ -1234,7 +1369,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:582cbdc9c1008927a40e"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:586fcdf7673c4e00e82b"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:589668a54b0db367b093"
     },
     {
       "relation": "defines",
@@ -1244,17 +1389,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:58e4edbe177ae15f64a3"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:5928198ab13d9f9f0c25"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:5a2c63baff5cd769eb4d"
+      "target": "route:5a16662d77adf87d101a"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:5aa3997c10688ca137dc"
+      "target": "route:5a2c63baff5cd769eb4d"
     },
     {
       "relation": "defines",
@@ -1294,12 +1444,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:5d92a52bb2530b2ec70f"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:5db8efe63a49c84c20f6"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:5dee3b66239235092353"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:5e21ec1f8dcb3ee86d8d"
     },
     {
       "relation": "defines",
@@ -1459,6 +1619,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:66235cbf9afc2671343e"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:664d00894714d5c6adde"
     },
     {
@@ -1549,6 +1714,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:6ba39aa0855092d80486"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:6bef6445db1f16ddb410"
     },
     {
@@ -1599,6 +1769,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:6ed8aae819fbd205c939"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:6ee9dbcaea0ebb771926"
     },
     {
@@ -1619,6 +1794,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:70aabb68338060486bdc"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:70f3a09db4fd6de5024c"
     },
     {
@@ -1635,6 +1815,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:711a291f6f2aceff7ee7"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:71776419fed885c9e61a"
     },
     {
       "relation": "defines",
@@ -1660,6 +1845,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:730d2051ccc1fb57720c"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:738e63e62c0822dd3b05"
     },
     {
       "relation": "defines",
@@ -1719,6 +1909,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:76dc8412f0532bc9ad0d"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:76f4568abc0630000c6e"
     },
     {
@@ -1765,11 +1960,6 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:78cf3b23d4e5fc16b97f"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
-      "target": "route:78dc643c673e47c6d50f"
     },
     {
       "relation": "defines",
@@ -1829,6 +2019,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:7c5b37b591cea0e5551d"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:7c74221121f32c5f7b81"
     },
     {
@@ -1864,7 +2059,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:7d93235b4873a5a61683"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:7da68be2fa86837b7798"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:7e59c5cdbfe7ecf482d2"
     },
     {
       "relation": "defines",
@@ -1875,6 +2080,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:7f016d79878b27d911f0"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:7f12296928dc132df2b1"
     },
     {
       "relation": "defines",
@@ -1904,12 +2114,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:80f4958a240d6fe8c134"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:814e0c3d3f422eb1846b"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:81b9b1f26eca0b20a0c2"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:81f7aaa5c7b152a96dd2"
     },
     {
       "relation": "defines",
@@ -1945,6 +2165,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:836894b3a4c69ca893c7"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:83b628102c91b344c37a"
     },
     {
       "relation": "defines",
@@ -2004,6 +2229,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:879dc77ff3e3fa8138e5"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:88d39283c3addeb5b681"
     },
     {
@@ -2015,6 +2245,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:8993f0a0a76bbff3835c"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:89af217813e3ef1372bf"
     },
     {
       "relation": "defines",
@@ -2094,6 +2329,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:903f29c32de7e9f356b9"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:90db3101dae4efe18513"
     },
     {
@@ -2145,6 +2385,16 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:93ba0c98755b25ffc808"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:944e6b5d1e749a905f00"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:94e4af96ee4a7ec1b001"
     },
     {
       "relation": "defines",
@@ -2204,11 +2454,6 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:984ab8d00ffd3ddd3f6e"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
       "target": "route:9874c4385aa887dde8f4"
     },
     {
@@ -2220,6 +2465,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:995e5f2d8808a910e572"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:99e27b9f5a7de30631f4"
     },
     {
       "relation": "defines",
@@ -2294,6 +2544,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:9e03bca41c809dbe435d"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:9e2dea674f006b2229fb"
     },
     {
@@ -2334,12 +2589,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:a1ca7c08ed4924a80d59"
+      "target": "route:a2ad8041043b9ab2545c"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:a2cc2803334dadf1e91e"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:a30e1adcadefc8a380a7"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:a3601bcd26247f401515"
     },
     {
       "relation": "defines",
@@ -2360,6 +2625,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:a4f519f6ef53786be8ea"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:a5b52fda6920720451ba"
     },
     {
       "relation": "defines",
@@ -2394,6 +2664,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:a79b3f4e113b172ad941"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:a7c70ff1d9a926602c8f"
     },
     {
@@ -2405,6 +2680,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:a855a6700e38575d0c76"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:a86efcae6cdc86714a48"
     },
     {
       "relation": "defines",
@@ -2469,7 +2749,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:adc61e081374d0e2dc28"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:ade040649fe877370b6b"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:ae0c46825babbfe5076d"
     },
     {
       "relation": "defines",
@@ -2480,6 +2770,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:ae95e1eb5b3aece08607"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:aeaa233de0c294de18f2"
     },
     {
       "relation": "defines",
@@ -2534,6 +2829,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:b17c2c3fde6a49d7aee0"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:b18d1c1cd25566240d5c"
     },
     {
@@ -2545,6 +2845,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:b19bc5668293194fb1be"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:b1c43d41beebcf7f149f"
     },
     {
       "relation": "defines",
@@ -2604,12 +2909,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:b3a22bea08a8efe10a40"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:b46e4ae62a992b6a8f7b"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:b480c1cb1afc3def6ef9"
+      "target": "route:b477a2e1a8e3b00a47d0"
     },
     {
       "relation": "defines",
@@ -2619,12 +2929,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:b4ca433bd2e2c86162a1"
+      "target": "route:b4e837793db892d5defe"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:b4e837793db892d5defe"
+      "target": "route:b528f8b4ff445f188cde"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:b536326b77b9371f8538"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:b54ed689267d35d03897"
     },
     {
       "relation": "defines",
@@ -2664,12 +2984,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:b84b2a37403acec533b2"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:b858d11f002458897aaf"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:b87127b7cddeffc229a9"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:b8867d185fe6704ad9a0"
     },
     {
       "relation": "defines",
@@ -2704,7 +3034,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:ba9248407da4ebc662b6"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:baccfe6904526965c239"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:baedd686e7a22550045d"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:baf26352979fce225eeb"
     },
     {
       "relation": "defines",
@@ -2744,7 +3089,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:bc23accbb07bb5a76abd"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:bccce89d857efab7f56b"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:bce14a5be977efe3f1d7"
     },
     {
       "relation": "defines",
@@ -2754,12 +3109,27 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:bd28490dbe5cbf10015c"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:bd353cb8db9fda871739"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:bd5e46d1e37deeb209ec"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:bd93acf35693d89585bd"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:bdac0c503e977cac4af6"
     },
     {
       "relation": "defines",
@@ -2774,12 +3144,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:bf06540cf954b8209837"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:bf2057215c68cb7a1d63"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:bf2cc4f2f7af92903b52"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:bf3d33ff2feebfbfd613"
     },
     {
       "relation": "defines",
@@ -2854,6 +3234,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:c324aa5695c2435a4d5a"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:c32ff0d7fa0cd1d22bcb"
     },
     {
@@ -2904,6 +3289,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:c7514749ebfb8c370904"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:c79a3bd9616a1e18040f"
     },
     {
@@ -2944,12 +3334,27 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:c8d909c105c017cc4ce2"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:c987709de171f84b547f"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:c9d443b0bdd883f32028"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:c9d705bd37e66f9cad44"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:ca213d76f78a100648fe"
     },
     {
       "relation": "defines",
@@ -3034,6 +3439,16 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:cfc0d8dedf183605f0ca"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:d0069b137d979cef7e27"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:d04ffb7ac17dfb095478"
     },
     {
@@ -3045,6 +3460,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:d1839cb6a45e808097f5"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:d1fbd1ca8e12b786eda5"
     },
     {
       "relation": "defines",
@@ -3114,11 +3534,6 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:d52874dfb8564a523e24"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
       "target": "route:d52aef14bf2afea8542e"
     },
     {
@@ -3164,6 +3579,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:d7785323956881682471"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:d77addf5c20879aa0602"
     },
     {
@@ -3194,6 +3614,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:d8d21e8772a2a7a3e06b"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:d8ec95d1f30527a1663c"
     },
     {
@@ -3210,6 +3635,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:da51ee24ac7212a0201f"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:da9a05befe5c44fbfb61"
     },
     {
       "relation": "defines",
@@ -3244,12 +3674,27 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:dc8dfb39f24a7a89c20f"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:dc9f591df048b15a4882"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:dcea59ff4654f20a4ac3"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:dd09ccfde74c5f7a222c"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:dd55e58248d4839c36ed"
     },
     {
       "relation": "defines",
@@ -3310,6 +3755,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:e00ecf4638da1f5ad769"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:e02ca6f196fd24e8b5b7"
     },
     {
       "relation": "defines",
@@ -3409,7 +3859,22 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:e84d2ed503cfee3428ae"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:e876fd65b0ed4646edaa"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:e8f45f8c430e7685d642"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:e92cc0c0297b84716cd9"
     },
     {
       "relation": "defines",
@@ -3499,6 +3964,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:ed053dd565dfd511140e"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:ed0d785da6e05dd223b8"
     },
     {
@@ -3509,12 +3979,27 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:ed722deb35c566a18d28"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:edd9900c0d78a757634b"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:edf8ff2fbd218b3e69e4"
     },
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:ee205999b16077dc437e"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:ee70c4ff136240eea63e"
     },
     {
       "relation": "defines",
@@ -3555,6 +4040,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:f144e8f5c7f7426fe701"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:f1498aceb8c9d3e2a0cb"
     },
     {
       "relation": "defines",
@@ -3649,7 +4139,17 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:f7166ec7a682a2591b60"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:f794d943675a71316d85"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:f8222303c6ad1d3da9a9"
     },
     {
       "relation": "defines",
@@ -3665,6 +4165,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:f8cdf59d41dcf1a9b770"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:f90932e74cd0e6eb9a0b"
     },
     {
       "relation": "defines",
@@ -3754,6 +4259,11 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
+      "target": "route:fd319bf436395c767266"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
       "target": "route:fda5c64435a55cf4e3f3"
     },
     {
@@ -3805,6 +4315,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:ffb1b9ea09dc906a132b"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:005c18810eca7fa93f52",
+      "target": "capability:cddad1e3a12a98467d8a"
     },
     {
       "relation": "exposes",
@@ -3863,6 +4378,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:03e029c6fa7b9e467a93",
+      "target": "capability:0f34cf87a6c01eeab3b8"
+    },
+    {
+      "relation": "exposes",
       "source": "route:03ed192328b8a233bc0e",
       "target": "capability:fb741cf9116c0ead8a4e"
     },
@@ -3908,6 +4428,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:05dec0c196c487639106",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:05dec0c196c487639106",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:0630ab14c30f74a30b47",
       "target": "capability:b0788f5d6ff1856e9c1c"
     },
@@ -3945,6 +4475,11 @@
       "relation": "exposes",
       "source": "route:0802e60c0b75778345d0",
       "target": "capability:a27d2ff9d3e171d4b8c7"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:08d02f6db3523633f044",
+      "target": "capability:e1b18f25e71b58912541"
     },
     {
       "relation": "exposes",
@@ -4098,6 +4633,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:0f92e8229171384df04d",
+      "target": "capability:42799ccf5edeff5be5c5"
+    },
+    {
+      "relation": "exposes",
       "source": "route:0fb3e96a054fe8c71594",
       "target": "capability:d364ebcb20860eea5ea8"
     },
@@ -4140,6 +4680,16 @@
       "relation": "exposes",
       "source": "route:135bddea2ca593b2120a",
       "target": "capability:31e8f1f6324662c46afd"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:136f341e667c90d6d190",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:136f341e667c90d6d190",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -4193,6 +4743,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:15d376595b602326c165",
+      "target": "capability:e1b18f25e71b58912541"
+    },
+    {
+      "relation": "exposes",
       "source": "route:15e3d8de4cf6d6c4fb54",
       "target": "capability:87fc969d29426b491116"
     },
@@ -4218,6 +4773,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:17ae6d63122550c6afd1",
+      "target": "capability:b151f218110e7968b4ac"
+    },
+    {
+      "relation": "exposes",
       "source": "route:183a9353dfd04d9836fe",
       "target": "capability:a43b0ca14c88d4f2694d"
     },
@@ -4225,6 +4785,11 @@
       "relation": "requires",
       "source": "route:183a9353dfd04d9836fe",
       "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:184413b0b6f2de21a96d",
+      "target": "capability:98eb237e4d2b677bcab0"
     },
     {
       "relation": "exposes",
@@ -4338,6 +4903,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:2215e5fe64795281e30d",
+      "target": "capability:775a60cd3fbf4be95489"
+    },
+    {
+      "relation": "exposes",
       "source": "route:227a294ee3ab98793b8a",
       "target": "capability:e8d45e28b9f99f76daf1"
     },
@@ -4383,6 +4953,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:25c9994e428c170b0bd1",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
+    },
+    {
+      "relation": "exposes",
       "source": "route:25d84187e8728bcb476d",
       "target": "capability:be0643d29a4e69b5771e"
     },
@@ -4403,6 +4978,21 @@
     },
     {
       "relation": "exposes",
+      "source": "route:26fdae980cd1b573910f",
+      "target": "capability:a43b0ca14c88d4f2694d"
+    },
+    {
+      "relation": "requires",
+      "source": "route:26fdae980cd1b573910f",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:277a0234795cb7b2b564",
+      "target": "capability:98eb237e4d2b677bcab0"
+    },
+    {
+      "relation": "exposes",
       "source": "route:27dca03ac1e3d8eed213",
       "target": "capability:783e372d94b050e61338"
     },
@@ -4418,8 +5008,23 @@
     },
     {
       "relation": "exposes",
+      "source": "route:28d12afb193df48749eb",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:28d12afb193df48749eb",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:298e73b52019d3963ceb",
       "target": "capability:42799ccf5edeff5be5c5"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:29e03b4d3422bb0e86b7",
+      "target": "capability:71d71f32d9ce5fc9ae3e"
     },
     {
       "relation": "exposes",
@@ -4430,11 +5035,6 @@
       "relation": "requires",
       "source": "route:2a10244cf4d293ccfb38",
       "target": "control:8beb2443d48d78613952"
-    },
-    {
-      "relation": "exposes",
-      "source": "route:2a72cad17085d2f610b4",
-      "target": "capability:2a03c0d6c37e1a6864fa"
     },
     {
       "relation": "exposes",
@@ -4493,6 +5093,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:2c83d1f707c7a990519d",
+      "target": "capability:ebbc4104642881464a4e"
+    },
+    {
+      "relation": "exposes",
       "source": "route:2cbe0c75b8c737da74dd",
       "target": "capability:d596852cefc1dfbb3783"
     },
@@ -4520,6 +5125,11 @@
       "relation": "exposes",
       "source": "route:2e0632407f1660f10122",
       "target": "capability:91b9936e3911f634245e"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:2e0d129c52e55e51e970",
+      "target": "capability:775a60cd3fbf4be95489"
     },
     {
       "relation": "exposes",
@@ -4560,6 +5170,11 @@
       "relation": "exposes",
       "source": "route:2f8e1c83431a95eb8c73",
       "target": "capability:fb9b018b2cae68c84a3d"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:30e412ad111f64604ded",
+      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -4638,6 +5253,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:341641de5ce0c795bb27",
+      "target": "capability:775a60cd3fbf4be95489"
+    },
+    {
+      "relation": "exposes",
       "source": "route:3445032c480ee0d6f122",
       "target": "capability:af814b3c776a8febd564"
     },
@@ -4658,6 +5278,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:37d7efca9e991d5df224",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:37d7efca9e991d5df224",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:37f152d0d95a6ecdb8e3",
       "target": "capability:93fb06e4f9ffce38d233"
     },
@@ -4665,6 +5295,11 @@
       "relation": "exposes",
       "source": "route:38130e4686060fe64cdf",
       "target": "capability:4f37e94fae8492dcc314"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:3835fee744ec998f8f84",
+      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -4758,8 +5393,8 @@
     },
     {
       "relation": "exposes",
-      "source": "route:40b41a4ff31dc63d9e11",
-      "target": "capability:fb9b018b2cae68c84a3d"
+      "source": "route:3fbba34a135ff6515dcd",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
     },
     {
       "relation": "exposes",
@@ -4803,6 +5438,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:4302b94e0afa4d7751b5",
+      "target": "capability:6825def902cf03b3831a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:4302b94e0afa4d7751b5",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:4364e6e0ed8724da534e",
       "target": "capability:87fc969d29426b491116"
     },
@@ -4810,11 +5455,6 @@
       "relation": "exposes",
       "source": "route:4429aea1e0fd04bcfcee",
       "target": "capability:e8d45e28b9f99f76daf1"
-    },
-    {
-      "relation": "exposes",
-      "source": "route:4442ac33bc259357b386",
-      "target": "capability:fb9b018b2cae68c84a3d"
     },
     {
       "relation": "exposes",
@@ -4878,6 +5518,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:470491a6ccf2caf205b5",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:470491a6ccf2caf205b5",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:47264068d2069900e331",
       "target": "capability:6856aed692e0fdb26ab2"
     },
@@ -4905,6 +5555,11 @@
       "relation": "exposes",
       "source": "route:48f265c2de510249c58a",
       "target": "capability:3c466884f7a27bc42d3c"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:49270e0fc05dad68522b",
+      "target": "capability:0f34cf87a6c01eeab3b8"
     },
     {
       "relation": "exposes",
@@ -4945,6 +5600,11 @@
       "relation": "exposes",
       "source": "route:4ae62a6908e7ee19936f",
       "target": "capability:e2f46d15b0454312ca00"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:4b7a5351ad1714ab73e4",
+      "target": "capability:e94e79b5c8d1a59229de"
     },
     {
       "relation": "exposes",
@@ -5003,8 +5663,28 @@
     },
     {
       "relation": "exposes",
+      "source": "route:4d87e2455bc8070740c8",
+      "target": "capability:a43b0ca14c88d4f2694d"
+    },
+    {
+      "relation": "requires",
+      "source": "route:4d87e2455bc8070740c8",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:4dfb6053b0a7f8ce4a15",
       "target": "capability:1dcf4ffcc88123a8421d"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:4e146cf9cc36c5de078c",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:4e146cf9cc36c5de078c",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -5163,8 +5843,18 @@
     },
     {
       "relation": "exposes",
+      "source": "route:582cbdc9c1008927a40e",
+      "target": "capability:b151f218110e7968b4ac"
+    },
+    {
+      "relation": "exposes",
       "source": "route:586fcdf7673c4e00e82b",
       "target": "capability:9f7e669dec6addce1bb3"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:589668a54b0db367b093",
+      "target": "capability:42799ccf5edeff5be5c5"
     },
     {
       "relation": "exposes",
@@ -5173,13 +5863,18 @@
     },
     {
       "relation": "exposes",
-      "source": "route:5a2c63baff5cd769eb4d",
-      "target": "capability:72855172876d0c8c22dd"
+      "source": "route:58e4edbe177ae15f64a3",
+      "target": "capability:e1b18f25e71b58912541"
     },
     {
       "relation": "exposes",
-      "source": "route:5aa3997c10688ca137dc",
-      "target": "capability:ebbc4104642881464a4e"
+      "source": "route:5a16662d77adf87d101a",
+      "target": "capability:8844832fd69d152a37eb"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:5a2c63baff5cd769eb4d",
+      "target": "capability:72855172876d0c8c22dd"
     },
     {
       "relation": "exposes",
@@ -5223,6 +5918,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:5d92a52bb2530b2ec70f",
+      "target": "capability:b151f218110e7968b4ac"
+    },
+    {
+      "relation": "exposes",
       "source": "route:5db8efe63a49c84c20f6",
       "target": "capability:c511f5cb3ae7a78be246"
     },
@@ -5230,6 +5930,11 @@
       "relation": "exposes",
       "source": "route:5dee3b66239235092353",
       "target": "capability:c9c6781e5c4173c1eb52"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:5e21ec1f8dcb3ee86d8d",
+      "target": "capability:199084c23fd34aafdc71"
     },
     {
       "relation": "exposes",
@@ -5403,6 +6108,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:66235cbf9afc2671343e",
+      "target": "capability:8844832fd69d152a37eb"
+    },
+    {
+      "relation": "exposes",
       "source": "route:664d00894714d5c6adde",
       "target": "capability:74037bb683c003294966"
     },
@@ -5498,18 +6208,18 @@
     },
     {
       "relation": "exposes",
+      "source": "route:6ba39aa0855092d80486",
+      "target": "capability:ebbc4104642881464a4e"
+    },
+    {
+      "relation": "exposes",
       "source": "route:6bef6445db1f16ddb410",
       "target": "capability:e8d45e28b9f99f76daf1"
     },
     {
       "relation": "exposes",
       "source": "route:6c342ca96fa0a2ffee96",
-      "target": "capability:873cd4c050768f3aa94a"
-    },
-    {
-      "relation": "requires",
-      "source": "route:6c342ca96fa0a2ffee96",
-      "target": "control:8beb2443d48d78613952"
+      "target": "capability:775a60cd3fbf4be95489"
     },
     {
       "relation": "exposes",
@@ -5553,6 +6263,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:6ed8aae819fbd205c939",
+      "target": "capability:0f34cf87a6c01eeab3b8"
+    },
+    {
+      "relation": "exposes",
       "source": "route:6ee9dbcaea0ebb771926",
       "target": "capability:a43b0ca14c88d4f2694d"
     },
@@ -5573,6 +6288,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:70aabb68338060486bdc",
+      "target": "capability:3ae8b9bca5770ec8ca97"
+    },
+    {
+      "relation": "exposes",
       "source": "route:70f441f681a6e6734bfa",
       "target": "capability:1ebf3e7637e518f88f62"
     },
@@ -5585,6 +6305,11 @@
       "relation": "exposes",
       "source": "route:711a291f6f2aceff7ee7",
       "target": "capability:9dd0dcdbb5a60133ec45"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:71776419fed885c9e61a",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
     },
     {
       "relation": "exposes",
@@ -5610,6 +6335,16 @@
       "relation": "exposes",
       "source": "route:730d2051ccc1fb57720c",
       "target": "capability:e8d45e28b9f99f76daf1"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:738e63e62c0822dd3b05",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:738e63e62c0822dd3b05",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -5678,6 +6413,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:76dc8412f0532bc9ad0d",
+      "target": "capability:ebbc4104642881464a4e"
+    },
+    {
+      "relation": "exposes",
       "source": "route:76f4568abc0630000c6e",
       "target": "capability:b2ce51b893bd4a0e6308"
     },
@@ -5735,11 +6475,6 @@
       "relation": "exposes",
       "source": "route:78cf3b23d4e5fc16b97f",
       "target": "capability:da09e1be507d7f96bcb6"
-    },
-    {
-      "relation": "exposes",
-      "source": "route:78dc643c673e47c6d50f",
-      "target": "capability:2a03c0d6c37e1a6864fa"
     },
     {
       "relation": "exposes",
@@ -5808,6 +6543,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:7c5b37b591cea0e5551d",
+      "target": "capability:ebbc4104642881464a4e"
+    },
+    {
+      "relation": "exposes",
       "source": "route:7c74221121f32c5f7b81",
       "target": "capability:d2b9062c3e67b4038a68"
     },
@@ -5858,8 +6598,18 @@
     },
     {
       "relation": "exposes",
+      "source": "route:7d93235b4873a5a61683",
+      "target": "capability:3ae8b9bca5770ec8ca97"
+    },
+    {
+      "relation": "exposes",
       "source": "route:7da68be2fa86837b7798",
       "target": "capability:822e5a8678bed7a41e81"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:7e59c5cdbfe7ecf482d2",
+      "target": "capability:42799ccf5edeff5be5c5"
     },
     {
       "relation": "exposes",
@@ -5898,6 +6648,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:80f4958a240d6fe8c134",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:80f4958a240d6fe8c134",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:814e0c3d3f422eb1846b",
       "target": "capability:71660eb3cfe2e01df2ac"
     },
@@ -5905,6 +6665,11 @@
       "relation": "exposes",
       "source": "route:81b9b1f26eca0b20a0c2",
       "target": "capability:be0643d29a4e69b5771e"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:81f7aaa5c7b152a96dd2",
+      "target": "capability:e1b18f25e71b58912541"
     },
     {
       "relation": "exposes",
@@ -5935,6 +6700,11 @@
       "relation": "exposes",
       "source": "route:835d282389b6003007a0",
       "target": "capability:1ebf3e7637e518f88f62"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:83b628102c91b344c37a",
+      "target": "capability:221f4abc23701d2ed343"
     },
     {
       "relation": "exposes",
@@ -6003,6 +6773,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:879dc77ff3e3fa8138e5",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
+    },
+    {
+      "relation": "exposes",
       "source": "route:88d39283c3addeb5b681",
       "target": "capability:f7e44f160cfa07a19306"
     },
@@ -6015,6 +6790,11 @@
       "relation": "exposes",
       "source": "route:8993f0a0a76bbff3835c",
       "target": "capability:15d8a85fa8941aad62ac"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:89af217813e3ef1372bf",
+      "target": "capability:b151f218110e7968b4ac"
     },
     {
       "relation": "exposes",
@@ -6098,6 +6878,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:903f29c32de7e9f356b9",
+      "target": "capability:42799ccf5edeff5be5c5"
+    },
+    {
+      "relation": "exposes",
       "source": "route:912f93a49b6481703fb8",
       "target": "capability:482b7110d31bdc8b0bfa"
     },
@@ -6145,6 +6930,16 @@
       "relation": "exposes",
       "source": "route:93ba0c98755b25ffc808",
       "target": "capability:be0643d29a4e69b5771e"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:944e6b5d1e749a905f00",
+      "target": "capability:42799ccf5edeff5be5c5"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:94e4af96ee4a7ec1b001",
+      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -6213,11 +7008,6 @@
     },
     {
       "relation": "exposes",
-      "source": "route:984ab8d00ffd3ddd3f6e",
-      "target": "capability:ebbc4104642881464a4e"
-    },
-    {
-      "relation": "exposes",
       "source": "route:9874c4385aa887dde8f4",
       "target": "capability:f84c1129030df1b6fef7"
     },
@@ -6230,6 +7020,11 @@
       "relation": "exposes",
       "source": "route:995e5f2d8808a910e572",
       "target": "capability:deb55f4c13bcab2a37be"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:99e27b9f5a7de30631f4",
+      "target": "capability:4b954bae6573be9441f8"
     },
     {
       "relation": "exposes",
@@ -6254,7 +7049,12 @@
     {
       "relation": "exposes",
       "source": "route:9b591abe12931ddf8f96",
-      "target": "capability:7e07c2da4a53d2a97dfc"
+      "target": "capability:5feeb0a677354e86bc56"
+    },
+    {
+      "relation": "requires",
+      "source": "route:9b591abe12931ddf8f96",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -6313,6 +7113,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:9e03bca41c809dbe435d",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:9e03bca41c809dbe435d",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:9e2dea674f006b2229fb",
       "target": "capability:0304e05cfc30a6eece57"
     },
@@ -6353,13 +7163,28 @@
     },
     {
       "relation": "exposes",
-      "source": "route:a1ca7c08ed4924a80d59",
-      "target": "capability:ebbc4104642881464a4e"
+      "source": "route:a2ad8041043b9ab2545c",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:a2ad8041043b9ab2545c",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:a2cc2803334dadf1e91e",
+      "target": "capability:42799ccf5edeff5be5c5"
     },
     {
       "relation": "exposes",
       "source": "route:a30e1adcadefc8a380a7",
       "target": "capability:be0643d29a4e69b5771e"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:a3601bcd26247f401515",
+      "target": "capability:42799ccf5edeff5be5c5"
     },
     {
       "relation": "exposes",
@@ -6378,6 +7203,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:a5b52fda6920720451ba",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:a5b52fda6920720451ba",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:a5cd61fdc3a12306534c",
       "target": "capability:c61db607e1a0d6633822"
     },
@@ -6390,6 +7225,11 @@
       "relation": "exposes",
       "source": "route:a6a024f9be94a6c68db2",
       "target": "capability:8e31cbebb2223944f7bf"
+    },
+    {
+      "relation": "requires",
+      "source": "route:a6a024f9be94a6c68db2",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -6405,6 +7245,11 @@
       "relation": "exposes",
       "source": "route:a76bd19e4961421991db",
       "target": "capability:1e71f3b23bcc997fea0b"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:a79b3f4e113b172ad941",
+      "target": "capability:71d71f32d9ce5fc9ae3e"
     },
     {
       "relation": "exposes",
@@ -6430,6 +7275,11 @@
       "relation": "requires",
       "source": "route:a855a6700e38575d0c76",
       "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:a86efcae6cdc86714a48",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
     },
     {
       "relation": "exposes",
@@ -6503,6 +7353,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:adc61e081374d0e2dc28",
+      "target": "capability:71d71f32d9ce5fc9ae3e"
+    },
+    {
+      "relation": "exposes",
       "source": "route:ade040649fe877370b6b",
       "target": "capability:48e36bfcf9acb468662b"
     },
@@ -6510,6 +7365,11 @@
       "relation": "exposes",
       "source": "route:ade040649fe877370b6b",
       "target": "capability:75439a8e077189d31fd2"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:ae0c46825babbfe5076d",
+      "target": "capability:d32c6529fb9a8ad3dbf2"
     },
     {
       "relation": "exposes",
@@ -6573,6 +7433,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:b17c2c3fde6a49d7aee0",
+      "target": "capability:0f34cf87a6c01eeab3b8"
+    },
+    {
+      "relation": "exposes",
       "source": "route:b18d1c1cd25566240d5c",
       "target": "capability:8907ae938c1d48ec41d3"
     },
@@ -6585,6 +7450,16 @@
       "relation": "exposes",
       "source": "route:b19bc5668293194fb1be",
       "target": "capability:694feb872c40bb7b24c2"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:b1c43d41beebcf7f149f",
+      "target": "capability:a43b0ca14c88d4f2694d"
+    },
+    {
+      "relation": "requires",
+      "source": "route:b1c43d41beebcf7f149f",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -6648,13 +7523,13 @@
     },
     {
       "relation": "exposes",
-      "source": "route:b46e4ae62a992b6a8f7b",
-      "target": "capability:1529132869d0450a4275"
+      "source": "route:b3a22bea08a8efe10a40",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
     },
     {
       "relation": "exposes",
-      "source": "route:b480c1cb1afc3def6ef9",
-      "target": "capability:ebbc4104642881464a4e"
+      "source": "route:b46e4ae62a992b6a8f7b",
+      "target": "capability:1529132869d0450a4275"
     },
     {
       "relation": "exposes",
@@ -6663,13 +7538,23 @@
     },
     {
       "relation": "exposes",
-      "source": "route:b4ca433bd2e2c86162a1",
+      "source": "route:b4e837793db892d5defe",
+      "target": "capability:5633f959bc98bc95c92d"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:b528f8b4ff445f188cde",
       "target": "capability:ebbc4104642881464a4e"
     },
     {
       "relation": "exposes",
-      "source": "route:b4e837793db892d5defe",
-      "target": "capability:5633f959bc98bc95c92d"
+      "source": "route:b536326b77b9371f8538",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:b54ed689267d35d03897",
+      "target": "capability:223b7358f0f4eef50645"
     },
     {
       "relation": "exposes",
@@ -6713,6 +7598,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:b84b2a37403acec533b2",
+      "target": "capability:42799ccf5edeff5be5c5"
+    },
+    {
+      "relation": "exposes",
       "source": "route:b858d11f002458897aaf",
       "target": "capability:42c6d18f6188e6235fab"
     },
@@ -6725,6 +7615,11 @@
       "relation": "requires",
       "source": "route:b87127b7cddeffc229a9",
       "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:b8867d185fe6704ad9a0",
+      "target": "capability:e8d45e28b9f99f76daf1"
     },
     {
       "relation": "exposes",
@@ -6763,6 +7658,21 @@
     },
     {
       "relation": "exposes",
+      "source": "route:ba9248407da4ebc662b6",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:ba9248407da4ebc662b6",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:baccfe6904526965c239",
+      "target": "capability:8e31cbebb2223944f7bf"
+    },
+    {
+      "relation": "exposes",
       "source": "route:baedd686e7a22550045d",
       "target": "capability:873cd4c050768f3aa94a"
     },
@@ -6770,6 +7680,11 @@
       "relation": "requires",
       "source": "route:baedd686e7a22550045d",
       "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:baf26352979fce225eeb",
+      "target": "capability:42799ccf5edeff5be5c5"
     },
     {
       "relation": "exposes",
@@ -6813,8 +7728,23 @@
     },
     {
       "relation": "exposes",
+      "source": "route:bc23accbb07bb5a76abd",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:bc23accbb07bb5a76abd",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:bccce89d857efab7f56b",
       "target": "capability:0a1a104413dce5b881dc"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:bce14a5be977efe3f1d7",
+      "target": "capability:42799ccf5edeff5be5c5"
     },
     {
       "relation": "exposes",
@@ -6823,13 +7753,28 @@
     },
     {
       "relation": "exposes",
+      "source": "route:bd28490dbe5cbf10015c",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
+    },
+    {
+      "relation": "exposes",
       "source": "route:bd353cb8db9fda871739",
       "target": "capability:be0643d29a4e69b5771e"
     },
     {
       "relation": "exposes",
+      "source": "route:bd5e46d1e37deeb209ec",
+      "target": "capability:42799ccf5edeff5be5c5"
+    },
+    {
+      "relation": "exposes",
       "source": "route:bd93acf35693d89585bd",
       "target": "capability:b8af85aecacde4df0938"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:bdac0c503e977cac4af6",
+      "target": "capability:42799ccf5edeff5be5c5"
     },
     {
       "relation": "exposes",
@@ -6840,6 +7785,11 @@
       "relation": "exposes",
       "source": "route:beba6032b268a7f9d66e",
       "target": "capability:9db8777383cd0d7d68b5"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:bf06540cf954b8209837",
+      "target": "capability:2a03c0d6c37e1a6864fa"
     },
     {
       "relation": "exposes",
@@ -6855,6 +7805,11 @@
       "relation": "exposes",
       "source": "route:bf2cc4f2f7af92903b52",
       "target": "capability:e8d45e28b9f99f76daf1"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:bf3d33ff2feebfbfd613",
+      "target": "capability:ebbc4104642881464a4e"
     },
     {
       "relation": "exposes",
@@ -6930,6 +7885,16 @@
       "relation": "exposes",
       "source": "route:c31d171555fd04bc1f52",
       "target": "capability:e8d45e28b9f99f76daf1"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:c324aa5695c2435a4d5a",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:c324aa5695c2435a4d5a",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -7023,6 +7988,21 @@
     },
     {
       "relation": "exposes",
+      "source": "route:c8d909c105c017cc4ce2",
+      "target": "capability:a43b0ca14c88d4f2694d"
+    },
+    {
+      "relation": "requires",
+      "source": "route:c8d909c105c017cc4ce2",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:c987709de171f84b547f",
+      "target": "capability:42799ccf5edeff5be5c5"
+    },
+    {
+      "relation": "exposes",
       "source": "route:c9d443b0bdd883f32028",
       "target": "capability:e8d45e28b9f99f76daf1"
     },
@@ -7030,6 +8010,11 @@
       "relation": "exposes",
       "source": "route:c9d705bd37e66f9cad44",
       "target": "capability:694feb872c40bb7b24c2"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:ca213d76f78a100648fe",
+      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -7113,6 +8098,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:cfc0d8dedf183605f0ca",
+      "target": "capability:cddad1e3a12a98467d8a"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:d0069b137d979cef7e27",
+      "target": "capability:b151f218110e7968b4ac"
+    },
+    {
+      "relation": "exposes",
       "source": "route:d04ffb7ac17dfb095478",
       "target": "capability:a27d2ff9d3e171d4b8c7"
     },
@@ -7125,6 +8120,11 @@
       "relation": "exposes",
       "source": "route:d1839cb6a45e808097f5",
       "target": "capability:944870579723917ee0fc"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:d1fbd1ca8e12b786eda5",
+      "target": "capability:775a60cd3fbf4be95489"
     },
     {
       "relation": "exposes",
@@ -7203,11 +8203,6 @@
     },
     {
       "relation": "exposes",
-      "source": "route:d52874dfb8564a523e24",
-      "target": "capability:ebbc4104642881464a4e"
-    },
-    {
-      "relation": "exposes",
       "source": "route:d52aef14bf2afea8542e",
       "target": "capability:8e31cbebb2223944f7bf"
     },
@@ -7253,6 +8248,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:d7785323956881682471",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:d7785323956881682471",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:d77addf5c20879aa0602",
       "target": "capability:e8d45e28b9f99f76daf1"
     },
@@ -7283,6 +8288,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:d8d21e8772a2a7a3e06b",
+      "target": "capability:71d71f32d9ce5fc9ae3e"
+    },
+    {
+      "relation": "exposes",
       "source": "route:d8ec95d1f30527a1663c",
       "target": "capability:ebbc4104642881464a4e"
     },
@@ -7305,6 +8315,11 @@
       "relation": "exposes",
       "source": "route:da51ee24ac7212a0201f",
       "target": "capability:c21872abe21d3abd2e21"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:da9a05befe5c44fbfb61",
+      "target": "capability:71d71f32d9ce5fc9ae3e"
     },
     {
       "relation": "exposes",
@@ -7353,8 +8368,23 @@
     },
     {
       "relation": "exposes",
+      "source": "route:dc8dfb39f24a7a89c20f",
+      "target": "capability:2a03c0d6c37e1a6864fa"
+    },
+    {
+      "relation": "exposes",
       "source": "route:dcea59ff4654f20a4ac3",
       "target": "capability:e8d45e28b9f99f76daf1"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:dd09ccfde74c5f7a222c",
+      "target": "capability:98eb237e4d2b677bcab0"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:dd55e58248d4839c36ed",
+      "target": "capability:3ae8b9bca5770ec8ca97"
     },
     {
       "relation": "exposes",
@@ -7420,6 +8450,11 @@
       "relation": "exposes",
       "source": "route:e00ecf4638da1f5ad769",
       "target": "capability:b0d73027f6f805b5fd6c"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:e02ca6f196fd24e8b5b7",
+      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -7513,8 +8548,18 @@
     },
     {
       "relation": "exposes",
+      "source": "route:e84d2ed503cfee3428ae",
+      "target": "capability:98eb237e4d2b677bcab0"
+    },
+    {
+      "relation": "exposes",
       "source": "route:e876fd65b0ed4646edaa",
       "target": "capability:47c569237dfe1dace02f"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:e8f45f8c430e7685d642",
+      "target": "capability:44dcb5ab824eb67704b5"
     },
     {
       "relation": "exposes",
@@ -7525,6 +8570,11 @@
       "relation": "exposes",
       "source": "route:e9a0699481b4d768a202",
       "target": "capability:8e31cbebb2223944f7bf"
+    },
+    {
+      "relation": "requires",
+      "source": "route:e9a0699481b4d768a202",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -7603,6 +8653,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:ed053dd565dfd511140e",
+      "target": "capability:e2ed693dcdda5bacae56"
+    },
+    {
+      "relation": "exposes",
       "source": "route:ed0d785da6e05dd223b8",
       "target": "capability:783e372d94b050e61338"
     },
@@ -7613,6 +8668,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:ed722deb35c566a18d28",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:edd9900c0d78a757634b",
+      "target": "capability:199084c23fd34aafdc71"
+    },
+    {
+      "relation": "exposes",
       "source": "route:edf8ff2fbd218b3e69e4",
       "target": "capability:b8af85aecacde4df0938"
     },
@@ -7620,6 +8685,11 @@
       "relation": "exposes",
       "source": "route:ee205999b16077dc437e",
       "target": "capability:a837830100d97d765815"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:ee70c4ff136240eea63e",
+      "target": "capability:b151f218110e7968b4ac"
     },
     {
       "relation": "exposes",
@@ -7665,6 +8735,11 @@
       "relation": "exposes",
       "source": "route:f144e8f5c7f7426fe701",
       "target": "capability:42c6d18f6188e6235fab"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:f1498aceb8c9d3e2a0cb",
+      "target": "capability:42799ccf5edeff5be5c5"
     },
     {
       "relation": "exposes",
@@ -7778,8 +8853,18 @@
     },
     {
       "relation": "exposes",
+      "source": "route:f7166ec7a682a2591b60",
+      "target": "capability:42799ccf5edeff5be5c5"
+    },
+    {
+      "relation": "exposes",
       "source": "route:f794d943675a71316d85",
       "target": "capability:694feb872c40bb7b24c2"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:f8222303c6ad1d3da9a9",
+      "target": "capability:4a8c6d9ba6f94504d1bb"
     },
     {
       "relation": "exposes",
@@ -7795,6 +8880,16 @@
       "relation": "exposes",
       "source": "route:f8cdf59d41dcf1a9b770",
       "target": "capability:694feb872c40bb7b24c2"
+    },
+    {
+      "relation": "exposes",
+      "source": "route:f90932e74cd0e6eb9a0b",
+      "target": "capability:873cd4c050768f3aa94a"
+    },
+    {
+      "relation": "requires",
+      "source": "route:f90932e74cd0e6eb9a0b",
+      "target": "control:8beb2443d48d78613952"
     },
     {
       "relation": "exposes",
@@ -7918,6 +9013,16 @@
     },
     {
       "relation": "exposes",
+      "source": "route:fd319bf436395c767266",
+      "target": "capability:a43b0ca14c88d4f2694d"
+    },
+    {
+      "relation": "requires",
+      "source": "route:fd319bf436395c767266",
+      "target": "control:8beb2443d48d78613952"
+    },
+    {
+      "relation": "exposes",
       "source": "route:fda5c64435a55cf4e3f3",
       "target": "capability:19ec853e34b7b253e5b0"
     },
@@ -7977,7 +9082,7 @@
       "target": "control:8beb2443d48d78613952"
     }
   ],
-  "node_count": 898,
+  "node_count": 1012,
   "nodes": [
     {
       "id": "capability:0304e05cfc30a6eece57",
@@ -8013,6 +9118,11 @@
       "id": "capability:0efcd50344bff9c13c86",
       "kind": "capability",
       "label": "Events"
+    },
+    {
+      "id": "capability:0f34cf87a6c01eeab3b8",
+      "kind": "capability",
+      "label": "Project Spaces"
     },
     {
       "id": "capability:0fdc7bdb8f9e4f81e98f",
@@ -8180,9 +9290,19 @@
       "label": "analytics"
     },
     {
+      "id": "capability:4a8c6d9ba6f94504d1bb",
+      "kind": "capability",
+      "label": "mesh-tasks"
+    },
+    {
       "id": "capability:4b811cedc02c655f0e98",
       "kind": "capability",
       "label": "knowledge-graph"
+    },
+    {
+      "id": "capability:4b954bae6573be9441f8",
+      "kind": "capability",
+      "label": "webhooks-orchestration"
     },
     {
       "id": "capability:4f37e94fae8492dcc314",
@@ -8218,6 +9338,11 @@
       "id": "capability:58809cf25597fb9fba8c",
       "kind": "capability",
       "label": "RAG Hybrid Search"
+    },
+    {
+      "id": "capability:5feeb0a677354e86bc56",
+      "kind": "capability",
+      "label": "Autonomous Agents"
     },
     {
       "id": "capability:64845b95831dc94336e6",
@@ -8270,6 +9395,11 @@
       "label": "TaskGateway"
     },
     {
+      "id": "capability:71d71f32d9ce5fc9ae3e",
+      "kind": "capability",
+      "label": "Admin LLM Gateway"
+    },
+    {
       "id": "capability:72575c0acc31c8b9c080",
       "kind": "capability",
       "label": "Internet Monitor"
@@ -8293,6 +9423,11 @@
       "id": "capability:7676ad0181c7371f49c8",
       "kind": "capability",
       "label": "diagram-to-architecture"
+    },
+    {
+      "id": "capability:775a60cd3fbf4be95489",
+      "kind": "capability",
+      "label": "agent-registry"
     },
     {
       "id": "capability:783e372d94b050e61338",
@@ -8355,6 +9490,11 @@
       "label": "simulator"
     },
     {
+      "id": "capability:8844832fd69d152a37eb",
+      "kind": "capability",
+      "label": "mesh-mailbox"
+    },
+    {
       "id": "capability:8907ae938c1d48ec41d3",
       "kind": "capability",
       "label": "Artifacts"
@@ -8383,6 +9523,11 @@
       "id": "capability:944870579723917ee0fc",
       "kind": "capability",
       "label": "multilingual-tts"
+    },
+    {
+      "id": "capability:98eb237e4d2b677bcab0",
+      "kind": "capability",
+      "label": "mesh-presence"
     },
     {
       "id": "capability:9c5e2a6bba8f7ba6bd61",
@@ -8448,6 +9593,11 @@
       "id": "capability:b0d73027f6f805b5fd6c",
       "kind": "capability",
       "label": "voice-coder"
+    },
+    {
+      "id": "capability:b151f218110e7968b4ac",
+      "kind": "capability",
+      "label": "AI Surface Assignment"
     },
     {
       "id": "capability:b2b0c95bad700e8de047",
@@ -8530,6 +9680,11 @@
       "label": "kaggle"
     },
     {
+      "id": "capability:cddad1e3a12a98467d8a",
+      "kind": "capability",
+      "label": "merge-learning"
+    },
+    {
       "id": "capability:d2b9062c3e67b4038a68",
       "kind": "capability",
       "label": "layer-6-agent-breeding"
@@ -8585,6 +9740,11 @@
       "label": "ai-pair-programmer"
     },
     {
+      "id": "capability:e2ed693dcdda5bacae56",
+      "kind": "capability",
+      "label": "swarm"
+    },
+    {
       "id": "capability:e2f46d15b0454312ca00",
       "kind": "capability",
       "label": "Workspace Files"
@@ -8603,6 +9763,11 @@
       "id": "capability:e8d45e28b9f99f76daf1",
       "kind": "capability",
       "label": "browser"
+    },
+    {
+      "id": "capability:e94e79b5c8d1a59229de",
+      "kind": "capability",
+      "label": "github-webhook"
     },
     {
       "id": "capability:ebbc4104642881464a4e",
@@ -8663,6 +9828,16 @@
       "id": "control:8beb2443d48d78613952",
       "kind": "control",
       "label": "authenticated-access"
+    },
+    {
+      "id": "route:005c18810eca7fa93f52",
+      "kind": "route",
+      "label": "POST /api/merge-learning/webhook",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "merge_learning_webhook_api_merge_learning_webhook_post",
+        "owner": "unassigned"
+      }
     },
     {
       "id": "route:009568acc60d6af44409",
@@ -8765,6 +9940,16 @@
       }
     },
     {
+      "id": "route:03e029c6fa7b9e467a93",
+      "kind": "route",
+      "label": "GET /api/v1/projects",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_projects_api_v1_projects_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:03ed192328b8a233bc0e",
       "kind": "route",
       "label": "GET /api/share/{share_id}",
@@ -8841,6 +10026,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "get_rules_api_admin_rules_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:05dec0c196c487639106",
+      "kind": "route",
+      "label": "GET /api/v1/admin/system-status",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_system_status_v1_api_v1_admin_system_status_get",
         "owner": "unassigned"
       }
     },
@@ -8931,6 +10126,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "get_detailed_status_api_telemetry_status_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:08d02f6db3523633f044",
+      "kind": "route",
+      "label": "POST /api/knowledge/feedback",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "record_feedback_api_knowledge_feedback_post",
         "owner": "unassigned"
       }
     },
@@ -9155,6 +10360,16 @@
       }
     },
     {
+      "id": "route:0f92e8229171384df04d",
+      "kind": "route",
+      "label": "POST /api/v1/ecosystem/admin/sources/{source_id}/transition",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_transition_source_api_v1_ecosystem_admin_sources__source_id__transition_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:0fb3e96a054fe8c71594",
       "kind": "route",
       "label": "POST /api/v1/webhooks/n8n/callback",
@@ -9231,6 +10446,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "ping_single_service_admin_api_ping_service_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:136f341e667c90d6d190",
+      "kind": "route",
+      "label": "GET /api/v1/admin/deployments",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_deployments_v1_api_v1_admin_deployments_get",
         "owner": "unassigned"
       }
     },
@@ -9345,6 +10570,16 @@
       }
     },
     {
+      "id": "route:15d376595b602326c165",
+      "kind": "route",
+      "label": "POST /api/knowledge/failure",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "report_failure_api_knowledge_failure_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:15e3d8de4cf6d6c4fb54",
       "kind": "route",
       "label": "POST /api/simulator/profile",
@@ -9395,12 +10630,32 @@
       }
     },
     {
+      "id": "route:17ae6d63122550c6afd1",
+      "kind": "route",
+      "label": "POST /api/admin/ai/assign",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "assign_ai_api_admin_ai_assign_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:183a9353dfd04d9836fe",
       "kind": "route",
       "label": "GET /admin-api/config",
       "metadata": {
         "auth_required": true,
         "operation_id": "get_config_admin_api_config_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:184413b0b6f2de21a96d",
+      "kind": "route",
+      "label": "POST /api/v1/nodes/heartbeat",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "post_node_heartbeat_api_v1_nodes_heartbeat_post",
         "owner": "unassigned"
       }
     },
@@ -9605,6 +10860,16 @@
       }
     },
     {
+      "id": "route:2215e5fe64795281e30d",
+      "kind": "route",
+      "label": "POST /api/v1/agents/{agent_id}/ownership",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "assign_ownership_api_v1_agents__agent_id__ownership_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:227a294ee3ab98793b8a",
       "kind": "route",
       "label": "DELETE /api/browser/tasks/{id}",
@@ -9631,6 +10896,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "submit_task_api_v1_ecosystem_tasks_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:23d71aa974fbcd8bc51a",
+      "kind": "route",
+      "label": "POST /api/admin/cloud-mesh/smell-check",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "cloud_mesh_smell_check_contract_alias_api_admin_cloud_mesh_smell_check_post",
         "owner": "unassigned"
       }
     },
@@ -9695,6 +10970,16 @@
       }
     },
     {
+      "id": "route:25c9994e428c170b0bd1",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/tasks/{task_id}/fail",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "fail_task_api_v1_mesh_tasks__task_id__fail_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:25d84187e8728bcb476d",
       "kind": "route",
       "label": "POST /admin-api/commandcenter/money/budget",
@@ -9735,6 +11020,26 @@
       }
     },
     {
+      "id": "route:26fdae980cd1b573910f",
+      "kind": "route",
+      "label": "GET /admin-api/secrets-health",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "get_secrets_health_admin_api_secrets_health_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:277a0234795cb7b2b564",
+      "kind": "route",
+      "label": "GET /api/v1/nodes",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_active_nodes_api_v1_nodes_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:27dca03ac1e3d8eed213",
       "kind": "route",
       "label": "GET /api/v1/mcp/gateway",
@@ -9755,6 +11060,16 @@
       }
     },
     {
+      "id": "route:28d12afb193df48749eb",
+      "kind": "route",
+      "label": "GET /api/v1/admin/agents",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_agents_v1_api_v1_admin_agents_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:298e73b52019d3963ceb",
       "kind": "route",
       "label": "POST /api/v1/ecosystem/admin/opportunities",
@@ -9765,22 +11080,22 @@
       }
     },
     {
+      "id": "route:29e03b4d3422bb0e86b7",
+      "kind": "route",
+      "label": "GET /api/admin/llm/providers",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_llm_providers_api_admin_llm_providers_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:2a10244cf4d293ccfb38",
       "kind": "route",
       "label": "POST /api/browser/surf/skip-auth",
       "metadata": {
         "auth_required": true,
         "operation_id": "skip_auth_api_browser_surf_skip_auth_post",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:2a72cad17085d2f610b4",
-      "kind": "route",
-      "label": "POST /api/api/admin/librarian/process",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "process_skill_action_api_api_admin_librarian_process_post",
         "owner": "unassigned"
       }
     },
@@ -9875,6 +11190,16 @@
       }
     },
     {
+      "id": "route:2c83d1f707c7a990519d",
+      "kind": "route",
+      "label": "GET /admin-api/service-uptime",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_service_uptime_admin_api_service_uptime_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:2cbe0c75b8c737da74dd",
       "kind": "route",
       "label": "GET /api/admin/selector-healing/",
@@ -9945,6 +11270,16 @@
       }
     },
     {
+      "id": "route:2e0d129c52e55e51e970",
+      "kind": "route",
+      "label": "DELETE /api/v1/agents/{agent_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "remove_agent_api_v1_agents__agent_id__delete",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:2e309024f23bf58d03c8",
       "kind": "route",
       "label": "GET /api/admin/automation/workflows",
@@ -10011,6 +11346,26 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "list_checkpoints_api_memory_checkpoints_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:30c3b14381032bac3763",
+      "kind": "route",
+      "label": "GET /api/admin/tenant-limits",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_tenant_limits_contract_alias_api_admin_tenant_limits_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:30e412ad111f64604ded",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/subscriptions",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "mesh_subscribe_topics_api_v1_mesh_subscriptions_post",
         "owner": "unassigned"
       }
     },
@@ -10125,6 +11480,16 @@
       }
     },
     {
+      "id": "route:341641de5ce0c795bb27",
+      "kind": "route",
+      "label": "POST /api/v1/agents",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "upsert_agent_api_v1_agents_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:3445032c480ee0d6f122",
       "kind": "route",
       "label": "GET /api/v1/workspace/capabilities",
@@ -10175,6 +11540,16 @@
       }
     },
     {
+      "id": "route:37d7efca9e991d5df224",
+      "kind": "route",
+      "label": "GET /api/v1/admin/metrics",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_metrics_v1_api_v1_admin_metrics_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:37f152d0d95a6ecdb8e3",
       "kind": "route",
       "label": "POST /integrations/email/imap",
@@ -10191,6 +11566,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "store_long_term_memory_endpoint_unified_memory_long_term_store_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:3835fee744ec998f8f84",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/messages",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "mesh_send_message_api_v1_mesh_messages_post",
         "owner": "unassigned"
       }
     },
@@ -10355,12 +11740,12 @@
       }
     },
     {
-      "id": "route:40b41a4ff31dc63d9e11",
+      "id": "route:3fbba34a135ff6515dcd",
       "kind": "route",
-      "label": "GET /api/memory/conversations",
+      "label": "POST /api/v1/mesh/tasks/{task_id}/complete",
       "metadata": {
         "auth_required": false,
-        "operation_id": "list_conversations_api_memory_conversations_get",
+        "operation_id": "complete_task_api_v1_mesh_tasks__task_id__complete_post",
         "owner": "unassigned"
       }
     },
@@ -10425,6 +11810,16 @@
       }
     },
     {
+      "id": "route:4302b94e0afa4d7751b5",
+      "kind": "route",
+      "label": "GET /api/v1/admin/render/accounts/health",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "get_multi_account_health_api_v1_admin_render_accounts_health_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:4364e6e0ed8724da534e",
       "kind": "route",
       "label": "GET /api/simulator/devices",
@@ -10441,16 +11836,6 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "get_status_api_browser_surf_status_get",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:4442ac33bc259357b386",
-      "kind": "route",
-      "label": "POST /api/memory/conversations/messages",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "save_message_api_memory_conversations_messages_post",
         "owner": "unassigned"
       }
     },
@@ -10555,6 +11940,16 @@
       }
     },
     {
+      "id": "route:470491a6ccf2caf205b5",
+      "kind": "route",
+      "label": "GET /api/v1/admin/dashboard",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_dashboard_v1_api_v1_admin_dashboard_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:47264068d2069900e331",
       "kind": "route",
       "label": "GET /api/v1/zero-cost/metrics",
@@ -10611,6 +12006,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "get_task_stats_api_task__stats_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:49270e0fc05dad68522b",
+      "kind": "route",
+      "label": "POST /api/v1/projects",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "create_project_api_v1_projects_post",
         "owner": "unassigned"
       }
     },
@@ -10705,6 +12110,16 @@
       }
     },
     {
+      "id": "route:4b7a5351ad1714ab73e4",
+      "kind": "route",
+      "label": "POST /api/v1/integrations/github/webhook",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "github_webhook_api_v1_integrations_github_webhook_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:4ba28ae9fa6b6dd6a6e2",
       "kind": "route",
       "label": "POST /pair/review",
@@ -10785,12 +12200,32 @@
       }
     },
     {
+      "id": "route:4d87e2455bc8070740c8",
+      "kind": "route",
+      "label": "POST /admin-api/approvals/mcp",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "resolve_commandcenter_approval_mcp_admin_api_approvals_mcp_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:4dfb6053b0a7f8ce4a15",
       "kind": "route",
       "label": "GET /api/preferences/",
       "metadata": {
         "auth_required": false,
         "operation_id": "get_preferences_api_preferences__get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:4e146cf9cc36c5de078c",
+      "kind": "route",
+      "label": "GET /api/v1/admin/skills",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_skills_v1_api_v1_admin_skills_get",
         "owner": "unassigned"
       }
     },
@@ -11125,12 +12560,32 @@
       }
     },
     {
+      "id": "route:582cbdc9c1008927a40e",
+      "kind": "route",
+      "label": "GET /api/admin/ai/assignment",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_assignment_api_admin_ai_assignment_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:586fcdf7673c4e00e82b",
       "kind": "route",
       "label": "GET /api/v1/admin/crawler/history",
       "metadata": {
         "auth_required": false,
         "operation_id": "get_crawl_history_api_v1_admin_crawler_history_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:589668a54b0db367b093",
+      "kind": "route",
+      "label": "DELETE /api/v1/ecosystem/admin/capabilities/{capability_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_delete_capability_api_v1_ecosystem_admin_capabilities__capability_id__delete",
         "owner": "unassigned"
       }
     },
@@ -11145,6 +12600,16 @@
       }
     },
     {
+      "id": "route:58e4edbe177ae15f64a3",
+      "kind": "route",
+      "label": "GET /api/knowledge/stats",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "learning_stats_api_knowledge_stats_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:5928198ab13d9f9f0c25",
       "kind": "route",
       "label": "POST /api/v1/admin/alerts",
@@ -11155,22 +12620,22 @@
       }
     },
     {
+      "id": "route:5a16662d77adf87d101a",
+      "kind": "route",
+      "label": "GET /api/v1/mesh/messages/stats",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "mesh_message_stats_api_v1_mesh_messages_stats_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:5a2c63baff5cd769eb4d",
       "kind": "route",
       "label": "POST /api/v1/plugins/community/submit",
       "metadata": {
         "auth_required": false,
         "operation_id": "submit_community_plugin_api_v1_plugins_community_submit_post",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:5aa3997c10688ca137dc",
-      "kind": "route",
-      "label": "POST /api/admin-api/test-service",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "test_specific_service_api_admin_api_test_service_post",
         "owner": "unassigned"
       }
     },
@@ -11245,6 +12710,16 @@
       }
     },
     {
+      "id": "route:5d92a52bb2530b2ec70f",
+      "kind": "route",
+      "label": "GET /api/admin/ai/providers",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_providers_api_admin_ai_providers_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:5db8efe63a49c84c20f6",
       "kind": "route",
       "label": "POST /api/billing/webhook/stripe",
@@ -11261,6 +12736,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "stream_chat_sse_api_v1_stream_chat_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:5e21ec1f8dcb3ee86d8d",
+      "kind": "route",
+      "label": "DELETE /api/skills/uninstall",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "uninstall_skill_api_skills_uninstall_delete",
         "owner": "unassigned"
       }
     },
@@ -11575,6 +13060,16 @@
       }
     },
     {
+      "id": "route:66235cbf9afc2671343e",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/messages/{message_id}/ack",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "mesh_ack_message_api_v1_mesh_messages__message_id__ack_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:664d00894714d5c6adde",
       "kind": "route",
       "label": "GET /api/v1/markdown/export/{job_id}/download",
@@ -11755,6 +13250,16 @@
       }
     },
     {
+      "id": "route:6ba39aa0855092d80486",
+      "kind": "route",
+      "label": "GET /admin-api/provider-readiness",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_provider_readiness_admin_api_provider_readiness_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:6bef6445db1f16ddb410",
       "kind": "route",
       "label": "GET /api/browser/surf/screenshot",
@@ -11769,8 +13274,8 @@
       "kind": "route",
       "label": "GET /api/v1/agents",
       "metadata": {
-        "auth_required": true,
-        "operation_id": "list_agents_v1_api_v1_agents_get",
+        "auth_required": false,
+        "operation_id": "list_agents_api_v1_agents_get",
         "owner": "unassigned"
       }
     },
@@ -11855,6 +13360,16 @@
       }
     },
     {
+      "id": "route:6ed8aae819fbd205c939",
+      "kind": "route",
+      "label": "DELETE /api/v1/projects/{project_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "delete_project_api_v1_projects__project_id__delete",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:6ee9dbcaea0ebb771926",
       "kind": "route",
       "label": "GET /admin-api/approvals",
@@ -11895,6 +13410,16 @@
       }
     },
     {
+      "id": "route:70aabb68338060486bdc",
+      "kind": "route",
+      "label": "POST /api/v1/auth/totp/verify",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "totp_verify_compat_api_v1_auth_totp_verify_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:70f3a09db4fd6de5024c",
       "kind": "route",
       "label": "POST /internal/run-daily-evolution",
@@ -11931,6 +13456,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "create_tool_api_v1_tools_registry__post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:71776419fed885c9e61a",
+      "kind": "route",
+      "label": "GET /api/v1/mesh/tasks/{task_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_task_api_v1_mesh_tasks__task_id__get",
         "owner": "unassigned"
       }
     },
@@ -11981,6 +13516,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "create_automation_session_api_browser_automation_sessions_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:738e63e62c0822dd3b05",
+      "kind": "route",
+      "label": "GET /api/v1/admin/config",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_config_v1_api_v1_admin_config_get",
         "owner": "unassigned"
       }
     },
@@ -12095,6 +13640,16 @@
       }
     },
     {
+      "id": "route:76dc8412f0532bc9ad0d",
+      "kind": "route",
+      "label": "POST /admin-api/test-service",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "test_specific_service_admin_api_test_service_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:76f4568abc0630000c6e",
       "kind": "route",
       "label": "GET /api/v1/missions/{mission_id}/trace/stream",
@@ -12191,16 +13746,6 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "stream_hitl_sse_api_v1_stream_hitl_get",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:78dc643c673e47c6d50f",
-      "kind": "route",
-      "label": "GET /api/api/admin/librarian/queue",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "get_quarantine_queue_api_api_admin_librarian_queue_get",
         "owner": "unassigned"
       }
     },
@@ -12315,6 +13860,16 @@
       }
     },
     {
+      "id": "route:7c5b37b591cea0e5551d",
+      "kind": "route",
+      "label": "GET /admin-api/dependencies",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "check_dependencies_admin_api_dependencies_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:7c74221121f32c5f7b81",
       "kind": "route",
       "label": "POST /api/v1/meta-ai/metrics",
@@ -12385,12 +13940,32 @@
       }
     },
     {
+      "id": "route:7d93235b4873a5a61683",
+      "kind": "route",
+      "label": "GET /api/v1/auth/users",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_users_admin_api_v1_auth_users_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:7da68be2fa86837b7798",
       "kind": "route",
       "label": "POST /api/admin/cloud-mesh/defcon",
       "metadata": {
         "auth_required": false,
         "operation_id": "set_defcon_api_admin_cloud_mesh_defcon_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:7e59c5cdbfe7ecf482d2",
+      "kind": "route",
+      "label": "GET /api/v1/ecosystem/admin/sources/{source_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_get_source_api_v1_ecosystem_admin_sources__source_id__get",
         "owner": "unassigned"
       }
     },
@@ -12411,6 +13986,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "update_policy_api_v1_admin_crawler_policies__policy_id__patch",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:7f12296928dc132df2b1",
+      "kind": "route",
+      "label": "GET /api/health-aggregation",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "health_aggregation_contract_api_health_aggregation_get",
         "owner": "unassigned"
       }
     },
@@ -12465,6 +14050,16 @@
       }
     },
     {
+      "id": "route:80f4958a240d6fe8c134",
+      "kind": "route",
+      "label": "GET /api/v1/admin/analytics",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_analytics_v1_api_v1_admin_analytics_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:814e0c3d3f422eb1846b",
       "kind": "route",
       "label": "GET /api/v1/tasks/{task_id}",
@@ -12481,6 +14076,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "get_overview_admin_api_commandcenter_overview_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:81f7aaa5c7b152a96dd2",
+      "kind": "route",
+      "label": "POST /api/knowledge/learn",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "learn_knowledge_api_knowledge_learn_post",
         "owner": "unassigned"
       }
     },
@@ -12551,6 +14156,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "free_tier_status_admin_free_tier_status_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:83b628102c91b344c37a",
+      "kind": "route",
+      "label": "DELETE /api/preferences/memory/user-data",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "delete_all_user_memories_api_preferences_memory_user_data_delete",
         "owner": "unassigned"
       }
     },
@@ -12665,6 +14280,16 @@
       }
     },
     {
+      "id": "route:879dc77ff3e3fa8138e5",
+      "kind": "route",
+      "label": "GET /api/v1/mesh/tasks/queue/stats",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "queue_stats_api_v1_mesh_tasks_queue_stats_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:88d39283c3addeb5b681",
       "kind": "route",
       "label": "POST /video-to-code/process",
@@ -12691,6 +14316,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "admin_set_quota_api_simulator_admin_set_quota__userId__post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:89af217813e3ef1372bf",
+      "kind": "route",
+      "label": "POST /api/admin/ai/test/{provider_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "test_provider_api_admin_ai_test__provider_id__post",
         "owner": "unassigned"
       }
     },
@@ -12845,6 +14480,16 @@
       }
     },
     {
+      "id": "route:903f29c32de7e9f356b9",
+      "kind": "route",
+      "label": "GET /api/v1/ecosystem/admin/governance/budgets",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_governance_budgets_api_v1_ecosystem_admin_governance_budgets_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:90db3101dae4efe18513",
       "kind": "route",
       "label": "GET /api/v1/ready",
@@ -12951,6 +14596,26 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "command_health_admin_api_commandcenter_health_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:944e6b5d1e749a905f00",
+      "kind": "route",
+      "label": "GET /api/v1/ecosystem/admin/policies/match",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_match_policy_api_v1_ecosystem_admin_policies_match_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:94e4af96ee4a7ec1b001",
+      "kind": "route",
+      "label": "GET /api/v1/mesh/subscriptions",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "mesh_list_subscriptions_api_v1_mesh_subscriptions_get",
         "owner": "unassigned"
       }
     },
@@ -13065,16 +14730,6 @@
       }
     },
     {
-      "id": "route:984ab8d00ffd3ddd3f6e",
-      "kind": "route",
-      "label": "GET /api/admin-api/health-aggregation",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "get_health_aggregation_api_admin_api_health_aggregation_get",
-        "owner": "unassigned"
-      }
-    },
-    {
       "id": "route:9874c4385aa887dde8f4",
       "kind": "route",
       "label": "POST /api/v1/recipe",
@@ -13101,6 +14756,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "summarize_thread_api_comment_ai_summarize_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:99e27b9f5a7de30631f4",
+      "kind": "route",
+      "label": "POST /api/webhooks/github",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "github_webhook_api_webhooks_github_post",
         "owner": "unassigned"
       }
     },
@@ -13159,8 +14824,8 @@
       "kind": "route",
       "label": "POST /api/v1/agents/execute",
       "metadata": {
-        "auth_required": false,
-        "operation_id": "execute_agent_api_v1_agents_execute_post",
+        "auth_required": true,
+        "operation_id": "execute_agent_task_api_v1_agents_execute_post",
         "owner": "unassigned"
       }
     },
@@ -13245,6 +14910,16 @@
       }
     },
     {
+      "id": "route:9e03bca41c809dbe435d",
+      "kind": "route",
+      "label": "GET /api/v1/admin/billing",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_billing_v1_api_v1_admin_billing_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:9e2dea674f006b2229fb",
       "kind": "route",
       "label": "POST /admin-api/workspaces/bind-target",
@@ -13325,12 +15000,22 @@
       }
     },
     {
-      "id": "route:a1ca7c08ed4924a80d59",
+      "id": "route:a2ad8041043b9ab2545c",
       "kind": "route",
-      "label": "GET /api/admin-api/dependencies",
+      "label": "GET /api/v1/admin/api-keys",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_api_keys_v1_api_v1_admin_api_keys_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:a2cc2803334dadf1e91e",
+      "kind": "route",
+      "label": "POST /api/v1/ecosystem/admin/learned/prune",
       "metadata": {
         "auth_required": false,
-        "operation_id": "check_dependencies_api_admin_api_dependencies_get",
+        "operation_id": "admin_prune_learned_api_v1_ecosystem_admin_learned_prune_post",
         "owner": "unassigned"
       }
     },
@@ -13341,6 +15026,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "create_backup_admin_api_commandcenter_system_backups_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:a3601bcd26247f401515",
+      "kind": "route",
+      "label": "GET /api/v1/ecosystem/admin/proposals/{proposal_id}/decisions",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_list_proposal_decisions_api_v1_ecosystem_admin_proposals__proposal_id__decisions_get",
         "owner": "unassigned"
       }
     },
@@ -13385,6 +15080,16 @@
       }
     },
     {
+      "id": "route:a5b52fda6920720451ba",
+      "kind": "route",
+      "label": "GET /api/v1/admin/tiers",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_tiers_v1_api_v1_admin_tiers_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:a5cd61fdc3a12306534c",
       "kind": "route",
       "label": "GET /api/v1/healing/stats",
@@ -13409,7 +15114,7 @@
       "kind": "route",
       "label": "POST /api/v1/evolution/swarm/forge/{flow_id}/execute",
       "metadata": {
-        "auth_required": false,
+        "auth_required": true,
         "operation_id": "execute_swarm_blueprint_api_v1_evolution_swarm_forge__flow_id__execute_post",
         "owner": "unassigned"
       }
@@ -13445,6 +15150,16 @@
       }
     },
     {
+      "id": "route:a79b3f4e113b172ad941",
+      "kind": "route",
+      "label": "POST /api/admin/llm/router/override",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "set_llm_router_override_api_admin_llm_router_override_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:a7c70ff1d9a926602c8f",
       "kind": "route",
       "label": "POST /admin-api/settings",
@@ -13471,6 +15186,16 @@
       "metadata": {
         "auth_required": true,
         "operation_id": "add_denied_url_api_browser_urls_denied_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:a86efcae6cdc86714a48",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/tasks/reap",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "reap_expired_api_v1_mesh_tasks_reap_post",
         "owner": "unassigned"
       }
     },
@@ -13595,12 +15320,32 @@
       }
     },
     {
+      "id": "route:adc61e081374d0e2dc28",
+      "kind": "route",
+      "label": "GET /api/admin/llm/router",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_llm_router_api_admin_llm_router_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:ade040649fe877370b6b",
       "kind": "route",
       "label": "POST /tools/image-to-palette",
       "metadata": {
         "auth_required": false,
         "operation_id": "api_extract_palette_tools_image_to_palette_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:ae0c46825babbfe5076d",
+      "kind": "route",
+      "label": "GET /api/v1/capabilities/runtime",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "runtime_capabilities_api_v1_capabilities_runtime_get",
         "owner": "unassigned"
       }
     },
@@ -13621,6 +15366,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "approve_fix_api_admin_fixes__fix_id__approve_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:aeaa233de0c294de18f2",
+      "kind": "route",
+      "label": "PUT /api/admin/tenant-limits/{tenant_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "update_tenant_limits_contract_alias_api_admin_tenant_limits__tenant_id__put",
         "owner": "unassigned"
       }
     },
@@ -13725,6 +15480,16 @@
       }
     },
     {
+      "id": "route:b17c2c3fde6a49d7aee0",
+      "kind": "route",
+      "label": "PATCH /api/v1/projects/{project_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "update_project_api_v1_projects__project_id__patch",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:b18d1c1cd25566240d5c",
       "kind": "route",
       "label": "POST /api/artifacts/",
@@ -13751,6 +15516,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "cost_forecast_api_admin_infrastructure_cost_forecast_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:b1c43d41beebcf7f149f",
+      "kind": "route",
+      "label": "GET /admin-api/approvals/mcp",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "get_commandcenter_approvals_mcp_admin_api_approvals_mcp_get",
         "owner": "unassigned"
       }
     },
@@ -13865,6 +15640,16 @@
       }
     },
     {
+      "id": "route:b3a22bea08a8efe10a40",
+      "kind": "route",
+      "label": "GET /api/v1/mesh/tasks",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_tasks_api_v1_mesh_tasks_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:b46e4ae62a992b6a8f7b",
       "kind": "route",
       "label": "POST /api/style/generate",
@@ -13875,12 +15660,12 @@
       }
     },
     {
-      "id": "route:b480c1cb1afc3def6ef9",
+      "id": "route:b477a2e1a8e3b00a47d0",
       "kind": "route",
-      "label": "GET /api/admin-api/provider-readiness",
+      "label": "POST /api/admin/traffic/kill-switch",
       "metadata": {
         "auth_required": false,
-        "operation_id": "get_provider_readiness_api_admin_api_provider_readiness_get",
+        "operation_id": "traffic_kill_switch_contract_alias_api_admin_traffic_kill_switch_post",
         "owner": "unassigned"
       }
     },
@@ -13895,22 +15680,42 @@
       }
     },
     {
-      "id": "route:b4ca433bd2e2c86162a1",
-      "kind": "route",
-      "label": "GET /api/admin-api/health-map",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "get_health_map_api_admin_api_health_map_get",
-        "owner": "unassigned"
-      }
-    },
-    {
       "id": "route:b4e837793db892d5defe",
       "kind": "route",
       "label": "GET /api/v1/control-plane/health",
       "metadata": {
         "auth_required": false,
         "operation_id": "health_api_v1_control_plane_health_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:b528f8b4ff445f188cde",
+      "kind": "route",
+      "label": "GET /admin-api/health-aggregation",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_health_aggregation_admin_api_health_aggregation_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:b536326b77b9371f8538",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/tasks/{task_id}/cancel",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "cancel_task_api_v1_mesh_tasks__task_id__cancel_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:b54ed689267d35d03897",
+      "kind": "route",
+      "label": "GET /api/v1/conversations/{session_id}/messages",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_session_messages_api_v1_conversations__session_id__messages_get",
         "owner": "unassigned"
       }
     },
@@ -13985,6 +15790,16 @@
       }
     },
     {
+      "id": "route:b84b2a37403acec533b2",
+      "kind": "route",
+      "label": "DELETE /api/v1/ecosystem/admin/policies/{policy_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_delete_policy_api_v1_ecosystem_admin_policies__policy_id__delete",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:b858d11f002458897aaf",
       "kind": "route",
       "label": "DELETE /api/schedule/{task_id}",
@@ -14001,6 +15816,16 @@
       "metadata": {
         "auth_required": true,
         "operation_id": "get_commandcenter_rate_limits_admin_api_rate_limits_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:b8867d185fe6704ad9a0",
+      "kind": "route",
+      "label": "POST /api/browser/render-ticket",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "issue_render_ticket_api_browser_render_ticket_post",
         "owner": "unassigned"
       }
     },
@@ -14065,12 +15890,42 @@
       }
     },
     {
+      "id": "route:ba9248407da4ebc662b6",
+      "kind": "route",
+      "label": "GET /api/v1/admin/security",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_security_v1_api_v1_admin_security_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:baccfe6904526965c239",
+      "kind": "route",
+      "label": "GET /api/v1/evolution/canary/{proposal_id}/route",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "evaluate_canary_route_api_v1_evolution_canary__proposal_id__route_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:baedd686e7a22550045d",
       "kind": "route",
       "label": "GET /api/v1/admin/audit-logs",
       "metadata": {
         "auth_required": true,
         "operation_id": "audit_logs_v1_api_v1_admin_audit_logs_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:baf26352979fce225eeb",
+      "kind": "route",
+      "label": "POST /api/v1/ecosystem/admin/sources/discover",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_discover_source_api_v1_ecosystem_admin_sources_discover_post",
         "owner": "unassigned"
       }
     },
@@ -14145,12 +16000,32 @@
       }
     },
     {
+      "id": "route:bc23accbb07bb5a76abd",
+      "kind": "route",
+      "label": "GET /api/v1/admin/audit",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_audit_v1_api_v1_admin_audit_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:bccce89d857efab7f56b",
       "kind": "route",
       "label": "GET /ws/command-center/health",
       "metadata": {
         "auth_required": false,
         "operation_id": "ws_health_ws_command_center_health_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:bce14a5be977efe3f1d7",
+      "kind": "route",
+      "label": "GET /api/v1/ecosystem/admin/policies",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_list_policies_api_v1_ecosystem_admin_policies_get",
         "owner": "unassigned"
       }
     },
@@ -14165,6 +16040,16 @@
       }
     },
     {
+      "id": "route:bd28490dbe5cbf10015c",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/tasks/{task_id}/claim",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "claim_task_api_v1_mesh_tasks__task_id__claim_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:bd353cb8db9fda871739",
       "kind": "route",
       "label": "GET /admin-api/commandcenter/build/knowledge",
@@ -14175,12 +16060,32 @@
       }
     },
     {
+      "id": "route:bd5e46d1e37deeb209ec",
+      "kind": "route",
+      "label": "POST /api/v1/ecosystem/admin/policies",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_create_policy_api_v1_ecosystem_admin_policies_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:bd93acf35693d89585bd",
       "kind": "route",
       "label": "POST /payments/checkout",
       "metadata": {
         "auth_required": false,
         "operation_id": "create_checkout_session_payments_checkout_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:bdac0c503e977cac4af6",
+      "kind": "route",
+      "label": "GET /api/v1/ecosystem/admin/sources",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_list_sources_api_v1_ecosystem_admin_sources_get",
         "owner": "unassigned"
       }
     },
@@ -14205,6 +16110,16 @@
       }
     },
     {
+      "id": "route:bf06540cf954b8209837",
+      "kind": "route",
+      "label": "GET /api/admin/librarian/queue",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_quarantine_queue_api_admin_librarian_queue_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:bf2057215c68cb7a1d63",
       "kind": "route",
       "label": "POST /tools/image-to-component",
@@ -14221,6 +16136,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "type_key_api_browser_surf_type_key_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:bf3d33ff2feebfbfd613",
+      "kind": "route",
+      "label": "GET /admin-api/service-health-map",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_health_map_admin_api_service_health_map_get",
         "owner": "unassigned"
       }
     },
@@ -14365,6 +16290,16 @@
       }
     },
     {
+      "id": "route:c324aa5695c2435a4d5a",
+      "kind": "route",
+      "label": "GET /api/v1/admin/notifications",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_notifications_v1_api_v1_admin_notifications_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:c32ff0d7fa0cd1d22bcb",
       "kind": "route",
       "label": "DELETE /admin-api/tenant-limits/{tenant_id}",
@@ -14465,6 +16400,16 @@
       }
     },
     {
+      "id": "route:c7514749ebfb8c370904",
+      "kind": "route",
+      "label": "GET /api/v1/hitl/resume/{record_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "resume_decision_via_token_api_v1_hitl_resume__record_id__get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:c79a3bd9616a1e18040f",
       "kind": "route",
       "label": "GET /health/ready",
@@ -14545,6 +16490,26 @@
       }
     },
     {
+      "id": "route:c8d909c105c017cc4ce2",
+      "kind": "route",
+      "label": "GET /admin-api/security/memory",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "get_security_memory_admin_api_security_memory_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:c987709de171f84b547f",
+      "kind": "route",
+      "label": "GET /api/v1/ecosystem/admin/governance/decisions",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_governance_decisions_api_v1_ecosystem_admin_governance_decisions_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:c9d443b0bdd883f32028",
       "kind": "route",
       "label": "POST /api/browser/tasks",
@@ -14561,6 +16526,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "list_automation_executions_api_admin_automation_executions_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:ca213d76f78a100648fe",
+      "kind": "route",
+      "label": "GET /api/v1/mesh/messages/inbox",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "mesh_message_inbox_api_v1_mesh_messages_inbox_get",
         "owner": "unassigned"
       }
     },
@@ -14725,6 +16700,26 @@
       }
     },
     {
+      "id": "route:cfc0d8dedf183605f0ca",
+      "kind": "route",
+      "label": "GET /api/merge-learning/reports",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_merge_learning_reports_api_merge_learning_reports_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:d0069b137d979cef7e27",
+      "kind": "route",
+      "label": "GET /api/admin/ai/surfaces",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_surfaces_api_admin_ai_surfaces_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:d04ffb7ac17dfb095478",
       "kind": "route",
       "label": "GET /api/telemetry/metrics/security",
@@ -14751,6 +16746,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "get_audio_api_tts_audio__filename__get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:d1fbd1ca8e12b786eda5",
+      "kind": "route",
+      "label": "GET /api/v1/agents/{agent_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_agent_api_v1_agents__agent_id__get",
         "owner": "unassigned"
       }
     },
@@ -14885,16 +16890,6 @@
       }
     },
     {
-      "id": "route:d52874dfb8564a523e24",
-      "kind": "route",
-      "label": "GET /api/admin-api/service-uptime",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "get_service_uptime_api_admin_api_service_uptime_get",
-        "owner": "unassigned"
-      }
-    },
-    {
       "id": "route:d52aef14bf2afea8542e",
       "kind": "route",
       "label": "POST /api/v1/evolution/evaluate-performance",
@@ -14985,6 +16980,16 @@
       }
     },
     {
+      "id": "route:d7785323956881682471",
+      "kind": "route",
+      "label": "GET /api/v1/admin/webhooks",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_webhooks_v1_api_v1_admin_webhooks_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:d77addf5c20879aa0602",
       "kind": "route",
       "label": "POST /api/browser/swarm/explore",
@@ -15045,6 +17050,16 @@
       }
     },
     {
+      "id": "route:d8d21e8772a2a7a3e06b",
+      "kind": "route",
+      "label": "GET /api/admin/llm/rules",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_llm_rules_api_admin_llm_rules_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:d8ec95d1f30527a1663c",
       "kind": "route",
       "label": "GET /api/v1/health/live",
@@ -15081,6 +17096,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "reset_usage_admin_api_tenant_limits_admin_api_tenants__tenant_id__reset_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:da9a05befe5c44fbfb61",
+      "kind": "route",
+      "label": "POST /api/admin/llm/rules",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "update_llm_rules_api_admin_llm_rules_post",
         "owner": "unassigned"
       }
     },
@@ -15145,6 +17170,16 @@
       }
     },
     {
+      "id": "route:dc8dfb39f24a7a89c20f",
+      "kind": "route",
+      "label": "POST /api/admin/librarian/process",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "process_skill_action_api_admin_librarian_process_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:dc9f591df048b15a4882",
       "kind": "route",
       "label": "POST /api/admin/firebase-totp-recover",
@@ -15161,6 +17196,26 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "navigate_api_browser_surf_navigate_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:dd09ccfde74c5f7a222c",
+      "kind": "route",
+      "label": "PATCH /api/v1/nodes/{node_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "patch_node_role_api_v1_nodes__node_id__patch",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:dd55e58248d4839c36ed",
+      "kind": "route",
+      "label": "PATCH /api/v1/auth/users/{user_id}/role",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "set_user_role_api_v1_auth_users__user_id__role_patch",
         "owner": "unassigned"
       }
     },
@@ -15281,6 +17336,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "process_audio_voice_process_audio_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:e02ca6f196fd24e8b5b7",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/messages/purge",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "mesh_purge_messages_api_v1_mesh_messages_purge_post",
         "owner": "unassigned"
       }
     },
@@ -15475,12 +17540,42 @@
       }
     },
     {
+      "id": "route:e84d2ed503cfee3428ae",
+      "kind": "route",
+      "label": "GET /api/v1/nodes/{node_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_node_detail_api_v1_nodes__node_id__get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:e876fd65b0ed4646edaa",
       "kind": "route",
       "label": "DELETE /api/v1/onboarding/reset/{user_id}",
       "metadata": {
         "auth_required": false,
         "operation_id": "reset_onboarding_api_v1_onboarding_reset__user_id__delete",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:e8f45f8c430e7685d642",
+      "kind": "route",
+      "label": "GET /api/chat/upload",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_uploads_api_chat_upload_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:e92cc0c0297b84716cd9",
+      "kind": "route",
+      "label": "GET /api/v1/integrations",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "list_integrations_api_v1_integrations_get",
         "owner": "unassigned"
       }
     },
@@ -15499,7 +17594,7 @@
       "kind": "route",
       "label": "POST /api/v1/evolution/swarm/forge",
       "metadata": {
-        "auth_required": false,
+        "auth_required": true,
         "operation_id": "save_swarm_blueprint_api_v1_evolution_swarm_forge_post",
         "owner": "unassigned"
       }
@@ -15655,6 +17750,16 @@
       }
     },
     {
+      "id": "route:ed053dd565dfd511140e",
+      "kind": "route",
+      "label": "GET /api/v1/swarm/stream",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "swarm_stream_api_v1_swarm_stream_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:ed0d785da6e05dd223b8",
       "kind": "route",
       "label": "PATCH /api/v1/mcp/clients/{client_id}",
@@ -15675,6 +17780,26 @@
       }
     },
     {
+      "id": "route:ed722deb35c566a18d28",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/tasks",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "submit_task_api_v1_mesh_tasks_post",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:edd9900c0d78a757634b",
+      "kind": "route",
+      "label": "POST /api/skills/deploy-blueprint",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "deploy_blueprint_api_skills_deploy_blueprint_post",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:edf8ff2fbd218b3e69e4",
       "kind": "route",
       "label": "POST /payments/webhook",
@@ -15691,6 +17816,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "get_detailed_metrics_api_living_brain_metrics_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:ee70c4ff136240eea63e",
+      "kind": "route",
+      "label": "GET /api/admin/ai/overview",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "get_overview_api_admin_ai_overview_get",
         "owner": "unassigned"
       }
     },
@@ -15771,6 +17906,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "list_scheduled_tasks_api_schedule__get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:f1498aceb8c9d3e2a0cb",
+      "kind": "route",
+      "label": "DELETE /api/v1/ecosystem/admin/learned/{item_id}",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_delete_learned_api_v1_ecosystem_admin_learned__item_id__delete",
         "owner": "unassigned"
       }
     },
@@ -15955,12 +18100,32 @@
       }
     },
     {
+      "id": "route:f7166ec7a682a2591b60",
+      "kind": "route",
+      "label": "GET /api/v1/ecosystem/admin/learned",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "admin_list_learned_api_v1_ecosystem_admin_learned_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:f794d943675a71316d85",
       "kind": "route",
       "label": "GET /api/admin/integrations",
       "metadata": {
         "auth_required": false,
         "operation_id": "list_all_integrations_api_admin_integrations_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:f8222303c6ad1d3da9a9",
+      "kind": "route",
+      "label": "POST /api/v1/mesh/tasks/{task_id}/lease",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "renew_lease_api_v1_mesh_tasks__task_id__lease_post",
         "owner": "unassigned"
       }
     },
@@ -15991,6 +18156,16 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "model_branding_api_admin_model_branding_get",
+        "owner": "unassigned"
+      }
+    },
+    {
+      "id": "route:f90932e74cd0e6eb9a0b",
+      "kind": "route",
+      "label": "GET /api/v1/admin/health",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "admin_health_v1_api_v1_admin_health_get",
         "owner": "unassigned"
       }
     },
@@ -16165,6 +18340,16 @@
       }
     },
     {
+      "id": "route:fd319bf436395c767266",
+      "kind": "route",
+      "label": "GET /admin-api/security/tasks",
+      "metadata": {
+        "auth_required": true,
+        "operation_id": "get_security_tasks_admin_api_security_tasks_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:fda5c64435a55cf4e3f3",
       "kind": "route",
       "label": "POST /api/v1/social/pause",
@@ -16277,5 +18462,5 @@
   ],
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "57f27f7accaa979eaed20b214001053abce1cfa90c07ab14a0b7cb0a799b6075"
+  "source_sha256": "c5cac08428d29f4480920e54f06e26f718882a8863736a9ceeb7a0f0211adbc4"
 }
