@@ -14,9 +14,16 @@ try:
     from .churn_prophet import ChurnProphet
 except ImportError:
     ChurnProphet = None
-# #2248: ephemeral_executor.py retired (0 production callers; test coverage
-# migrated). The try/except block is removed — the names are no longer
-# re-exported from this package.
+try:
+    from .ephemeral_executor import (
+        EphemeralExecutor,
+        ExecutionResult,
+        ExecutionStatus,
+        ResourceQuota,
+        SecurityScanner,
+    )
+except ImportError:
+    EphemeralExecutor = ExecutionResult = ExecutionStatus = ResourceQuota = SecurityScanner = None
 try:
     from .headless_terminal_agent import HeadlessTerminalAgent
 except ImportError:
