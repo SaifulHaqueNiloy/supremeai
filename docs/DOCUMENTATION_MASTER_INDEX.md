@@ -12,10 +12,10 @@ This document provides a comprehensive, centralized index of all documentation, 
 | Category / Section | File Count |
 | :--- | :--- |
 | [.agents](#.agents) | 11 |
-| [.clinerules](#.clinerules) | 11 |
+| .clinerules — archived → `docs/archive/legacy-agent-rules/` | 11 |
 | [.github](#.github) | 5 |
 | [.kilo](#.kilo) | 428 |
-| [.lingma](#.lingma) | 1 |
+| .lingma — archived → `docs/archive/legacy-agent-rules/` | 1 |
 | [.specify](#.specify) | 6 |
 | [Root Documents](#root-documents) | 6 |
 | [agent-ctx](#agent-ctx) | 1 |
@@ -63,21 +63,21 @@ This document provides a comprehensive, centralized index of all documentation, 
 | 10 | [`.agents/skills/github-actions-debugger/SKILL.md`](./.agents/skills/github-actions-debugger/SKILL.md) | **GitHub Actions Pipeline Debugger** | Specialized skill for diagnosing, analyzing, and fixing failing GitHub Actions workflows by parsing run logs and pipeline definitions. |
 | 11 | [`.agents/skills/mcp-tool-developer/SKILL.md`](./.agents/skills/mcp-tool-developer/SKILL.md) | **MCP Tool Developer** | Build Model Context Protocol (MCP) servers and tools from scratch. Full-stack MCP development with TypeScript/Python, testing, deployment, and registry publi... |
 
-## .clinerules
+## .clinerules (archived → docs/archive/legacy-agent-rules/)
 
 | # | File Path / Name | Title / Header | Purpose & Summary |
 | :--- | :--- | :--- | :--- |
-| 12 | [`.clinerules/master_prompt.md`](./.clinerules/master_prompt.md) | **SUPREMEAI SOVEREIGN COGNITIVE PROMPT** | Repository: detect from git remote |
-| 13 | [`.clinerules/workflows/speckit-analyze.md`](./.clinerules/workflows/speckit-analyze.md) | **User Input** | Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation. |
-| 14 | [`.clinerules/workflows/speckit-checklist.md`](./.clinerules/workflows/speckit-checklist.md) | **Checklist Purpose: "Unit Tests for English"** | Generate a custom checklist for the current feature based on user requirements. |
-| 15 | [`.clinerules/workflows/speckit-clarify.md`](./.clinerules/workflows/speckit-clarify.md) | **User Input** | Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec. |
-| 16 | [`.clinerules/workflows/speckit-constitution.md`](./.clinerules/workflows/speckit-constitution.md) | **User Input** | Create or update the project constitution from interactive or provided principle inputs. |
-| 17 | [`.clinerules/workflows/speckit-converge.md`](./.clinerules/workflows/speckit-converge.md) | **User Input** | Assess the current codebase against the feature's spec, plan, and tasks, then append any remaining unbuilt work as new tasks to tasks.md so implement can com... |
-| 18 | [`.clinerules/workflows/speckit-implement.md`](./.clinerules/workflows/speckit-implement.md) | **User Input** | Execute the implementation plan by processing and executing all tasks defined in tasks.md |
-| 19 | [`.clinerules/workflows/speckit-plan.md`](./.clinerules/workflows/speckit-plan.md) | **User Input** | Execute the implementation planning workflow using the plan template to generate design artifacts. |
-| 20 | [`.clinerules/workflows/speckit-specify.md`](./.clinerules/workflows/speckit-specify.md) | **User Input** | Create or update the feature specification from a natural language feature description. |
-| 21 | [`.clinerules/workflows/speckit-tasks.md`](./.clinerules/workflows/speckit-tasks.md) | **User Input** | Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts. |
-| 22 | [`.clinerules/workflows/speckit-taskstoissues.md`](./.clinerules/workflows/speckit-taskstoissues.md) | **User Input** | Convert existing tasks into actionable, dependency-ordered GitHub issues for the feature based on available design artifacts. |
+| 12 | [`.clinerules/master_prompt.md`](./docs/archive/legacy-agent-rules/clinerules/master_prompt.md) | **SUPREMEAI SOVEREIGN COGNITIVE PROMPT** | Repository: detect from git remote |
+| 13 | [`.clinerules/workflows/speckit-analyze.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-analyze.md) | **User Input** | Perform a non-destructive cross-artifact consistency and quality analysis across spec.md, plan.md, and tasks.md after task generation. |
+| 14 | [`.clinerules/workflows/speckit-checklist.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-checklist.md) | **Checklist Purpose: "Unit Tests for English"** | Generate a custom checklist for the current feature based on user requirements. |
+| 15 | [`.clinerules/workflows/speckit-clarify.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-clarify.md) | **User Input** | Identify underspecified areas in the current feature spec by asking up to 5 highly targeted clarification questions and encoding answers back into the spec. |
+| 16 | [`.clinerules/workflows/speckit-constitution.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-constitution.md) | **User Input** | Create or update the project constitution from interactive or provided principle inputs. |
+| 17 | [`.clinerules/workflows/speckit-converge.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-converge.md) | **User Input** | Assess the current codebase against the feature's spec, plan, and tasks, then append any remaining unbuilt work as new tasks to tasks.md so implement can com... |
+| 18 | [`.clinerules/workflows/speckit-implement.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-implement.md) | **User Input** | Execute the implementation plan by processing and executing all tasks defined in tasks.md |
+| 19 | [`.clinerules/workflows/speckit-plan.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-plan.md) | **User Input** | Execute the implementation planning workflow using the plan template to generate design artifacts. |
+| 20 | [`.clinerules/workflows/speckit-specify.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-specify.md) | **User Input** | Create or update the feature specification from a natural language feature description. |
+| 21 | [`.clinerules/workflows/speckit-tasks.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-tasks.md) | **User Input** | Generate an actionable, dependency-ordered tasks.md for the feature based on available design artifacts. |
+| 22 | [`.clinerules/workflows/speckit-taskstoissues.md`](./docs/archive/legacy-agent-rules/clinerules/workflows/speckit-taskstoissues.md) | **User Input** | Convert existing tasks into actionable, dependency-ordered GitHub issues for the feature based on available design artifacts. |
 
 ## .github
 
@@ -522,11 +522,11 @@ This document provides a comprehensive, centralized index of all documentation, 
 | 454 | [`.kilo/worktrees/moored-flat/tools/vscode-extension/README_BANGLA.md`](./.kilo/worktrees/moored-flat/tools/vscode-extension/README_BANGLA.md) | **সুপ্রিমএআই ভিএসকোড এক্সটেনশন** | সুপ্রিমএআই ভিএসকোড এক্সটেনশন হল একটি এআই-পাওয়ার্ড ডেভেলপমেন্ট সহায়ক যা ডেভেলপারদের কোড লেখা, বোঝা, এবং উন্নত করতে সাহায্য করে। এটি eLai কোড এক্সটেনশনের সের... |
 | 455 | [`.kilo/worktrees/moored-flat/tools/vscode-extension/_INDEX.md`](./.kilo/worktrees/moored-flat/tools/vscode-extension/_INDEX.md) | **tools/vscode-extension/ — File Index** | User → Extension (Thin Client) → SupremeAI Backend → [LLM providers hidden] |
 
-## .lingma
+## .lingma (archived → docs/archive/legacy-agent-rules/)
 
 | # | File Path / Name | Title / Header | Purpose & Summary |
 | :--- | :--- | :--- | :--- |
-| 456 | [`.lingma/rules/agents.md`](./.lingma/rules/agents.md) | **SupremeAI Agent Core Directives (Self-Evolving Phase)** | trigger: always_on |
+| 456 | [`.lingma/rules/agents.md`](./docs/archive/legacy-agent-rules/lingma/rules/agents.md) | **SupremeAI Agent Core Directives (Self-Evolving Phase)** | trigger: always_on |
 
 ## .specify
 

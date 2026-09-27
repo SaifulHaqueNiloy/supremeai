@@ -8,7 +8,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-PROTECTED_PREFIXES = (".github/", ".clinerules/", ".specify/", "infrastructure/")
+PROTECTED_PREFIXES = (".github/", ".specify/", "docs/archive/", "infrastructure/")
 
 
 def changed_paths(patch: str) -> list[str]:

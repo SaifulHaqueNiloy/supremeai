@@ -9,7 +9,7 @@ import subprocess
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-PROTECTED_PREFIXES = (".github/", ".clinerules/", ".specify/", "infrastructure/", "backend/alembic_migrations/")
+PROTECTED_PREFIXES = (".github/", ".specify/", "docs/archive/", "infrastructure/", "backend/alembic_migrations/")
 PROTECTED_NAMES = {".env", ".env.local", ".env.production", "Dockerfile"}
 IMPORT_PATTERNS = (
     re.compile(r"^\s*(?:from|import)\s+[\"']([^\"']+)[\"']"),

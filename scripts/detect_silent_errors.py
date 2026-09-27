@@ -78,7 +78,7 @@ DEFAULT_EXCLUDE_DIRS = {
     "htmlcov", "coverage", "coverage-tmp", ".turbo", ".next", "out",
     ".pytest_cache", ".ruff_cache", ".mypy_cache", "playwright-report",
     "test-results", "_archive", ".secrets", ".firebase",
-    ".playwright-mcp", ".agents", ".continue", ".kilo", ".lingma", ".vscode",
+    ".playwright-mcp", ".agents", ".continue", ".kilo", ".vscode",
     ".devcontainer", ".github", "snapshots", "__snapshots__", "storybook-static",
     "build", "e2e-artifacts", "generated", ".terraform", "node_modules_cache",
     ".cache",
