@@ -261,10 +261,19 @@ def find_linked_issue_numbers(title: str, body: str) -> list:
 
 
 def find_undeclared_files(changed: list, declared: set, allowlist: list) -> list:
-    """Files changed by the PR that are neither declared in the claim nor allowlisted."""
+    """Files changed by the PR that are neither declared in the claim nor allowlisted.
+
+    Declaration semantics: an exact path matches itself; a declaration that ends
+    with `/` (or is a known directory prefix) matches its whole subtree — agents
+    commonly declare directories like `.github/scripts/`.
+    """
     out = []
+    dir_decls = {d.rstrip("/") for d in declared or [] if d.endswith("/")}
+    file_decls = {d for d in declared or [] if not d.endswith("/")}
     for path in changed or []:
-        if path in declared:
+        if path in file_decls:
+            continue
+        if any(path == d or path.startswith(d + "/") for d in dir_decls):
             continue
         if path_matches_any(path, allowlist or []):
             continue

@@ -137,6 +137,13 @@ class UndeclaredFileTests(unittest.TestCase):
         undeclared = find_undeclared_files(changed, {"a.py"}, DEFAULT_SCOPE_POLICY["allowlist"])
         self.assertEqual(undeclared, ["b.ts"])
 
+    def test_directory_declaration_covers_subtree(self):
+        changed = [".github/scripts/constitution/gates.py",
+                   ".github/scripts/constitution/tests/test_gates.py", "outside.py"]
+        undeclared = find_undeclared_files(
+            changed, {".github/scripts/"}, DEFAULT_SCOPE_POLICY["allowlist"])
+        self.assertEqual(undeclared, ["outside.py"])
+
 
 class LeaseGateTests(unittest.TestCase):
     def test_slot_bot_matching_branch_passes(self):
