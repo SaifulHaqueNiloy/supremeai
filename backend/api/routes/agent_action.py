@@ -108,7 +108,10 @@ async def run_agent_action(
 
         return {
             "status": "success",
-            "workspace_logs": custom_workspace.logs,
+            # Issue #1816: SharedWorkspace's field is execution_logs (there is
+            # no .logs attribute — the old reference raised AttributeError and
+            # 500'd every successful sync right at the response build).
+            "workspace_logs": custom_workspace.execution_logs,
             "result": result,
         }
 
