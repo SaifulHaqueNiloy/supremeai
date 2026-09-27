@@ -144,3 +144,98 @@ class TestValidationConstants(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestPlaceholderExpansionAndHeartbeatOnlyMode(_BaseConfigTest):
+    """#2255 regression: ${VAR} placeholders + empty tower_ws_url contract.
+
+    পুরনো আচরণ: yaml.safe_load "${TOWER_URL}"-কে literal string হিসেবে রাখত
+    (interpolation ছিলই না) — out-of-the-box heartbeat URL হত "${TOWER_URL}/api/…".
+    নতুন চুক্তি: expandvars চলে, আর খালি tower_ws_url মানে heartbeat-only mode।
+    """
+
+    def test_placeholder_expands_from_env(self):
+        # Explicit YAML (chained string-replace আগের চেষ্টায় host-substring
+        # collision করেছিল — এখানে পরিষ্কার template)।
+        yaml_tpl = """
+node_id: pc-1-dev-rig
+node_type: local_pc
+role: coder
+capabilities:
+  - file_edit
+tower_url: ${TOWER_URL}
+tower_ws_url: wss://${TOWER_WS_HOST}/ws/node
+"""
+        path = self._write_config(yaml_tpl)
+        old_url = os.environ.get("TOWER_URL")
+        old_ws = os.environ.get("TOWER_WS_HOST")
+        os.environ["TOWER_URL"] = "https://backend.example.com"
+        os.environ["TOWER_WS_HOST"] = "backend.example.com"
+        try:
+            cfg = load_config(path)
+        finally:
+            for key, old in (("TOWER_URL", old_url), ("TOWER_WS_HOST", old_ws)):
+                if old is None:
+                    os.environ.pop(key, None)
+                else:
+                    os.environ[key] = old
+        self.assertEqual(cfg["tower_url"], "https://backend.example.com")
+        self.assertEqual(cfg["tower_ws_url"], "wss://backend.example.com/ws/node")
+
+    def test_unset_placeholder_stays_literal(self):
+        # TOWER_URL unset → ${TOWER_URL} literal-ই থাকে (ব্যবহারকারীর দায়িত্ব
+        # production-এ env set করা — docs/mesh/SUPREME_NODE_CONFIG.md দেখুন)
+        yaml_tpl = """
+node_id: pc-1-dev-rig
+node_type: local_pc
+role: coder
+capabilities:
+  - file_edit
+tower_url: ${TOWER_URL}
+tower_ws_url: ""
+"""
+        path = self._write_config(yaml_tpl)
+        old = os.environ.pop("TOWER_URL", None)
+        try:
+            cfg = load_config(path)
+        finally:
+            if old is not None:
+                os.environ["TOWER_URL"] = old
+        self.assertEqual(cfg["tower_url"], "${TOWER_URL}")
+        self.assertEqual(cfg["tower_ws_url"], "")
+
+    def test_empty_tower_ws_url_selects_heartbeat_only_mode(self):
+        bad_ws = VALID_CONFIG_YAML.replace(
+            "wss://supremeai-mcp-tower.onrender.com/ws/node", '""'
+        )
+        path = self._write_config(bad_ws)
+        cfg = load_config(path)
+        self.assertEqual(cfg["tower_ws_url"], "")
+
+    def test_daemon_empty_ws_url_becomes_none_and_keeps_heartbeat(self):
+        import asyncio
+
+        from daemon import SupremeNodeDaemon
+
+        cfg = load_config(self._write_config(
+            VALID_CONFIG_YAML.replace("wss://supremeai-mcp-tower.onrender.com/ws/node", '""')
+        ))
+        d = SupremeNodeDaemon(cfg)
+        self.assertIsNone(d.tower_ws_url)  # heartbeat-only mode selected
+        self.assertTrue(d.heartbeat_url.startswith("https://"))
+        self.assertIn("/api/v1/nodes/heartbeat", d.heartbeat_url)
+
+        async def _probe():
+            # connect() must be a clean no-op (no WS dial, no exception)
+            await d.connect()
+            # listen_for_tasks must park on stop_event, not return instantly
+            task = asyncio.create_task(d.listen_for_tasks())
+            await asyncio.sleep(0.05)
+            try:
+                done = task.done()
+            finally:
+                d._stop_event.set()
+                await asyncio.wait_for(task, timeout=2)
+            return done
+
+        self.assertFalse(asyncio.run(_probe()))  # still waiting = heartbeat not starved

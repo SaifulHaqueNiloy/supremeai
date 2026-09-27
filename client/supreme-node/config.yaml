@@ -31,15 +31,22 @@ capabilities:
   - bash
   - ollama
 
-# Tower REST base URL — heartbeat POST করার endpoint।
-# Production: set TOWER_URL env var (or uncomment + set here)
-tower_url: ${TOWER_URL}  # set via env var (your tower host)
+# Backend REST base URL — heartbeat POST করার endpoint-এর host।
+# #2255: এই URL টা **Python backend**-এর (SupremeAI API)-এর base URL হতে হবে,
+# MCP Tower-এর নয় — /api/v1/nodes/heartbeat route-টা backend/api/routes/mesh.py-তে
+# আছে, Tower-এ নেই (Tower-এ দিলে out-of-the-box 404)।
+# ${TOWER_URL} env var দিয়ে override হয় (set না থাকলে এই literal string-টাই থেকে যাবে —
+# production-এ TOWER_URL=https://your-backend-host set করুন)।
+tower_url: ${TOWER_URL}
 
-# Tower WebSocket URL — task receive করার persistent channel।
-# Endpoint: /ws/node  (Tower side তৈরি থাকলে)
-tower_ws_url: ${TOWER_WS_URL}  # set via env var (your tower ws host)
+# WebSocket task-receive channel — **এখনো কোনো peer-এ implement হয়নি**
+# (#2255: তাই Tower-এও নেই, backend-এও নেই)।
+# খালি ("") রাখলে daemon heartbeat-only mode-এ চলবে — presence register হবে,
+# task listener বন্ধ থাকবে। ভবিষ্যতে /ws/node channel তৈরি হলে এখানে
+# wss://<backend-host>/ws/node বসালেই full mode চালু হয়ে যাবে।
+tower_ws_url: ""
 
-# Tower REST heartbeat endpoint (MESH-1 #939 দ্বারা চালু করা)।
+# Backend REST heartbeat endpoint (backend/api/routes/mesh.py — MESH-1 #939)।
 # Full URL = tower_url + heartbeat_path
 heartbeat_path: /api/v1/nodes/heartbeat
 

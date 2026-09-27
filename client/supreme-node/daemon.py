@@ -158,6 +158,24 @@ def load_config(config_path: str | None = None) -> dict[str, Any]:
     if env_tok:
         cfg["tower_auth_token"] = env_tok
 
+    # #2255 — out-of-the-box triple fix:
+    # (1) The shipped template uses ${TOWER_URL} / ${TOWER_WS_URL} placeholders,
+    #     but yaml.safe_load keeps the LITERAL "${TOWER_URL}" string (no
+    #     interpolation anywhere), producing garbage URLs. expandvars makes
+    #     the documented template syntax ("Production: set TOWER_URL env var")
+    #     actually work.
+    # (2) The heartbeat route /api/v1/nodes/heartbeat lives on the PYTHON
+    #     BACKEND (api/routes/mesh.py), NOT on the MCP Tower — tower_url must
+    #     point at the backend. (config.yaml comments + docs/mesh/ updated.)
+    # (3) The /ws/node channel is not implemented on ANY peer yet (neither
+    #     Tower nor backend exposes it). An empty tower_ws_url now selects
+    #     heartbeat-only mode — the daemon registers presence and stays
+    #     useful instead of starving the heartbeat in a WS reconnect loop
+    #     (the main loop gates heartbeat on connect() success).
+    for _key in ("tower_url", "tower_ws_url"):
+        if isinstance(cfg.get(_key), str):
+            cfg[_key] = os.path.expandvars(cfg[_key]).strip()
+
     # workspace dir create করি (না থাকলে)
     ws = cfg["workspace_dir"]
     if not os.path.isabs(ws):
@@ -228,7 +246,9 @@ class SupremeNodeDaemon:
         self.config = config
         self.node_id: str = config["node_id"]
         self.tower_url: str = config["tower_url"].rstrip("/")
-        self.tower_ws_url: str = config["tower_ws_url"]
+        # #2255: empty tower_ws_url → None → heartbeat-only mode (the /ws/node
+        # channel is not implemented on any peer yet; see docs/mesh/).
+        self.tower_ws_url: str | None = (config["tower_ws_url"] or "").strip() or None
         self.heartbeat_url: str = self.tower_url + config["heartbeat_path"]
         self.heartbeat_interval: float = float(config["heartbeat_interval"])
         self.backoff_base: float = float(config["reconnect_backoff_base"])
@@ -341,7 +361,14 @@ class SupremeNodeDaemon:
     # WebSocket connect।
     # ------------------------------------------------------------------
     async def connect(self) -> None:
-        """Tower-এর WebSocket-এ connect করে।"""
+        """Backend-এর WebSocket-এ connect করে (heartbeat-only mode-এ no-op)।"""
+        if self.tower_ws_url is None:
+            # #2255: heartbeat-only mode — WS channel বন্ধ, presence REST-এই চলবে।
+            logger.info(
+                "tower_ws_url খালি — heartbeat-only mode; task listener বন্ধ "
+                "(/ws/node channel এখনো কোনো peer-এ implement করা নেই, #2255)"
+            )
+            return
         logger.info("connecting to Tower WebSocket: %s", self.tower_ws_url)
         # Auth header (optional per MESH-1 spec)
         headers = {}
@@ -435,6 +462,13 @@ class SupremeNodeDaemon:
     async def listen_for_tasks(self) -> None:
         """WebSocket message receive করে এবং task execute করে।"""
         if self._ws is None:
+            if self.tower_ws_url is None:
+                # #2255: heartbeat-only mode — সাথে সাথে return করলে main loop-এর
+                # FIRST_COMPLETED gate heartbeat-কে cancel করে reconnect-loop-এ
+                # ফেলে দিত; shutdown signal-এর অপেক্ষা করি।
+                logger.info("task listener disabled — heartbeat-only mode (#2255)")
+                await self._stop_event.wait()
+                return
             logger.error("listen_for_tasks — WebSocket not connected")
             return
         logger.info("task listener started")
