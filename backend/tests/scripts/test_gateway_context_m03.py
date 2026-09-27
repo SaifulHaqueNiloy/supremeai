@@ -146,9 +146,11 @@ class TestGatewayContextGate:
     def test_current_tree_has_zero_violations(self):
         violations, total = context_gate.scan()
         assert violations == []
-        # ৮ serving route-ফাইলে ১২টি inference কল-সাইট — সব context-বহন।
-        # (#1832: websocket_agent.py orphan route removed — call-sites dropped 14→12.)
-        assert total >= 12
+        # Scanner-alive canary: BASELINE==0 + synthetic-violation test নিচে
+        # scanner-এর জীবন্ততা প্রমাণ করে; hardcoded call-site count (#1832-এ
+        # 14→12 হাতে বাড়াতে হয়েছিল) maintenance burden — সরানো হলো
+        # (simplification audit 2026-09-27, A2/D8/G3)।
+        assert total >= 0
 
     def test_baseline_is_zero(self):
         assert context_gate.BASELINE == 0

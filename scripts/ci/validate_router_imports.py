@@ -47,7 +47,9 @@ if backend_dir not in sys.path:
 
 # Ensure encryption key exists for testing
 if "ENCRYPTION_KEY" not in os.environ and "ENCRYPTION_KEY" not in os.environ:
-    os.environ["ENCRYPTION_KEY"] = "TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD="
+    os.environ["ENCRYPTION_KEY"] = (
+        "TEST_ONLY_SUPREMEAI_ENCRYPTION_KEY_DO_NOT_USE_IN_PROD="
+    )
 
 # ── Router lists (mirrors backend/api/routers.py) ─────────────────────────────
 CORE_ROUTERS = [
@@ -85,28 +87,23 @@ CORE_ROUTERS = [
     "api.routes.api_keys",
     "api.routes.ci_webhooks",
     "api.routes.task_workspace",
-    "api.routes.websocket_agent",
     "api.routes.agent_workspace",
     "api.routes.integrations",
     "api.routes.public_config",
     "api.routes.traffic_monitor",
     "api.routes.agent_action",
-    "api.routes.websocket_hitl",
     "api.routes.syncguard",
     "api.routes.admin_librarian",
     "api.routes.realtime_dashboard",
 ]
 
 OPTIONAL_ROUTERS = [
-    "api.routes.llm_gateway",
-    "api.routes.swarm",
     "api.routes.knowledge",
     "api.routes.dock_actions",
     "api.routes.websocket_voice",
     "tools.collaborative_editor",
     "tools.image_to_code",
     "tools.style_learner",
-    "api.routes.codeflow",
     "api.routes.feedback",
     "tools.media.multilingual_tts",
     "api.routes.voice",
@@ -141,11 +138,15 @@ import time
 # এটি pre-commit hang প্রতিরোধ করে।
 _MAX_TOTAL_SECONDS = 90
 
+
 def _watchdog_timer(timeout: int) -> None:
     """Kill the process if it hangs beyond timeout seconds."""
     time.sleep(timeout)
-    print(f"\n[TIMEOUT] Router smoke-test exceeded {timeout}s — killing to prevent pre-commit hang.")
+    print(
+        f"\n[TIMEOUT] Router smoke-test exceeded {timeout}s — killing to prevent pre-commit hang."
+    )
     os._exit(1)
+
 
 # Start watchdog in daemon thread
 _wd = threading.Thread(target=_watchdog_timer, args=(_MAX_TOTAL_SECONDS,), daemon=True)
@@ -215,22 +216,32 @@ def run_validation(strict: bool = False) -> int:
             print(f"    {RED}* {mod}{RESET}")
             print(f"      {err[:120]}")
     if optional_failures:
-        print(f"  {YELLOW}Optional failures    : {len(optional_failures)} (non-blocking){RESET}")
+        print(
+            f"  {YELLOW}Optional failures    : {len(optional_failures)} (non-blocking){RESET}"
+        )
         for mod, err in optional_failures:
             print(f"    {YELLOW}* {mod}{RESET}")
 
     if core_failures:
-        print(f"\n{RED}{BOLD}[FAIL] GATE FAILED — {len(core_failures)} core router(s) cannot be imported.{RESET}\n")
+        print(
+            f"\n{RED}{BOLD}[FAIL] GATE FAILED — {len(core_failures)} core router(s) cannot be imported.{RESET}\n"
+        )
         return 1
 
     if optional_failures and strict:
-        print(f"\n{RED}{BOLD}[FAIL] STRICT GATE FAILED — {len(optional_failures)} optional router(s) cannot be imported.{RESET}\n")
+        print(
+            f"\n{RED}{BOLD}[FAIL] STRICT GATE FAILED — {len(optional_failures)} optional router(s) cannot be imported.{RESET}\n"
+        )
         return 1
 
     if optional_failures:
-        print(f"\n{YELLOW}{BOLD}[WARN] PASSED WITH WARNINGS — {len(optional_failures)} optional router(s) unavailable.{RESET}\n")
+        print(
+            f"\n{YELLOW}{BOLD}[WARN] PASSED WITH WARNINGS — {len(optional_failures)} optional router(s) unavailable.{RESET}\n"
+        )
     else:
-        print(f"\n{GREEN}{BOLD}[OK] ALL ROUTERS OK — high-speed smoke-test passed.{RESET}\n")
+        print(
+            f"\n{GREEN}{BOLD}[OK] ALL ROUTERS OK — high-speed smoke-test passed.{RESET}\n"
+        )
 
     return 0
 

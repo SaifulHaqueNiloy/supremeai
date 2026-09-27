@@ -26,7 +26,7 @@ export default tseslint.config({ ignores: ['dist', 'dist-admin', 'dist-user', 's
     ...reactHooks.configs.recommended.rules,
     'react-refresh/only-export-components': [
       'warn',
-      { allowConstantExport: true, allowExportNames: ['useTheme', 'useToast', 'useI18n', 'useThemeSync', 'useSwarmStream', 'setSujonState', 'useSujonState', 'SUJON_STATE_EVENT', 'SujonState', 'Theme', 'THEME_ORDER', 'ToastType', 'Toast', 'globalShowToastRef', 'useSujonMetrics', 'SujonHealthIndicator', 'SujonDashboardGrid', 'useSwarmArchitect', 'useAuthStatus', 'useSystemHealth', 'workspaceFeatureRoutes', 'SwarmArchitect'] },
+      { allowConstantExport: true, allowExportNames: ['useTheme', 'useToast', 'useI18n', 'useThemeSync', 'setSujonState', 'useSujonState', 'SUJON_STATE_EVENT', 'SujonState', 'Theme', 'THEME_ORDER', 'ToastType', 'Toast', 'globalShowToastRef', 'useSujonMetrics', 'SujonHealthIndicator', 'SujonDashboardGrid', 'useSwarmArchitect', 'useAuthStatus', 'useSystemHealth', 'workspaceFeatureRoutes', 'SwarmArchitect'] },
     ],
     '@typescript-eslint/no-explicit-any': 'warn',
     '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],

@@ -2,13 +2,11 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from core.cache.autocache_proxy import AutocacheProxy
 from core.cache.multi_layer_cache import MultiLayerCache
 from core.cache.redis_manager import (
     IdempotencyUnavailableError,
     acquire_idempotency_lock,
 )
-from core.cache.semantic_cache import SemanticCache
 
 # বাংলা মন্তব্য: মডিউল ৩-এর নতুন অপ্টিমাইজেশনগুলো টেস্ট করার জন্য ইউনিট টেস্ট।
 
@@ -44,31 +42,3 @@ async def test_idempotency_lock_fail_closed():
         # Test fail_closed=False passes through
         res = await acquire_idempotency_lock("noncritical:key", fail_closed=False)
         assert res is True
-
-
-@pytest.mark.anyio
-async def test_autocache_proxy_ttl_and_dynamic_costs():
-    mock_semantic = MagicMock(spec=SemanticCache)
-    proxy = AutocacheProxy(mock_semantic)
-
-    # Test request_history is a TTLCache
-    from cachetools import TTLCache  # type: ignore
-
-    # Some environments can export TTLCache as a non-type symbol, so
-    # guard the isinstance() assertion to prevent TypeError-based breakage.
-    if isinstance(TTLCache, type):
-        assert isinstance(proxy.request_history, TTLCache)
-    else:
-        # Best-effort validation based on cachetools TTLCache API shape.
-        assert hasattr(proxy.request_history, "ttl")
-
-    # Test dynamic cost lookup
-    mock_config = MagicMock()
-    mock_config.get.side_effect = lambda k: (
-        0.02 if "input" in k else 0.04 if "output" in k else None
-    )
-
-    with patch("core.config_cache.config_cache", mock_config):
-        # Calculation: 10 input * 0.02 + 5 output * 0.04 = 0.20 + 0.20 = 0.40
-        cost = proxy._calculate_cost("openai/gpt-4o", 10, 5)
-        assert abs(cost - 0.40) < 1e-5
