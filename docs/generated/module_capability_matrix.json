@@ -845,16 +845,6 @@
       "path": "backend/agents/domain/bangla_nlp_agent.py"
     },
     {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/agents/ephemeral_executor.py"
-    },
-    {
       "capability_signals": [],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
@@ -10860,15 +10850,6 @@
       "path": "backend/tests/agents/test_email_agent.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/agents/test_ephemeral_executor.py"
-    },
-    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -10892,16 +10873,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/agents/test_marketplace_agent.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "mcp"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/agents/test_parallel_agent_executor.py"
     },
     {
       "capability_signals": [],
@@ -11543,24 +11514,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_ecosystem_admin_contract.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/test_ephemeral_executor.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/test_ephemeral_lifecycle.py"
     },
     {
       "capability_signals": [],
@@ -15507,9 +15460,7 @@
       "path": "backend/tests/services/test_video_to_code_pipeline.py"
     },
     {
-      "capability_signals": [
-        "execute"
-      ],
+      "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
@@ -17352,16 +17303,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tools/offline_mode.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "mcp"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tools/parallel_agent_executor.py"
     },
     {
       "capability_signals": [],
