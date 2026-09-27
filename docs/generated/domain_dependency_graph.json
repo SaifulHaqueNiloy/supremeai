@@ -182,7 +182,7 @@
     {
       "evidence": [
         {
-          "line": 17,
+          "line": 18,
           "path": "backend/agents/domain/bangla_nlp_agent.py"
         }
       ],
@@ -552,7 +552,7 @@
     {
       "evidence": [
         {
-          "line": 25,
+          "line": 26,
           "path": "backend/core/self_evolution/daily_learner.py"
         }
       ],
@@ -774,46 +774,6 @@
         {
           "line": 28,
           "path": "backend/services/email/email_service.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 37,
-          "path": "backend/services/llm/llm_router.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 38,
-          "path": "backend/services/llm/llm_router.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 20,
-          "path": "backend/services/llm/providers.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 21,
-          "path": "backend/services/llm/providers.py"
         }
       ],
       "source": "ai",
@@ -2242,7 +2202,7 @@
     {
       "evidence": [
         {
-          "line": 29,
+          "line": 25,
           "path": "backend/agents/user_retention_risk_agent.py"
         }
       ],
@@ -2262,7 +2222,7 @@
     {
       "evidence": [
         {
-          "line": 28,
+          "line": 29,
           "path": "backend/agents/user_retention_risk_agent.py"
         }
       ],
@@ -2352,7 +2312,7 @@
     {
       "evidence": [
         {
-          "line": 27,
+          "line": 28,
           "path": "backend/agents/user_retention_risk_agent.py"
         }
       ],
@@ -4252,7 +4212,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 16,
           "path": "backend/agents/governance/ethics_monitor_agent.py"
         }
       ],

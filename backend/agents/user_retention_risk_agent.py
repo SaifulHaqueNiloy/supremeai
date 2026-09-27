@@ -22,11 +22,11 @@ from datetime import UTC, datetime, timedelta
 from enum import StrEnum
 from typing import Any
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.logging_config import logger
 from database.tenant_db import TenantAwareFirestore
-from services.llm.llm_router import LLMRouter
 
 
 # ── Enums & Constants ───────────────────────────────────────────────────────
@@ -195,8 +195,8 @@ class RetentionStrategist:
     Generates personalized retention strategies using zero-cost LLM routing.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm_router = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm_router = llm_router or ModelRouter()
 
     async def generate_strategy(
         self,
@@ -233,13 +233,13 @@ class RetentionStrategist:
                 user_context,
             )
             try:
-                response = await self.llm_router.route(
+                response = await self.llm_router.async_route_and_generate(
                     prompt=prompt,
                     task_type="retention_strategy",
                     max_tokens=config_cache.get("churn_prophet_max_tokens", 500),
                     temperature=config_cache.get("churn_prophet_temperature", 0.4),
                 )
-                personalized = response.get("content", "")
+                personalized = response.get("text", "")
             except Exception as e:
                 logger.warning("LLM personalization failed for %s: %s", user_id, e)
                 personalized = ""

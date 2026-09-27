@@ -158,7 +158,23 @@ class SupabaseVectorBackend:
                 )
             return results
         except Exception as exc:
-            logger.debug(f"[SupabaseVectorBackend] query failed: {exc}")
+            # OBSERVABLE degradation, not silent (#2257): the historical
+            # failure mode here was match_experiences typed VECTOR(1536)
+            # while every caller passes the canonical 384-dim embeddings —
+            # pgvector rejects at execution and experience recall died
+            # silently at debug level. Surface it at WARNING with the fix
+            # pointer; re-type the RPC via
+            # backend/database/migrations/17_retype_match_experiences_384.sql
+            # (match_experiences must be vector(384), the canonical
+            # ai_memory embedding contract — see
+            # docs/database/AI_MEMORY_SCHEMA_AUDIT.md §2).
+            logger.warning(
+                "[SupabaseVectorBackend] experience query failed: "
+                f"{exc} — returning []. If this mentions dimension mismatch, "
+                "apply backend/database/migrations/"
+                "17_retype_match_experiences_384.sql (RPC must be "
+                "vector(384))."
+            )
             return []
 
 
