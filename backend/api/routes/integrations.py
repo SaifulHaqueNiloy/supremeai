@@ -2,11 +2,13 @@ import base64
 import hashlib
 import hmac
 import time
+from typing import Literal
 from urllib.parse import urlencode
 
 import httpx
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -24,6 +26,56 @@ from models.integration import Integration
 router = APIRouter()
 
 _OAUTH_STATE_TTL_SECONDS = 600
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Connected Platforms Vault listing (#1826): GET /api/v1/integrations আগে
+# কখনোই built হয়নি — ফলে /platform-vault পেজ স্থায়ীভাবে "Unable to load"
+# দেখাত। এখন caller-এর সংরক্ষিত integration rows (Integration মডেল) থেকে
+# vault-এর প্রত্যাশিত shape-এ projection ফেরত দেওয়া হয়।
+# ═══════════════════════════════════════════════════════════════════════════
+class IntegrationSummary(BaseModel):
+    """Shape the ConnectedPlatformsVault dashboard consumes (frontend contract)."""
+
+    id: str
+    name: str
+    platform: str
+    connected: bool
+    lastAccessed: str
+    permissions: list[str]
+    status: Literal["active", "revoked", "expired", "pending"]
+
+
+@router.get("/integrations")
+async def list_integrations(
+    user: dict = Depends(get_current_user_token),
+    db: AsyncSession = Depends(get_db_session),
+) -> list[IntegrationSummary]:
+    """List the caller's connected integrations (Connected Platforms Vault, #1826)."""
+    user_id = str(user.get("sub") or "")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+    result = await db.execute(
+        select(Integration)
+        .where(Integration.user_id == user_id)
+        .order_by(Integration.updated_at.desc())
+    )
+    rows = result.scalars().all()
+    return [
+        IntegrationSummary(
+            id=str(row.id),
+            name=row.provider,
+            platform=row.provider,
+            connected=bool(row.encrypted_access_token),
+            lastAccessed=(row.updated_at or row.created_at).isoformat(),
+            # Least-privilege scope actually granted by the GitHub link flow;
+            # other providers carry no recorded scopes yet.
+            permissions=["repo"] if row.provider == "github" else [],
+            status="active",
+        )
+        for row in rows
+    ]
 
 
 def _sign_oauth_state(user_id: str, expires_at: int) -> str:
