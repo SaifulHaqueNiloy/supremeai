@@ -117,6 +117,19 @@ class TestMarkerParsing:
         assert ad.fmt_age(0.5) == "30m"
         assert ad.fmt_age(2.0) == "2h"
 
+    def test_age_hours_naive_timestamp_assumed_utc(self):
+        """#2134: naive (zone-less) markers must not raise TypeError."""
+        hrs = ad.age_hours("2026-09-27 12:40:00", NOW)  # naive, space-separated
+        assert abs(hrs - 2.0) < 1 / 60
+
+    def test_parse_iso_naive_gets_utc_tzinfo(self):
+        dt = ad.parse_iso("2026-09-27 12:40:00")
+        assert dt is not None and dt.tzinfo is not None
+
+    def test_parse_iso_z_suffix_still_aware(self):
+        dt = ad.parse_iso("2026-09-27T12:40:00Z")
+        assert dt is not None and dt.tzinfo is not None
+
 
 # ────────────────────────────────────────────────────────── row building ──
 def _roster():
@@ -276,3 +289,40 @@ class TestLiveSmoke:
         )
         assert res.returncode == 0, res.stderr
         assert "AGENT DASHBOARD" in res.stdout
+
+
+# ─────────────────────────────────────────── gh_available liveness (#2134) ──
+class TestGhAvailable:
+    """GH_TOKEN presence must NOT count as authentication."""
+
+    def test_bogus_token_reports_unavailable(self, monkeypatch):
+        monkeypatch.setenv("GH_TOKEN", "ghs_definitely_invalid_token")
+        # gh() shells out to the real binary; with a bogus token `gh api user`
+        # exits non-zero -> "" -> gh_available() must be False.
+        assert ad.gh_available() is False
+
+    def test_no_token_no_gh_binary(self, monkeypatch):
+        monkeypatch.delenv("GH_TOKEN", raising=False)
+        monkeypatch.setattr(ad, "gh", lambda *a, **k: "")
+        assert ad.gh_available() is False
+
+    def test_valid_token_reports_available(self, monkeypatch):
+        monkeypatch.setenv("GH_TOKEN", "ghs_valid")
+        monkeypatch.setattr(
+            ad,
+            "gh",
+            lambda *a, **k: "somebody" if a[:2] == ("api", "user") else "",
+        )
+        assert ad.gh_available() is True
+
+    def test_gh_version_no_longer_satisfies_token_path(self, monkeypatch):
+        """Regression pin: `--version` succeeding must NOT equal available."""
+        monkeypatch.setenv("GH_TOKEN", "ghs_expired_token")
+
+        def fake_gh(*args, **kwargs):
+            if args and args[0] == "--version":
+                return "gh version 2.63.0"  # binary present...
+            return ""  # ...but every authenticated call fails
+
+        monkeypatch.setattr(ad, "gh", fake_gh)
+        assert ad.gh_available() is False
