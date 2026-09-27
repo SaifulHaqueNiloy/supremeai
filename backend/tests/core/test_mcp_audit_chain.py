@@ -19,7 +19,7 @@ import pytest
 import pytest_asyncio
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from core.mcp_audit_chain import MCPAuditChainStore, args_fingerprint, compute_entry_hash
+from core.kernel.audit_chain import MCPAuditChainStore, args_fingerprint, compute_entry_hash
 from models.base import Base
 from models.mcp_audit_event import MCPAuditEvent
 

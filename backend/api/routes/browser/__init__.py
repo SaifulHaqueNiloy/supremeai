@@ -81,7 +81,7 @@ from core.neon_repository import (  # noqa: F401  (module-attr parity)
 from core.neon_repository import (  # noqa: F401  (module-attr parity)
     update_task_status as update_neon_task_status,
 )
-from core.observability.audit_logger import AuditLogger  # noqa: F401  (module-attr parity)
+from core.kernel.audit_logger import AuditLogger  # noqa: F401  (module-attr parity)
 from core.security.secure_credential_store import (  # noqa: F401  (module-attr parity)
     SecureCredentialStore,
 )
