@@ -16,8 +16,8 @@ from core.logging_config import logger
 try:
     from .circuit_breaker import CircuitBreakerManager
 except ImportError:
-    # Fallback to core circuit breaker
-    from core.circuit_breaker import RedisCircuitBreaker as CircuitBreakerManager
+    # Fallback to the canonical resilience circuit breaker (issue #2250)
+    from core.resilience.circuit_breaker import RedisCircuitBreaker as CircuitBreakerManager
 
 
 class TaskType(StrEnum):

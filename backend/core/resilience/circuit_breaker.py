@@ -8,9 +8,12 @@ After cooldown, transitions to half-open state for recovery testing.
 
 from __future__ import annotations
 
+import asyncio
 import threading
 import time
 from collections.abc import Awaitable, Callable
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, TypeVar
 
@@ -440,3 +443,343 @@ class CircuitBreaker:
                 f'circuit_breaker_failures_total{{name="{self.name}"}}': self.failure_count,
                 f'circuit_breaker_successes_total{{name="{self.name}"}}': self.success_count,
             }
+
+
+# =============================================================================
+# Async circuit-breaker family (consolidated from core/circuit_breaker.py)
+#
+# Issue #2250: the legacy `core.circuit_breaker` module is retired so every
+# breaker caller shares ONE import path. The classes below are a verbatim
+# behavior-preserving port of the legacy v3.0 async state machine + the
+# Redis-backed compatibility API:
+#   - `AsyncCircuitBreaker` (legacy class name `CircuitBreaker`): async
+#     `protect()` context manager, asyncio.Lock, consecutive-failure threshold,
+#     success-threshold HALF_OPEN recovery, `CircuitStats` counters.
+#   - `RedisCircuitBreaker`: `should_attempt_external()` / `record_success()` /
+#     `record_failure()` surface used by the chat path, with central Redis
+#     state and in-memory fallback.
+#   - `CIRCUITS` / `get_circuit()` / `sync_from_db()`: shared registry and
+#     DB-driven threshold sync (ConfigService `circuit_breaker_configs`).
+# The lowercase `CircuitState` spelling below is PERSISTED to Redis
+# (`circuit_breaker:<name>:state`) and exposed in API payloads — do NOT
+# re-case it; normalize via `normalize_circuit_state()` when comparing
+# against `CircuitBreakerState` (issue #684, H-05). Full semantic unification
+# of the sync/async pair is tracked under issue #688.
+# =============================================================================
+
+
+class CircuitState(StrEnum):
+    """Async-family breaker states (lowercase, Redis-persisted family).
+
+    Issue #684 (H-05): the canonical breaker-state enum is
+    ``CircuitBreakerState`` above (uppercase values). These lowercase values
+    are PERSISTED to Redis (``circuit_breaker:<name>:state``, written by
+    RedisCircuitBreaker) and exposed in API payloads, so the spelling must
+    NOT change — backward compatibility with already-serialized state.
+    Cross-family comparisons must normalize via ``normalize_circuit_state()``.
+    """
+
+    CLOSED = "closed"  # Normal operation
+    OPEN = "open"  # Failing, reject immediately
+    HALF_OPEN = "half_open"  # Testing recovery
+
+
+@dataclass
+class CircuitStats:
+    """Statistics for an async-family circuit breaker."""
+
+    total_requests: int = 0
+    total_successes: int = 0
+    total_failures: int = 0
+    total_rejections: int = 0  # Rejected while OPEN
+    current_state: CircuitState = CircuitState.CLOSED
+    last_failure_time: float = 0
+    last_success_time: float = 0
+    consecutive_failures: int = 0
+    consecutive_successes: int = 0
+
+
+class CircuitBreakerError(Exception):
+    """Raised when the async-family breaker is OPEN and a request is rejected."""
+
+    def __init__(self, name: str, state: CircuitState, recovery_in: float):
+        self.name = name
+        self.state = state
+        self.recovery_in = recovery_in
+        super().__init__(
+            f"Circuit '{name}' is OPEN. "
+            f"Recovery in ~{recovery_in:.0f}s. "
+            f"Requests are being rejected."
+        )
+
+
+class AsyncCircuitBreaker:
+    """
+    Async circuit breaker (legacy v3.0 state machine, ported verbatim).
+
+    Prevents cascading failures by temporarily stopping calls to
+    failing services and automatically testing for recovery.
+
+    Usage:
+        cb = AsyncCircuitBreaker(name="gemini_api", failure_threshold=5)
+        async with cb.protect():
+            result = await call_external_api()
+    """
+
+    def __init__(
+        self,
+        name: str,
+        failure_threshold: int = 5,
+        success_threshold: int = 3,
+        recovery_timeout: float = 30.0,
+        half_open_max_calls: int = 1,
+    ):
+        """
+        Initialize circuit breaker.
+
+        Args:
+            name: Identifier for this circuit (for logging/metrics)
+            failure_threshold: Consecutive failures before opening
+            success_threshold: Successes in HALF_OPEN before closing
+            recovery_timeout: Seconds before trying HALF_OPEN
+            half_open_max_calls: Max concurrent test requests in HALF_OPEN
+        """
+        self.name = name
+        self.failure_threshold = failure_threshold
+        self.success_threshold = success_threshold
+        self.recovery_timeout = recovery_timeout
+        self.half_open_max_calls = half_open_max_calls
+
+        self._state = CircuitState.CLOSED
+        self._failure_count = 0
+        self._success_count = 0
+        self._last_failure_time = 0.0
+        self._half_open_calls = 0
+        self._lock = asyncio.Lock()
+        self._stats = CircuitStats()
+
+    @property
+    def state(self) -> CircuitState:
+        return self._state
+
+    @property
+    def stats(self) -> CircuitStats:
+        return self._stats
+
+    def _should_attempt_reset(self) -> bool:
+        """Check if enough time has passed to try HALF_OPEN."""
+        if self._state != CircuitState.OPEN:
+            return False
+        elapsed = time.time() - self._last_failure_time
+        return elapsed >= self.recovery_timeout
+
+    async def _on_success(self) -> None:
+        """Handle successful call."""
+        async with self._lock:
+            self._stats.total_successes += 1
+            self._stats.last_success_time = time.time()
+
+            if self._state == CircuitState.HALF_OPEN:
+                self._success_count += 1
+                if self._success_count >= self.success_threshold:
+                    self._state = CircuitState.CLOSED
+                    self._failure_count = 0
+                    self._success_count = 0
+                    self._half_open_calls = 0
+            else:  # CLOSED
+                self._failure_count = 0
+                self._consecutive_failures = 0
+
+    async def _on_failure(self) -> None:
+        """Handle failed call."""
+        async with self._lock:
+            self._stats.total_failures += 1
+            self._stats.last_failure_time = time.time()
+            self._failure_count += 1
+
+            if self._state == CircuitState.HALF_OPEN:
+                # Failure in HALF_OPEN → back to OPEN
+                self._state = CircuitState.OPEN
+                self._last_failure_time = time.time()
+                self._half_open_calls = 0
+            elif self._failure_count >= self.failure_threshold:
+                # Threshold reached → OPEN
+                self._state = CircuitState.OPEN
+                self._last_failure_time = time.time()
+
+    @asynccontextmanager
+    async def protect(self):
+        """
+        Context manager that wraps a call with circuit breaker protection.
+
+        Raises:
+            CircuitBreakerError: If circuit is OPEN
+        """
+        self._stats.total_requests += 1
+
+        async with self._lock:
+            # Check if we should try reset
+            if self._should_attempt_reset():
+                self._state = CircuitState.HALF_OPEN
+                self._half_open_calls = 0
+
+            self._stats.current_state = self._state
+
+            if self._state == CircuitState.OPEN:
+                self._stats.total_rejections += 1
+                recovery_in = self.recovery_timeout - (time.time() - self._last_failure_time)
+                raise CircuitBreakerError(self.name, self._state, recovery_in)
+
+            if self._state == CircuitState.HALF_OPEN:
+                if self._half_open_calls >= self.half_open_max_calls:
+                    self._stats.total_rejections += 1
+                    raise CircuitBreakerError(self.name, self._state, 0)
+                self._half_open_calls += 1
+
+        try:
+            yield
+            await self._on_success()
+        except Exception:
+            await self._on_failure()
+            raise
+
+    def get_recovery_time(self) -> float:
+        """Get seconds until circuit may attempt recovery."""
+        if self._state != CircuitState.OPEN:
+            return 0.0
+        elapsed = time.time() - self._last_failure_time
+        return max(0, self.recovery_timeout - elapsed)
+
+    def reset(self) -> None:
+        """Manually reset circuit to CLOSED state."""
+        self._state = CircuitState.CLOSED
+        self._failure_count = 0
+        self._success_count = 0
+        self._half_open_calls = 0
+
+
+# Pre-configured circuits for common services
+CIRCUITS: dict[str, AsyncCircuitBreaker] = {
+    "gemini_api": AsyncCircuitBreaker("gemini_api", failure_threshold=5, recovery_timeout=30),
+    "groq_api": AsyncCircuitBreaker("groq_api", failure_threshold=5, recovery_timeout=30),
+    "openrouter_api": AsyncCircuitBreaker("openrouter_api", failure_threshold=5, recovery_timeout=30),
+    "database": AsyncCircuitBreaker("database", failure_threshold=3, recovery_timeout=15),
+    "external_http": AsyncCircuitBreaker("external_http", failure_threshold=5, recovery_timeout=20),
+}
+
+
+async def sync_from_db(db: Any) -> None:
+    """Sync circuit breaker thresholds from the database configuration."""
+    # Lazy import: keeps the resilience package import-graph free of the
+    # services layer at module load (behavior identical to the legacy
+    # module-level import — sync_from_db() is the only consumer).
+    from services.config_service import ConfigService
+
+    global CIRCUITS
+    try:
+        # We serialize the default dict to a dict of config kwargs for fallback
+        default_configs = {
+            name: {
+                "failure_threshold": cb.failure_threshold,
+                "recovery_timeout": cb.recovery_timeout,
+            }
+            for name, cb in CIRCUITS.items()
+        }
+
+        configs = await ConfigService.get_config(db, "circuit_breaker_configs", default_configs)
+
+        if configs:
+            for name, cfg in configs.items():
+                if name in CIRCUITS:
+                    CIRCUITS[name].failure_threshold = cfg.get(
+                        "failure_threshold", CIRCUITS[name].failure_threshold
+                    )
+                    CIRCUITS[name].recovery_timeout = float(
+                        cfg.get("recovery_timeout", CIRCUITS[name].recovery_timeout)
+                    )
+                else:
+                    CIRCUITS[name] = AsyncCircuitBreaker(
+                        name=name,
+                        failure_threshold=cfg.get("failure_threshold", 5),
+                        recovery_timeout=float(cfg.get("recovery_timeout", 30.0)),
+                    )
+            logger.info(f"✅ Synced {len(configs)} circuit_breaker_configs from DB.")
+    except Exception as e:
+        logger.error(f"❌ Failed to sync circuit_breaker_configs from DB: {e}")
+
+
+def get_circuit(name: str) -> AsyncCircuitBreaker:
+    """Get or create a circuit breaker by name."""
+    if name not in CIRCUITS:
+        CIRCUITS[name] = AsyncCircuitBreaker(name)
+    return CIRCUITS[name]
+
+
+class RedisCircuitBreaker(AsyncCircuitBreaker):
+    """
+    Circuit breaker with a Redis-backed compatibility API.
+
+    Provides the should_attempt_external() / record_success() / record_failure()
+    surface used by call sites written against the original Redis-based circuit
+    breaker (see core/cache/redis_manager.py), while delegating actual
+    open/closed/half-open bookkeeping to the async state machine above. State
+    is tracked centrally in Redis when available (shared across workers), and
+    falls back to local in-memory state if Redis is unreachable.
+    """
+
+    def __init__(
+        self,
+        name: str = "default",
+        failure_threshold: int = 3,
+        recovery_timeout: float = 30.0,
+    ):
+        super().__init__(
+            name=name, failure_threshold=failure_threshold, recovery_timeout=recovery_timeout
+        )
+        self.prefix = f"circuit_breaker:{name}"
+
+    async def _get_redis_client(self):
+        try:
+            from core.cache.redis_manager import redis_manager
+
+            return await redis_manager.get_client_async()
+        except Exception as e:
+            logger.debug(f"RedisCircuitBreaker: Redis unavailable ({e}), using in-memory state")
+            return None
+
+    async def record_success(self) -> None:
+        await self._on_success()
+        client = await self._get_redis_client()
+        if not client:
+            return
+        try:
+            await client.set(f"{self.prefix}:state", self._state.value)
+            await client.set(f"{self.prefix}:failures", self._failure_count)
+        except Exception as e:
+            logger.error(f"RedisCircuitBreaker record_success sync failed: {e}")
+
+    async def record_failure(self) -> None:
+        await self._on_failure()
+        client = await self._get_redis_client()
+        if not client:
+            return
+        try:
+            await client.set(f"{self.prefix}:state", self._state.value)
+            await client.set(f"{self.prefix}:failures", self._failure_count)
+            if self._state == CircuitState.OPEN:
+                await client.set(f"{self.prefix}:opened_at", self._last_failure_time)
+        except Exception as e:
+            logger.error(f"RedisCircuitBreaker record_failure sync failed: {e}")
+
+    async def should_attempt_external(self) -> bool:
+        """Return True if a call should be attempted (mirrors protect()'s gate logic)."""
+        async with self._lock:
+            if self._should_attempt_reset():
+                self._state = CircuitState.HALF_OPEN
+                self._half_open_calls = 0
+
+            if self._state == CircuitState.OPEN:
+                return False
+            if self._state == CircuitState.HALF_OPEN:
+                return self._half_open_calls < self.half_open_max_calls
+            return True

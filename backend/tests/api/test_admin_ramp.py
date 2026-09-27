@@ -661,7 +661,7 @@ class TestBrandingAndConfigs:
             "brain.economic_optimizer.get_economic_optimizer", AsyncMock(return_value=econ)
         )
         monkeypatch.setattr("utils.branding.sync_from_db", target)
-        monkeypatch.setattr("core.circuit_breaker.sync_from_db", target)
+        monkeypatch.setattr("core.resilience.circuit_breaker.sync_from_db", target)
         mon = SimpleNamespace(sync_from_db=target)
         monkeypatch.setattr("core.health.health_monitor.get_health_monitor", lambda: mon)
         monkeypatch.setattr("core.middleware.health_aware_middleware.sync_from_db", target)

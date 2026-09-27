@@ -512,9 +512,12 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
     async def global_exception_handler(request, exc: Exception):
         """Handle unhandled exceptions with proper response and circuit breaker awareness."""
 
-        from core.circuit_breaker import CIRCUITS
         from core.request_context import get_correlation_id
-        from core.resilience.circuit_breaker import CircuitBreakerState, normalize_circuit_state
+        from core.resilience.circuit_breaker import (
+            CIRCUITS,
+            CircuitBreakerState,
+            normalize_circuit_state,
+        )
 
         status_code = getattr(exc, "status_code", 500)
 
