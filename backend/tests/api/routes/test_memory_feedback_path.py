@@ -11,17 +11,17 @@ import pytest
 
 class TestChatMemoryPath:
     def test_ltm_noop_block_removed_from_chat_route(self):
-        chat = (
-            Path(__file__).resolve().parents[3] / "api" / "routes" / "chat.py"
-        ).read_text(encoding="utf-8")
+        chat = (Path(__file__).resolve().parents[3] / "api" / "routes" / "chat.py").read_text(
+            encoding="utf-8"
+        )
         assert "LongTermMemory" not in chat, "dead LTM construction must stay out of the hot path"
         assert "recall_memories" in chat, "the real pgvector recall remains the memory path"
 
     def test_no_wasted_supabase_init_per_request(self):
         """The removed block was the only per-request MemoryManager/Supabase init."""
-        chat = (
-            Path(__file__).resolve().parents[3] / "api" / "routes" / "chat.py"
-        ).read_text(encoding="utf-8")
+        chat = (Path(__file__).resolve().parents[3] / "api" / "routes" / "chat.py").read_text(
+            encoding="utf-8"
+        )
         assert "MemoryManager()" not in chat
 
 
@@ -43,9 +43,7 @@ class TestFeedbackWiring:
                 recorded.append((session_id, query, chunks, rating))
                 return {"recorded": True}
 
-        monkeypatch.setattr(
-            "core.self_evolution.evolution_engine.EvolutionEngine", FakeEngine
-        )
+        monkeypatch.setattr("core.self_evolution.evolution_engine.EvolutionEngine", FakeEngine)
         payload: dict[str, Any] = {
             "type": "SUGGESTION_FEEDBACK",
             "sessionId": "sess-1",
@@ -64,9 +62,7 @@ class TestFeedbackWiring:
             def __init__(self, *a, **k):
                 raise RuntimeError("engine down")
 
-        monkeypatch.setattr(
-            "core.self_evolution.evolution_engine.EvolutionEngine", BrokenEngine
-        )
+        monkeypatch.setattr("core.self_evolution.evolution_engine.EvolutionEngine", BrokenEngine)
         payload = {
             "type": "SUGGESTION_FEEDBACK",
             "sessionId": "sess-2",
@@ -81,10 +77,7 @@ class TestFeedbackWiring:
 class TestSingleFeedbackPipeline:
     def test_feedback_loop_writer_is_reachable(self):
         engine = (
-            Path(__file__).resolve().parents[3]
-            / "core"
-            / "self_evolution"
-            / "evolution_engine.py"
+            Path(__file__).resolve().parents[3] / "core" / "self_evolution" / "evolution_engine.py"
         ).read_text(encoding="utf-8")
         assert "def record_feedback" in engine
         assert "insert_feedback" in engine
