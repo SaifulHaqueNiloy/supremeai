@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 19:41 UTC
+- **Date:** 2026-09-27 20:13 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,13 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.devcontainer/devcontainer.json`
-  - `docs/architecture/MULTI_PLATFORM_WORKSPACE_IMPLEMENTATION_ROADMAP.md`
   - `.agents/rules/GROUND_TRUTH_AUDITING_DISCIPLINE.md`
-  - `docs/architecture/MULTI_PLATFORM_AGENT_WORKSPACE_PLAN.md`
-  - `.devcontainer/Dockerfile`
+  - `docs/agents/COLLECTIVE_AGENT_MEMORY_ARCHITECTURE.md`
+  - `AGENTS.md`
+  - `tests/unit/test_agent_solution_memory.py`
   - `CHECKPOINT.md`
-  - `.devcontainer/setup.sh`
+  - `scripts/agents/agent_solution_memory.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)

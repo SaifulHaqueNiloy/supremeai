@@ -10,6 +10,7 @@ import pytest
 
 from scripts.agents.agent_solution_memory import (
     record_solution,
+    record_solution_gap,
     search_local_lessons,
     verify_mcp,
 )
@@ -38,7 +39,8 @@ def test_verify_mcp_missing_server(tmp_path: Path):
     mock_mcp_config.write_text(json.dumps({"mcpServers": {}}), encoding="utf-8")
 
     with patch("scripts.agents.agent_solution_memory.MCP_CONFIG_FILE", mock_mcp_config):
-        assert verify_mcp() is False
+        with patch.dict("os.environ", {}, clear=True):
+            assert verify_mcp() is False
 
 
 def test_search_local_lessons_finds_match(tmp_path: Path):
@@ -94,6 +96,7 @@ def test_record_solution_appends_to_lessons(tmp_path: Path):
                 problem="Redis connection dropped",
                 solution="Implement exponential backoff retry",
                 lesson="Never fail on transient network errors",
+                status="VERIFIED",
                 tags=["redis", "network"],
             )
             assert success is True
@@ -102,3 +105,15 @@ def test_record_solution_appends_to_lessons(tmp_path: Path):
             assert "#9999" in content
             assert "Redis connection dropped" in content
             assert "Implement exponential backoff retry" in content
+
+
+def test_record_solution_gap(tmp_path: Path):
+    with patch("scripts.agents.agent_solution_memory.SQLITE_DB_PATH", tmp_path / "test.db"):
+        success = record_solution_gap(
+            task_id="1042",
+            problem="OAuth token refresh failed in container",
+            failed_attempts="Direct refresh blocked by network policy",
+            missing_capability="credential.refresh.scoped",
+            future_path="Implement scoped broker proxy",
+        )
+        assert success is True

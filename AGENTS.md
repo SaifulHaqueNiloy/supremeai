@@ -151,7 +151,7 @@ CLAIM → BRANCH → WORK (SEARCH & PAVE) → VERIFY → PR → (MERGE DOOR) →
 
 1. **Claim** the highest-priority unclaimed issue in your lane — `./scripts/agents/next_claimable.sh <lane>` (atomic claim — never edit without it; skipping a priority level requires a stated reason on the skipped issue).
 2. **Branch** from fresh `origin/main` onto your slot (`acquire_role_slot.py`).
-3. **Work (Search Past Solutions First)**: Query collective memory before solving (`python scripts/agents/agent_solution_memory.py search --query "..."`). If an existing solution exists, apply it. If solving an unrecorded problem, pave the pathway for future peers by recording the fix upon verification (`record`). Work freely inside the boundaries.
+3. **Work (Search Past Solutions First & Pave Future Pathway)**: Query collective memory before solving (`python scripts/agents/agent_solution_memory.py search --query "..."`). If an existing solution exists, check compatibility, adapt, and apply it. If no solution exists, formulate the fix or record a Solution Gap (`python scripts/agents/agent_solution_memory.py gap`), and upon verification, pave the pathway for future peers by recording the experience (`python scripts/agents/agent_solution_memory.py record`). Work freely inside the boundaries.
 4. **Verify**: pre-push checks + `scripts/git/pre-push`; collision check when touching shared paths.
 5. **PR** to `main` (`type(scope): description (#issue)`) — gates run, then the merge queue (`queue:pending-rollup` → single-flight rollup batch → single merge door).
 6. **Never merge a PR that sits inside a rollup batch** — batch members land together via the batch PR only (single merge door).

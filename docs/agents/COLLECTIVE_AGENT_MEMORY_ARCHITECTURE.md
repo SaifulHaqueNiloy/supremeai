@@ -1,126 +1,203 @@
-# SupremeAI — Collective Agent Memory & Solution Knowledge Base Architecture
+# SupremeAI — Collective Agent Memory & Problem-Solving Layer Architecture
 
 > **Axiom:**  
-> **“তোমার মতো আরও অনেকের সেইম সমস্যা হয়েছিল—সেটা কীভাবে সলভ করেছে? আমাদের সিস্টেমে অলরেডি কোনো সমাধান আছে কি না দেখো! না থাকলে তোমার ও তোমার মতো যারা ভবিষ্যতে সমস্যায় পড়বে তাদের জন্য রাস্তা তৈরি করো।”**
+> **“কোনো agent সমস্যায় পড়লে আগে দেখবে—SupremeAI এই সমস্যাটা আগে দেখেছে কি না। না দেখে নতুন করে একই যুদ্ধ শুরু করবে না। আর solution না থাকলে শুধু problem solve করার চেষ্টা করবে না; future agents-এর জন্য একটা usable পথও তৈরি করবে।”**
 >
 > **Core Principle:**  
-> **Search Before Solving · Pave Before Leaving**  
+> **Search Before Solving · Pave Before Leaving · Gap Before Guessing**  
 > No agent solves in isolation. Collective intelligence transforms individual mistakes into permanent system strengths.
 
 ---
 
-## 1. Executive Summary
+## 1. Executive Summary: The Collective Problem-Solving Layer
 
-SupremeAI-এর মাল্টি-এজেন্ট সিস্টেমে প্রতিদিন শত শত জটিল কোডিং, কনফিগারেশন ও টেস্ট চ্যালেঞ্জ আসবে। কোনো এজেন্টকে শূন্য থেকে চাকা আবিষ্কার করতে হবে না। প্রতিটি এজেন্টের কাজ শুরু হবে অতীত সমাধানের অভিজ্ঞতা যাচাই করে এবং কাজ শেষ হবে ভবিষ্যতের সহকর্মীদের জন্য স্পষ্ট পথ তৈরি করে।
+SupremeAI MCP Tower কেবল একটি Agent Control Tower নয়; এটি এজেন্টদের **“Collective Memory + Collective Problem-Solving Layer”**।
 
 ```text
-               [ INCOMING TASK OR ERROR ]
+                    SUPREMEAI MCP TOWER
                            │
-                           ▼
-          ┌──────────────────────────────────┐
-          │  Step 1: Search Past Solutions   │
-          │  "Does SupremeAI already know?"   │
-          └─────────────────┬────────────────┘
-                            │
-              ┌─────────────┴─────────────┐
-              │                           │
-          [ FOUND ]                  [ NOT FOUND ]
-              │                           │
-              ▼                           ▼
-    ┌──────────────────┐        ┌──────────────────┐
-    │  Step 2: Apply   │        │ Step 2b: Solve   │
-    │  Proven Recipe   │        │ Soundly & Verify │
-    └─────────┬────────┘        └─────────┬────────┘
-              │                           │
-              │                           ▼
-              │                 ┌──────────────────┐
-              │                 │ Step 3: Pave Way │
-              │                 │ Record in DB &   │
-              │                 │ LESSONS_LEARNED  │
-              │                 └─────────┬────────┘
-              └─────────────┬─────────────┘
-                            ▼
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+   AGENT CONTROL       COLLECTIVE         CAPABILITY
+   / GOVERNANCE          MEMORY             DISCOVERY
+        │                  │                  │
+        │          ┌───────┼────────┐         │
+        │          │       │        │         │
+        │       Problems Solutions Attempts  Gaps
+        │          │       │        │         │
+        └──────────┴───────┼────────┴─────────┘
+                           │
+                     AGENT MCP API
+                           │
+                    EVERY AGENT
+```
+
+---
+
+## 2. The Universal Connection Contract (Adapter-Neutral)
+
+**“সব agent-কে একই literal `mcp.json` file ব্যবহার করতেই হবে”**—এটি কোনো রিজিড বাধ্যবাধকতা নয়। এজেন্ট Cursor-এ থাকতে পারে, Codespaces-এ থাকতে পারে, Gitpod-এ থাকতে পারে, বা নিজস্ব লোকাল স্যান্ডবক্সে থাকতে পারে।
+
+> **Contract Rule:**  
+> **Every agent MUST have a valid MCP Tower connection contract.**
+
+```text
+mcp.json / .env / CLI bootstrap / SDK bootstrap / Platform adapter
+                      ↓
+           Agent → MCP Tower (Mandatory)
+```
+- **Local IDE:** Workspace রুট ফোল্ডারে `mcp.json` দিয়ে `supremeai-control-tower` রান হয়।
+- **Remote / Worker:** `MCP_TOWER_URL` এনভায়রনমেন্ট ভেরিয়েবল বা SDK কল দিয়ে কানেক্ট ও ৪৫-সেকেন্ড হার্টবিট চালু রাখে।
+
+---
+
+## 3. Experience Record: শুধু Answer নয়, সম্পূর্ণ অভিজ্ঞতা
+
+SupremeAI শুধু `problem → answer` সংরক্ষণ করে না। এখানে সংরক্ষিত হয় একটি পূর্ণাঙ্গ **Experience Record**:
+
+```text
+Problem
+ ↓
+Context (repo, module, runtime, dependencies)
+ ↓
+Attempts (what was tried)
+ ↓
+Failures (what failed and why)
+ ↓
+Successful Solution (exact approach, diff, command)
+ ↓
+Evidence (test outputs, benchmark deltas)
+ ↓
+Verification (status & confidence score)
+ ↓
+Reusable Conditions (when to apply, prerequisites)
+ ↓
+Limitations (where not to apply)
+ ↓
+Future Path (next steps or follow-ups)
+```
+
+---
+
+## 4. The Canonical Memory Model
+
+ডাটাবেসে (Supabase pgvector / Qdrant / SQLite fallback) ৩টি মূল সত্ত্বা ট্র্যাক হয়:
+
+1. **ProblemCase:**
+   - Fingerprint (error signature, exception class, call-stack hash)
+   - Context (language, framework, platform, dependency versions)
+   - Symptoms (terminal output, failing test name)
+2. **SolutionPattern:**
+   - Approach & Code changes
+   - Prerequisites & Environment requirements
+   - Verification status:
+     - `UNVERIFIED`: সদ্য প্রস্তাবিত
+     - `EXPERIMENTAL`: প্রাথমিক পরীক্ষায় উত্তীর্ণ
+     - `VERIFIED`: টেস্ট ও গেট দ্বারা প্রমাণিত
+     - `RECOMMENDED`: প্রোডাকশন-গ্রেড সেরা সমাধান
+     - `DEPRECATED`: কোডবেসের পরিবর্তনে অপ্রচলিত
+     - `FAILED`: পূর্বে চেষ্টা করে ব্যর্থ হওয়া পথ
+   - Compatibility Matrix:
+     - `COMPATIBLE` (একই রিপো, একই মডিউল, একই ভার্সন)
+     - `PARTIALLY_COMPATIBLE` (এডাপ্টেশন প্রয়োজন)
+     - `NOT_COMPATIBLE` (প্রযোজ্য নয়)
+3. **AttemptRecord:**
+   - কোন এজেন্ট কোন অ্যাপ্রোচ ট্রাই করেছিল
+   - কেন ব্যর্থ হয়েছিল এবং তার এভিডেন্স
+
+---
+
+## 5. দুইভাবে রাস্তা তৈরি (The Two Pathways)
+
+```text
+                     PROBLEM DISCOVERED
+                             │
+                             ▼
+                 [ Search Collective Memory ]
+                             │
+              ┌──────────────┴──────────────┐
+              │                             │
+          [ FOUND ]                    [ NOT FOUND ]
+              │                             │
+              ▼                             ▼
+       Path A: Reuse                 Path B: Solution Gap
+              │                             │
+   ┌──────────────────────┐      ┌──────────────────────┐
+   │ Check Compatibility  │      │ Record Gap & Context │
+   │ Adapt Proven Recipe  │      │ Try Candidates       │
+   │ Verify Locally       │      │ Note Missing Cap.    │
+   └──────────┬───────────┘      └──────────┬───────────┘
+              │                             │
+              │                             ▼
+              │                  ┌──────────────────────┐
+              │                  │ Solved?              │
+              │                  │ YES: Verified Sol.   │
+              │                  │ NO: Future Path / GAP│
+              │                  └──────────┬───────────┘
+              └──────────────┬──────────────┘
+                             ▼
                      [ SAFE DELIVERY ]
 ```
 
----
+### Path A — Existing Solution (পুনর্ব্যবহার)
+- পরিচিত সমস্যা হলে পূর্ববর্তী প্রমাণিত সমাধানটি অ্যাডাপ্ট করে ভেরিফাই করা হয়। ফলে ১০ জন এজেন্টকে একই সমস্যার জন্য ১০ বার শূন্য থেকে কাজ করতে হয় না।
 
-## 2. The Three Architectural Pillars
-
-### Pillar 1: Mandatory MCP Control Tower Connection (`mcp.json`)
-সকল এজেন্ট (Antigravity IDE, Cursor, Claude Desktop, CLI Agent, Autonomous Worker) স্টার্টআপে বাধ্যতামূলকভাবে SupremeAI MCP Control Tower-এর সাথে কানেক্ট করবে:
-- **Local IDE Configuration:** Workspace রুট ফোল্ডারে `mcp.json`-এর মাধ্যমে `supremeai-control-tower` কানেক্ট করা থাকে:
-  ```json
-  {
-    "mcpServers": {
-      "supremeai-control-tower": {
-        "command": "npx",
-        "args": ["tsx", "infrastructure/mcp-control-plane/src/index.ts"],
-        "env": {
-          "MCP_TRANSPORT": "stdio",
-          "MCP_CLIENT_REGISTRY_FILE": "config/mcp-clients.json"
-        }
-      }
-    }
-  }
-  ```
-- **Remote / SSE Connection:** রিমোট রানারের জন্য `MCP_TOWER_URL=https://supremeai-mcp-tower.onrender.com/sse` ব্যবহার করে হার্টবিট ও টুলস এক্সেস করা হয় (`scripts/agents/mcp_tower_client.py`)।
-- **Exposed Memory Tools:**
-  - `memory_get_similar_tasks`: সদৃশ সমস্যা ও সমাধান খুঁজে আনে।
-  - `memory_search_learned_facts`: অতীতে শেখা শিক্ষা ও নিয়ম সার্চ করে।
-  - `memory_record_task`: নতুন সমাধানের ধাপ ও মেট্রিক ডাটাবেসে সেভ করে।
-  - `memory_remember_fact`: স্থায়ী ফ্যাক্ট ও প্রতিরোধমূলক নির্দেশ সংরক্ষণ করে।
+### Path B — No Solution Yet (Solution Gap & New Pathway)
+- যদি মেমোরিতে কোনো সমাধান না থাকে, সিস্টেম একটি **Solution Gap** তৈরি করে।
+- এজেন্ট সমাধান করতে গিয়ে যা যা চেষ্টা করেছে এবং ব্যর্থ হয়েছে (`what_failed`), কোন ক্যাপাসিটি মিসিং ছিল, এবং সম্ভাব্য ভবিষ্যৎ পথ কী—সব রেকর্ড করে।
+- **ফলশ্রুতি:** পরবর্তী এজেন্ট এসে যখন সার্চ করবে, সে আর ব্ল্যাঙ্ক পেজ থেকে শুরু করবে না; সে দেখতে পাবে পূর্বে কোন কোন ভুল পথ পরিহার করা হয়েছে এবং কোন পথে এগোনো উচিত!
 
 ---
 
-### Pillar 2: Collective Memory Storage Engine (Database Layer)
-এজেন্টদের জন্য সমাধান ও মেমোরি সংরক্ষণ স্তর:
-1. **Vector & Semantic Database:** Supabase pgvector / Qdrant ভেক্টর সার্চ—প্রবলেমের টেক্সট ও এরর সিগনেচারের কসাইন সিমিলারিটি বের করে।
-2. **Episodic & Structured Database (`ai_memory` / `task_checkpoints`):** টাস্ক আইডি, ইনপুট প্রম্পট, এক্সিকিউটেড কোড, ল্যাটেন্সি এবং সাকসেস/ফেইলিউর ফলাফল ধারণ করে।
-3. **Local Permanent Ledger (`LESSONS_LEARNED.md`):** মানব-পঠনযোগ্য এবং গিট-ভার্শন নিয়ন্ত্রিত রেজিস্ট্রি।
+## 6. Memory Scopes Isolation (সিকিউরিটি ও প্রাইভেসি সীমানা)
 
-```yaml
-# Schema of a Recorded Solution / Episode
-solution_record:
-  task_id: "issue-2201"
-  error_pattern: "UnicodeEncodeError: 'charmap' codec can't encode character '\\u2705'"
-  root_cause: "Windows PowerShell default console encoding cp1252 cannot encode UTF-8 emojis."
-  validated_solution: "Set $env:PYTHONIOENCODING='utf-8' before executing python script."
-  tags: ["windows", "encoding", "ci-guard", "python"]
-  timestamp: 1759000000
-  success: true
+কালেক্টিভ মেমোরিতে ৪টি সম্পূর্ণ স্বাধীন স্কোপ বজায় রাখা হয়:
+
+| স্কোপ | কার ডেটা | শেয়ারিং নিয়ম |
+| :--- | :--- | :--- |
+| **USER MEMORY** | ইউজারের ব্যক্তিগত চ্যাট, পছন্দ ও ডেটা | সম্পূর্ণ প্রাইভেট; কোনো এজেন্টের ইঞ্জিনিয়ারিং মেমোরিতে যাবে না |
+| **TENANT MEMORY** | অর্গানাইজেশন-নির্দিষ্ট কনফিগ ও স্টেট | কঠোরভাবে টেন্যান্ট-আইসোলেটেড |
+| **PROJECT / SYSTEM MEMORY** | রিপোজিটরির আর্কিটেকচার, পলিসি ও কোডবেস স্টেট | প্রজেক্ট সদস্যদের জন্য উন্মুক্ত |
+| **AGENT EXPERIENCE MEMORY** | প্রযুক্তিগত সমাধান, বাগ ফিক্স, এরর সিগনেচার, গ্যাপস | সমস্ত এজেন্টের জন্য উন্মুক্ত কালেক্টিভ বুদ্ধিমত্তা |
+
+---
+
+## 7. Universal Agent Rules: "Before Solve" & "After Solve"
+
+### 🔍 Rule: Before Solve (সমাধানের পূর্বে)
+> **Before solving a non-trivial problem, search the MCP Tower for relevant prior experience, known solutions, failed attempts, and available capabilities. Do not repeat known failed approaches without a reason.**
+
+### 📝 Rule: After Solve (সমাধানের পর)
+> **After solving a sound, non-trivial, or failure-derived issue, record the Experience Record (Problem, Solution, Evidence, Verification, Lessons) to pave the pathway for future agents.**
+> *(অপ্রয়োজনীয় তুচ্ছ কাজ মেমোরিতে জমিয়ে নয়েজ তৈরি করা নিষিদ্ধ।)*
+
+---
+
+## 8. SupremeAI-এর নতুন Collective Intelligence Loop
+
+```text
+Problem বুঝো
+  ↓
+Previous Experience খোঁজো (MCP Tower / Database)
+  ↓
+Capability খোঁজো
+  ↓
+Run চালাও
+  ↓
+Verify করো (Trust Level নিরূপণ)
+  ↓
+Memory-তে রাখো (Experience Record)
+  ↓
+Gap থাকলে নতুন পথ তৈরি করো (Future Path)
+  ↓
+Approval & Merge ↺
 ```
 
 ---
 
-### Pillar 3: The "Search-and-Pave" Operational Discipline
+## 9. CLI ও MCP ইন্টারফেস
 
-#### 🔍 Step 1: Search First (খোঁজ করো)
-যেকোনো কাজ শুরু করার আগে বা কোনো এরর দেখা দিলে এজেন্টের প্রথম পদক্ষেপ:
-```bash
-python scripts/agents/agent_solution_memory.py search --query "failing test or error message"
-```
-অথবা MCP Tool: `memory_get_similar_tasks(query="...")` বা `memory_search_learned_facts(query="...")`।
-- যদি সমাধান পাওয়া যায়, তবে অপ্রয়োজনীয় পরীক্ষা-নিরীক্ষা পরিহার করে সরাসরি ভেরিফাইড সমাধানটি প্রয়োগ করবে।
-
-#### 🛠️ Step 2: Apply or Solve (সমাধান করো)
-- অতীতের সমাধান থাকলে তা প্রয়োগ করে টেস্ট ভেরিফাই করবে।
-- সমাধান না থাকলে এজেন্টের সম্পূর্ণ স্বাধীনতা রয়েছে (Kite & Spool Principle অনুযায়ী) সেরা পদ্ধতি বের করার।
-
-#### 🛣️ Step 3: Pave the Way for Future Agents (রাস্তা তৈরি করো)
-সমস্যা সমাধানের পর এজেন্ট ভবিষ্যতের এজেন্টদের জন্য রাস্তা তৈরি করবে:
-```bash
-python scripts/agents/agent_solution_memory.py record \
-  --task-id "issue-xxx" \
-  --problem "সমস্যার বিবরণ ও এরর সিগনেচার" \
-  --solution "কীভাবে সমস্যার সমাধান করা হয়েছে" \
-  --lesson "ভবিষ্যতে যাতে পুনরাবৃত্তি না হয় তার নিয়ম" \
-  --tags "area,component"
-```
-একই সাথে [`LESSONS_LEARNED.md`](../../LESSONS_LEARNED.md)-তে এক লাইনে এন্ট্রি যুক্ত হবে।
-
----
-
-## 4. Integration with AGENTS.md Constitution
-- **Rule Zero:** "Leave SupremeAI better than you found it, day by day."
-- **Collective Memory Rule:** "Search past solutions before coding; pave pathways in the database when unrecorded problems are solved."
+এজেন্টরা টার্মিনাল বা MCP টুলের মাধ্যমে সরাসরি যোগাযোগ করবে:
+- **Search:** `python scripts/agents/agent_solution_memory.py search --query "<symptom>"`
+- **Record:** `python scripts/agents/agent_solution_memory.py record --task-id "<id>" --problem "..." --solution "..." --lesson "..." --status "VERIFIED"`
+- **Create Gap:** `python scripts/agents/agent_solution_memory.py gap --task-id "<id>" --problem "..." --failed-attempts "..." --missing-capability "..." --future-path "..."`
