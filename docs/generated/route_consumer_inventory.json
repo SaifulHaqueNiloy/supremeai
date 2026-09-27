@@ -14,7 +14,7 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 861,
+    "backend_routes": 864,
     "frontend_unique_refs": 145,
     "routes_with_frontend_consumer": 300,
     "unmounted_routes": 0,
@@ -24,7 +24,7 @@
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 170,
-      "admin-only": 347,
+      "admin-only": 350,
       "internal": 40,
       "deprecated": 4,
       "api-only": 300,
@@ -8835,6 +8835,48 @@
       "frontend_consumers": [
         "frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx"
       ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/external-agents/jobs",
+      "declared": "/api/v1/external-agents/jobs",
+      "deprecated": false,
+      "router_file": "backend/api/routes/external_agents_admin.py",
+      "module": "api.routes.external_agents_admin",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "delegate_job",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/external-agents/jobs/:param",
+      "declared": "/api/v1/external-agents/jobs/{job_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/external_agents_admin.py",
+      "module": "api.routes.external_agents_admin",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "cancel_job",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/external-agents/jobs/:param",
+      "declared": "/api/v1/external-agents/jobs/{job_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/external_agents_admin.py",
+      "module": "api.routes.external_agents_admin",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_job",
+      "frontend_consumers": [],
       "classification": "admin-only"
     },
     {
