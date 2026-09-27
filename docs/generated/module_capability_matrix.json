@@ -437,6 +437,34 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/_archive/batch-7/resource_manager.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-7/secure_tunnel.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-7/test_resource_manager.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-7/test_secure_tunnel.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/adapters/__init__.py"
     },
     {
@@ -2472,6 +2500,13 @@
       "path": "backend/api/routes/execution_policies.py"
     },
     {
+      "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/external_agents_admin.py"
+    },
+    {
       "capability_signals": [
         "execute",
         "memory"
@@ -3624,13 +3659,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/byoc/container_orchestrator.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/byoc/resource_manager.py"
     },
     {
       "capability_signals": [],
@@ -9281,13 +9309,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/p2p/secure_tunnel.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/pipelines/__init__.py"
     },
     {
@@ -11097,6 +11118,13 @@
       "path": "backend/tests/api/routes/test_deep_research_full.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_external_agents_admin.py"
+    },
+    {
       "capability_signals": [
         "execute"
       ],
@@ -11818,13 +11846,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/byoc/test_container_orchestrator.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/byoc/test_resource_manager.py"
     },
     {
       "capability_signals": [],
@@ -14597,13 +14618,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/p2p_tests/test_credit_system.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/p2p_tests/test_secure_tunnel.py"
     },
     {
       "capability_signals": [],
@@ -26798,5 +26812,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3061
+  "source_file_count": 3063
 }
