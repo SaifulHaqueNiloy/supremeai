@@ -21,3 +21,19 @@
 - **সমস্যা:** ব্যাকএন্ড এপিআই, ফ্রন্টএন্ড ওয়েব অ্যাপ, ডকুমেন্টেশন, এআই এজেন্ট বা রিমোট কানেকশনে bare `http://localhost...` লিঙ্ক দিলে রিমোট এআই বা ক্লাউড সার্ভিস সার্ভিসগুলোর সাথে কানেকশন ফেইল করে।
 - **ফিক্স:** `AGENTS.md`-তে ইউনিভার্সাল রুল ৬ সিস্টেম-ওয়াইড বিস্তৃত করা হয়েছে—সামগ্রিক SupremeAI প্রজেক্টের (Backend APIs, Frontend, Docs, MCP, AI Agents) যেকোনো কানেকশন বা নির্দেশনায় bare `localhost` ব্যবহার সম্পূর্ণ নিষিদ্ধ। সবসময় প্রডাকশন ডোমেইন লিঙ্ক (`https://...onrender.com`) অথবা লাইভ টানেল এন্ডপয়েন্ট (`cloudflared`/`ngrok`) রেকমেন্ড করতে হবে।
 - **লেসন:** ক্লাউড সার্ভিস বা রিমোট ক্লায়েন্ট কখনো ডিভাইসের লোকাল লুপব্যাক আইপি (`127.0.0.1`/`localhost`) এক্সেস করতে পারে না; পুরো সুপ্রিমএআই ইকোসিস্টেমে পাবলিকলি এক্সেসিবল এন্ডপয়েন্ট বা টানেল বাধ্যতামূলক।
+
+---
+
+## 2026-09-12 — 🏛️ Core Philosophy Reinforcement: Zero-Hardcoding Mandate & System-Wide Universal Rule Scoping
+
+
+- **সমস্যা:** কোডবেস বা সিস্টেমে যেকোনো হার্ডকোডেড ভ্যালু (লজিক, প্রম্পট, ইউআরএল, কনফিগারেশন, পলিসি) ফ্লেক্সিবিলিটি নষ্ট করে। একই সাথে কোনো একটি সুনির্দিষ্ট মডিউল (যেমন: MCP Server) নিয়ে শেখা নিয়ম বা নির্দেশ সেকশন-আইসোলেটেড মনে করার ঝুঁকি তৈরি হতে পারে।
+- **ফিক্স:** `AGENTS.md` (Section 1)-এ ২টি মৌলিক সার্বজনীন ফিলোসোফি আপডেট করা হয়েছে: (১) **Zero-Hardcoding Mandate** — সিস্টেমে কোনো কিছুই হার্ডকোড করা যাবে না; সব ড্যাশবোর্ড/ডিবি থেকে ডাইনামিকভাবে নিয়ন্ত্রণযোগ্য হতে হবে; (২) **Universal Rule Scoping** — একটি মডিউলে শেখা নিয়ম বা গার্ডরেল কখনো আইসোলেটেড থাকবে না, তা Backend, Frontend, AI Agents, Docs, CI/CD জুড়ে **সামগ্রিক SupremeAI প্রজেক্টে সার্বজনীনভাবে (System-Wide)** কার্যকর হবে।
+- **লেসন:** হার্ডকোডিং মুক্ত ডাইনামিক ডিজাইন এবং সিস্টেম-ওয়াইড ইউনিভার্সাল রুল স্কোপিং হলো SupremeAI-এর ক্যানোনিকাল আর্কিটেকচারের মূল ভিত্তি।
+| 2026-09-27 | #2249 | Phase-2.1: retire second parallel LLM provider stack (services/llm providers.py 852L + llm_router.py 987L) with 15 production callers uniformly consuming result.get('content') while route() returned a RouteResult dataclass (no .get) — none of the callers ever received LLM text | Strangler Fig: migrate all 15 callers to brain/model_router.ModelRouter.async_route_and_generate (kwargs pass through gateway **kwargs -> litellm), map consumption to the facade dict contract (result.get('text')), delete services/llm entirely, retarget test mocks to the real contract, drop dead images=[...] kwargs (git archaeology proved no provider consumed them), regenerate route/capability evidence | 1) Before any dead-code retirement claim, grep the exact import lines (substring scans over-report); 2) When migrating an API, check the RETURN-type contract at every call site — mocks in tests can codify a contract the real implementation never had; 3) GitHub /branches commit dates live at .commit.commit.committer.date (not .commit.committer.date) — the /commits shape differs; 4) RouteResult-style dataclasses vs dict contracts: prefer one canonical result type across the stack |
+
+## 2026-09-12 — ⚡ MANDATORY RULE #1: Zero Local-Machine Dependency & Start-of-Conversation Recall Mandate
+
+- **সমস্যা:** ম্যানুয়াল লোকাল পিসি ও লোকাল টার্মিনালনির্ভর নির্দেশ বা প্লাগইন কনফিগারেশন দিলে তা ক্লাউড-ফার্স্ট/প্রডাকশন আর্কিটেকচার এবং ব্যবহারকারীর ওয়ার্কফ্লোকে ব্যাহত করে।
+- **ফিক্স:** `AGENTS.md`-এর চূড়ায় **MANDATORY RULE #1** সংস্থাপিত করা হয়েছে—১% কাজ বা প্ল্যানিংও লোকাল পিসির ওপর নির্ভর করা যাবে না। প্রতিটি এআই এজেন্টকে প্রতি কনভার্সেশনের শুরুতে Rule #1 রিফাইন ও এনফোর্স করতে হবে। সব সার্ভিস (Backend, Frontend, MCP, CI/CD) প্রথম দিন থেকেই ১০০% অটোমেটেড ক্লাউড-নেটিভ প্রডাকশন ইঞ্জিনে চলবে (No Exception)।
+- **লেসন:** জিরো লোকাল ডিপেন্ডেন্সি ও কনভার্সেশনের শুরুতে বাধ্যতামূলক রিকল হলো SupremeAI-এর এক নম্বর সাংবিধানিক নিয়ম।
