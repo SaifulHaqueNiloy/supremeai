@@ -155,3 +155,24 @@ batch next. The shim-contract suite now parametrizes over that single shim.
 | backend/core/gcp_firestore.py | 24 | `services/storage/gcp_firestore.py` |
 
 Total: 9 files, ~225 lines.
+
+## batch-7 — archived 2026-09-28 (issue #1619)
+
+Verification date: 2026-09-28 · Scheduled delete-after review: 2026-10-12
+
+| Original path | Lines | Note |
+|---|---|---|
+| backend/p2p/secure_tunnel.py | 9 | dormant stub (`SecureTunnel.create` returns a literal dict) — zero production refs; only its own test imported it |
+| backend/tests/p2p_tests/test_secure_tunnel.py | 19 | test of the archived stub, moved as one unit |
+| backend/byoc/resource_manager.py | 9 | dormant stub (`ResourceManager.get_status` returns literals) — zero production refs; `api/routes/byoc_api.py` uses `byoc.cloud_connector` + `byoc.container_orchestrator` (both live, untouched) |
+| backend/tests/byoc/test_resource_manager.py | 19 | test of the archived stub, moved as one unit |
+
+Total: 4 files, 56 lines.
+
+Evidence: repo-wide textual reference scan 2026-09-28 (`secure_tunnel|SecureTunnel`
+→ only `tests/p2p_tests/test_secure_tunnel.py`; `byoc.resource_manager|ResourceManager`
+→ only `tests/byoc/test_resource_manager.py`). `scripts/audit/find_dead_modules.py`
+reports 0 dead files because its definition counts test-imported modules as alive —
+the production-reference scan above is the governing evidence for this batch.
+pytest `testpaths = ["tests"]` (backend/pyproject.toml) does not collect from
+`_archive/`. **Do not import from here.**
