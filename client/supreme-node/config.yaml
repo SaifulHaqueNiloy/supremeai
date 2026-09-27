@@ -39,8 +39,16 @@ tower_url: ${TOWER_URL}  # set via env var (your tower host)
 # Endpoint: /ws/node  (Tower side তৈরি থাকলে)
 tower_ws_url: ${TOWER_WS_URL}  # set via env var (your tower ws host)
 
-# Tower REST heartbeat endpoint (MESH-1 #939 দ্বারা চালু করা)।
-# Full URL = tower_url + heartbeat_path
+# Backend REST URL — Python backend (FastAPI) host। #2255 (Phase-0):
+# heartbeat + node-presence + mesh-task routes live in the Python backend
+# (backend/api/routes/mesh.py), NOT in the MCP Tower. Before #2255, config
+# pointed heartbeat at tower_url → 404 because the route doesn't exist
+# on Tower. Now backend_url is the canonical source for /api/v1/nodes/*.
+# Override chain: BACKEND_URL env var > this default.
+backend_url: ${BACKEND_URL}  # set via env var (your backend host; defaults to tower_url for backward compat)
+
+# Backend heartbeat endpoint — POSTed to backend_url + heartbeat_path.
+# Canonical route: backend/api/routes/mesh.py (POST /api/v1/nodes/heartbeat).
 heartbeat_path: /api/v1/nodes/heartbeat
 
 # কত সেকেন্ড অন্তর heartbeat পাঠাবে — spec অনুযায়ী 60s।
