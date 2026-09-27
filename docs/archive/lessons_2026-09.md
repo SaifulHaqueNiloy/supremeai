@@ -1,0 +1,10 @@
+# LESSONS_LEARNED Archive — 2026-09
+> Auto-archived by rotate_lessons.py on 2026-09-27
+> Original entries: 1
+
+## 2026-09-11 — 🔌 Backend/Frontend Parity Audit Remediation: Silent 404 Contracts & Unmounted Routers
+
+
+- **সমস্যা:** ডিপ প্যারিটি অডিটে প্রমাণিত — (১) ফ্রন্টএন্ড দীর্ঘদিন ৪টি এমন এন্ডপয়েন্ট কল করছিল যা ব্যাকএন্ডে কখনোই ছিল না (`GET/POST /api/v1/health/agents`, `/admin/tenant-limits`, `/api/v1/agents/` GET list/status, `/api/admin/metrics/cost`) — প্রতিটি কল নীরবে 404 খেত (Swarm health, RateLimitManager, agentService, useBudgetCheck); (২) ৭টি কার্যকর ব্যাকএন্ড রাউটার (`diagram_to_architecture`, `voice_coder`, `ai_pair_programmer`, `self_planner`, `video_to_code_pipeline`, `vulnerability_prophet`, `ws/command_center`) `ALL_ROUTERS`-এ ছিল না বলে বুট থেকেই dead ছিল।
+- **ফিক্স:** `health.py`-তে GET+POST `/health/agents` (agent_supervisor.get_health + agent_ids ফিল্টার, unknown id → status="unknown"); `billing_api.py`-তে wallet-ভিত্তিক `GET /api/billing/budget-check` (estimated > balance হলে 402 Payment Required); ৭টি রাউটার `ALL_ROUTERS`-এ মাউন্ট (registry prefix="" — প্রতিটির নিজস্ব prefix আছে; voice_coder-এ WS রুট থাকায় is_admin=False sibling pattern)। ফ্রন্টএন্ড: RateLimitManager → `/admin-api/tenant-limits`, agentService → `/api/agents/*`, useBudgetCheck → `/api/billing/budget-check`; navigationRegistry-তে /research, /scheduled-tasks, /memory, /settings/api-keys implemented হিসেবে exposed; SecretsPage `/settings/api-keys` রাউটেড; MCPConnector IntegrationsManager-এর নতুন 'MCP Servers' tab-এ embedded।
+- **লেসন:** Contract drift ধরতে runtime-evidence cross-system audit আবশ্যক — mounted-but-unregistered রাউটার ও frontend-এর legacy পাথ দুটোই নীরব 404 তৈরি করে। ফিক্সগুলো `tests/security/test_dead_route_wiring.py`-এ regression guard হিসেবে লক করা হয়েছে। টেকনিক্যাল নোট: FastAPI-র নতুন `_IncludedRouter` wrapper ব্যবহার করলে route ভেরিফিকেশনে `original_router` traversal + `include_context.prefix` প্রয়োগ করতে হয় — top-level `app.routes`-এ include prefix প্রয়োগ হয় না।
