@@ -10998,6 +10998,13 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/api/routes/commandcenter/test_payload_validation.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/api/routes/commandcenter/test_secure.py"
     },
     {
@@ -23663,6 +23670,19 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "mcp",
+        "memory"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/agents/agent_solution_memory.py"
+    },
+    {
+      "capability_signals": [
         "dispatch"
       ],
       "classification": "canonical",
@@ -26812,5 +26832,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3063
+  "source_file_count": 3065
 }
