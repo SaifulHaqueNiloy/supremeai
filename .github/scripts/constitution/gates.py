@@ -415,28 +415,28 @@ def main() -> int:
 
     policies = load_policies(Path(args.rules))
     failures: list = []
+    needs_ctx = args.gate in ("verification", "all", "scope") or (
+        args.gate == "lease" and not (args.author and args.branch)
+    )
+    if needs_ctx and args.pr:
+        title, body, author, branch, assoc = _resolve_pr_context(args)
+    else:
+        title, body, author, branch, assoc = (
+            args.title, args.body, args.author, args.branch, args.author_association,
+        )
 
     if args.gate in ("verification", "all"):
-        title, body, author, branch, assoc = _resolve_pr_context(args)
         rc = run_verification_gate(body, policies["verification_policy"])
         if rc:
             failures.append("verification")
-    else:
-        title, body, author, branch, assoc = "", args.body, args.author, args.branch, args.author_association
 
     if args.gate in ("lease", "all"):
-        if not (author and branch):
-            title, body, author, branch, assoc = _resolve_pr_context(args)
         rc = run_lease_gate(author, branch, policies["lease_policy"])
         if rc:
             failures.append("lease")
 
     if args.gate in ("scope", "all"):
-        if not args.pr:
-            parser.error("scope gate requires --pr")
-        rc = run_scope_gate(
-            args.pr, assoc or "NONE", title, body, policies["scope_policy"]
-        )
+        rc = run_scope_gate(args.pr, assoc or "NONE", title, body, policies["scope_policy"])
         if rc:
             failures.append("scope")
 
