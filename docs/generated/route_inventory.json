@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "dc13e058136296c78c1ec3c867ecad2850c343d17f166fa297660694c8c9b2b8",
-  "route_count": 866,
+  "source_sha256": "651d27514b66e216f8a7a0414091aea342830f2741fea42b9bc28791a3171718",
+  "route_count": 865,
   "routes": [
     {
       "method": "GET",
@@ -4757,11 +4757,11 @@
     {
       "method": "POST",
       "path": "/api/browser/ai-action",
-      "operation_id": "browser_ai_action_api_browser_ai_action_post",
+      "operation_id": "ai_action_api_browser_ai_action_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
-      "summary": "Browser Ai Action",
+      "summary": "Ai Action",
       "auth": {
         "required": false,
         "schemes": []
@@ -4975,29 +4975,11 @@
     {
       "method": "POST",
       "path": "/api/browser/browse-session",
-      "operation_id": "save_browse_session_api_browser_browse_session_post",
+      "operation_id": "browse_session_api_browser_browse_session_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
-      "summary": "Save Browse Session",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/browser/browse-sessions",
-      "operation_id": "get_browse_sessions_api_browser_browse_sessions_get",
-      "tags": [
-        "browser-integration"
-      ],
-      "summary": "Get Browse Sessions",
+      "summary": "Browse Session",
       "auth": {
         "required": false,
         "schemes": []
@@ -5279,11 +5261,11 @@
     {
       "method": "POST",
       "path": "/api/browser/screenshot",
-      "operation_id": "browser_screenshot_api_browser_screenshot_post",
+      "operation_id": "capture_screenshot_api_browser_screenshot_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
-      "summary": "Browser Screenshot",
+      "summary": "Capture Screenshot",
       "auth": {
         "required": false,
         "schemes": []
@@ -5299,7 +5281,7 @@
       "path": "/api/browser/screenshots",
       "operation_id": "save_screenshot_to_gallery_api_browser_screenshots_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
       "summary": "Save Screenshot To Gallery",
       "auth": {
@@ -5315,11 +5297,11 @@
     {
       "method": "POST",
       "path": "/api/browser/security-scan",
-      "operation_id": "browser_security_scan_api_browser_security_scan_post",
+      "operation_id": "security_scan_api_browser_security_scan_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
-      "summary": "Browser Security Scan",
+      "summary": "Security Scan",
       "auth": {
         "required": false,
         "schemes": []

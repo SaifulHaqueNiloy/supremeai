@@ -1,5 +1,5 @@
 {
-  "edge_count": 1822,
+  "edge_count": 1820,
   "edges": [
     {
       "relation": "defines",
@@ -1475,11 +1475,6 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:5f4e928c41a18e2acc0a"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
-      "target": "route:5fdb54cf7120509d4fd9"
     },
     {
       "relation": "defines",
@@ -4364,7 +4359,7 @@
     {
       "relation": "exposes",
       "source": "route:0187c3f16a02e1caad95",
-      "target": "capability:f007deed71db690a50ee"
+      "target": "capability:e8d45e28b9f99f76daf1"
     },
     {
       "relation": "exposes",
@@ -5965,11 +5960,6 @@
       "relation": "exposes",
       "source": "route:5f4e928c41a18e2acc0a",
       "target": "capability:482b7110d31bdc8b0bfa"
-    },
-    {
-      "relation": "exposes",
-      "source": "route:5fdb54cf7120509d4fd9",
-      "target": "capability:f007deed71db690a50ee"
     },
     {
       "relation": "exposes",
@@ -7659,7 +7649,7 @@
     {
       "relation": "exposes",
       "source": "route:b96fef22f0e1ba82856e",
-      "target": "capability:f007deed71db690a50ee"
+      "target": "capability:e8d45e28b9f99f76daf1"
     },
     {
       "relation": "exposes",
@@ -7669,7 +7659,7 @@
     {
       "relation": "exposes",
       "source": "route:b9e193ef1a4fcad90486",
-      "target": "capability:f007deed71db690a50ee"
+      "target": "capability:e8d45e28b9f99f76daf1"
     },
     {
       "relation": "exposes",
@@ -8044,7 +8034,7 @@
     {
       "relation": "exposes",
       "source": "route:cbfa2dffeb5f4a83f5fa",
-      "target": "capability:f007deed71db690a50ee"
+      "target": "capability:e8d45e28b9f99f76daf1"
     },
     {
       "relation": "exposes",
@@ -9084,7 +9074,7 @@
     {
       "relation": "exposes",
       "source": "route:ff62343bd0746b8bd928",
-      "target": "capability:f007deed71db690a50ee"
+      "target": "capability:e8d45e28b9f99f76daf1"
     },
     {
       "relation": "exposes",
@@ -9112,7 +9102,7 @@
       "target": "control:8beb2443d48d78613952"
     }
   ],
-  "node_count": 1016,
+  "node_count": 1015,
   "nodes": [
     {
       "id": "capability:0304e05cfc30a6eece57",
@@ -9930,7 +9920,7 @@
       "label": "POST /api/browser/security-scan",
       "metadata": {
         "auth_required": false,
-        "operation_id": "browser_security_scan_api_browser_security_scan_post",
+        "operation_id": "security_scan_api_browser_security_scan_post",
         "owner": "unassigned"
       }
     },
@@ -12811,16 +12801,6 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "smell_check_tools_smell_check_post",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:5fdb54cf7120509d4fd9",
-      "kind": "route",
-      "label": "GET /api/browser/browse-sessions",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "get_browse_sessions_api_browser_browse_sessions_get",
         "owner": "unassigned"
       }
     },
@@ -15900,7 +15880,7 @@
       "label": "POST /api/browser/screenshot",
       "metadata": {
         "auth_required": false,
-        "operation_id": "browser_screenshot_api_browser_screenshot_post",
+        "operation_id": "capture_screenshot_api_browser_screenshot_post",
         "owner": "unassigned"
       }
     },
@@ -16600,7 +16580,7 @@
       "label": "POST /api/browser/ai-action",
       "metadata": {
         "auth_required": false,
-        "operation_id": "browser_ai_action_api_browser_ai_action_post",
+        "operation_id": "ai_action_api_browser_ai_action_post",
         "owner": "unassigned"
       }
     },
@@ -18490,7 +18470,7 @@
       "label": "POST /api/browser/browse-session",
       "metadata": {
         "auth_required": false,
-        "operation_id": "save_browse_session_api_browser_browse_session_post",
+        "operation_id": "browse_session_api_browser_browse_session_post",
         "owner": "unassigned"
       }
     },
@@ -18527,5 +18507,5 @@
   ],
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "dc13e058136296c78c1ec3c867ecad2850c343d17f166fa297660694c8c9b2b8"
+  "source_sha256": "651d27514b66e216f8a7a0414091aea342830f2741fea42b9bc28791a3171718"
 }

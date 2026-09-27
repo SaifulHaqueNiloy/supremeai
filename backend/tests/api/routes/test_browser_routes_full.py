@@ -1,463 +1,86 @@
-"""Full-coverage tests for api/routes/browser_routes.py (Task 7-c).
+"""Live-contract tests for the consolidated browser route surface (Task #2258).
 
-Strategy:
-    - Minimal FastAPI app mounting ONLY browser_routes.router (prefix
-      /api/browser, admin-guarded — satisfied by the conftest auth bypass).
-    - SSRFProtection.validate_url is patched at class level with a
-      deterministic host-based decision (the real one does DNS lookups).
-    - LLM gateway, Playwright browser and unified memory are patched.
-    - No real network anywhere.
+History: this file was full-coverage for the retired
+``api/routes/browser_routes.py`` — a legacy module whose admin router was
+permanently shadowed by the ``api.routes.browser`` package (registered first
+in ALL_ROUTERS) and whose public router only carried the #1490 health probe.
+The Phase 3.2 consolidation (#2258) ported the two LIVE contracts into the
+package (``_health.py`` public probe + ``_crown_jewel.py`` gallery endpoint)
+and deleted the module, so this suite now pins:
+
+    - /api/browser/health is dependency-free and public (#1490 contract);
+    - /api/browser/screenshots gallery entry shape (live FE caller);
+    - the crown-jewel surface still resolves on the package router;
+    - the retired legacy-only endpoint (/browse-sessions) is really gone.
+
+The shadowed legacy behaviours (InferenceContext ai-action, external
+security-scan checkers, shared-browser screenshot, RAG browse-sessions)
+were never reachable at runtime and are intentionally NOT re-pinned here —
+the live implementations of those paths are the package's, covered by
+``test_browser_package_request_models.py``.
 """
 
 from __future__ import annotations
-
-import time
-from types import SimpleNamespace
-from typing import Any
-from urllib.parse import urlparse
 
 import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
-import api.routes.browser_routes as br
-from core.security.protection.ssrf_protection import SSRFValidationResult
-
 PUBLIC_URL = "https://example.com/page"
-BLOCKED_URL = "http://169.254.169.254/latest/meta-data"
-
-
-def fake_validate_url(self, url: str) -> SSRFValidationResult:
-    host = (urlparse(url).hostname or "").lower()
-    blocked = {
-        "localhost",
-        "127.0.0.1",
-        "0.0.0.0",
-        "169.254.169.254",
-        "10.0.0.1",
-        "192.168.1.1",
-        "metadata.google.internal",
-    }
-    if not host or host in blocked or host.endswith(".internal"):
-        return SSRFValidationResult(is_safe=False, reason="internal target", validated_url=url)
-    return SSRFValidationResult(is_safe=True, reason="OK", validated_url=url)
-
-
-class FakeLLMResult:
-    text = "AI analysis text"
-    model = "test-model"
-    tokens_used = 42
 
 
 @pytest_asyncio.fixture
-async def browser_env(monkeypatch):
+async def pkg_env():
+    """Mount the REAL browser package with auth guards overridden (user token).
+
+    Mirrors the pkg_env fixture in test_browser_package_request_models.py:
+    this suite validates the consolidated surface's behaviour, not auth.
+    """
+    from api.deps import get_current_user_token
+    from api.routes.admin_dashboard import require_admin_token
+    from api.routes.browser import public_router, router
+
+    stub = {"sub": "pkg-test-user", "role": "user", "tenant_id": "t1"}
     app = FastAPI()
-    app.include_router(br.router)
-    # Issue #1490 (CI red 36219425476): /api/browser/health lives on the
-    # dependency-free public_router — the fixture app must mirror production.
-    app.include_router(br.public_router)
-
-    monkeypatch.setattr(
-        "core.security.protection.ssrf_protection.SSRFProtection.validate_url",
-        fake_validate_url,
-    )
-
-    llm_calls: list[dict[str, Any]] = []
-
-    async def fake_acompletion(**kwargs):
-        llm_calls.append(kwargs)
-        return FakeLLMResult()
-
-    monkeypatch.setattr("core.llm.llm_gateway.llm_gateway.acompletion", fake_acompletion)
-
+    app.include_router(router)
+    app.dependency_overrides[get_current_user_token] = lambda: stub
+    app.dependency_overrides[require_admin_token] = lambda: stub
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
-        yield http, llm_calls
+        yield http
+    app.dependency_overrides.clear()
 
+
+@pytest_asyncio.fixture
+async def public_env():
+    """Mount ONLY the dependency-free public router — no auth overrides at all.
+
+    This is the #1490 production shape for the health probe: it must answer
+    without any credentials, like the core /health/* contract.
+    """
+    from api.routes.browser import public_router
+
+    app = FastAPI()
+    app.include_router(public_router)
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
+        yield http
     app.dependency_overrides.clear()
 
 
 @pytest.mark.unit
-class TestAIAction:
-    async def test_summarize_success(self, browser_env):
-        http, llm_calls = browser_env
-        resp = await http.post(
-            "/api/browser/ai-action",
-            json={"action": "summarize", "url": PUBLIC_URL, "context": "hello page"},
-        )
+class TestHealthProbe:
+    """#1490 contract: /api/browser/health is public and dependency-free."""
+
+    async def test_health_public_no_auth(self, public_env):
+        resp = await public_env.get("/api/browser/health")
         assert resp.status_code == 200, resp.text
         body = resp.json()
-        assert body["success"] is True
-        assert body["response"] == "AI analysis text"
-        assert body["action"] == "summarize"
-        assert body["metadata"]["model_used"] == "test-model"
-        assert body["metadata"]["context_length"] == len("hello page")
-        assert llm_calls[0]["context"].task_type == "browser_ai_action"
+        assert body["service"] == "browser-integration"
+        assert body["status"] in ("healthy", "degraded")
+        assert len(body["capabilities"]) == 4
 
-    async def test_all_actions_map_to_prompts(self, browser_env):
-        http, llm_calls = browser_env
-        for action in ("explain", "extract_links", "find_issues"):
-            resp = await http.post(
-                "/api/browser/ai-action",
-                json={"action": action, "url": PUBLIC_URL, "context": "ctx"},
-            )
-            assert resp.status_code == 200
-        interact = await http.post(
-            "/api/browser/ai-action",
-            json={
-                "action": "interact",
-                "url": PUBLIC_URL,
-                "payload": {"question": "what is this?"},
-            },
-        )
-        assert interact.status_code == 200
-        unknown = await http.post(
-            "/api/browser/ai-action",
-            json={"action": "mystery", "url": PUBLIC_URL},
-        )
-        assert unknown.status_code == 200  # falls back to summarize prompt
-        assert len(llm_calls) == 5
-
-    async def test_ssrf_blocked_403(self, browser_env):
-        http, _ = browser_env
-        resp = await http.post(
-            "/api/browser/ai-action",
-            json={"action": "summarize", "url": BLOCKED_URL},
-        )
-        assert resp.status_code == 403
-        assert "not allowed" in resp.json()["detail"]
-
-    async def test_llm_failure_503(self, browser_env, monkeypatch):
-        http, _ = browser_env
-
-        async def boom(**kwargs):
-            raise RuntimeError("llm exploded")
-
-        monkeypatch.setattr("core.llm.llm_gateway.llm_gateway.acompletion", boom)
-        resp = await http.post(
-            "/api/browser/ai-action",
-            json={"action": "summarize", "url": PUBLIC_URL},
-        )
-        assert resp.status_code == 503
-        assert "temporarily unavailable" in resp.json()["detail"]
-
-    async def test_llm_gateway_import_failure_fallback(self, browser_env, monkeypatch):
-        http, _ = browser_env
-        with monkeypatch.context() as m:
-            m.setitem(__import__("sys").modules, "core.llm.llm_gateway", None)
-            resp = await http.post(
-                "/api/browser/ai-action",
-                json={"action": "explain", "url": PUBLIC_URL},
-            )
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["metadata"] == {"mode": "fallback"}
-        assert "Technical Analysis" in body["response"]
-
-
-@pytest.mark.unit
-class TestSecurityScan:
-    async def test_invalid_url_400(self, browser_env):
-        http, _ = browser_env
-        resp = await http.post("/api/browser/security-scan", json={"url": "not-a-url"})
-        assert resp.status_code == 400
-
-    async def test_ssrf_blocked_403(self, browser_env):
-        http, _ = browser_env
-        resp = await http.post("/api/browser/security-scan", json={"url": BLOCKED_URL})
-        assert resp.status_code == 403
-
-    async def test_scan_with_external_checks(self, browser_env, monkeypatch):
-        http, _ = browser_env
-
-        async def fake_ssl(url):
-            return 70, [
-                br.SecurityIssue(
-                    severity="high",
-                    category="SSL/TLS",
-                    message="not https",
-                    remediation="enable TLS",
-                )
-            ]
-
-        async def fake_headers(url):
-            return 100, [
-                br.SecurityIssue(severity="low", category="Security Headers", message="missing x")
-            ]
-
-        monkeypatch.setattr(br, "check_ssl_security", fake_ssl)
-        monkeypatch.setattr(br, "check_security_headers", fake_headers)
-
-        resp = await http.post(
-            "/api/browser/security-scan",
-            json={"url": "http://example.com/x", "deep_scan": True},
-        )
-        assert resp.status_code == 200, resp.text
-        body = resp.json()
-        assert body["success"] is True
-        # high (-15) + low (-3) = 82
-        assert body["score"] == 82
-        assert body["checks_performed"] == [
-            "ssl_validation",
-            "security_headers",
-            "ssrf_check",
-            "vulnerability_patterns",
-        ]
-        assert body["scan_url"].startswith("http://example.com")
-
-    async def test_deep_scan_url_vulnerability_patterns(self, browser_env, monkeypatch):
-        http, _ = browser_env
-
-        async def clean_ssl(url):
-            return 100, []
-
-        async def clean_headers(url):
-            return 100, []
-
-        monkeypatch.setattr(br, "check_ssl_security", clean_ssl)
-        monkeypatch.setattr(br, "check_security_headers", clean_headers)
-        resp = await http.post(
-            "/api/browser/security-scan",
-            json={"url": "https://example.com/?q=<script>alert(1)</script>", "deep_scan": True},
-        )
-        assert resp.status_code == 200
-        body = resp.json()
-        patterns = [i for i in body["issues"] if i["category"] == "Vulnerability Pattern"]
-        assert patterns and "XSS" in patterns[0]["message"]
-        assert body["score"] == 85  # one high pattern
-
-    async def test_scan_unexpected_error_503(self, browser_env, monkeypatch):
-        http, _ = browser_env
-
-        async def broken_ssl(url):
-            raise RuntimeError("ssl checker crashed")
-
-        monkeypatch.setattr(br, "check_ssl_security", broken_ssl)
-        resp = await http.post("/api/browser/security-scan", json={"url": PUBLIC_URL})
-        assert resp.status_code == 503
-
-
-@pytest.mark.unit
-class TestScreenshot:
-    async def test_screenshot_success(self, browser_env, monkeypatch):
-        http, _ = browser_env
-
-        class FakePage:
-            async def goto(self, url, **kwargs):
-                self.goto_url = url
-
-            async def evaluate(self, script):
-                pass
-
-            async def wait_for_timeout(self, ms):
-                pass
-
-            async def screenshot(self, **kwargs):
-                return b"FAKEPNG"
-
-            async def close(self):
-                pass
-
-        captured: dict[str, Any] = {}
-
-        class FakeBrowser:
-            async def new_page(self, viewport=None):
-                captured["viewport"] = viewport
-                return FakePage()
-
-        async def fake_browser():
-            return FakeBrowser()
-
-        monkeypatch.setattr("core.playwright_manager.get_global_browser", fake_browser)
-
-        resp = await http.post(
-            "/api/browser/screenshot",
-            json={"url": PUBLIC_URL, "width": 800, "height": 600, "full_page": True},
-        )
-        assert resp.status_code == 200
-        assert resp.headers["content-type"] == "image/png"
-        assert "screenshot_" in resp.headers["content-disposition"]
-        assert resp.headers["x-screenshot-url"] == PUBLIC_URL
-        assert captured["viewport"] == {"width": 800, "height": 600}
-
-    async def test_screenshot_ssrf_blocked(self, browser_env):
-        http, _ = browser_env
-        resp = await http.post("/api/browser/screenshot", json={"url": "http://localhost:8080"})
-        # CURRENT BEHAVIOUR NOTE: the SSRF gate raises HTTPException(403) but
-        # the screenshot handler's blanket ``except Exception`` converts it
-        # into a 500 — the 403 is masked (documented as a source finding).
-        assert resp.status_code == 500
-        assert "not allowed" in resp.json()["detail"]
-
-    async def test_screenshot_playwright_failure_500(self, browser_env, monkeypatch):
-        http, _ = browser_env
-
-        class FailingPage:
-            async def goto(self, url, **kwargs):
-                raise RuntimeError("page crashed")
-
-            async def close(self):
-                pass
-
-        class FakeBrowser:
-            async def new_page(self, viewport=None):
-                return FailingPage()
-
-        async def fake_browser():
-            return FakeBrowser()
-
-        monkeypatch.setattr("core.playwright_manager.get_global_browser", fake_browser)
-        resp = await http.post("/api/browser/screenshot", json={"url": PUBLIC_URL})
-        assert resp.status_code == 500
-
-    async def test_screenshot_playwright_missing_503(self, browser_env, monkeypatch):
-        http, _ = browser_env
-        with monkeypatch.context() as m:
-            m.setitem(__import__("sys").modules, "core.playwright_manager", None)
-            resp = await http.post("/api/browser/screenshot", json={"url": PUBLIC_URL})
-        assert resp.status_code == 503
-        assert "Playwright" in resp.json()["detail"]
-
-
-@pytest.mark.unit
-class TestBrowseSessions:
-    async def test_save_browse_session(self, browser_env, monkeypatch):
-        http, _ = browser_env
-        stored: dict[str, Any] = {}
-
-        def fake_store(**kwargs):
-            stored.update(kwargs)
-
-        monkeypatch.setattr("core.unified_memory.unified_memory.store_long_term_memory", fake_store)
-        resp = await http.post(
-            "/api/browser/browse-session",
-            json={"url": PUBLIC_URL, "userId": "u1", "timestamp": 123, "tabId": "t1"},
-        )
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["success"] is True
-        assert body["session_id"].startswith("browse_123_")
-        assert stored["user_id"] == "u1"
-        assert stored["metadata"]["url"] == PUBLIC_URL
-
-    async def test_save_browse_session_failure_non_critical(self, browser_env, monkeypatch):
-        http, _ = browser_env
-
-        def broken(**kwargs):
-            raise RuntimeError("memory down")
-
-        monkeypatch.setattr("core.unified_memory.unified_memory.store_long_term_memory", broken)
-        resp = await http.post("/api/browser/browse-session", json={"url": PUBLIC_URL})
-        assert resp.status_code == 200  # never fails the request
-        body = resp.json()
-        assert body["success"] is False
-        assert body["session_id"] == "error"
-        assert "memory down" in body["message"]
-
-    async def test_get_browse_sessions_filters(self, browser_env, monkeypatch):
-        http, _ = browser_env
-        now = int(time.time())
-        rows = [
-            {
-                "task_type": "browse_session",
-                "user_id": "u1",
-                "session_id": "legacy-s1",
-                "created_at": "2026-01-01T00:00:00Z",
-                "metadata": {
-                    "session_id": "s1",
-                    "url": "https://a.example",
-                    "userId": "u1",
-                    "timestamp": now - 10,
-                },
-            },
-            {  # too old → filtered by hours window
-                "task_type": "browse_session",
-                "user_id": "u1",
-                "created_at": "old",
-                "metadata": {
-                    "session_id": "s2",
-                    "url": "https://old.example",
-                    "userId": "u1",
-                    "timestamp": now - 40 * 3600,
-                },
-            },
-            {  # wrong task type → skipped
-                "task_type": "chat",
-                "metadata": {"session_id": "s3", "timestamp": now},
-            },
-            {  # zero timestamp → kept (ts filter skipped)
-                "task_type": "browse_session",
-                "created_at": "c3",
-                "metadata": {"session_id": "s4", "url": "https://c.example"},
-            },
-        ]
-        monkeypatch.setattr(
-            "core.unified_memory.unified_memory.long_term_memory.retrieve_memories",
-            lambda user_id: rows,
-        )
-        resp = await http.get(
-            "/api/browser/browse-sessions", params={"userId": "u1", "hours": 24, "limit": 10}
-        )
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["success"] is True
-        assert body["count"] == 2
-        assert [s["session_id"] for s in body["sessions"]] == ["s1", "s4"]
-        assert body["query_params"]["limit"] == 10
-
-    async def test_get_browse_sessions_limit_cap(self, browser_env, monkeypatch):
-        http, _ = browser_env
-        now = int(time.time())
-        rows = [
-            {
-                "task_type": "browse_session",
-                "created_at": "c",
-                "metadata": {"session_id": f"s{i}", "timestamp": now},
-            }
-            for i in range(5)
-        ]
-        monkeypatch.setattr(
-            "core.unified_memory.unified_memory.long_term_memory.retrieve_memories",
-            lambda user_id: rows,
-        )
-        resp = await http.get("/api/browser/browse-sessions", params={"limit": 2})
-        body = resp.json()
-        assert body["count"] == 2
-
-    async def test_get_browse_sessions_failure(self, browser_env, monkeypatch):
-        http, _ = browser_env
-
-        def broken(user_id):
-            raise RuntimeError("retrieval exploded")
-
-        monkeypatch.setattr(
-            "core.unified_memory.unified_memory.long_term_memory.retrieve_memories",
-            broken,
-        )
-        resp = await http.get("/api/browser/browse-sessions")
-        assert resp.status_code == 200
-        body = resp.json()
-        assert body["success"] is False
-        assert "retrieval exploded" in body["error"]
-
-
-@pytest.mark.unit
-class TestGalleryAndHealth:
-    async def test_screenshot_gallery_entry(self, browser_env):
-        http, _ = browser_env
-        resp = await http.post(
-            "/api/browser/screenshots",
-            params={"userId": "u1", "url": PUBLIC_URL, "timestamp": 42},
-        )
-        assert resp.status_code == 200
-        entry = resp.json()["galleryEntry"]
-        assert entry["userId"] == "u1"
-        assert entry["url"] == PUBLIC_URL
-        assert entry["capturedAt"] == 42
-        assert "screenshots/u1/" in entry["storageLocation"]
-
-    async def test_health_all_available(self, browser_env, monkeypatch):
-        http, _ = browser_env
+    async def test_health_all_available(self, public_env, monkeypatch):
+        import api.routes.browser._health as h
 
         async def ok():
             return True
@@ -468,15 +91,15 @@ class TestGalleryAndHealth:
             "check_playwright",
             "check_unified_memory",
         ):
-            monkeypatch.setattr(br, fn, ok)
-        resp = await http.get("/api/browser/health")
+            monkeypatch.setattr(h, fn, ok)
+        resp = await public_env.get("/api/browser/health")
         assert resp.status_code == 200
         body = resp.json()
         assert body["status"] == "healthy"
         assert len(body["capabilities"]) == 4
 
-    async def test_health_degraded_and_error(self, browser_env, monkeypatch):
-        http, _ = browser_env
+    async def test_health_degraded_and_error(self, public_env, monkeypatch):
+        import api.routes.browser._health as h
 
         async def ok():
             return True
@@ -487,11 +110,11 @@ class TestGalleryAndHealth:
         async def explodes():
             raise RuntimeError("check crashed")
 
-        monkeypatch.setattr(br, "check_llm_gateway", ok)
-        monkeypatch.setattr(br, "check_security_modules", unavailable)
-        monkeypatch.setattr(br, "check_playwright", explodes)
-        monkeypatch.setattr(br, "check_unified_memory", ok)
-        resp = await http.get("/api/browser/health")
+        monkeypatch.setattr(h, "check_llm_gateway", ok)
+        monkeypatch.setattr(h, "check_security_modules", unavailable)
+        monkeypatch.setattr(h, "check_playwright", explodes)
+        monkeypatch.setattr(h, "check_unified_memory", ok)
+        resp = await public_env.get("/api/browser/health")
         body = resp.json()
         assert body["status"] == "degraded"
         caps = {c["name"]: c for c in body["capabilities"]}
@@ -500,61 +123,82 @@ class TestGalleryAndHealth:
         assert "check crashed" in caps["screenshot"]["error"]
         assert caps["ai-action"]["available"] is True
 
-    async def test_real_capability_checks(self, browser_env):
+    async def test_real_capability_checks(self, public_env):
         """check_* helpers with real imports (all deps exist in this env)."""
-        assert await br.check_llm_gateway() is True
-        assert await br.check_security_modules() is True
-        assert await br.check_playwright() is True
-        assert await br.check_unified_memory() is True
+        from api.routes.browser._health import (
+            check_llm_gateway,
+            check_playwright,
+            check_security_modules,
+            check_unified_memory,
+        )
+
+        assert await check_llm_gateway() is True
+        assert await check_security_modules() is True
+        assert await check_playwright() is True
+        assert await check_unified_memory() is True
 
 
 @pytest.mark.unit
-class TestSSRFGateDirect:
-    async def test_assert_helper_blocks(self, browser_env):
-        from fastapi import HTTPException
+class TestScreenshotGallery:
+    """POST /screenshots — ported from the legacy module (live FE caller:
+    admin-browser/useBrowserActions.ts fires it after each capture)."""
 
-        with pytest.raises(HTTPException) as exc:
-            br._assert_safe_public_url(BLOCKED_URL)
-        assert exc.value.status_code == 403
-        # safe URL passes silently (sync helper, returns None)
-        assert br._assert_safe_public_url(PUBLIC_URL) is None
+    async def test_screenshot_gallery_entry(self, pkg_env):
+        resp = await pkg_env.post(
+            "/api/browser/screenshots",
+            params={"userId": "u1", "url": PUBLIC_URL, "timestamp": 42},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["success"] is True
+        entry = body["galleryEntry"]
+        assert entry["userId"] == "u1"
+        assert entry["url"] == PUBLIC_URL
+        assert entry["capturedAt"] == 42
+        assert "screenshots/u1/" in entry["storageLocation"]
 
-    async def test_real_ssrf_blocks_localhost_without_dns(self):
-        """The real SSRFProtection blocks loopback without any network."""
-        from fastapi import HTTPException
+    async def test_gallery_defaults_when_no_params(self, pkg_env):
+        resp = await pkg_env.post("/api/browser/screenshots")
+        assert resp.status_code == 200
+        entry = resp.json()["galleryEntry"]
+        assert entry["userId"] is None
+        assert "anonymous" in entry["storageLocation"]
 
-        with pytest.raises(HTTPException) as exc:
-            await br._assert_safe_public_url("http://127.0.0.1:9/x")
-        assert exc.value.status_code == 403
 
-    async def test_admin_guard_403_for_non_admin(self):
-        """Router-level get_current_admin rejects a non-admin payload.
+@pytest.mark.unit
+class TestConsolidationContract:
+    """#2258 route-parity guards: the double mount is gone, the live
+    crown-jewel surface resolves on the package, the dead legacy-only
+    endpoint is retired."""
 
-        CONTRACT UPDATE (CI red 36219425476, issue #1490): /api/browser/health
-        is intentionally PUBLIC now — #1510 moved it onto the dependency-free
-        `public_router` (liveness probe consumed by ServiceHealthMonitor and
-        the audit contract without credentials). A non-admin hitting it must
-        get 200, NOT 403. The admin gate is asserted on the guarded surface
-        (/api/browser/screenshots) instead.
-        """
-        from api.dependencies import get_current_user_token
+    async def test_crown_jewel_paths_resolve_on_package(self, pkg_env):
+        """The four formerly-shadowed paths still exist (now solely on the
+        package router). Method-mismatch (405) proves the route is
+        registered; we avoid invoking real browser/LLM work."""
+        for path in (
+            "/api/browser/ai-action",
+            "/api/browser/security-scan",
+            "/api/browser/screenshot",
+            "/api/browser/browse-session",
+        ):
+            resp = await pkg_env.get(path)
+            assert resp.status_code == 405, f"{path} should be POST-only: {resp.status_code}"
 
-        app = FastAPI()
-        app.include_router(br.router)
-        app.include_router(br.public_router)
+    async def test_browse_sessions_retired(self, pkg_env):
+        """GET /browse-sessions had 0 callers and 0 writers (its only writer
+        was the shadowed legacy POST) — retired with the legacy module."""
+        resp = await pkg_env.get("/api/browser/browse-sessions")
+        assert resp.status_code == 404
 
-        def non_admin():
-            return {"sub": "u@x.com", "role": "user"}
+    async def test_legacy_module_gone(self):
+        """The retired module must not be importable (boot-time guarantee)."""
+        import importlib.util
 
-        app.dependency_overrides[get_current_user_token] = non_admin
-        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as http:
-            health = await http.get("/api/browser/health")
-            # FIX (round 3): /api/browser/screenshots is a POST-only route — a GET
-            # answers 405 (method mismatch) before auth runs. Assert the admin
-            # gate on an actual GET endpoint of the guarded router.
-            guarded = await http.get("/api/browser/browse-sessions")
-        app.dependency_overrides.clear()
-        # Liveness probe: public by contract (issue #1490) — 200 for non-admin.
-        assert health.status_code == 200
-        # The rest of the browser surface stays admin-gated.
-        assert guarded.status_code == 403
+        assert importlib.util.find_spec("api.routes.browser_routes") is None
+
+    async def test_registry_has_no_legacy_entry(self):
+        from api.routers import ALL_ROUTERS
+
+        paths = [r["path"] for r in ALL_ROUTERS]
+        assert "api.routes.browser_routes" not in paths
+        assert "api.routes.browser" in paths
