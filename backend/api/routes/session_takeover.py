@@ -405,7 +405,29 @@ async def takeover_session_websocket(websocket: WebSocket, session_id: str):
         return
 
     agent = PlaywrightBrowserAgent()
-    page = await agent.get_or_create_session(session_name=session_id)
+    # #2253 (Phase-0): PlaywrightBrowserAgent has NO `get_or_create_session`
+    # method (it never did — this call was dead-on-arrival, raising AttributeError
+    # before the screencast feature could ever start). Available async methods
+    # are navigate/click_target/type_text/upload_file; none return a bound page
+    # by session name. Migrating would require adding a real session-manager
+    # method on the agent — out of scope for Phase-0 (truth + live bug fix).
+    # Narrowest sound change: fail-closed with a clean WS protocol error so
+    # clients get an explicit reason instead of an unhandled crash.
+    # TODO(#2253-followup): wire a real get_or_create_session on
+    # PlaywrightBrowserAgent (or migrate screencast to BrowserSessionManager)
+    # to make this HITL feature actually work.
+    get_session = getattr(agent, "get_or_create_session", None)
+    if not callable(get_session):
+        await websocket.close(
+            code=5003,
+            reason=(
+                "Screencast session takeover unavailable: agent lacks "
+                "get_or_create_session (HITL screencast not yet wired — "
+                "see #2253 followup)"
+            ),
+        )
+        return
+    page = await get_session(session_name=session_id)
 
     if not page:
         await websocket.close(code=5003, reason="Cannot create browser session")
