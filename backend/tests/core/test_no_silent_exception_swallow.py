@@ -19,11 +19,36 @@ backend/tests/api/routes/test_external_agents_admin.py.
 from __future__ import annotations
 
 import ast
+import os
+from collections.abc import Iterator
 from pathlib import Path
 
 BACKEND_ROOT = Path(__file__).resolve().parents[2]
 EXCLUDE_PARTS = ("_archive", "alembic_migrations")
 CONTROL_STATEMENTS = (ast.Pass, ast.Continue, ast.Return)
+
+# Directory-level prune set: virtualenvs, caches, vendored trees. CI's poetry
+# venv lives at backend/.venv INSIDE the repo — without pruning, the scan
+# parses ~50k site-packages files and trips the per-test pytest timeout
+# (merge-train batch CI failure on rollup PR #2179). Hidden dirs (.git,
+# .venv, .tox, …) are pruned wholesale via the startswith(".") check.
+PRUNE_DIRS = frozenset(
+    {"_archive", "alembic_migrations", "__pycache__", "node_modules", "htmlcov", "venv"}
+)
+
+
+def _iter_python_files(root: Path) -> Iterator[Path]:
+    """Yield .py paths under root, pruning vendored/virtualenv/cache trees.
+
+    os.walk with in-place dirnames pruning never DESCENDS into excluded
+    trees (rglob cannot prune and would enumerate every site-packages
+    file). Sorted traversal keeps output deterministic.
+    """
+    for dirpath, dirnames, filenames in os.walk(root):
+        dirnames[:] = sorted(d for d in dirnames if not d.startswith(".") and d not in PRUNE_DIRS)
+        for name in sorted(filenames):
+            if name.endswith(".py"):
+                yield Path(dirpath) / name
 
 
 def _is_exception_handler(handler: ast.ExceptHandler) -> bool:
@@ -56,7 +81,7 @@ def _is_silent_body(handler: ast.ExceptHandler) -> bool:
 def scan_silent_swallows(root: Path) -> list[tuple[str, int, str]]:
     """Return (path, lineno, action) for every silent swallow under root."""
     hits: list[tuple[str, int, str]] = []
-    for path in sorted(root.rglob("*.py")):
+    for path in _iter_python_files(root):
         rel = path.as_posix()
         if (
             "/tests/" in rel
