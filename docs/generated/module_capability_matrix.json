@@ -3116,15 +3116,6 @@
     },
     {
       "capability_signals": [
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/api/routes/stream_voice_sse.py"
-    },
-    {
-      "capability_signals": [
         "execute"
       ],
       "classification": "human_review",
@@ -3247,17 +3238,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/webhooks_github.py"
-    },
-    {
-      "capability_signals": [
-        "health",
-        "memory",
-        "register"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/api/routes/websocket_agent.py"
     },
     {
       "capability_signals": [
@@ -11749,22 +11729,6 @@
     },
     {
       "capability_signals": [
-        "memory"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/test_websocket_agent.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/test_websocket_compaction.py"
-    },
-    {
-      "capability_signals": [
         "health",
         "register"
       ],
@@ -13677,6 +13641,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_rbac.py"
+    },
+    {
+      "capability_signals": [
+        "realtime",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_realtime_topology.py"
     },
     {
       "capability_signals": [
@@ -26735,5 +26709,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3054
+  "source_file_count": 3051
 }
