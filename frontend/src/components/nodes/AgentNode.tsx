@@ -1,4 +1,5 @@
-import { Handle, NodeProps, Position, type Node } from '@xyflow/react';
+import { Handle, Position, type Node } from '@xyflow/react';
+import type { NodeProps } from '@xyflow/react';
 import { Bot, Activity } from 'lucide-react';
 import { motion } from 'framer-motion';
 
