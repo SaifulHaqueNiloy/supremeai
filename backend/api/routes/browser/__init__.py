@@ -160,8 +160,8 @@ from ._crown_jewel import (  # noqa: F401,E402  (re-exports)
     security_scan,
 )
 from ._health import (  # noqa: F401,E402  (re-exports)
-    public_router,  # dependency-free /health probe (#1490 contract, #2258 port)
     browser_service_health,
+    public_router,  # dependency-free /health probe (#1490 contract, #2258 port)
 )
 from ._learning import (  # noqa: F401,E402  (re-exports)
     SYSTEM_LEARNING,

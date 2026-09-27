@@ -21,11 +21,11 @@ from enum import StrEnum
 from typing import Any
 from urllib.parse import quote_plus
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.logging_config import logger
 from core.self_evolution.evolution_engine import EvolutionEngine
 from services.config_service import ConfigService
-from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 LEARNER_CACHE_TTL = 1800  # 30 minutes
@@ -87,8 +87,8 @@ class GoalDecomposer:
     Decomposes high-level objectives into executable sub-goals using LLM + heuristics.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm_router = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm_router = llm_router or ModelRouter()
         self.cache = get_cache()
 
     def _cache_key(self, objective: str) -> str:
@@ -126,13 +126,13 @@ class GoalDecomposer:
             llm_config = await ConfigService.get_config(
                 None, "daily_learner_max_tokens", {"max_tokens": 2000, "temperature": 0.3}
             )
-            response = await self.llm_router.route(
+            response = await self.llm_router.async_route_and_generate(
                 prompt=prompt,
                 task_type="planning",
                 max_tokens=llm_config.get("max_tokens", 2000),
                 temperature=llm_config.get("temperature", 0.3),
             )
-            text = response.get("content", "")
+            text = response.get("text", "")
         except Exception as e:
             logger.error(f"LLM goal decomposition failed: {e}")
             return self._heuristic_fallback(objective)
