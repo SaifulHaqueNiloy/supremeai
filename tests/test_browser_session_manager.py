@@ -33,7 +33,7 @@ from browser.browser_session import (
     SessionStatus,
 )
 from browser.session_manager import (
-    AUTOMATION_HOST,
+    AUTOMATION_BIND_ADDRESS,
     BrowserSessionManager,
     chrome_launch_args,
     run_action_sequence,
@@ -237,7 +237,7 @@ def test_sweeper_daemon_runs_and_stops_cleanly():
 def test_chrome_launch_args_enforce_dedicated_profile_and_localhost():
     args = chrome_launch_args()
     assert "--user-data-dir=C:/SupremeAI_Automation_Profile" in args
-    assert f"--remote-debugging-address={AUTOMATION_HOST}" in args
+    assert f"--remote-debugging-address={AUTOMATION_BIND_ADDRESS}" in args
 
 
 def test_profile_dir_env_override(monkeypatch):
