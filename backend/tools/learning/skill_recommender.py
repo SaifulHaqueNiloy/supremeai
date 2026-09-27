@@ -22,12 +22,12 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any, cast
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
 from database.supabase_client import db
-from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 RECOMMENDATION_CACHE_TTL = 900  # 15 minutes
@@ -166,8 +166,8 @@ class HeuristicScorer:
     Uses project context, skill metadata, and popularity signals.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm_router = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm_router = llm_router or ModelRouter()
         self.cache = get_cache()
 
     async def score(
@@ -254,13 +254,13 @@ class HeuristicScorer:
         )
 
         try:
-            result = await self.llm_router.route(
+            result = await self.llm_router.async_route_and_generate(
                 prompt=prompt,
                 task_type="embedding",
                 max_tokens=config_cache.get("skill_recommender_max_tokens", 50),
                 temperature=config_cache.get("skill_recommender_temperature", 0.0),
             )
-            score = float(result.get("content", "0.0"))
+            score = float(result.get("text", "0.0"))
             await self.cache.set(cache_key, score, ttl=RECOMMENDATION_CACHE_TTL)
             return score
         except Exception:
