@@ -14912,6 +14912,13 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/scripts/test_validate_pr_metadata.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/security/test_admin_fail_closed.py"
     },
     {
@@ -23734,6 +23741,15 @@
       "path": "scripts/agents/priority_queue_ledger.py"
     },
     {
+      "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/agents/validate_pr_metadata.py"
+    },
+    {
       "capability_signals": [
         "browser",
         "dispatch"
@@ -26805,5 +26821,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3062
+  "source_file_count": 3064
 }
