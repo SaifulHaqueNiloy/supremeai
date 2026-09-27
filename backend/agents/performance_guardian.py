@@ -20,10 +20,10 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.logging_config import logger
-from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 METRIC_CACHE_TTL = 300  # 5 minutes
@@ -138,11 +138,11 @@ class PerformanceGuardian:
         self,
         collector: MetricCollector | None = None,
         detector: AnomalyDetector | None = None,
-        llm_router: LLMRouter | None = None,
+        llm_router: ModelRouter | None = None,
     ) -> None:
         self.collector = collector or MetricCollector()
         self.detector = detector or AnomalyDetector()
-        self.llm = llm_router or LLMRouter()
+        self.llm = llm_router or ModelRouter()
         self.cache = get_cache()
         self.alerts: list[PerformanceAlert] = []
         logger.info("PerformanceGuardian initialized")
@@ -244,7 +244,7 @@ class PerformanceGuardian:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=config_cache.get("performance_guardian_max_tokens", 500),
@@ -253,7 +253,7 @@ class PerformanceGuardian:
             analysis = {
                 "operation": operation_name,
                 "duration_ms": duration_ms,
-                "analysis": result.get("content", ""),
+                "analysis": result.get("text", ""),
                 "system_context": metrics,
             }
 

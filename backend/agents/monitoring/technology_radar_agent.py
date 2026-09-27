@@ -13,9 +13,9 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
-from services.llm.llm_router import LLMRouter
 
 RADAR_CACHE_TTL = 43200  # 12 hours
 
@@ -80,8 +80,8 @@ class TechnologyRadarAgent:
     Tracks emerging technologies and assesses their applicability.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm = llm_router or ModelRouter()
         self.cache = get_cache()
         self._technologies: list[Technology] = []
 
@@ -130,14 +130,14 @@ class TechnologyRadarAgent:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=config_cache.get("technology_radar_agent_max_tokens", 300),
             )
             return {
                 "technology": tech_name,
-                "relevance_assessment": result.get("content", ""),
+                "relevance_assessment": result.get("text", ""),
                 "maturity": tech.maturity.value,
                 "impact": tech.impact_score,
             }

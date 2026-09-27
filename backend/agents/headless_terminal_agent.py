@@ -20,11 +20,11 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
-from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 COMMAND_TIMEOUT = 30  # seconds
@@ -55,8 +55,8 @@ class CommandInterpreter:
     Interprets natural language into shell commands.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm = llm_router or ModelRouter()
         self.cache = get_cache()
 
     async def interpret(self, natural_query: str, context: dict[str, Any] | None = None) -> str:
@@ -83,13 +83,13 @@ class CommandInterpreter:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="generation",
                 max_tokens=config_cache.get("headless_terminal_agent_max_tokens", 200),
                 temperature=config_cache.get("headless_terminal_agent_temperature", 0.1),
             )
-            command = result.get("content", "").strip()
+            command = result.get("text", "").strip()
 
             # Clean command
             command = re.sub(r"^```\w*\s*", "", command)
@@ -337,12 +337,12 @@ class HeadlessTerminalAgent:
         )
 
         try:
-            result = await self.interpreter.llm.route(
+            result = await self.interpreter.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=config_cache.get("headless_terminal_agent_max_tokens", 200),
             )
-            return result.get("content", "").strip()
+            return result.get("text", "").strip()
         except Exception as exc:
             logger.error(f"[HeadlessTerminalAgent] suggest() failed: {exc}")
             return ""
@@ -353,12 +353,12 @@ class HeadlessTerminalAgent:
         prompt = f"Explain the following command output in 1-2 sentences:\n\n{output[:2000]}"
 
         try:
-            result = await self.interpreter.llm.route(
+            result = await self.interpreter.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="summarization",
                 max_tokens=config_cache.get("headless_terminal_agent_max_tokens", 200),
             )
-            return result.get("content", "").strip()
+            return result.get("text", "").strip()
         except Exception as exc:
             logger.error(f"[HeadlessTerminalAgent] explain_output() failed: {exc}")
             return "Unable to explain output."
