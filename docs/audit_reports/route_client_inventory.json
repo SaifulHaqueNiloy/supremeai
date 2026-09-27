@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 607,
+    "backend_routes": 610,
     "frontend_unique_refs": 145,
     "matched": 277,
-    "orphan_routes": 330
+    "orphan_routes": 333
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -35,6 +35,7 @@
     "/api/v1/analytics": 3,
     "/api/conversations/:param": 3,
     "/api/v1/circles": 3,
+    "/api/v1/external-agents": 3,
     "/api/v1/localization": 3,
     "/api/memory/recall": 3,
     "/api/v1/webhooks": 3,
@@ -133,7 +134,7 @@
     "/api/webhooks/github": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 253,
+    "unclassified-orphan": 256,
     "internal": 45,
     "admin-only": 32
   },
@@ -976,6 +977,27 @@
       "method": "POST",
       "declared": "/evolution/evaluate-performance",
       "resolved": "/api/v1/evolution/evaluate-performance",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/external_agents_admin.py",
+      "method": "POST",
+      "declared": "/api/v1/external-agents/jobs",
+      "resolved": "/api/v1/external-agents/jobs",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/external_agents_admin.py",
+      "method": "GET",
+      "declared": "/api/v1/external-agents/jobs/{job_id}",
+      "resolved": "/api/v1/external-agents/jobs/:param",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/external_agents_admin.py",
+      "method": "DELETE",
+      "declared": "/api/v1/external-agents/jobs/{job_id}",
+      "resolved": "/api/v1/external-agents/jobs/:param",
       "classification": "unclassified-orphan"
     },
     {

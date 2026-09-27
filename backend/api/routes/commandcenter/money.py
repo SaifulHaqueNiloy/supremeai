@@ -1,6 +1,25 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_admin
+
+# #1656: typed payload replacing bare dict — budget must be non-negative
+# to prevent invalid state (negative/infinite/wrong-type values).
+
+
+class BudgetUpdatePayload(BaseModel):
+    """Payload for POST /money/budget."""
+
+    model_config = {"extra": "forbid"}
+
+    tenant_id: str | None = Field(
+        default=None, min_length=1, max_length=100, description="Tenant ID; None = default cap"
+    )
+    cap: float = Field(..., ge=0, description="Budget cap (must be non-negative)")
+    period: str = Field(
+        default="monthly", pattern="^(daily|weekly|monthly)$", description="Budget period"
+    )
+
 
 router = APIRouter(
     prefix="",
@@ -30,7 +49,7 @@ def get_budget():
 
 
 @router.post("/money/budget")
-def update_budget(payload: dict):
+def update_budget(payload: BudgetUpdatePayload):
     return {"message": "updated"}
 
 

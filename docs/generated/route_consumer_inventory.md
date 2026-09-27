@@ -4,7 +4,7 @@
 
 | metric | value |
 |---|---|
-| backend routes | 861 |
+| backend routes | 864 |
 | routes with frontend consumer | 300 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
@@ -18,7 +18,7 @@
 | classification | count | meaning |
 |---|---|---|
 | `user-facing` | 170 | frontend consumer matched |
-| `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `admin-only` | 350 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 40 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 300 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
@@ -772,6 +772,9 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/evolution/swarm-graph` | `backend/api/routes/evolution.py` | admin-only | NONE |
 | POST | `/api/v1/evolution/swarm/forge` | `backend/api/routes/evolution.py` | admin-only | `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx` |
 | POST | `/api/v1/evolution/swarm/forge/:param/execute` | `backend/api/routes/evolution.py` | admin-only | `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx` |
+| POST | `/api/v1/external-agents/jobs` | `backend/api/routes/external_agents_admin.py` | admin-only | NONE |
+| DELETE | `/api/v1/external-agents/jobs/:param` | `backend/api/routes/external_agents_admin.py` | admin-only | NONE |
+| GET | `/api/v1/external-agents/jobs/:param` | `backend/api/routes/external_agents_admin.py` | admin-only | NONE |
 | POST | `/api/v1/gateway/automation` | `backend/tools/api_gateway.py` | admin-only | NONE |
 | POST | `/api/v1/gateway/dispatch/:param` | `backend/tools/api_gateway.py` | admin-only | NONE |
 | POST | `/api/v1/gateway/forward` | `backend/tools/api_gateway.py` | admin-only | NONE |
