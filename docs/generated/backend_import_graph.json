@@ -14104,7 +14104,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2020,
+  "module_count": 2022,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14941,6 +14941,7 @@
     "core.startup.agents",
     "core.startup.api_key_tables",
     "core.startup.services",
+    "core.startup.usage_metrics_aggregator",
     "core.startup_validator",
     "core.state_store",
     "core.storage.interfaces",
@@ -15708,6 +15709,7 @@
     "tests.core.test_universal_rules",
     "tests.core.test_universal_rules_extended",
     "tests.core.test_upload_validator",
+    "tests.core.test_usage_metrics_aggregator",
     "tests.core.test_vector_store_tenant_isolation",
     "tests.core.test_voice_stream",
     "tests.core.test_zero_cost_phase1_queue",
