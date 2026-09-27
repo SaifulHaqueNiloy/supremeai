@@ -27,7 +27,18 @@ class BrowserSession:
     last_used_at: float
     label: str = "Browser session"
     saved_url: str | None = None
-    allowed_actions: tuple[str, ...] = ("navigate", "screenshot", "content", "extract")
+    # #2252 (MODULE_04 P-A): click/fill/type handlers exist in _automation.py
+    # but were missing from the allowlist → every interactive action
+    # returned 403. Frontend + API routes advertise these actions.
+    allowed_actions: tuple[str, ...] = (
+        "navigate",
+        "screenshot",
+        "content",
+        "extract",
+        "click",
+        "fill",
+        "type",
+    )
 
 
 class BrowserSessionManager:
@@ -91,6 +102,23 @@ class BrowserSessionManager:
         if time.time() - session.last_used_at > self.idle_timeout_seconds:
             await self.close(session_id, owner_id)
             raise KeyError("Browser session expired")
+        session.last_used_at = time.time()
+        return session
+
+    async def get_for_admin(self, session_id: str) -> BrowserSession:
+        """Privileged lookup for HITL takeover (admin side-channel).
+
+        Deliberately bypasses the owner check: the caller must have already
+        authenticated via the takeover-token flow (verify_takeover_token in
+        api/routes/session_takeover.py), and the taking-over admin is by
+        definition NOT the session's original owner. Refreshes last_used_at
+        so a live takeover cannot be reaped by the idle-expiry sweeper
+        mid-stream. (#2253 — replaces the dead get_or_create_session call)
+        """
+        async with self._lock:
+            session = self._sessions.get(session_id)
+        if session is None:
+            raise KeyError("Browser session not found")
         session.last_used_at = time.time()
         return session
 
