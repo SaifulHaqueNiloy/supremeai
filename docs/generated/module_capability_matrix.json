@@ -24806,7 +24806,8 @@
     },
     {
       "capability_signals": [
-        "browser"
+        "browser",
+        "dispatch"
       ],
       "classification": "human_review",
       "entrypoints": [
