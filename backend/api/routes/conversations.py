@@ -160,9 +160,7 @@ async def list_conversations(
 
 
 @router.get("/{session_id}/messages", response_model=list[dict])
-async def list_session_messages(
-    session_id: str, user: dict = Depends(verify_token_dependency)
-):
+async def list_session_messages(session_id: str, user: dict = Depends(verify_token_dependency)):
     """Fetch one session's messages (structured user/assistant turns) — ai_memory."""
     user_id = user.get("sub")
     if not user_id:
@@ -172,12 +170,12 @@ async def list_session_messages(
     if vector_store is None:
         return []
 
-    exchanges = await vector_store.get_session_messages(
-        user_id=str(user_id), session_id=session_id
-    )
+    exchanges = await vector_store.get_session_messages(user_id=str(user_id), session_id=session_id)
     messages: list[dict] = []
     for exchange in exchanges:
-        messages.extend(parse_exchange_messages(exchange.get("content") or "", exchange.get("created_at")))
+        messages.extend(
+            parse_exchange_messages(exchange.get("content") or "", exchange.get("created_at"))
+        )
     return messages
 
 

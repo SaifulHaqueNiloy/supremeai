@@ -320,8 +320,15 @@ async def start_background_services(app):
         if os.getenv("ENABLE_QUOTA_ENFORCER", "false").lower() == "true":
 
             async def _quota_enforcer_loop() -> None:
-                script_path = Path(__file__).resolve().parents[2] / "scripts" / "billing" / "quota_enforcer.py"
-                interval_seconds = max(1, int(os.getenv("QUOTA_ENFORCE_INTERVAL_HOURS", "24"))) * 3600
+                script_path = (
+                    Path(__file__).resolve().parents[2]
+                    / "scripts"
+                    / "billing"
+                    / "quota_enforcer.py"
+                )
+                interval_seconds = (
+                    max(1, int(os.getenv("QUOTA_ENFORCE_INTERVAL_HOURS", "24"))) * 3600
+                )
                 grace_hours = os.getenv("QUOTA_ENFORCE_GRACE_HOURS", "0")
                 dry_run = os.getenv("QUOTA_ENFORCE_DRY_RUN", "false").lower() == "true"
                 notify = os.getenv("QUOTA_ENFORCE_NOTIFY", "true").lower() == "true"
@@ -345,7 +352,9 @@ async def start_background_services(app):
                             logger.info("✅ Quota enforcement pass completed (scheduled).")
                         elif proc.returncode == 1:
                             # CLI convention: exit 1 = tenants over quota (alert already sent)
-                            logger.warning("⚠️ Quota enforcement pass: tenants over quota (alerts sent).")
+                            logger.warning(
+                                "⚠️ Quota enforcement pass: tenants over quota (alerts sent)."
+                            )
                         else:
                             logger.error(
                                 "❌ Quota enforcement pass failed "
@@ -362,9 +371,13 @@ async def start_background_services(app):
                 max_restarts=5,
                 restart_delay=60.0,
             )
-            logger.info("✅ QuotaEnforcer background task started (scheduled --enforce-all passes).")
+            logger.info(
+                "✅ QuotaEnforcer background task started (scheduled --enforce-all passes)."
+            )
         else:
-            logger.info("ℹ️ QuotaEnforcer disabled via environment variable (ENABLE_QUOTA_ENFORCER).")
+            logger.info(
+                "ℹ️ QuotaEnforcer disabled via environment variable (ENABLE_QUOTA_ENFORCER)."
+            )
     except Exception as exc:
         logger.warning(f"⚠️ QuotaEnforcer failed to start: {exc}")
 

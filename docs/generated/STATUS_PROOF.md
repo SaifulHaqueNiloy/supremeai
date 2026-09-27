@@ -1,6 +1,6 @@
 # STATUS_PROOF.md (generated — do not hand-edit)
 
-**Verdict: PASS** — প্রতিটি machine-checkable দাবি tree-বাস্তবের সাথে মিলেছে।
+**Verdict: FAIL** — 2টি দাবি tree-বাস্তবের সাথে মেলেনি — STATUS.md হয় সংশোধন করুন, নয়তো tree ঠিক করুন।
 
 generated_by: `scripts/ci/generate_status_proof.py` (stdlib-only, deterministic)
 honesty_contract: tree-pure — কোনো timestamp/sha/runtime ডেটা নেই (diff-gate বৈধ রাখতে);
@@ -11,7 +11,7 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 - ✅ `frontend_e2e_specs=4` → tree reality: **4**
 - ✅ `frontend_test_files=112` → tree reality: **112**
 - ✅ `missions_tests=62` → tree reality: **62**
-- ✅ `registered_routes=762` → tree reality: **762**
+- ❌ `registered_routes=762` → tree reality: **761**  ← দাবি ও বাস্তব মিলছে না
 
 ## STATUS.md referenced repo paths
 
@@ -22,7 +22,7 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 
 - ✅ `.github/workflows/ci-deploy-production.yml` — reusable deploy (workflow_call); fail-closed gate markers present
 - ✅ `.github/workflows/09-post-deploy-smoke.yml` — post-deploy Playwright canary (workflow_run); fail-closed gate markers present
-- ✅ `.github/workflows/qa-live-smoke.yml` — scheduled live probe (schedule + workflow_dispatch); fail-closed gate markers present
+- ❌ `.github/workflows/qa-live-smoke.yml` — MISSING (declared in generator, not in tree)
 
 ## Cross-document consistency (skip-registry ↔ tree ↔ checkpoint)
 

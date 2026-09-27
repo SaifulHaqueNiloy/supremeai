@@ -55,9 +55,7 @@ def upgrade() -> None:
     op.execute(
         "CREATE INDEX IF NOT EXISTS idx_merge_learning_merged_at ON merge_learning_reports(merged_at DESC)"
     )
-    op.execute(
-        "CREATE INDEX IF NOT EXISTS idx_merge_learning_lane ON merge_learning_reports(lane)"
-    )
+    op.execute("CREATE INDEX IF NOT EXISTS idx_merge_learning_lane ON merge_learning_reports(lane)")
 
 
 def downgrade() -> None:
