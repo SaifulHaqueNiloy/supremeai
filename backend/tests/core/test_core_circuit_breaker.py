@@ -5,8 +5,12 @@ import time
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from backend.core.circuit_breaker import (
-    CircuitBreaker,
+# Issue #2250: legacy core.circuit_breaker retired — tests re-pointed to the
+# canonical resilience module. `AsyncCircuitBreaker as CircuitBreaker` keeps
+# every assertion byte-identical so the suite proves behavior parity of the
+# ported async state machine.
+from backend.core.resilience.circuit_breaker import (
+    AsyncCircuitBreaker as CircuitBreaker,
     CircuitBreakerError,
     CircuitState,
     RedisCircuitBreaker,
