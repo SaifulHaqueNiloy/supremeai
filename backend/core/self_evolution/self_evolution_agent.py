@@ -208,6 +208,19 @@ class SelfEvolutionAgent:
             return False
 
     async def _tick(self) -> None:
+        # #1939: before evaluating skills, learn from recent merge_learning_reports.
+        # Gated by settings.enable_evolution_learning (default False) — when enabled,
+        # held merges penalize the lane's skill fitness, clean merges reward it.
+        try:
+            from core.config import settings
+
+            if getattr(settings, "enable_evolution_learning", False):
+                from core.evolution.merge_learning_learner import learn_from_merge_reports
+
+                await learn_from_merge_reports(self.fitness_engine)
+        except Exception as exc:  # noqa: BLE001 — learning must never break the tick
+            logger.debug(f"SelfEvolutionAgent: merge-learning skip ({exc})")
+
         metrics = self.fitness_engine.metrics
         if not metrics:
             return
