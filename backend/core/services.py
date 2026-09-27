@@ -24,12 +24,16 @@ PATCH v4 (2026-08-30):
 
 import asyncio
 import functools
+import logging
 from collections.abc import Callable
 from typing import Any
 
 import httpx
 
 from core.errors.error_bus import with_error_bus
+
+logger = logging.getLogger(__name__)
+
 
 # Lazy HTTP client — initialized on first use
 _http_client: httpx.AsyncClient | None = None
@@ -283,6 +287,7 @@ def _get_service_attr(name: str) -> Any:
             # If construction fails, return None for callers that already check
             # truthiness (e.g. `if services.redis_queue and services.redis_queue.configured:`).
             # Construction errors will be logged by the underlying constructor.
+            logger.debug("Exception swallowed in services (deliberate fallback)", exc_info=True)
             return None
 
     # Attempt to resolve from registry safely without triggering imports

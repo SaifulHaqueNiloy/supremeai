@@ -83,7 +83,9 @@ def _default_session_factory(provider: str, session_id: str) -> dict[str, Any]:
             try:
                 with_suppress()
             except Exception:  # pragma: no cover - best effort cleanup
-                pass
+                logger.debug(
+                    "Exception swallowed in session_manager (deliberate fallback)", exc_info=True
+                )
         raise
     return {"context": context, "page": page, "playwright_runtime": runtime}
 

@@ -14132,7 +14132,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2039,
+  "module_count": 2040,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -15682,6 +15682,7 @@
     "tests.core.test_multi_tenant_isolation",
     "tests.core.test_multicloud",
     "tests.core.test_nats_messaging",
+    "tests.core.test_no_silent_exception_swallow",
     "tests.core.test_optional_services",
     "tests.core.test_orchestrators_crew",
     "tests.core.test_origin_validator",

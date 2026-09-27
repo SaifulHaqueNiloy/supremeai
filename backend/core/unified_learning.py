@@ -22,12 +22,16 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum, auto
 from typing import Any, Optional
+
+logger = logging.getLogger(__name__)
+
 
 # ============================================================================
 # Core Types
@@ -650,6 +654,10 @@ class UnifiedLearningEngine:
                         source_events=list(data.get("source_events") or []),
                     )
                 except Exception:
+                    logger.debug(
+                        "Exception swallowed in unified_learning (deliberate fallback)",
+                        exc_info=True,
+                    )
                     continue  # malformed record — skip, never boot-block
                 self.knowledge_base[knowledge.id] = knowledge
                 pattern_hash = hashlib.sha256(knowledge.pattern.encode()).hexdigest()[:16]
