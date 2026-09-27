@@ -859,20 +859,6 @@
       "path": "backend/agents/evolution_agents/adversarial_defense_agent.py"
     },
     {
-      "capability_signals": [],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/agents/evolution_agents/federated_learning_agent.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/agents/evolution_agents/meta_learning_agent.py"
-    },
-    {
       "capability_signals": [
         "capability",
         "execute",
@@ -2646,7 +2632,6 @@
     },
     {
       "capability_signals": [
-        "execute",
         "health",
         "memory",
         "register"
@@ -3496,13 +3481,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/brain/reasoning_orchestrator.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/brain/supreme_learning_engine.py"
     },
     {
       "capability_signals": [
@@ -5340,7 +5318,8 @@
     },
     {
       "capability_signals": [
-        "dispatch"
+        "dispatch",
+        "mcp"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -5349,8 +5328,29 @@
     },
     {
       "capability_signals": [
+        "execute",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/kernel/audit_chain.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/kernel/audit_logger.py"
+    },
+    {
+      "capability_signals": [
         "capability",
-        "dispatch"
+        "dispatch",
+        "mcp"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -5739,16 +5739,6 @@
     {
       "capability_signals": [
         "execute",
-        "mcp"
-      ],
-      "classification": "adapter",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/mcp_audit_chain.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
         "mcp",
         "register"
       ],
@@ -5980,16 +5970,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/observability/__init__.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/observability/audit_logger.py"
     },
     {
       "capability_signals": [
@@ -7265,13 +7245,6 @@
       "path": "backend/core/self_evolution/evolution_react_agent.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/self_evolution/federated_learning/fed_learning.py"
-    },
-    {
       "capability_signals": [
         "execute"
       ],
@@ -7679,15 +7652,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/type_sync_bus.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/unified_learning.py"
     },
     {
       "capability_signals": [
@@ -10185,7 +10149,9 @@
       "path": "backend/services/dynamic_ai/circuit_breaker.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -24597,6 +24563,15 @@
     },
     {
       "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/generate_agents_md.py"
+    },
+    {
+      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -26742,5 +26717,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3053
+  "source_file_count": 3049
 }
