@@ -4,13 +4,13 @@
 
 | metric | value |
 |---|---|
-| backend routes | 862 |
+| backend routes | 861 |
 | routes with frontend consumer | 296 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 2 |
 | orphan families | 2 |
-| api-only routes (allowlisted) | 303 |
+| api-only routes (allowlisted) | 302 |
 | api-only families | 158 |
 
 ## Classification legend
@@ -21,7 +21,7 @@
 | `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 40 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `api-only` | 302 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 2 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families (actionable — wire, classify or deprecate)
@@ -155,7 +155,7 @@
 | `/api/v1/runs` | 9 |
 | `/api/v1/sandbox` | 4 |
 | `/api/v1/scrape` | 1 |
-| `/api/v1/stream` | 4 |
+| `/api/v1/stream` | 3 |
 | `/api/v1/swarm` | 1 |
 | `/api/v1/syncguard` | 1 |
 | `/api/v1/tools-registry` | 4 |
@@ -918,7 +918,6 @@
 | GET | `/api/v1/stream/chat` | `backend/api/routes/stream_chat_sse.py` | api-only | NONE |
 | POST | `/api/v1/stream/chat` | `backend/api/routes/stream_chat_sse.py` | api-only | NONE |
 | GET | `/api/v1/stream/hitl` | `backend/api/routes/stream_hitl_sse.py` | api-only | NONE |
-| GET | `/api/v1/stream/voice` | `backend/api/routes/stream_voice_sse.py` | api-only | NONE |
 | GET | `/api/v1/swarm/stream` | `backend/api/routes/swarm_stream.py` | api-only | NONE |
 | POST | `/api/v1/syncguard/audit` | `backend/api/routes/syncguard.py` | api-only | NONE |
 | POST | `/api/v1/tasks` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
