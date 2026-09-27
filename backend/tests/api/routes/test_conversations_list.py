@@ -1,10 +1,9 @@
-"""Wave-3 backend perf — GET /conversations/ limit contract tests.
+"""#1823 conversation-history split-brain — GET /conversations/ contract tests.
 
-বাংলা: আগে list route-এ কোনো .limit() ছিল না — ইউজারের সব conversation প্রতি
-request-এ নামাত, অথচ একমাত্র frontend caller (UserDashboard) client-side-এ প্রথম
-৩টা slice করত। Supabase sandbox-এ নেই, তাই route-এর postgrest builder-chain
-contract fake দিয়ে lock করা হলো — test_tenant_admin_isolation.py-র FakeTable
-স্টাইল অনুসরণ করে (প্রতিটি builder মেথড self ফেরত দেয়, FakeResult awaitable)।
+বাংলা: ai_memory (pgvector) এখন চ্যাট হিস্টরির একমাত্র source of truth।
+GET /api/v1/conversations/ সেই store-এর read-projection (session grouping);
+POST endpoints branch-metadata Supabase টেবিলেই লেখে (fork feature)।
+Vector store fake দিয়ে projection contract lock করা হলো।
 """
 
 from __future__ import annotations
@@ -16,52 +15,31 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 
-class FakeResult:
-    """Awaitable-once result — route-এর `await ...execute()` প্যাটার্নের জন্য।"""
+class FakeVectorStore:
+    """ai_memory projection fake — list_conversation_sessions/get_session_messages রেকর্ড করে।"""
 
-    def __init__(self, data: list[dict[str, Any]]) -> None:
-        self.data = data
+    def __init__(self, sessions: list[dict[str, Any]] | None = None) -> None:
+        self.sessions = sessions or []
+        self.calls: list[tuple] = []
 
-    def __await__(self):
-        async def _self() -> FakeResult:
-            return self
+    async def list_conversation_sessions(self, user_id: str, limit: int = 50, **_: Any) -> list[dict]:
+        self.calls.append(("list", user_id, limit))
+        return self.sessions[:limit]
 
-        return _self().__await__()
-
-
-class FakeTable:
-    """Builder-chain recorder — কোন কোন filter/order/limit জারি হলো তা ধরে রাখে।"""
-
-    def __init__(self, rows: list[dict[str, Any]]) -> None:
-        self._rows = rows
-        self.ops: list[tuple] = []
-
-    def select(self, *cols: str) -> FakeTable:
-        self.ops.append(("select", cols))
-        return self
-
-    def eq(self, col: str, val: Any) -> FakeTable:
-        self.ops.append(("eq", col, val))
-        return self
-
-    def order(self, col: str, desc: bool = False) -> FakeTable:
-        self.ops.append(("order", col, desc))
-        return self
-
-    def limit(self, size: int) -> FakeTable:
-        self.ops.append(("limit", size))
-        return self
-
-    def execute(self) -> FakeResult:
-        return FakeResult(self._rows)
+    async def get_session_messages(self, user_id: str, session_id: str, **_: Any) -> list[dict]:
+        self.calls.append(("get", user_id, session_id))
+        for session in self.sessions:
+            if session["session_id"] == session_id:
+                return session["exchanges"]
+        return []
 
 
-def _row(i: int) -> dict[str, Any]:
+def _session(sid: str, exchanges: list[str], created: str, updated: str) -> dict[str, Any]:
     return {
-        "id": f"c{i}",
-        "title": f"conv {i}",
-        "created_at": "2026-01-01T00:00:00Z",
-        "updated_at": f"2026-01-0{(i % 9) + 1}T00:00:00Z",
+        "session_id": sid,
+        "created_at": created,
+        "updated_at": updated,
+        "exchanges": [{"content": c, "created_at": created} for c in exchanges],
     }
 
 
@@ -70,61 +48,100 @@ def client(monkeypatch):
     import api.routes.conversations as cmod
     from api.routes.conversations import router as conversations_router
 
-    captured: dict[str, FakeTable] = {}
-
-    class FakeDB:
-        def __init__(self) -> None:
-            # route-এর `db.client.table(...)` chain-এর জন্য client attribute দরকার
-            self.client = self
-
-        def table(self, name: str) -> FakeTable:
-            assert name == "conversations"
-            tbl = FakeTable([_row(i) for i in range(6)])
-            captured["table"] = tbl
-            return tbl
-
-    monkeypatch.setattr(cmod, "SupabaseDB", FakeDB)
+    fake = FakeVectorStore(
+        [
+            _session(
+                "sess-new",
+                ["Q: How do I deploy?\nA: Use the Render pipeline."],
+                "2026-01-02T10:00:00Z",
+                "2026-01-02T10:00:00Z",
+            ),
+            _session(
+                "sess-old",
+                ["Q: First question\nA: First answer", "Q: Second question\nA: Second answer"],
+                "2026-01-01T09:00:00Z",
+                "2026-01-01T11:00:00Z",
+            ),
+        ]
+    )
+    monkeypatch.setattr(cmod, "_get_vector_store", lambda: fake)
 
     app = FastAPI()
     app.include_router(conversations_router, prefix="/api/v1")
-    return TestClient(app), captured
+    return TestClient(app), fake
 
 
-class TestConversationsListLimit:
-    def test_default_limit_is_issued_recent_first(self, client):
-        import api.routes.conversations as cmod
-
-        tc, captured = client
+class TestConversationsAiMemoryProjection:
+    def test_list_is_recent_first_projection(self, client):
+        tc, fake = client
         res = tc.get("/api/v1/conversations/")
         assert res.status_code == 200
-        ops = captured["table"].ops
-        # বাংলা: default cap সহ .limit() জারি হয় + আগের মতোই recent-first ordering
-        assert ("limit", cmod.DEFAULT_CONVERSATIONS_LIMIT) in ops
-        assert ("order", "updated_at", True) in ops
-        assert ("eq", "user_id", "test_admin@supremeai.com") in ops
-
-    def test_explicit_limit_param_is_forwarded(self, client):
-        tc, captured = client
-        res = tc.get("/api/v1/conversations/", params={"limit": 10})
-        assert res.status_code == 200
-        assert ("limit", 10) in captured["table"].ops
-
-    def test_limit_above_cap_rejected(self, client):
-        tc, _ = client
-        res = tc.get("/api/v1/conversations/", params={"limit": 101})
-        assert res.status_code == 422
-
-    def test_limit_zero_rejected(self, client):
-        tc, _ = client
-        res = tc.get("/api/v1/conversations/", params={"limit": 0})
-        assert res.status_code == 422
-
-    def test_response_shape_unchanged(self, client):
-        # বাংলা: Consumer (UserDashboard) response shape-এর উপর নির্ভরশীল —
-        # limit যোগ হলেও contract হুবহু একই থাকতে হবে
-        tc, _ = client
-        res = tc.get("/api/v1/conversations/")
+        assert fake.calls[0][:2] == ("list", "test_admin@supremeai.com")
         body = res.json()
-        assert isinstance(body, list) and len(body) == 6  # fake server limit apply করে না
-        assert set(body[0].keys()) == {"id", "title", "created_at", "updated_at"}
-        assert body[0]["id"] == "c0"
+        assert [c["id"] for c in body] == ["sess-new", "sess-old"]
+
+    def test_list_response_shape(self, client):
+        tc, _ = client
+        body = tc.get("/api/v1/conversations/").json()
+        assert set(body[0].keys()) == {"id", "title", "created_at", "updated_at", "message_count"}
+
+    def test_title_derived_from_oldest_user_question(self, client):
+        tc, _ = client
+        body = tc.get("/api/v1/conversations/").json()
+        assert body[0]["title"] == "How do I deploy?"
+        assert body[1]["title"] == "First question"
+
+    def test_message_count_counts_exchanges(self, client):
+        tc, _ = client
+        body = tc.get("/api/v1/conversations/").json()
+        assert body[0]["message_count"] == 1
+        assert body[1]["message_count"] == 2
+
+    def test_limit_forwarded_to_store(self, client):
+        tc, fake = client
+        tc.get("/api/v1/conversations/", params={"limit": 1})
+        assert fake.calls[-1] == ("list", "test_admin@supremeai.com", 1)
+
+    def test_detail_endpoint_parses_qa_into_turns(self, client):
+        tc, fake = client
+        res = tc.get("/api/v1/conversations/sess-old/messages")
+        assert res.status_code == 200
+        assert fake.calls[-1] == ("get", "test_admin@supremeai.com", "sess-old")
+        turns = res.json()
+        roles = [t["role"] for t in turns]
+        assert roles == ["user", "assistant", "user", "assistant"]
+        assert turns[0]["content"] == "First question"
+        assert turns[1]["content"] == "First answer"
+
+    def test_detail_unknown_session_returns_empty(self, client):
+        tc, _ = client
+        res = tc.get("/api/v1/conversations/nope/messages")
+        assert res.status_code == 200
+        assert res.json() == []
+
+    def test_store_unavailable_degrades_to_empty_list(self, monkeypatch):
+        import api.routes.conversations as cmod
+        from api.routes.conversations import router as conversations_router
+
+        monkeypatch.setattr(cmod, "_get_vector_store", lambda: None)
+        app = FastAPI()
+        app.include_router(conversations_router, prefix="/api/v1")
+        tc = TestClient(app)
+        assert tc.get("/api/v1/conversations/").json() == []
+
+
+class TestParseHelpers:
+    def test_parse_qa_exchange(self):
+        from api.routes.conversations import parse_exchange_messages
+
+        turns = parse_exchange_messages("Q: Hello\nA: Hi there!", "2026-01-01T00:00:00Z")
+        assert [(t["role"], t["content"]) for t in turns] == [
+            ("user", "Hello"),
+            ("assistant", "Hi there!"),
+        ]
+
+    def test_parse_user_only_exchange(self):
+        from api.routes.conversations import parse_exchange_messages
+
+        turns = parse_exchange_messages("Q: only a question", None)
+        assert [(t["role"], t["content"]) for t in turns] == [("user", "only a question")]
