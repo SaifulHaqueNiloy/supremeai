@@ -234,7 +234,6 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/admin-api/gate/override` | `backend/api/routes/admin_dashboard/endpoints_gate.py` | admin-only | NONE |
 | GET | `/admin-api/health-aggregation` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | GET | `/admin-api/health-map` | `backend/api/routes/admin_dashboard/endpoints_health.py` | admin-only | NONE |
-| GET | `/admin-api/health-map` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | POST | `/admin-api/impersonate` | `backend/api/routes/admin_dashboard/endpoints_impersonate.py` | admin-only | NONE |
 | GET | `/admin-api/intelligence/insights` | `backend/api/routes/intelligence_insights.py` | admin-only | NONE |
 | GET | `/admin-api/intelligence/manual-tasks` | `backend/api/routes/intelligence_insights.py` | admin-only | NONE |
@@ -265,6 +264,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/admin-api/security/memory` | `backend/api/routes/admin_dashboard/endpoints_security_memory.py` | admin-only | NONE |
 | GET | `/admin-api/security/tasks` | `backend/api/routes/admin_dashboard/endpoints_security_memory.py` | admin-only | NONE |
 | GET | `/admin-api/service-categories` | `backend/api/routes/service_topology.py` | admin-only | NONE |
+| GET | `/admin-api/service-health-map` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | GET | `/admin-api/service-topology` | `backend/api/routes/service_topology.py` | admin-only | NONE |
 | GET | `/admin-api/service-uptime` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | GET | `/admin-api/sessions` | `backend/api/routes/admin_dashboard/endpoints_crud.py` | admin-only | NONE |

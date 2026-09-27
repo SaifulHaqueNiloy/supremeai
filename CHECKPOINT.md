@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 14:34 UTC
+- **Date:** 2026-09-27 14:37 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,12 +10,16 @@
   - (see git log for details)
 
 ## Files Changed
+  - `scripts/agents/agent_dashboard.py`
   - `docs/agents/GOLDEN_RULES.md`
-  - `CHECKPOINT.md`
-  - `AGENTS.md`
+  - `docs/generated/route_consumer_inventory.md`
+  - `docs/generated/route_consumer_inventory.json`
+  - `docs/audit_reports/route_client_inventory.md`
   - `backend/api/routes/health_aggregation.py`
-  - `backend/tests/api/routes/test_memory_feedback_path.py`
-  - `backend/tests/api/routes/test_api_contract_docs.py`
+  - `backend/tests/scripts/test_agent_dashboard.py`
+  - `AGENTS.md`
+  - `CHECKPOINT.md`
+  - `docs/audit_reports/route_client_inventory.json`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)

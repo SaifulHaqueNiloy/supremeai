@@ -11,8 +11,8 @@
 
 | classification | count | next action |
 |---|---|---|
-| `internal` | 46 | document as internal; verify not publicly reachable |
-| `unclassified-orphan` | 252 | triage: user-facing wiring vs intentional API-only |
+| `internal` | 45 | document as internal; verify not publicly reachable |
+| `unclassified-orphan` | 253 | triage: user-facing wiring vs intentional API-only |
 | `admin-only` | 32 | wire into admin UI or document as admin-API |
 
 ## Top orphan families

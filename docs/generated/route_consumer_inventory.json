@@ -740,20 +740,6 @@
       "classification": "admin-only"
     },
     {
-      "method": "GET",
-      "path": "/admin-api/health-map",
-      "declared": "/admin-api/health-map",
-      "deprecated": false,
-      "router_file": "backend/api/routes/health_aggregation.py",
-      "module": "api.routes.health_aggregation",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "get_health_map",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
       "method": "POST",
       "path": "/admin-api/impersonate",
       "declared": "/admin-api/impersonate",
@@ -1170,6 +1156,20 @@
       "mounted": true,
       "is_admin": true,
       "operation": "get_service_categories",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/service-health-map",
+      "declared": "/admin-api/service-health-map",
+      "deprecated": false,
+      "router_file": "backend/api/routes/health_aggregation.py",
+      "module": "api.routes.health_aggregation",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_health_map",
       "frontend_consumers": [],
       "classification": "admin-only"
     },

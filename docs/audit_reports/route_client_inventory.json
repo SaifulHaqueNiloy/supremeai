@@ -133,8 +133,8 @@
     "/api/webhooks/github": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 252,
-    "internal": 46,
+    "unclassified-orphan": 253,
+    "internal": 45,
     "admin-only": 32
   },
   "orphans": [
@@ -1058,9 +1058,9 @@
     {
       "file": "backend/api/routes/health_aggregation.py",
       "method": "GET",
-      "declared": "/admin-api/health-map",
-      "resolved": "/api/v1/admin-api/health-map",
-      "classification": "internal"
+      "declared": "/admin-api/service-health-map",
+      "resolved": "/api/v1/admin-api/service-health-map",
+      "classification": "unclassified-orphan"
     },
     {
       "file": "backend/api/routes/health_aggregation.py",
