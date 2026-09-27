@@ -4,7 +4,7 @@
 
 | metric | value |
 |---|---|
-| backend routes | 860 |
+| backend routes | 861 |
 | routes with frontend consumer | 295 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
@@ -19,7 +19,7 @@
 |---|---|---|
 | `user-facing` | 165 | frontend consumer matched |
 | `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
-| `internal` | 39 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
+| `internal` | 40 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 2 | no consumer and no classification — CI fails on NEW orphans |
@@ -946,6 +946,7 @@
 | GET | `/api/v1/zero-cost/recommendations` | `backend/api/routes/zero_cost.py` | api-only | NONE |
 | GET | `/api/voice/stream_audio` | `backend/api/routes/voice.py` | api-only | NONE |
 | GET | `/api/voice/voices` | `backend/api/routes/voice.py` | user-facing | `frontend/src/services/chatService.test.ts`, `frontend/src/services/chatService.ts` |
+| POST | `/api/webhooks/github` | `backend/api/routes/webhooks_github.py` | internal | NONE |
 | GET | `/auth/sso/metadata` | `backend/api/routes/sso.py` | api-only | NONE |
 | POST | `/auth/sso/oidc/:param/authorize` | `backend/api/routes/sso.py` | api-only | NONE |
 | POST | `/auth/sso/oidc/:param/callback` | `backend/api/routes/sso.py` | api-only | NONE |

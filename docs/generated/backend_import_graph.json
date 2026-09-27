@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3523,
+  "edge_count": 3527,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -3520,6 +3520,18 @@
       "to": "core.logging_config"
     },
     {
+      "from": "api.routes.webhooks_github",
+      "to": "core.cache.redis_manager"
+    },
+    {
+      "from": "api.routes.webhooks_github",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "api.routes.webhooks_github",
+      "to": "core.orchestration.handoff_schema"
+    },
+    {
       "from": "api.routes.websocket_agent",
       "to": "core.automation.models"
     },
@@ -5978,6 +5990,10 @@
     {
       "from": "core.orchestration.crew_departments",
       "to": "core.orchestration.swarm_agent_roles"
+    },
+    {
+      "from": "core.orchestration.handoff_schema",
+      "to": "core.logging_config"
     },
     {
       "from": "core.orchestration.master_cognitive_orchestrator",
@@ -14096,7 +14112,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2017,
+  "module_count": 2020,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14463,6 +14479,7 @@
     "api.routes.usage_metrics",
     "api.routes.voice",
     "api.routes.webhooks_ai",
+    "api.routes.webhooks_github",
     "api.routes.websocket_agent",
     "api.routes.websocket_hitl",
     "api.routes.websocket_voice",
@@ -14795,6 +14812,7 @@
     "core.orchestration.cognitive_pipeline_dispatcher",
     "core.orchestration.conversation_orchestrator",
     "core.orchestration.crew_departments",
+    "core.orchestration.handoff_schema",
     "core.orchestration.master_cognitive_orchestrator",
     "core.orchestration.periodic_task_scheduler",
     "core.orchestration.swarm_agent_roles",
@@ -15369,6 +15387,7 @@
     "tests.api.routes.test_surf_endpoints_retired",
     "tests.api.routes.test_swarm_adapter_contracts",
     "tests.api.routes.test_tenant_admin_isolation",
+    "tests.api.routes.test_webhooks_github",
     "tests.api.test_admin",
     "tests.api.test_admin_ramp",
     "tests.api.test_admin_routes",
