@@ -11,8 +11,11 @@ import StepFirstChat from './StepFirstChat';
  * with the API-key wall (CONFLICT_ANALYSIS verdict: plan correct, code wrong).
  *
  * New flow: StepModelSelect (Step 1) → StepFirstChat (Step 2) — first task in
- * 60 seconds, no key required. StepApiKey.tsx remains on disk (unused) per the
- * "no file deletion" doctrine (WAVE_MASTER_PLAN §10 rule 4).
+ * 60 seconds, no key required. The old StepApiKey.tsx step file has been
+ * removed (issue #1744): a founder-directed coder-pool verification confirmed
+ * zero active imports, lifting the WAVE_MASTER_PLAN §10 rule 4 no-delete hold
+ * for this file. History preserved in git; restore via `git log --follow`
+ * on this directory if the API-key step is ever re-needed.
  */
 const OnboardingWizard = () => {
   const [step, setStep] = useState(1);
