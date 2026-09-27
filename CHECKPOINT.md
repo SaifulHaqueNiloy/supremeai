@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 20:17 UTC
+- **Date:** 2026-09-27 21:01 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,22 +10,19 @@
   - (see git log for details)
 
 ## Files Changed
-  - `docs/audit_reports/route_client_inventory.md`
-  - `docs/generated/route_consumer_inventory.md`
-  - `docs/architecture/MULTI_PLATFORM_AGENT_WORKSPACE_PLAN.md`
-  - `backend/tests/api/routes/test_external_agents_admin.py`
-  - `backend/api/routes/external_agents_admin.py`
-  - `docs/generated/backend_import_graph.json`
+  - `docs/generated/route_inventory.json`
   - `.agents/rules/GROUND_TRUTH_AUDITING_DISCIPLINE.md`
-  - `.devcontainer/devcontainer.json`
-  - `.devcontainer/setup.sh`
-  - `docs/audit_reports/route_client_inventory.json`
-  - `docs/architecture/MULTI_PLATFORM_WORKSPACE_IMPLEMENTATION_ROADMAP.md`
-  - `docs/generated/route_consumer_inventory.json`
-  - `backend/api/routers.py`
-  - `.devcontainer/Dockerfile`
-  - `docs/generated/module_capability_matrix.json`
-  - `CHECKPOINT.md`
+  - `.github/workflows/integration-gate.yml`
+  - `docs/generated/STATUS_PROOF.md`
+  - `docs/generated/route_knowledge_graph.json`
+  - `scripts/ci/regen_all_artifacts.sh`
+  - `.agents/rules/PR_EVALUATION_POLICY.md`
+  - `.github/workflows/ci-advanced-checks.yml`
+  - `docs/generated/route_topology.mmd`
+  - `.github/workflows/artifact-regen.yml`
+  - `docs/audit_reports/full-architecture-audit-2026-09-27/FULL_ARCHITECTURE_AUDIT_BN.md`
+  - `backend/tests/api/routes/commandcenter/test_system.py`
+  - `backend/tests/api/routes/commandcenter/test_secure.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
