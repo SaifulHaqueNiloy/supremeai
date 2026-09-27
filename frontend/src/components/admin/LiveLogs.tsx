@@ -16,9 +16,14 @@ export function LiveLogs({ liveLogs, setLiveLogs }: LiveLogsProps) {
   // worker না থাকলে filterLogs নিজেই মেইন থ্রেডে সেফ fallback করে।
   useEffect(() => {
     let cancelled = false;
-    filterLogs(liveLogs, filterLevel, searchTerm).then((res) => {
-      if (!cancelled) setFilteredLogs(res);
-    });
+    filterLogs(liveLogs, filterLevel, searchTerm)
+      .then((res) => {
+        if (!cancelled) setFilteredLogs(res);
+      })
+      .catch((err: unknown) => {
+        // Log parser worker failure — keep existing filteredLogs rather than blanking the panel.
+        console.error('[LiveLogs] filterLogs worker failed:', err);
+      });
     return () => {
       cancelled = true;
     };
