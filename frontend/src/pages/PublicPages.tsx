@@ -166,7 +166,7 @@ export function DocsPage() {
     { method: 'POST', path: '/api/v1/auth/register', note: 'Account creation' },
     { method: 'POST', path: '/api/v1/chat/completions', note: 'Conversation orchestration entrypoint' },
     { method: 'GET', path: '/api/preferences/', note: 'Per-tenant user preferences' },
-    { method: 'GET', path: '/api/memory/conversations', note: 'Conversation history (Firestore-backed)' },
+    { method: 'GET', path: '/api/v1/conversations/', note: 'Conversation history (ai_memory read-projection)' },
     { method: 'GET', path: '/admin-api/metrics', note: 'Real rolling-window metrics (admin)' },
     { method: 'GET', path: '/admin-api/logs/stream', note: 'SSE log stream (admin)' },
   ];
