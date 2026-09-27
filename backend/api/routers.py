@@ -389,6 +389,13 @@ ALL_ROUTERS = [
     {"path": "api.routes.plugins", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.selector_healing", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.webhooks_ai", "prefix": "", "is_admin": False, "is_critical": False},
+    # #1802: GitHub webhook ingest for event-driven orchestration (own prefix /api/webhooks)
+    {
+        "path": "api.routes.webhooks_github",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
     # ── AUDIT-WIRE FIX 2 (backend/frontend parity audit, 2026-09-11): এই ৭টি মডিউলের
     # কার্যকর APIRouter ছিল কিন্তু র���জিস্ট্রিতে ছিল না — তাদের সব এন্ডপয়েন্ট বুটে 404 দিত।
     # মাউন্ট-নোট: প্রতিটির নিজস্ব APIRouter prefix আছে (/diagram, /voice, /pair, /agent,
