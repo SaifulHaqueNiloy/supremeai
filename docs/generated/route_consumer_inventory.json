@@ -6,7 +6,7 @@
   "assumptions": [
     "resolved path = ALL_ROUTERS include-time prefix + file's APIRouter(prefix) + decorator path",
     "package routers (admin_dashboard/, browser/, commandcenter/) take their prefix from the package __init__.py",
-    "routes in backend/api/routes/ not present in ALL_ROUTERS are marked mounted=false (unregistered files: 11)",
+    "routes in backend/api/routes/ not present in ALL_ROUTERS are marked mounted=false (unregistered files: 10)",
     "websocket routes are out of scope (no HTTP method, no openapi entry)",
     "frontend consumers are literal /api/... strings in frontend/src/**.{ts,tsx}; ${...} template params normalize to :param",
     "matching: exact \u2192 param-normalized \u2192 frontend base-path reference; /api/v1/x and /api/x are aliases",
@@ -14,20 +14,20 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 862,
+    "backend_routes": 861,
     "frontend_unique_refs": 145,
     "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
     "orphan_routes": 2,
     "orphan_families": 2,
-    "api_only_routes": 303,
+    "api_only_routes": 302,
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 166,
       "admin-only": 347,
       "internal": 40,
       "deprecated": 4,
-      "api-only": 303,
+      "api-only": 302,
       "orphaned": 2
     }
   },
@@ -156,7 +156,7 @@
     "/api/v1/runs": 9,
     "/api/v1/sandbox": 4,
     "/api/v1/scrape": 1,
-    "/api/v1/stream": 4,
+    "/api/v1/stream": 3,
     "/api/v1/swarm": 1,
     "/api/v1/syncguard": 1,
     "/api/v1/tools-registry": 4,
@@ -10905,20 +10905,6 @@
       "mounted": true,
       "is_admin": false,
       "operation": "stream_hitl_sse",
-      "frontend_consumers": [],
-      "classification": "api-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/stream/voice",
-      "declared": "/api/v1/stream/voice",
-      "deprecated": false,
-      "router_file": "backend/api/routes/stream_voice_sse.py",
-      "module": "api.routes.stream_voice_sse",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "stream_voice_sse",
       "frontend_consumers": [],
       "classification": "api-only"
     },
