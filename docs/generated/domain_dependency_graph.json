@@ -3229,6 +3229,16 @@
     {
       "evidence": [
         {
+          "line": 111,
+          "path": "backend/core/startup/usage_metrics_aggregator.py"
+        }
+      ],
+      "source": "observability",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 8,
           "path": "backend/models/patch_telemetry.py"
         }
