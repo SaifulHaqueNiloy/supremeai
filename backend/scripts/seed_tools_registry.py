@@ -126,14 +126,6 @@ TOOLS = [
         0.1,
     ),
     (
-        "parallel_agent_executor",
-        "Parallel Agent Executor",
-        "tools/parallel_agent_executor.py",
-        "agentic",
-        "Async parallel sub-agent spawning via Redis pub/sub",
-        0.02,
-    ),
-    (
         "auto_pr_pipeline",
         "Auto PR Pipeline",
         "tools/auto_pr_pipeline.py",

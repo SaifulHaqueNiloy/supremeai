@@ -17,11 +17,9 @@ from agents.user_retention_risk_agent import (  # noqa: F401
     get_churn_prophet,
     get_user_retention_risk_agent,
 )
-from services.llm.llm_router import LLMRouter  # noqa: F401
 
 __all__ = [
     "CHURN_WEIGHTS",
-    "LLMRouter",
     "RETENTION_TEMPLATES",
     "BehavioralScorer",
     "ChurnProphet",

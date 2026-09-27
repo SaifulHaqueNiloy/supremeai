@@ -110,8 +110,12 @@ class TestChurnProphet:
 
     @pytest.fixture
     def mock_llm_router(self):
-        """Mock LLM router for testing."""
-        with patch("backend.agents.churn_prophet.LLMRouter") as mock:
+        """Mock LLM router for testing.
+
+        Phase-2.1 (#2249): the legacy services/llm LLMRouter re-export was
+        retired — patch the canonical facade instead.
+        """
+        with patch("brain.model_router.ModelRouter") as mock:
             instance = MagicMock()
             mock.return_value = instance
             yield instance
