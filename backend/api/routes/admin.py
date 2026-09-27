@@ -524,7 +524,7 @@ async def refresh_system_configs(admin_user: dict = Depends(get_current_admin)):
     from brain.economic_optimizer import get_economic_optimizer
     from utils.branding import sync_from_db as sync_branding
 
-    from core.circuit_breaker import sync_from_db as sync_circuit_breaker
+    from core.resilience.circuit_breaker import sync_from_db as sync_circuit_breaker
     from core.health.health_monitor import get_health_monitor
     from core.middleware.health_aware_middleware import sync_from_db as sync_health_middleware
 
