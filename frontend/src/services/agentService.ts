@@ -42,7 +42,8 @@ export const agentService = {
   },
 
   listAgents: async (): Promise<unknown[]> => {
-    return apiClient.get<{ agents: unknown[] }>('/api/agents/').then((response) => response.agents);
+    const response = await apiClient.get<{ agents: unknown[] }>('/api/agents/');
+    return response.agents;
   },
 
   getAgentStatus: async (agentId: string): Promise<{ status: string }> => {

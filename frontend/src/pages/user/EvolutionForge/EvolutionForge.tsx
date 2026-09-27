@@ -14,7 +14,7 @@ import {
   type Node,
   useReactFlow,
 } from '@xyflow/react';
-import type { Edge, Node, ReactFlowJsonObject } from '@xyflow/react';
+import type { ReactFlowJsonObject } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import AgentNode from './nodes/AgentNode';
@@ -72,7 +72,7 @@ const EvolutionForgeCanvas = () => {
    
   interface DebateLogEntry {
     agentName: string;
-    status: string;
+    status: 'PROPOSING' | 'JUDGING' | 'CONSENSUS' | 'RETHINKING';
     message: string;
   }
   const [debateLogs, setDebateLogs] = useState<DebateLogEntry[]>([]);
