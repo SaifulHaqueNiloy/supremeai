@@ -2,17 +2,17 @@
 
 > Generator: `scripts/ci/generate_route_client_inventory.py` — issue #480 / GAP-001. Do not edit by hand; assumptions live inside the JSON header.
 
-- backend routes scanned: **605**
-- unique frontend `/api/...` refs: **148**
-- matched (frontend-reachable): **273**
-- orphan backend routes: **332** (118 route families)
+- backend routes scanned: **607**
+- unique frontend `/api/...` refs: **145**
+- matched (frontend-reachable): **277**
+- orphan backend routes: **330** (119 route families)
 
 ## Orphan classifications (heuristic — owners must ratify)
 
 | classification | count | next action |
 |---|---|---|
-| `internal` | 44 | document as internal; verify not publicly reachable |
-| `unclassified-orphan` | 256 | triage: user-facing wiring vs intentional API-only |
+| `internal` | 46 | document as internal; verify not publicly reachable |
+| `unclassified-orphan` | 252 | triage: user-facing wiring vs intentional API-only |
 | `admin-only` | 32 | wire into admin UI or document as admin-API |
 
 ## Top orphan families

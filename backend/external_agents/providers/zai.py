@@ -19,6 +19,7 @@ from typing import Any
 
 import httpx
 
+from core.config import settings
 from core.logging_config import logger
 from external_agents.contracts.task_contract import TaskContract
 from external_agents.control.state_manager import AgentStateManager
@@ -55,10 +56,12 @@ class HttpMcpTransport(ZcodeTransport):
         bearer_token: str | None = None,
         timeout: float = 120.0,
     ) -> None:
+        # unguarded-localhost idiom: local-dev fallback only — production-এ
+        # silent localhost default ভুল হোস্টে connect করাত; unset হলে
+        # fail-closed (empty base → caller-এর কাছে স্পষ্ট error)।
+        mcp_default = "http://127.0.0.1:8000" if settings.env == "local" else ""
         self.base_url = (
-            base_url
-            or os.getenv("ZCODE_MCP_URL", "")
-            or os.getenv("MCP_URL", "http://127.0.0.1:8000")
+            base_url or os.getenv("ZCODE_MCP_URL", "") or os.getenv("MCP_URL", mcp_default)
         ).rstrip("/")
         self.bearer_token = bearer_token or os.getenv("ZCODE_MCP_TOKEN", "")
         self.timeout = timeout

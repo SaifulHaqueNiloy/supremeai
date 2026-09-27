@@ -175,17 +175,22 @@ class RedisTaskQueue:
             task_data["result"] = result
             await redis.set(f"task:{task_id}", json.dumps(task_data), ex=86400)
 
-            # Broadcast completion via pubsub
+            # #1832: কমপ্লিশন নোটিফিকেশন এখন লাইভ SSE চ্যানেলে যায়
+            # (dashboard_events — /api/dashboard/stream-এর সাবস্ক্রাইবাররা পায়)।
+            # আগের unmounted WS ম্যানেজার broadcast
+            # করত — কোনো সাবস্ক্রাইবার থাকা অসম্ভব, নোটিফিকেশন নীরবে হারাত।
             try:
-                from api.routes.websocket_agent import manager
+                from core.messaging.pubsub import global_pubsub
 
-                if hasattr(manager, "broadcast_to_user"):
-                    await manager.broadcast_to_user(
-                        task_data.get("user_id", "unknown"),
-                        json.dumps(
-                            {"type": "task_completed", "task_id": task_id, "result": result}
-                        ),
-                    )
+                await global_pubsub.publish(
+                    "dashboard_events",
+                    {
+                        "type": "task_completed",
+                        "task_id": task_id,
+                        "user_id": task_data.get("user_id", "unknown"),
+                        "result": result,
+                    },
+                )
             except asyncio.CancelledError:
                 raise
             except Exception as e:

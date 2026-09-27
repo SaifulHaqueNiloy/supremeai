@@ -70,18 +70,15 @@ on:
     workflows:
       # বাংলা: "CI Pipeline" এখানে নেই — ci.yml নিজেই শেষে workflow_call দিয়ে
       # ci-doctor invoke করে। এখানে রাখলে double-run হতো (resource waste)।
-      - "🔧 Scheduled Deep Audit & Maintenance"
-      - "🤖 Manual Maintenance & Auto-Fix"
-      - "DB Retention Prune"
+      # ("🤖 Manual Maintenance & Auto-Fix" removed — dead entry: no workflow by that
+      #  name exists since an earlier consolidation; grep-verified in #1858 truth-sync.)
       - "Audit & Official Release Center"
-      # (issue #1261: 05/06/07-e2e wrappers merged into e2e-suites.yml — the
-      # scheduled customer suite now runs under the merged name below.)
-      - "QA — E2E Suites"
-      - "Constitution Governance"
-      - "DAST Gate (OWASP ZAP)"
       # বাংলা: লাইভ প্রোডাকশন প্রোব — এটি লাল হলে প্রোডাকশন পাথ ভাঙা/অযাচাইকৃত,
       # নীরব থাকা প্রশ্রয় দেওয়া যাবে না (V10 doc-truth রাউন্ড)।
-      - "QA — Live Production Smoke"
+      # (epic #1850 Phase B / #1854: QA — Live Production Smoke, Scheduled Deep Audit,
+      # DB Retention, E2E Suites schedule, Constitution weekly, DAST — সব absorbed
+      # হয়ে nightly-ops.yml-এ চলে গেছে; নীরব-ব্যর্থতা কভারেজ এখন সেই একটি নামেই।)
+      - "🔧 Nightly Ops & Maintenance"
       # বাংলা: post-deploy canary এখন workflow_dispatch দিয়েও চলে — ব্যর্থতা নীরব থাকবে না।
       - "QA — Post-Deploy Smoke"
     types: [completed]
@@ -116,10 +113,17 @@ jobs:
     # main-গেট করে) doctor চলবে।
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.head_branch == 'main' }}
     steps:
-      - name: Checkout latest main
+      # Epic #1850 Phase C / #1855 root-cause fix: the drift self-heal push below
+      # used the default github.token — THAT was the last remaining GITHUB_TOKEN
+      # pusher, and the exact cause of action_required lockouts that the watchdog
+      # existed to unblock. SELF_HEAL_PAT-authenticated push (anti-recursion #1634)
+      # keeps downstream workflows triggering normally; the watchdog becomes a
+      # pure safety net.
+      - name: Checkout latest main (SELF_HEAL_PAT — anti-recursion safety, Issue #1634)
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          token: ${{ secrets.SELF_HEAL_PAT || github.token }}
 
       - name: Setup Python
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
@@ -200,9 +204,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pipeline-summary-trend
-          path: |
-            ci-reports/pipeline-summary.txt
-            ci-reports/test-failure-trend.json
+          path: ci-reports/pipeline-summary.txt
           if-no-files-found: ignore
 
       # -----------------------------------------------------------------
@@ -263,36 +265,10 @@ jobs:
         run: python .github/scripts/surface_advanced_audit_summary.py || true
 
       # -----------------------------------------------------------------
-      # 3. Auto-Merge Gate (Only for Verified PRs with 100% Green Status)
+      # 3. (Removed #1852 P1) Auto-Merge Verified PR — dead code: this
+      #    workflow has no pull_request event path (workflow_call only),
+      #    so the pull_request condition could never be true.
       # -----------------------------------------------------------------
-      - name: 🤖 Auto-Merge Verified PR (Zero-Regression Empirical Gate)
-        if: |
-          always() &&
-          github.event_name == 'pull_request' &&
-          github.event.pull_request.draft == false &&
-          steps.ctx.outputs.conclusion == 'success'
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8.0.0
-        with:
-          script: |
-            const { owner, repo } = context.repo;
-            const prNumber = context.payload.pull_request.number;
-            const prTitle = context.payload.pull_request.title;
-            console.log(`All required CI gates are 100% green and verified for PR #${prNumber} ("${prTitle}").`);
-
-            try {
-              await github.rest.pulls.merge({
-                owner,
-                repo,
-                pull_request_number: prNumber,
-                merge_method: 'squash',
-                commit_title: `${prTitle} (#${prNumber})`,
-                commit_message: `Auto-merged by SupremeAI Empirical Gate after 100% green CI verification.`
-              });
-              console.log(`✅ PR #${prNumber} successfully merged into main.`);
-            } catch (err) {
-              console.warn(`Could not automatically merge PR #${prNumber}: ${err.message}`);
-            }
-
       # -----------------------------------------------------------------
       # 4. CI Doctor Incident Response (Only for failures on main)
       # -----------------------------------------------------------------

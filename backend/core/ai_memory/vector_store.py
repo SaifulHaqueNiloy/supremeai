@@ -173,6 +173,106 @@ class FreeTierOptimizedVectorStore:
             logger.debug(f"Similarity search failed: {e}")
             return []
 
+    async def list_conversation_sessions(
+        self, user_id: str, limit: int = 50, max_rows: int = 400, max_exchanges: int = 40
+    ) -> list[dict]:
+        """List conversation sessions grouped from the ai_memory table (#1823).
+
+        বাংলা: ai_memory (pgvector) এখন চ্যাট হিস্টরির একমাত্র source of truth —
+        এই পদ্ধতি rows-কে session_id দিয়ে group করে conversation-list projection
+        তৈরি করে (recent-first)। Tenant isolation mandatory: খালি user_id →
+        ValueError (#1689 নীতি)। Failure → খালি list (graceful degradation)।
+        """
+        if not user_id or not str(user_id).strip():
+            raise ValueError(
+                "list_conversation_sessions requires a non-empty user_id "
+                "(tenant isolation is mandatory — issue #1689)"
+            )
+        try:
+
+            def _fetch() -> list[dict[str, Any]]:
+                res = (
+                    self.client.table(self.table_name)
+                    .select("content, session_id, created_at")
+                    .eq("user_id", str(user_id))
+                    .order("created_at", desc=True)
+                    .limit(max_rows)
+                    .execute()
+                )
+                return res.data or []
+
+            rows = await asyncio.to_thread(_fetch)
+
+            sessions: dict[str, dict[str, Any]] = {}
+            for row in rows:  # newest-first আসে; insert(0) দিয়ে ascending রাখা হয়
+                sid = str(row.get("session_id") or "default")
+                created = row.get("created_at")
+                session = sessions.setdefault(
+                    sid,
+                    {
+                        "session_id": sid,
+                        "created_at": created,
+                        "updated_at": created,
+                        "exchanges": [],
+                    },
+                )
+                session["exchanges"].insert(
+                    0, {"content": str(row.get("content") or ""), "created_at": created}
+                )
+                if created:
+                    if not session["created_at"] or created < session["created_at"]:
+                        session["created_at"] = created
+                    if not session["updated_at"] or created > session["updated_at"]:
+                        session["updated_at"] = created
+
+            ordered = sorted(sessions.values(), key=lambda s: s["updated_at"] or "", reverse=True)[
+                :limit
+            ]
+            for session in ordered:
+                # বাংলা: ফ্রি-টিয়ার মেমরি বাঁচাতে প্রতি session-এ শেষ N এক্সচেঞ্জ
+                session["exchanges"] = session["exchanges"][-max_exchanges:]
+            return ordered
+
+        except Exception as e:
+            logger.debug(f"List conversation sessions failed: {e}")
+            return []
+
+    async def get_session_messages(
+        self, user_id: str, session_id: str, max_rows: int = 200
+    ) -> list[dict[str, Any]]:
+        """Fetch one session's exchanges ascending (raw rows: content + created_at)."""
+        if not user_id or not str(user_id).strip():
+            raise ValueError(
+                "get_session_messages requires a non-empty user_id "
+                "(tenant isolation is mandatory — issue #1689)"
+            )
+        if not session_id or not str(session_id).strip():
+            return []
+        try:
+
+            def _fetch() -> list[dict[str, Any]]:
+                res = (
+                    self.client.table(self.table_name)
+                    .select("content, created_at")
+                    .eq("user_id", str(user_id))
+                    .eq("session_id", str(session_id))
+                    .order("created_at", desc=True)
+                    .limit(max_rows)
+                    .execute()
+                )
+                return res.data or []
+
+            rows = await asyncio.to_thread(_fetch)
+            rows.reverse()  # ascending
+            return [
+                {"content": str(r.get("content") or ""), "created_at": r.get("created_at")}
+                for r in rows
+            ]
+
+        except Exception as e:
+            logger.debug(f"Get session messages failed: {e}")
+            return []
+
     async def delete_old_memories(self, days_old: int = 30, limit: int = 100):
         """Delete old memories to save space (free tier storage limit)."""
         try:

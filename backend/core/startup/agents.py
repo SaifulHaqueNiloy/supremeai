@@ -1,14 +1,99 @@
 import asyncio
+import os
+import sys
+from pathlib import Path
 
 from core import services
 from core.agent_supervisor import agent_supervisor
 from core.logging_config import logger
 
 
+def _build_orchestrator_tick_loop(orchestrator):
+    """Build the periodic tick loop for the core Orchestrator (issue #1817).
+
+    Contract:
+    - Runs ``orchestrator.tick()`` immediately, then every ``interval`` seconds
+      (the Orchestrator's own cadence drives fitness scoring, the self-evolution
+      tick, and the budget-guardian subprocess).
+    - A budget-guardian HALT (RuntimeError containing "Halting orchestrator")
+      returns CLEANLY — the supervisor treats a normal return as a permanent
+      stop, so fail-closed financial-bleed protection is never defeated by an
+      auto-restart into the same halt.
+    - Any other exception propagates so the supervisor's exponential-backoff
+      restart can self-heal transient failures (Redis/DB blips, cold starts).
+    - ``_running`` mirrors the loop lifecycle so ``GET /orchestrator/status``
+      (and the supervisor health map) reflect reality.
+    """
+
+    async def _orchestrator_tick_loop() -> None:
+        orchestrator._running = True
+        try:
+            while True:
+                try:
+                    await orchestrator.tick()
+                except RuntimeError as exc:
+                    if "Halting orchestrator" in str(exc):
+                        logger.critical(
+                            f"🛑 Orchestrator tick loop HALTED (fail-closed): {exc} "
+                            "Restart the process to re-enable after remediation."
+                        )
+                        return
+                    raise
+                await asyncio.sleep(orchestrator.interval)
+        finally:
+            orchestrator._running = False
+
+    return _orchestrator_tick_loop
+
+
 async def start_background_services(app):
     # ── Start background agents via centralized Supervisor ────────────────────
     from core.cache.multi_layer_cache import start_swarm_cache_invalidator
     from core.sentinel_agent import sentinel
+
+    # Agent 0: Orchestrator Tick (issue #1817) — the ONE trigger path that
+    # drives fitness scoring, the self-evolution tick, and the budget guardian
+    # subprocess on a fixed cadence. Before #1817 the Orchestrator was built at
+    # boot (core/lifespan.py) but `tick()` had zero callers in any deployed
+    # environment — the intended `POST /orchestrator/tick` webhook router was
+    # never registered, so the entire core loop was inert.
+    #
+    # Fail-closed contract (financial-bleed protection): when the budget
+    # guardian halts (RuntimeError "Halting orchestrator..."), the loop returns
+    # CLEANLY so the supervisor stops it permanently instead of restarting it
+    # into the same halt. Transient (non-halt) errors still propagate so the
+    # supervisor's exponential-backoff restart can self-heal them.
+    # Zero LLM cost: fitness scoring + evolution tick are in-process reads,
+    # the budget guardian is a local subprocess. Kill switch:
+    # ENABLE_ORCHESTRATOR_TICK=false.
+    try:
+        import os
+
+        if os.getenv("ENABLE_ORCHESTRATOR_TICK", "true").lower() == "true":
+            orchestrator = getattr(app.state, "orchestrator", None)
+            if orchestrator is not None:
+                _tick_loop = _build_orchestrator_tick_loop(orchestrator)
+                await agent_supervisor.start_agent(
+                    "orchestrator-tick",
+                    _tick_loop,
+                    health_check_interval=300,
+                    max_restarts=5,
+                    restart_delay=10.0,
+                )
+                logger.info(
+                    f"✅ Orchestrator tick loop started "
+                    f"(interval={getattr(orchestrator, 'interval', '?')}s; "
+                    "drives fitness scoring + self-evolution + budget guardian)."
+                )
+            else:
+                logger.warning(
+                    "⚠️ Orchestrator not initialized at boot — tick loop NOT started "
+                    "(check ORCHESTRATOR_INIT_FAILED entries in boot logs)."
+                )
+        else:
+            logger.info("ℹ️ Orchestrator tick loop disabled via environment variable.")
+    except Exception as exc:
+        logger.warning(f"⚠️ Orchestrator tick agent failed to start: {exc}")
 
     # Agent 1: Sentinel Agent (periodic endpoint monitoring & dependency audit)
     try:
@@ -223,6 +308,105 @@ async def start_background_services(app):
             logger.info("ℹ️ DailyLearner disabled via environment variable.")
     except Exception as exc:
         logger.warning(f"⚠️ DailyLearner failed to start: {exc}")
+
+    # ── #1828: Quota Enforcer supervisor — scheduled hard-quota enforcement ──
+    # বাংলা: quota_enforcer.py CLI আগে শুধু মানুষ মনে রাখলে চলত — ফলে over-quota
+    # tenant কখনো suspend হতো না। এখন supervisor agent হিসেবে নির্ধারিত ব্যবধানে
+    # (ডিফল্ট 24 ঘণ্টা) --enforce-all চালায়, সরাসরি CLI subprocess হিসেবে (হুবহু
+    # যেভাবে মানুষ চালাত) — report + alert সব CLI-র নিজস্ব পাইপলাইনে।
+    # Suspend করা একটি destructive কাজ, তাই ডিফল্ট off — prod-এ
+    # ENABLE_QUOTA_ENFORCER=true দিয়ে চালু করা হয় (DailyLearner প্যাটার্ন)।
+    try:
+        if os.getenv("ENABLE_QUOTA_ENFORCER", "false").lower() == "true":
+
+            async def _quota_enforcer_loop() -> None:
+                script_path = (
+                    Path(__file__).resolve().parents[2]
+                    / "scripts"
+                    / "billing"
+                    / "quota_enforcer.py"
+                )
+                interval_seconds = (
+                    max(1, int(os.getenv("QUOTA_ENFORCE_INTERVAL_HOURS", "24"))) * 3600
+                )
+                grace_hours = os.getenv("QUOTA_ENFORCE_GRACE_HOURS", "0")
+                dry_run = os.getenv("QUOTA_ENFORCE_DRY_RUN", "false").lower() == "true"
+                notify = os.getenv("QUOTA_ENFORCE_NOTIFY", "true").lower() == "true"
+
+                while True:
+                    try:
+                        cmd = [sys.executable, str(script_path), "--enforce-all"]
+                        if grace_hours:
+                            cmd += ["--grace-hours", str(int(grace_hours))]
+                        if dry_run:
+                            cmd.append("--dry-run")
+                        if notify:
+                            cmd.append("--notify")
+                        proc = await asyncio.create_subprocess_exec(
+                            *cmd,
+                            stdout=asyncio.subprocess.PIPE,
+                            stderr=asyncio.subprocess.PIPE,
+                        )
+                        _, stderr = await proc.communicate()
+                        if proc.returncode == 0:
+                            logger.info("✅ Quota enforcement pass completed (scheduled).")
+                        elif proc.returncode == 1:
+                            # CLI convention: exit 1 = tenants over quota (alert already sent)
+                            logger.warning(
+                                "⚠️ Quota enforcement pass: tenants over quota (alerts sent)."
+                            )
+                        else:
+                            logger.error(
+                                "❌ Quota enforcement pass failed "
+                                f"(exit {proc.returncode}): {stderr[-500:] if stderr else 'no stderr'}"
+                            )
+                    except Exception as exc:
+                        logger.warning(f"⚠️ Quota enforcement pass failed: {exc}")
+                    await asyncio.sleep(interval_seconds)
+
+            await agent_supervisor.start_agent(
+                "quota-enforcer",
+                lambda: _quota_enforcer_loop(),
+                health_check_interval=3600,  # Check hourly (runs every 24h)
+                max_restarts=5,
+                restart_delay=60.0,
+            )
+            logger.info(
+                "✅ QuotaEnforcer background task started (scheduled --enforce-all passes)."
+            )
+        else:
+            logger.info(
+                "ℹ️ QuotaEnforcer disabled via environment variable (ENABLE_QUOTA_ENFORCER)."
+            )
+    except Exception as exc:
+        logger.warning(f"⚠️ QuotaEnforcer failed to start: {exc}")
+
+    # ── #1827: Usage Metrics Aggregator — daily pipeline writer ─────────────
+    # বাংলা: usage_metrics টেবিলে কেউ লিখত না — Usage dashboard স্থায়ী খালি।
+    # এই agent দৈনিক in-process collector + CostGuard aggregates থেকে delta
+    # snapshot লেখে (বিদ্যমান db.upsert_usage_metric ব্যবহার করে)। অ-ধ্বংসাত্মক
+    # (নিজের DB-তে metrics লেখা) — তাই ডিফল্ট চালু (LearningLoop প্যাটার্ন)।
+    try:
+        if os.getenv("ENABLE_USAGE_METRICS_AGGREGATOR", "true").lower() == "true":
+
+            async def _usage_metrics_loop() -> None:
+                from core.startup.usage_metrics_aggregator import run_usage_metrics_loop
+
+                interval = max(1, int(os.getenv("USAGE_METRICS_INTERVAL_HOURS", "24")))
+                await run_usage_metrics_loop(interval_hours=interval)
+
+            await agent_supervisor.start_agent(
+                "usage-metrics-aggregator",
+                lambda: _usage_metrics_loop(),
+                health_check_interval=3600,  # Check hourly (writes every 24h)
+                max_restarts=5,
+                restart_delay=60.0,
+            )
+            logger.info("✅ UsageMetricsAggregator background task started (daily usage rows).")
+        else:
+            logger.info("ℹ️ UsageMetricsAggregator disabled via environment variable.")
+    except Exception as exc:
+        logger.warning(f"⚠️ UsageMetricsAggregator failed to start: {exc}")
 
     # ── Sprint 3/4 (Self-Evolution Zero-Cost plan): Learning Loop ────────────
     # Observe layer: start the LearningStore flush task ALWAYS (it is the

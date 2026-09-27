@@ -1,12 +1,5 @@
 {
-  "boundary_violations": [
-    {
-      "line": 23,
-      "reason": "private cross-domain import",
-      "source": "backend/tests/security/test_render_ticket_auth.py",
-      "target": "backend/api/routes/browser/_render_proxy.py"
-    }
-  ],
+  "boundary_violations": [],
   "cycles": [],
   "domain_count": 9,
   "domains": [
@@ -139,7 +132,7 @@
     {
       "evidence": [
         {
-          "line": 23,
+          "line": 24,
           "path": "backend/external_agents/providers/zai.py"
         }
       ],
@@ -569,7 +562,7 @@
     {
       "evidence": [
         {
-          "line": 22,
+          "line": 23,
           "path": "backend/external_agents/providers/zai.py"
         }
       ],
@@ -1299,6 +1292,16 @@
     {
       "evidence": [
         {
+          "line": 25,
+          "path": "backend/services/billing/billing_plans.py"
+        }
+      ],
+      "source": "billing",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 9,
           "path": "backend/tools/billing/monthly_cost_reporter.py"
         }
@@ -1639,7 +1642,7 @@
     {
       "evidence": [
         {
-          "line": 23,
+          "line": 82,
           "path": "scripts/agents/dispatch_task_all_agents.py"
         }
       ],
@@ -2689,26 +2692,6 @@
     {
       "evidence": [
         {
-          "line": 258,
-          "path": "backend/api/routes/memory.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 334,
-          "path": "backend/api/routes/memory.py"
-        }
-      ],
-      "source": "knowledge",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
           "line": 40,
           "path": "backend/api/routes/memory_mcp_http.py"
         }
@@ -3231,6 +3214,16 @@
         {
           "line": 191,
           "path": "backend/core/observability/observability_middleware.py"
+        }
+      ],
+      "source": "observability",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
+          "line": 111,
+          "path": "backend/core/startup/usage_metrics_aggregator.py"
         }
       ],
       "source": "observability",

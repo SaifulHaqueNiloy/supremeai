@@ -214,9 +214,7 @@ class DockerSandbox:
 
         is_safe, reason = validate_code_for_sandbox(script, strict_mode=True)
         if not is_safe:
-            logger.critical(
-                f"[DockerSandbox] AST validation blocked unsafe script: {reason}"
-            )
+            logger.critical(f"[DockerSandbox] AST validation blocked unsafe script: {reason}")
             return {
                 "exit_code": 1,
                 "stdout": "",

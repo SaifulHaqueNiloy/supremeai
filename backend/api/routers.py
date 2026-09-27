@@ -118,6 +118,7 @@ ALL_ROUTERS = [
     {"path": "api.routes.sso", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.api_keys", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.ci_webhooks", "prefix": "", "is_admin": False, "is_critical": False},
+    {"path": "api.routes.merge_learning", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.n8n_webhooks", "prefix": "", "is_admin": False, "is_critical": False},
     {
         "path": "api.routes.task_workspace",
@@ -174,8 +175,9 @@ ALL_ROUTERS = [
         "is_critical": False,
     },
     # {"path": "api.routes.websocket_voice", "prefix": "", "is_admin": False, "is_critical": False},
-    # R10 FIX: SSE stream for the /voice route
-    {"path": "api.routes.stream_voice_sse", "prefix": "", "is_admin": False, "is_critical": False},
+    # #1832: stream_voice_sse removed — zero consumers (feature_parity_baseline
+    # listed it as an orphan endpoint); the live voice transport is the
+    # re-mounted websocket_voice below (CommandCenter connects /ws/voice).
     # FIX (API-contract audit): এই তিনটি রাউটারের ফ্রন্টএন্ড কনজিউমার দীর্ঘদিন
     # সক্রিয় ছিল কিন্তু রাউটারগুলো কখনো মাউন্টই হয়নি — ফলে সব রিয়েলটাইম
     # সংযোগ নীরবে ব্যর্থ হতো:
@@ -257,8 +259,11 @@ ALL_ROUTERS = [
     {"path": "api.routes.billing_api", "prefix": "", "is_admin": False, "is_critical": True},
     # ---- Admin & Health Routes ----
     {
+        # #1833: the router carries its own /admin-api prefix — a previous
+        # /api mount here produced a double-prefixed /api/admin-api/... path
+        # that no docstring or frontend consumer ever called.
         "path": "api.routes.health_aggregation",
-        "prefix": "/api",
+        "prefix": "",
         "is_admin": False,
         "is_critical": False,
     },
@@ -388,6 +393,13 @@ ALL_ROUTERS = [
     {"path": "api.routes.plugins", "prefix": "", "is_admin": False, "is_critical": False},
     {"path": "api.routes.selector_healing", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.webhooks_ai", "prefix": "", "is_admin": False, "is_critical": False},
+    # #1802: GitHub webhook ingest for event-driven orchestration (own prefix /api/webhooks)
+    {
+        "path": "api.routes.webhooks_github",
+        "prefix": "",
+        "is_admin": False,
+        "is_critical": False,
+    },
     # ── AUDIT-WIRE FIX 2 (backend/frontend parity audit, 2026-09-11): এই ৭টি মডিউলের
     # কার্যকর APIRouter ছিল কিন্তু র���জিস্ট্রিতে ছিল না — তাদের সব এন্ডপয়েন্ট বুটে 404 দিত।
     # মাউন্ট-নোট: প্রতিটির নিজস্ব APIRouter prefix আছে (/diagram, /voice, /pair, /agent,

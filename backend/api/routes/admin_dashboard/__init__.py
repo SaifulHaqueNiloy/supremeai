@@ -414,7 +414,6 @@ from .endpoints_backups import (  # noqa: E402  (registers routes + re-export)
     trigger_backup,
 )
 from .endpoints_flags import (  # noqa: E402  (registers routes + re-export)
-    _FEATURE_FLAGS,
     create_feature_flag,
     get_feature_flags,
     update_feature_flag,
@@ -501,6 +500,9 @@ from .endpoints_events import get_events, list_reports  # noqa: E402  (registers
 from .endpoints_gate import (  # noqa: E402  (registers route + re-export)
     GateOverridePayload,
     execute_manual_gate_override,
+)
+from .endpoints_secrets_health import (  # noqa: E402  (registers routes + re-export)
+    get_secrets_health,
 )
 from .endpoints_security import (  # noqa: E402  (registers routes + re-export)
     get_security_findings,

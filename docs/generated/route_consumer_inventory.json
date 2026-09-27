@@ -6,7 +6,7 @@
   "assumptions": [
     "resolved path = ALL_ROUTERS include-time prefix + file's APIRouter(prefix) + decorator path",
     "package routers (admin_dashboard/, browser/, commandcenter/) take their prefix from the package __init__.py",
-    "routes in backend/api/routes/ not present in ALL_ROUTERS are marked mounted=false (unregistered files: 11)",
+    "routes in backend/api/routes/ not present in ALL_ROUTERS are marked mounted=false (unregistered files: 10)",
     "websocket routes are out of scope (no HTTP method, no openapi entry)",
     "frontend consumers are literal /api/... strings in frontend/src/**.{ts,tsx}; ${...} template params normalize to :param",
     "matching: exact \u2192 param-normalized \u2192 frontend base-path reference; /api/v1/x and /api/x are aliases",
@@ -14,26 +14,24 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 858,
-    "frontend_unique_refs": 148,
-    "routes_with_frontend_consumer": 296,
+    "backend_routes": 861,
+    "frontend_unique_refs": 145,
+    "routes_with_frontend_consumer": 300,
     "unmounted_routes": 0,
-    "orphan_routes": 1,
-    "orphan_families": 1,
-    "api_only_routes": 303,
+    "orphan_routes": 0,
+    "orphan_families": 0,
+    "api_only_routes": 300,
     "api_only_families": 158,
     "by_classification": {
-      "user-facing": 166,
-      "admin-only": 346,
-      "internal": 38,
+      "user-facing": 170,
+      "admin-only": 347,
+      "internal": 40,
       "deprecated": 4,
-      "api-only": 303,
-      "orphaned": 1
+      "api-only": 300,
+      "orphaned": 0
     }
   },
-  "orphan_families": {
-    "/render-ticket": 1
-  },
+  "orphan_families": {},
   "api_only_families": {
     "/agent/plan": 1,
     "/api/artifacts": 1,
@@ -65,7 +63,6 @@
     "/api/chat/export": 2,
     "/api/chat/get_completion": 1,
     "/api/chat/learning": 1,
-    "/api/chat/orchestrate": 1,
     "/api/chat/prompt-action": 1,
     "/api/chat/search": 1,
     "/api/chat/stream": 2,
@@ -99,6 +96,7 @@
     "/api/memory/recall": 3,
     "/api/memory/save": 1,
     "/api/memory/session": 1,
+    "/api/merge-learning/reports": 1,
     "/api/mobile/bff": 1,
     "/api/reasoning/think": 2,
     "/api/research/:param": 1,
@@ -111,7 +109,6 @@
     "/api/simulator/session": 3,
     "/api/skills/install": 1,
     "/api/skills/uninstall": 1,
-    "/api/stream/chat": 1,
     "/api/style/generate": 1,
     "/api/style/learn": 1,
     "/api/style/prompt": 1,
@@ -155,7 +152,7 @@
     "/api/v1/runs": 9,
     "/api/v1/sandbox": 4,
     "/api/v1/scrape": 1,
-    "/api/v1/stream": 4,
+    "/api/v1/stream": 1,
     "/api/v1/swarm": 1,
     "/api/v1/syncguard": 1,
     "/api/v1/tools-registry": 4,
@@ -183,6 +180,7 @@
     "/pair/solve": 1,
     "/payments/checkout": 1,
     "/payments/plans": 1,
+    "/render-ticket": 1,
     "/repos": 2,
     "/repos/:param": 2,
     "/task/execute": 1,
@@ -574,6 +572,20 @@
       "classification": "admin-only"
     },
     {
+      "method": "GET",
+      "path": "/admin-api/dependencies",
+      "declared": "/admin-api/dependencies",
+      "deprecated": false,
+      "router_file": "backend/api/routes/health_aggregation.py",
+      "module": "api.routes.health_aggregation",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "check_dependencies",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
       "method": "POST",
       "path": "/admin-api/deploy",
       "declared": "/admin-api/deploy",
@@ -701,6 +713,20 @@
     },
     {
       "method": "GET",
+      "path": "/admin-api/health-aggregation",
+      "declared": "/admin-api/health-aggregation",
+      "deprecated": false,
+      "router_file": "backend/api/routes/health_aggregation.py",
+      "module": "api.routes.health_aggregation",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_health_aggregation",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
       "path": "/admin-api/health-map",
       "declared": "/admin-api/health-map",
       "deprecated": false,
@@ -709,6 +735,20 @@
       "registry_prefix": "",
       "mounted": true,
       "is_admin": true,
+      "operation": "get_health_map",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/health-map",
+      "declared": "/admin-api/health-map",
+      "deprecated": false,
+      "router_file": "backend/api/routes/health_aggregation.py",
+      "module": "api.routes.health_aggregation",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
       "operation": "get_health_map",
       "frontend_consumers": [],
       "classification": "admin-only"
@@ -939,6 +979,20 @@
     },
     {
       "method": "GET",
+      "path": "/admin-api/provider-readiness",
+      "declared": "/admin-api/provider-readiness",
+      "deprecated": false,
+      "router_file": "backend/api/routes/health_aggregation.py",
+      "module": "api.routes.health_aggregation",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_provider_readiness",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
       "path": "/admin-api/providers",
       "declared": "/admin-api/providers",
       "deprecated": false,
@@ -1018,6 +1072,20 @@
       "mounted": true,
       "is_admin": true,
       "operation": "update_commandcenter_rules",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/secrets-health",
+      "declared": "/admin-api/secrets-health",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_dashboard/endpoints_secrets_health.py",
+      "module": "api.routes.admin_dashboard.endpoints_secrets_health",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_secrets_health",
       "frontend_consumers": [],
       "classification": "admin-only"
     },
@@ -1116,6 +1184,20 @@
       "mounted": true,
       "is_admin": true,
       "operation": "get_service_topology",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/service-uptime",
+      "declared": "/admin-api/service-uptime",
+      "deprecated": false,
+      "router_file": "backend/api/routes/health_aggregation.py",
+      "module": "api.routes.health_aggregation",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_service_uptime",
       "frontend_consumers": [],
       "classification": "admin-only"
     },
@@ -1340,6 +1422,20 @@
       "mounted": true,
       "is_admin": true,
       "operation": "reset_usage",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "POST",
+      "path": "/admin-api/test-service",
+      "declared": "/admin-api/test-service",
+      "deprecated": false,
+      "router_file": "backend/api/routes/health_aggregation.py",
+      "module": "api.routes.health_aggregation",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "test_specific_service",
       "frontend_consumers": [],
       "classification": "admin-only"
     },
@@ -1650,90 +1746,6 @@
       "operation": "create_plan",
       "frontend_consumers": [],
       "classification": "api-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/dependencies",
-      "declared": "/api/admin-api/dependencies",
-      "deprecated": false,
-      "router_file": "backend/api/routes/health_aggregation.py",
-      "module": "api.routes.health_aggregation",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "check_dependencies",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/health-aggregation",
-      "declared": "/api/admin-api/health-aggregation",
-      "deprecated": false,
-      "router_file": "backend/api/routes/health_aggregation.py",
-      "module": "api.routes.health_aggregation",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "get_health_aggregation",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/health-map",
-      "declared": "/api/admin-api/health-map",
-      "deprecated": false,
-      "router_file": "backend/api/routes/health_aggregation.py",
-      "module": "api.routes.health_aggregation",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "get_health_map",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/provider-readiness",
-      "declared": "/api/admin-api/provider-readiness",
-      "deprecated": false,
-      "router_file": "backend/api/routes/health_aggregation.py",
-      "module": "api.routes.health_aggregation",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "get_provider_readiness",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/service-uptime",
-      "declared": "/api/admin-api/service-uptime",
-      "deprecated": false,
-      "router_file": "backend/api/routes/health_aggregation.py",
-      "module": "api.routes.health_aggregation",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "get_service_uptime",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
-      "method": "POST",
-      "path": "/api/admin-api/test-service",
-      "declared": "/api/admin-api/test-service",
-      "deprecated": false,
-      "router_file": "backend/api/routes/health_aggregation.py",
-      "module": "api.routes.health_aggregation",
-      "registry_prefix": "/api",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "test_specific_service",
-      "frontend_consumers": [],
-      "classification": "admin-only"
     },
     {
       "method": "POST",
@@ -4678,8 +4690,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "orchestrate_chat",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/pages/PublicPages.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",
@@ -5483,40 +5497,6 @@
       "classification": "api-only"
     },
     {
-      "method": "GET",
-      "path": "/api/memory/conversations",
-      "declared": "/api/memory/conversations",
-      "deprecated": false,
-      "router_file": "backend/api/routes/memory.py",
-      "module": "api.routes.memory",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "list_conversations",
-      "frontend_consumers": [
-        "frontend/src/components/admin/MemoryBrowser.tsx",
-        "frontend/src/pages/PublicPages.tsx"
-      ],
-      "classification": "user-facing"
-    },
-    {
-      "method": "POST",
-      "path": "/api/memory/conversations/messages",
-      "declared": "/api/memory/conversations/messages",
-      "deprecated": false,
-      "router_file": "backend/api/routes/memory.py",
-      "module": "api.routes.memory",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "save_message",
-      "frontend_consumers": [
-        "frontend/src/components/admin/MemoryBrowser.tsx",
-        "frontend/src/pages/PublicPages.tsx"
-      ],
-      "classification": "user-facing"
-    },
-    {
       "method": "DELETE",
       "path": "/api/memory/recall",
       "declared": "/api/memory/recall",
@@ -5585,6 +5565,34 @@
       "operation": "save_session",
       "frontend_consumers": [],
       "classification": "api-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/merge-learning/reports",
+      "declared": "/api/merge-learning/reports",
+      "deprecated": false,
+      "router_file": "backend/api/routes/merge_learning.py",
+      "module": "api.routes.merge_learning",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_merge_learning_reports",
+      "frontend_consumers": [],
+      "classification": "api-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/merge-learning/webhook",
+      "declared": "/api/merge-learning/webhook",
+      "deprecated": false,
+      "router_file": "backend/api/routes/merge_learning.py",
+      "module": "api.routes.merge_learning",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "merge_learning_webhook",
+      "frontend_consumers": [],
+      "classification": "internal"
     },
     {
       "method": "POST",
@@ -6447,8 +6455,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "stream_chat",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/pages/PublicPages.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",
@@ -7961,7 +7971,9 @@
       "is_admin": false,
       "operation": "list_conversations",
       "frontend_consumers": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -7977,7 +7989,27 @@
       "is_admin": false,
       "operation": "create_conversation",
       "frontend_consumers": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/conversations/:param/messages",
+      "declared": "/api/v1/conversations/{session_id}/messages",
+      "deprecated": false,
+      "router_file": "backend/api/routes/conversations.py",
+      "module": "api.routes.conversations",
+      "registry_prefix": "/api/v1",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_session_messages",
+      "frontend_consumers": [
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -7993,7 +8025,9 @@
       "is_admin": false,
       "operation": "add_message",
       "frontend_consumers": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -9106,6 +9140,22 @@
       "operation": "resume_decision_via_token",
       "frontend_consumers": [],
       "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/integrations",
+      "declared": "/api/v1/integrations",
+      "deprecated": false,
+      "router_file": "backend/api/routes/integrations.py",
+      "module": "api.routes.integrations",
+      "registry_prefix": "/api/v1",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_integrations",
+      "frontend_consumers": [
+        "frontend/src/components/dashboard/ConnectedPlatformsVault.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",
@@ -10828,8 +10878,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "stream_chat_sse",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/pages/PublicPages.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",
@@ -10842,8 +10894,10 @@
       "mounted": true,
       "is_admin": false,
       "operation": "stream_chat_post",
-      "frontend_consumers": [],
-      "classification": "api-only"
+      "frontend_consumers": [
+        "frontend/src/pages/PublicPages.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "GET",
@@ -10856,20 +10910,6 @@
       "mounted": true,
       "is_admin": false,
       "operation": "stream_hitl_sse",
-      "frontend_consumers": [],
-      "classification": "api-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/stream/voice",
-      "declared": "/api/v1/stream/voice",
-      "deprecated": false,
-      "router_file": "backend/api/routes/stream_voice_sse.py",
-      "module": "api.routes.stream_voice_sse",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "stream_voice_sse",
       "frontend_consumers": [],
       "classification": "api-only"
     },
@@ -11291,6 +11331,20 @@
         "frontend/src/services/chatService.ts"
       ],
       "classification": "user-facing"
+    },
+    {
+      "method": "POST",
+      "path": "/api/webhooks/github",
+      "declared": "/api/webhooks/github",
+      "deprecated": false,
+      "router_file": "backend/api/routes/webhooks_github.py",
+      "module": "api.routes.webhooks_github",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "github_webhook",
+      "frontend_consumers": [],
+      "classification": "internal"
     },
     {
       "method": "GET",
@@ -12298,7 +12352,7 @@
       "is_admin": false,
       "operation": "issue_render_ticket",
       "frontend_consumers": [],
-      "classification": "orphaned"
+      "classification": "api-only"
     },
     {
       "method": "GET",

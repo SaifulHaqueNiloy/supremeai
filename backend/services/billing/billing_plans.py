@@ -5,12 +5,68 @@ Key Components:
 - `SUBSCRIPTION_PLANS`: A constant dict keyed by plan name, each containing details like price, cost (Decimal), currency, interval, and included features.
 
 Dependencies:
-- `pydantic`: Used for defining `CheckoutRequest` to ensure robust data validation and serialization."""
+- `pydantic`: Used for defining `CheckoutRequest` to ensure robust data validation and serialization.
 
+#1828 (single pricing source of truth): tier prices are LOADED from
+`backend/config/pricing_tiers.json` (same file the quota enforcer reads), so
+Stripe checkout catalog and quota allowances can never disagree again. Only
+Stripe price IDs remain hardcoded here. Override the file path with the
+`PRICING_TIERS_PATH` env var (mirrors scripts/billing/quota_enforcer.py).
+"""
+
+import json
+import os
 from dataclasses import dataclass
 from decimal import Decimal
+from pathlib import Path
 
 from pydantic import BaseModel
+
+from core.logging_config import logger
+
+
+def _load_tier_prices() -> dict[str, Decimal]:
+    """Load tier → monthly USD price from pricing_tiers.json (#1828).
+
+    Missing/unreadable file → {} (callers fall back to the config defaults
+    below so behavior stays deterministic). Never raises at import time.
+    """
+    default_path = Path(__file__).resolve().parents[2] / "config" / "pricing_tiers.json"
+    path = Path(os.getenv("PRICING_TIERS_PATH") or default_path)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+        tiers = data.get("tiers", {})
+        return {
+            str(tier): Decimal(str(cfg.get("monthly_credits_usd", 0)))
+            for tier, cfg in tiers.items()
+            if isinstance(cfg, dict)
+        }
+    except (OSError, ValueError, AttributeError) as exc:
+        logger.warning(f"pricing_tiers.json unreadable ({exc}) — billing plans use fallback prices")
+        return {}
+
+
+# Fallbacks mirror backend/config/pricing_tiers.json defaults — used ONLY when
+# the config file is missing/unreadable, so a broken deploy still bills predictably.
+_FALLBACK_TIER_PRICES: dict[str, Decimal] = {
+    "free": Decimal("0.00"),
+    "pro": Decimal("10.00"),
+    "enterprise": Decimal("100.00"),
+}
+
+
+def _tier_price(tier: str) -> Decimal:
+    return _load_tier_prices_cache().get(tier, _FALLBACK_TIER_PRICES[tier])
+
+
+def _load_tier_prices_cache() -> dict[str, Decimal]:
+    global _TIER_PRICES
+    if _TIER_PRICES is None:
+        _TIER_PRICES = _load_tier_prices()
+    return _TIER_PRICES
+
+
+_TIER_PRICES: dict[str, Decimal] | None = None
 
 
 class CheckoutRequest(BaseModel):
@@ -37,8 +93,8 @@ SUBSCRIPTION_PLANS: dict[str, SubscriptionPlan] = {
     "free": SubscriptionPlan(
         id="price_free",
         name="Free Plan",
-        price=0,
-        cost=Decimal("0.00"),
+        price=float(_tier_price("free")),
+        cost=_tier_price("free"),
         currency="usd",
         interval="month",
         features=["100 AI Credits", "Basic Models", "Community Support"],
@@ -46,8 +102,8 @@ SUBSCRIPTION_PLANS: dict[str, SubscriptionPlan] = {
     "pro": SubscriptionPlan(
         id="price_pro_monthly",
         name="Pro Plan",
-        price=9.99,
-        cost=Decimal("9.99"),
+        price=float(_tier_price("pro")),
+        cost=_tier_price("pro"),
         currency="usd",
         interval="month",
         features=["1000 AI Credits", "Advanced Models", "Priority Support"],
@@ -55,8 +111,8 @@ SUBSCRIPTION_PLANS: dict[str, SubscriptionPlan] = {
     "enterprise": SubscriptionPlan(
         id="price_enterprise_monthly",
         name="Enterprise Plan",
-        price=199.99,
-        cost=Decimal("199.99"),
+        price=float(_tier_price("enterprise")),
+        cost=_tier_price("enterprise"),
         currency="usd",
         interval="month",
         features=["Unlimited AI Credits", "Dedicated Account Manager", "Custom SLAs", "API Access"],

@@ -1,4 +1,10 @@
-version: '2.0'
+version: '2.2'
+# v2.2 (issue #1924, founder directive 2026-09-27):
+#   + super pool — omni-lane executor (union of all specialist lanes)
+# v2.1 (plan: docs/plans/ROLE_BASED_AGENT_ECOSYSTEM_PLAN.md, issue #1439):
+#   + browser pool (agent-13's lane, promoted from coder side-duty)
+#   + acquisition_rules — 15-min activity rule, CAS branch-claim protocol
+#   - validation: global active-slot cap REMOVED (dynamic pools, issue #1800 Option D)
 role_pools:
   planner:
     app: planner-and-auditor
@@ -20,13 +26,46 @@ role_pools:
     description: 'CI/CD Workflows & Pipeline Automation Pool. Fixed App, Fixed Rules.'
   platform:
     app: platform-agent
-    branch_pattern: 'platform-{N}'  # e.g., platform-1 ... platform-10
+    branch_pattern: 'platform-{N}'  # e.g., platform-1 ... platform-100
     bot_identity: 'supremeai-platform-agent[bot]'
     description: 'Cloud Platform Health & Connectivity Sweeper Pool. Fixed App, Fixed Rules.'
+  browser:
+    app: browser-explorer
+    branch_pattern: 'browser-{N}'   # e.g., browser-1 ... browser-100
+    description: 'Browser E2E Exploration & Frontend Verification Pool (agent-13 lane, promoted
+      from coder side-duty per founder directive 2026-09-27). Fixed App, Fixed Rules.'
+  super:
+    app: super-agent
+    branch_pattern: 'super-{N}'     # e.g., super-1 ... super-100
+    description: 'SUPER AGENT — Omni-Lane Executor Pool (founder directive 2026-09-27, issue #1924).
+      Allowed scope = union of all six specialist lanes (planner/coder/ci/pr-helper/browser/platform).
+      Guardrails: universal invariants bind; handoff:<lane> issues stay with specialist lanes unless
+      explicitly assigned to super; works priority-first like every lane. Fixed App, Fixed Rules.'
 
-# Legacy slot assignments (maintained for active session backwards compatibility):
+# ── Branch Slot Acquisition (15-minute activity rule — founder directive, issue #1439) ──
+# Algorithm (CAS, race-safe; CLI: scripts/git/acquire_lane_slot.sh — issue tracked in #1439):
+#   for n in 1..100:
+#     if branch <pool>-n does not exist:
+#         atomic create from origin/main HEAD (POST /git/refs; 422 = raced → next n)
+#     elif last_commit_age(<pool>-n) <= 15 min:   # ACTIVE → skip
+#         continue
+#     else:                                       # STALE → reuse via fast-forward claim push
+#         push '[slot-claim] pool=<P> agent=<id> ts=<ISO>' (non-FF = raced → next n)
+#         reset branch to origin/main (--force-with-lease) → clean slate
+#   Activity = latest commit timestamp on the branch (every push = heartbeat).
+#   Lifecycle: FREE --create--> ACTIVE --idle>15min--> STALE --CAS claim--> ACTIVE(reset)
+acquisition_rules:
+  staleness_window_minutes: 15
+  numeric_bound: 100
+  claim_commit_format: '[slot-claim] pool=<pool> agent=<agent_id> ts=<ISO8601>'
+  reuse_protocol: 'reset to origin/main with --force-with-lease after winning CAS claim'
+  new_branch_only_if: 'all existing <pool>-{N} branches have commits within the last 15 minutes (name same, number +1)'
+  same_app_same_rules_per_pool: true
+
+# Legacy slot assignments (DEPRECATED v2.1 — migrate via legacy_migration_target, auto-expire via expires_on; tracked in #1439):
 slots:
 - slot: agent-1
+  legacy_migration_target: planner-1
   tool: planner-and-auditor
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -37,6 +76,7 @@ slots:
     identification, implementation planning, and backlog issue creation. FORBIDDEN
     from modifying CI workflows or authoring business feature code unless Admin explicitly orders role change.'
 - slot: agent-2
+  legacy_migration_target: pr-helper-1
   tool: pr-helper
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -47,6 +87,7 @@ slots:
   notes: 'PR Gate & Diagnostics Verifier. Evaluates PR delta, regression risk, and performs
     beneficial squash merges. FORBIDDEN from opening feature PRs or writing core code.'
 - slot: agent-3
+  legacy_migration_target: coder-1
   tool: coder-1
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -58,6 +99,7 @@ slots:
     performing full codebase audits or refactoring outside issue scope. FORBIDDEN from
     modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-5
+  legacy_migration_target: ci-1
   tool: ci-action
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -67,6 +109,7 @@ slots:
   notes: 'CI/CD & Workflow Specialist. Owns .github/workflows/*, git pre-push hooks,
     auto-sync engines, and artifact regeneration. FORBIDDEN from modifying business code.'
 - slot: agent-6
+  legacy_migration_target: coder-2
   tool: coder-2
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -77,6 +120,7 @@ slots:
     production code and unit tests. FORBIDDEN from performing full codebase audits or
     modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-7
+  legacy_migration_target: coder-3
   tool: coder-3
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -87,6 +131,7 @@ slots:
     opens focused PRs. FORBIDDEN from touching .github/workflows or modifying any files
     without an atomically claimed Issue (status:in-progress).'
 - slot: agent-8
+  legacy_migration_target: pr-helper-2
   tool: pr-helper
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -113,6 +158,7 @@ slots:
   notes: Orchestrator + fallback. Assigns alternatives if agent inactive. Does any
     role if needed
 - slot: agent-11
+  legacy_migration_target: platform-1
   tool: platform-agent
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -127,6 +173,7 @@ slots:
     agent-11-longrun/issue-<N>-<slug> branches (OPS-06 naming guard), applies
     platform-side config changes (owner approval for destructive/billing).'
 - slot: agent-12
+  legacy_migration_target: ci-2
   tool: ci-action
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -135,6 +182,7 @@ slots:
   notes: 'CI pipeline maintenance & failure triage (part of ci pool). Watches CI/Actions logs on failure (handoff:ci), diagnoses,
     fixes, re-verifies. Creates blocker issues on repeated failures.'
 - slot: agent-13
+  legacy_migration_target: browser-1
   tool: coder-4
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
@@ -147,7 +195,10 @@ validation_rules:
 - maintainer MUST be a GitHub username (starts with @)
 - expires_on MUST be <= 7 days from assigned_on
 - Only one active assignment per slot at a time
-- Active slots MUST be <= 10 (Max Concurrent Agent Policy — OPS-06 Safeguard 5)
+- 'Concurrency model (v2.1, replaces the old global cap): one agent per ISSUE (atomic claim)
+  and one agent per BRANCH (15-min CAS acquisition, see acquisition_rules). No global active-slot
+  cap — capacity is dynamic per pool, bounded by acquisition_rules.numeric_bound (=100).
+  Resolves #1800 (Option D: dynamic pools).'
 - 'Auto-expiry: assignments past expires_on are auto-deactivated'
 usage:
 - Maintainer edits this file directly via PR (protected scope per SECURITY_GUARDIAN.md)

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import uuid
 from collections.abc import AsyncIterator
 from typing import Any
@@ -25,16 +26,84 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_current_user_token
+from core.logging_config import logger
 from database.session import get_db_session, get_db_session_context
-from missions.models import MissionTraceEvent
+from missions.models import Mission, MissionTraceEvent
 from missions.schemas import MissionCreate, MissionOut, TraceEventOut, TransitionRequest
 from missions.service import MissionNotFound, MissionService
 from missions.state_machine import STATES, IllegalTransition
 
 router = APIRouter(prefix="/api/v1/missions", tags=["missions"])
 
+#: Executor lane actually wired by this service (#1829): approved missions run
+#: their goal through the production LLM gateway path (the same engine the
+#: scheduled-tasks executor uses). The assigner label reflects that routing
+#: decision instead of stamping a fake "auto-agent-v1" badge.
+EXECUTOR_LANE_LABEL = "llm-gateway-direct"
+
+
+def _llm_assigner(mission: Mission) -> str:  # noqa: ARG001 — hook signature keeps the seam
+    """Real routing decision (#1829): this service executes goals through the
+    LLM gateway executor, so the assigned-agent label names that lane."""
+    return EXECUTOR_LANE_LABEL
+
+
+async def _execute_mission_goal(mission_id: str) -> None:
+    """Background executor (#1829): run the mission goal through the LLM
+    gateway and advance its phases from the run's completion — approved
+    missions no longer sit RUNNING until someone POSTs /advance manually.
+
+    Uses its own session per step (never the request session) via
+    ``get_db_session_context``; any execution error transitions the mission
+    to FAILED with the reason recorded.
+    """
+    import asyncio
+
+    from api.routes.scheduled_tasks import _execute_task_prompt
+
+    try:
+        async with get_db_session_context() as session:
+            mission = await mission_service.get_mission(session, mission_id)
+            goal_text = str(mission.goal_text or "")
+            user_id = str(getattr(mission, "created_by", None) or "anonymous")
+            phase_count = len(mission.phases or [])
+
+        if not goal_text.strip():
+            raise RuntimeError("mission has an empty goal_text — nothing to execute")
+
+        await _execute_task_prompt(goal_text, user_id)
+
+        # Completion callback: advance every phase (the last advance lands
+        # the mission in SUCCEEDED via the state machine).
+        for _ in range(max(1, phase_count)):
+            async with get_db_session_context() as session:
+                await mission_service.advance_phase(session, mission_id, actor="auto-executor")
+        logger.info(f"✅ [missions] mission {mission_id} executed and completed autonomously")
+    except Exception as exc:  # noqa: BLE001 — executor must translate errors to FAILED
+        logger.error(f"❌ [missions] autonomous execution failed for {mission_id}: {exc}")
+        try:
+            async with get_db_session_context() as session:
+                await mission_service.fail(
+                    session, mission_id, reason=str(exc)[:500], actor="auto-executor"
+                )
+        except Exception as fail_exc:  # noqa: BLE001
+            logger.error(
+                f"❌ [missions] failed to record FAILED state for {mission_id}: {fail_exc}"
+            )
+
+
+def _spawn_autonomous_executor(mission_id: str) -> None:
+    """Fire the background executor unless disabled (TESTING env or explicit off)."""
+    if os.getenv("TESTING", "").lower() == "true":
+        logger.debug(f"[missions] autonomous executor suppressed in TESTING for {mission_id}")
+        return
+    if os.getenv("MISSIONS_AUTONOMOUS_EXECUTION", "true").lower() == "false":
+        return
+    asyncio.create_task(_execute_mission_goal(mission_id))
+
+
 #: Request-scoped service instance (assigner hook injectable for tests/ops).
-mission_service = MissionService()
+mission_service = MissionService(assigner=_llm_assigner)
 
 #: Roles allowed to read/operate on missions across all owners.
 _ADMIN_ROLES = {"admin", "master_admin", "owner", "project_admin", "tenant_admin"}
@@ -174,7 +243,9 @@ async def _transition(
         if operation == "approve":
             return await mission_service.approve(session, mission.id, actor=actor)
         if operation == "start":
-            return await mission_service.start(session, mission.id, actor=actor)
+            started = await mission_service.start(session, mission.id, actor=actor)
+            _spawn_autonomous_executor(str(mission.id))
+            return started
         if operation == "advance":
             return await mission_service.advance_phase(session, mission.id, actor=actor)
         if operation == "fail":
@@ -211,10 +282,13 @@ async def start_mission(
     session: AsyncSession = Depends(get_db_session),
     user: dict = Depends(get_current_user_token),
 ) -> MissionOut:
-    """ASSIGNED → RUNNING (Phase 01 in_progress)."""
+    """ASSIGNED → RUNNING (Phase 01 in_progress); enqueues autonomous execution."""
     mission = await _transition(session, mission_id, user, "start", payload)
     out = _finish(session, mission)
     await session.commit()
+    # #1829: approved+started missions execute autonomously — the background
+    # executor owns its own sessions and advances phases on completion.
+    _spawn_autonomous_executor(str(mission_id))
     return out
 
 
