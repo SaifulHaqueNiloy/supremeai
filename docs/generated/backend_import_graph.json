@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3513,
+  "edge_count": 3511,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -10108,10 +10108,6 @@
       "to": "byoc.container_orchestrator"
     },
     {
-      "from": "tests.byoc.test_resource_manager",
-      "to": "byoc.resource_manager"
-    },
-    {
       "from": "tests.conftest",
       "to": "core.logging_config"
     },
@@ -11814,10 +11810,6 @@
     {
       "from": "tests.p2p_tests.test_credit_system",
       "to": "p2p.credit_system"
-    },
-    {
-      "from": "tests.p2p_tests.test_secure_tunnel",
-      "to": "p2p.secure_tunnel"
     },
     {
       "from": "tests.rag.test_hybrid_retriever",
@@ -14111,6 +14103,10 @@
     "_archive.batch-6.metrics_collector",
     "_archive.batch-6.pgbouncer_pool",
     "_archive.batch-6.tenant_db",
+    "_archive.batch-7.resource_manager",
+    "_archive.batch-7.secure_tunnel",
+    "_archive.batch-7.test_resource_manager",
+    "_archive.batch-7.test_secure_tunnel",
     "adapters",
     "adapters.base_adapter",
     "adapters.business_adapter",
@@ -14466,7 +14462,6 @@
     "byoc",
     "byoc.cloud_connector",
     "byoc.container_orchestrator",
-    "byoc.resource_manager",
     "conftest",
     "context",
     "context.budget",
@@ -15101,7 +15096,6 @@
     "monitoring.metrics_collector",
     "p2p",
     "p2p.credit_system",
-    "p2p.secure_tunnel",
     "pipelines",
     "pipelines.code_to_db_sync",
     "pipelines.synthetic_data_pipeline",
@@ -15397,7 +15391,6 @@
     "tests.brain.test_economic_optimizer",
     "tests.byoc.test_cloud_connector",
     "tests.byoc.test_container_orchestrator",
-    "tests.byoc.test_resource_manager",
     "tests.ci.pr_helper.test_ai_fix_generator",
     "tests.ci.pr_helper.test_intelligent_decision",
     "tests.cloud_db_load_test",
@@ -15712,7 +15705,6 @@
     "tests.monitoring.test_cost_auditor",
     "tests.orchestration.test_master_cognitive_orchestrator",
     "tests.p2p_tests.test_credit_system",
-    "tests.p2p_tests.test_secure_tunnel",
     "tests.rag.test_hybrid_retriever",
     "tests.runs.test_run_adoption",
     "tests.runs.test_run_api",
