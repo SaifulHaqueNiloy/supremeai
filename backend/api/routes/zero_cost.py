@@ -25,9 +25,14 @@ async def zero_cost_health():
         "queue": orchestrator.queue.get_metrics(),
         "redis_connected": orchestrator.redis.is_connected,
         "config": {
-            "max_concurrent": get_zero_cost_config().ZERO_COST_MAX_CONCURRENT,
-            "timeout": get_zero_cost_config().ZERO_COST_TASK_TIMEOUT,
-            "self_healing": get_zero_cost_config().SELF_HEALING,
+            # Issue #1830: these read the real config fields — the endpoint
+            # previously used the ENV-VAR names (ZERO_COST_MAX_CONCURRENT /
+            # ZERO_COST_TASK_TIMEOUT) as pydantic attribute names, which do
+            # not exist on ZeroCostConfig → AttributeError → 500 on every
+            # health poll.
+            "max_concurrent": get_zero_cost_config().QUEUE_MAX_CONCURRENT_TASKS,
+            "timeout": get_zero_cost_config().QUEUE_TASK_TIMEOUT_SECONDS,
+            "self_healing": get_zero_cost_config().SELF_HEALING_ENABLED,
         },
     }
 
@@ -50,7 +55,9 @@ async def zero_cost_recommendations():
 
     recommendations = []
     for op, param in metrics.items():
-        if param.get("p95_duration", 0) > get_zero_cost_config().ZERO_COST_TASK_TIMEOUT * 0.8:
+        # Issue #1830: the config field is QUEUE_TASK_TIMEOUT_SECONDS — the
+        # env-var name (ZERO_COST_TASK_TIMEOUT) is not a pydantic attribute.
+        if param.get("p95_duration", 0) > get_zero_cost_config().QUEUE_TASK_TIMEOUT_SECONDS * 0.8:
             recommendations.append(
                 f"Timeout for {op} is approaching P95 duration. Consider increasing it."
             )
