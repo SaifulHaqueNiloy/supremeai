@@ -500,15 +500,17 @@ class SettingsValidationMixin:
             "ENV", "local"
         )
         # AUDIT-FIX (#1658): পরিচিত insecure default values — কখনো accept নয়।
-        INSECURE_DEFAULTS = frozenset({
-            "change-me-in-production",
-            "change-me",
-            "changeme",
-            "secret",
-            "your-secret-key",
-            "default-secret-key",
-            "insecure",
-        })
+        INSECURE_DEFAULTS = frozenset(
+            {
+                "change-me-in-production",
+                "change-me",
+                "changeme",
+                "secret",
+                "your-secret-key",
+                "default-secret-key",
+                "insecure",
+            }
+        )
         if value and isinstance(value, str) and value.strip().lower() in INSECURE_DEFAULTS:
             raise ValueError(
                 f"❌ JWT secret is set to a known insecure default ('{value}'). "

@@ -38,5 +38,10 @@ class TestPostVerifyHardening:
     def test_cas_core_unchanged(self):
         """The existing CAS machinery (claim → verify → evict-others) stays intact."""
         text = SCRIPT.read_text(encoding="utf-8")
-        for marker in ("STEP 1: CLAIM", "STEP 2: VERIFY", "Removing other assignees", "STEP 3: LOCK"):
+        for marker in (
+            "STEP 1: CLAIM",
+            "STEP 2: VERIFY",
+            "Removing other assignees",
+            "STEP 3: LOCK",
+        ):
             assert marker in text, f"existing CAS stage missing: {marker}"

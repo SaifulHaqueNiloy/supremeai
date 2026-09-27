@@ -228,8 +228,7 @@ class SecureRedisManager:
         elif not self._budget_warned and self._command_count >= int(self._command_budget * 0.8):
             self._budget_warned = True
             logger.warning(
-                f"⚠️ Redis daily command budget at 80%: "
-                f"{self._command_count}/{self._command_budget}"
+                f"⚠️ Redis daily command budget at 80%: {self._command_count}/{self._command_budget}"
             )
 
     def get_budget_status(self) -> dict:

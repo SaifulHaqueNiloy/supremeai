@@ -240,7 +240,6 @@ async def save_session(req: SessionSaveRequest, user: dict = Depends(get_current
     return result
 
 
-
 # ── #1823 conversation-history split-brain retirement ────────────────────────
 # The Firestore-backed conversation endpoints that lived here
 # (POST /conversations/messages + GET /conversations) are RETIRED:

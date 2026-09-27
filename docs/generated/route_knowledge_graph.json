@@ -1,5 +1,5 @@
 {
-  "edge_count": 1597,
+  "edge_count": 1595,
   "edges": [
     {
       "relation": "defines",
@@ -3200,11 +3200,6 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:d9e6162e59f08cbbb2f9"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
-      "target": "route:da2ab71a5825c335601c"
     },
     {
       "relation": "defines",
@@ -7303,11 +7298,6 @@
     },
     {
       "relation": "exposes",
-      "source": "route:da2ab71a5825c335601c",
-      "target": "capability:bcb7708af85d83f32beb"
-    },
-    {
-      "relation": "exposes",
       "source": "route:da51ee24ac7212a0201f",
       "target": "capability:654aa14b05faffbe9b54"
     },
@@ -7987,7 +7977,7 @@
       "target": "control:8beb2443d48d78613952"
     }
   ],
-  "node_count": 900,
+  "node_count": 898,
   "nodes": [
     {
       "id": "capability:0304e05cfc30a6eece57",
@@ -8473,11 +8463,6 @@
       "id": "capability:b8af85aecacde4df0938",
       "kind": "capability",
       "label": "payments"
-    },
-    {
-      "id": "capability:bcb7708af85d83f32beb",
-      "kind": "capability",
-      "label": "SSE Voice Stream"
     },
     {
       "id": "capability:be0643d29a4e69b5771e",
@@ -15080,16 +15065,6 @@
       }
     },
     {
-      "id": "route:da2ab71a5825c335601c",
-      "kind": "route",
-      "label": "GET /api/v1/stream/voice",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "stream_voice_sse_api_v1_stream_voice_get",
-        "owner": "unassigned"
-      }
-    },
-    {
       "id": "route:da41d06e9c54b8eba11f",
       "kind": "route",
       "label": "GET /api/v1/live",
@@ -16302,5 +16277,5 @@
   ],
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "7fb088dbd70aca13ca89de65616520505b03964cf7a1eb07cc85cf17d1eea273"
+  "source_sha256": "57f27f7accaa979eaed20b214001053abce1cfa90c07ab14a0b7cb0a799b6075"
 }

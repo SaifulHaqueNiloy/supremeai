@@ -1,11 +1,11 @@
 {
-  "functional_module_count": 194,
+  "functional_module_count": 190,
   "functional_module_inventory": "MODULES_LIST.md",
   "functional_status_counts": {
-    "broken": 1,
+    "broken": 3,
     "env_dependent": 3,
-    "operational": 127,
-    "partially_wired": 63,
+    "operational": 124,
+    "partially_wired": 60,
     "planned": 0
   },
   "inventory_type": "source_file_capability",
