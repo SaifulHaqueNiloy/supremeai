@@ -35,16 +35,45 @@ class FakeInnerClient:
         return True
 
 
+def _snapshot_redis_manager_modules() -> dict:
+    """FIX (#2088 fallout): snapshot live sys.modules entries for the module.
+
+    The reload dance below replaces the module object in sys.modules with a
+    FRESH one (new singleton). Without restoring the snapshot at teardown,
+    every later ``from core.cache.redis_manager import redis_manager`` in the
+    same pytest session resolves to that fresh module, while tests that
+    captured the module object earlier (e.g. module-level import_module in
+    test_security_rate_limit_backend) keep patching the STALE object — their
+    monkeypatches silently no-op and the REAL singleton is used (observed in
+    CI core-unit: 4× "Event loop is closed" rate-limit failures that pass
+    in isolation).
+    """
+    return {
+        name: mod
+        for name, mod in sys.modules.items()
+        if name == "core.cache.redis_manager" or name.startswith("core.cache.redis_manager.")
+    }
+
+
+def _restore_redis_manager_modules(saved: dict) -> None:
+    for name in [
+        m
+        for m in list(sys.modules)
+        if m == "core.cache.redis_manager" or m.startswith("core.cache.redis_manager.")
+    ]:
+        del sys.modules[name]
+    sys.modules.update(saved)
+
+
 @pytest.fixture()
 def manager(monkeypatch):
     """SecureRedisManager with no network: monkeypatch connect to a FakeInnerClient."""
-    import importlib
-
     monkeypatch.setenv("REDIS_DAILY_LIMIT", "10")
     # বাংলা: `import core.cache.redis_manager as x` ট্র্যাপ — core/cache/__init__
     # প্যাকেজ নেমস্পেসে `redis_manager` = singleton INSTANCE, তাই module নয়।
     # import_module() সবসময় module অবজেক্ট দেয়।
-    for mod_name in [m for m in list(sys.modules) if m.startswith("core.cache.redis_manager")]:
+    saved = _snapshot_redis_manager_modules()
+    for mod_name in list(saved):
         del sys.modules[mod_name]
     module = importlib.import_module("core.cache.redis_manager")
     mgr = module.SecureRedisManager()
@@ -55,7 +84,11 @@ def manager(monkeypatch):
         mgr._initialized = True
 
     monkeypatch.setattr(mgr, "_ensure_connected", _fake_ensure)
-    return mgr
+    yield mgr
+    # বাংলা: teardown — reload-করা fresh module-কা বাদ দিয়ে আসল module
+    # object ফিরিয়ে দিই, যাতে পরের টেস্টগুলো stale-module monkeypatch ট্র্যাপে
+    # না পড়ে (#2088 fallout fix)।
+    _restore_redis_manager_modules(saved)
 
 
 class TestBudgetTracking:
@@ -105,26 +138,28 @@ class TestBudgetTracking:
 
     @pytest.mark.asyncio
     async def test_disabled_budget_never_opens(self, monkeypatch):
-        import importlib
-
         monkeypatch.setenv("REDIS_DAILY_LIMIT", "0")
-        for mod_name in [m for m in list(sys.modules) if m.startswith("core.cache.redis_manager")]:
-            del sys.modules[mod_name]
-        rm = importlib.import_module("core.cache.redis_manager")
-        mgr = rm.SecureRedisManager()
+        saved = _snapshot_redis_manager_modules()
+        try:
+            for mod_name in list(saved):
+                del sys.modules[mod_name]
+            rm = importlib.import_module("core.cache.redis_manager")
+            mgr = rm.SecureRedisManager()
 
-        async def _fake_ensure():
-            if mgr._client is None:
-                mgr._client = FakeInnerClient()
-            mgr._initialized = True
+            async def _fake_ensure():
+                if mgr._client is None:
+                    mgr._client = FakeInnerClient()
+                mgr._initialized = True
 
-        monkeypatch.setattr(mgr, "_ensure_connected", _fake_ensure)
-        client = await mgr.get_client_async()
-        for _ in range(50):
-            await client.ping()
-        status = mgr.get_budget_status()
-        assert status["enabled"] is False
-        assert status["breaker_open"] is False
+            monkeypatch.setattr(mgr, "_ensure_connected", _fake_ensure)
+            client = await mgr.get_client_async()
+            for _ in range(50):
+                await client.ping()
+            status = mgr.get_budget_status()
+            assert status["enabled"] is False
+            assert status["breaker_open"] is False
+        finally:
+            _restore_redis_manager_modules(saved)
 
 
 class TestSingleCacheManager:
