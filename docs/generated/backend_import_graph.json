@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3527,
+  "edge_count": 3525,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -4474,10 +4474,6 @@
     {
       "from": "core.cache.semantic_cache",
       "to": "core.messaging.event_bus"
-    },
-    {
-      "from": "core.cache_manager",
-      "to": "core.logging_config"
     },
     {
       "from": "core.capability_discovery",
@@ -10656,10 +10652,6 @@
       "to": "core.browser_session_vault"
     },
     {
-      "from": "tests.core.test_cache_manager_coverage",
-      "to": "core.cache_manager"
-    },
-    {
       "from": "tests.core.test_cache_optimization",
       "to": "core.cache.autocache_proxy"
     },
@@ -14112,7 +14104,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2020,
+  "module_count": 2022,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14595,7 +14587,6 @@
     "core.cache.rate_limit_atomic",
     "core.cache.redis_manager",
     "core.cache.semantic_cache",
-    "core.cache_manager",
     "core.capability_activation",
     "core.capability_discovery",
     "core.capability_gateway",
@@ -14950,6 +14941,7 @@
     "core.startup.agents",
     "core.startup.api_key_tables",
     "core.startup.services",
+    "core.startup.usage_metrics_aggregator",
     "core.startup_validator",
     "core.state_store",
     "core.storage.interfaces",
@@ -15373,6 +15365,7 @@
     "tests.api.routes.test_deep_research_full",
     "tests.api.routes.test_feature_flags_endpoint",
     "tests.api.routes.test_global_memory_stats",
+    "tests.api.routes.test_integrations_list",
     "tests.api.routes.test_knowledge_search_seed",
     "tests.api.routes.test_mcp_hub",
     "tests.api.routes.test_mcp_hub_contract",
@@ -15528,7 +15521,6 @@
     "tests.core.test_brain",
     "tests.core.test_browser_credentials",
     "tests.core.test_browser_session_vault",
-    "tests.core.test_cache_manager_coverage",
     "tests.core.test_cache_optimization",
     "tests.core.test_capability_activation",
     "tests.core.test_capability_discovery",
@@ -15670,6 +15662,7 @@
     "tests.core.test_rate_limiter_lua_invariants",
     "tests.core.test_rbac",
     "tests.core.test_reasoning_orchestrator",
+    "tests.core.test_redis_budget_guard",
     "tests.core.test_redis_cache",
     "tests.core.test_redis_manager_memory_fallback",
     "tests.core.test_reliability_plane",
@@ -15716,6 +15709,7 @@
     "tests.core.test_universal_rules",
     "tests.core.test_universal_rules_extended",
     "tests.core.test_upload_validator",
+    "tests.core.test_usage_metrics_aggregator",
     "tests.core.test_vector_store_tenant_isolation",
     "tests.core.test_voice_stream",
     "tests.core.test_zero_cost_phase1_queue",
