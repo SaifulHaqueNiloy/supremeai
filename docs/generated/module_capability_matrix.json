@@ -23614,6 +23614,17 @@
     },
     {
       "capability_signals": [
+        "dispatch",
+        "mcp",
+        "register"
+      ],
+      "classification": "adapter",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/agents/mcp_tower_client.py"
+    },
+    {
+      "capability_signals": [
         "browser",
         "dispatch",
         "health"
@@ -26692,5 +26703,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3050
+  "source_file_count": 3051
 }
