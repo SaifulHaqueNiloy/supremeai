@@ -1944,7 +1944,7 @@ jobs:
           NOW_EPOCH=$(date -u +%s)
           STALE_CUTOFF=$((NOW_EPOCH - 6*3600))
 
-          PRS=$(gh pr list --state open --json number,headRefName,isDraft,headRepositoryOwner,labels,updatedAt -q '.[] | select(.isDraft == false and .headRepositoryOwner.login == "'"$GITHUB_REPOSITORY_OWNER"'") | "\(.number)|\(.headRefName)|\(.updatedAt)|\([.labels[].name] | index(\"queue:pending-rollup\") != null)"')
+          PRS=$(gh pr list --state open --json number,headRefName,isDraft,headRepositoryOwner,labels,updatedAt -q '.[] | select(.isDraft == false and .headRepositoryOwner.login == "'"$GITHUB_REPOSITORY_OWNER"'") | "\(.number)|\(.headRefName)|\(.updatedAt)|\([.labels[].name] | index("queue:pending-rollup") != null)"')
 
           if [ -z "$PRS" ]; then
             echo "✅ No open PRs require synchronization."
