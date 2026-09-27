@@ -677,7 +677,7 @@ jobs:
           PR_TITLE="$(gh pr view "$PR" --json title -q .title 2>/dev/null || echo '')"
 
           ISSUE_REFS=$(printf '%s\n%s\n' "$PR_TITLE" "$PR_BODY" \
-            | grep -oE '(close[sd]?|fix(es|ed)?|resolve[sd]?|refs?|see)[[:space:]]+#[0-9]+' \
+            | grep -ioE '(close[sd]?|fix(es|ed)?|resolve[sd]?|refs?|see)[[:space:]]+#[0-9]+' \
             | grep -oE '#[0-9]+' | sort -u | tr '\n' ' ' | sed 's/ $//')
 
           if [[ -n "$ISSUE_REFS" ]]; then
