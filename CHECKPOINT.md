@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 21:01 UTC
+- **Date:** 2026-09-27 21:14 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,19 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `docs/generated/route_inventory.json`
-  - `.agents/rules/GROUND_TRUTH_AUDITING_DISCIPLINE.md`
-  - `.github/workflows/integration-gate.yml`
-  - `docs/generated/STATUS_PROOF.md`
-  - `docs/generated/route_knowledge_graph.json`
-  - `scripts/ci/regen_all_artifacts.sh`
   - `.agents/rules/PR_EVALUATION_POLICY.md`
-  - `.github/workflows/ci-advanced-checks.yml`
-  - `docs/generated/route_topology.mmd`
-  - `.github/workflows/artifact-regen.yml`
-  - `docs/audit_reports/full-architecture-audit-2026-09-27/FULL_ARCHITECTURE_AUDIT_BN.md`
-  - `backend/tests/api/routes/commandcenter/test_system.py`
   - `backend/tests/api/routes/commandcenter/test_secure.py`
+  - `.agents/rules/GROUND_TRUTH_AUDITING_DISCIPLINE.md`
+  - `backend/tests/api/routes/commandcenter/test_system.py`
+  - `docs/audit_reports/full-architecture-audit-2026-09-27/FULL_ARCHITECTURE_AUDIT_BN.md`
+  - `CHECKPOINT.md`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
