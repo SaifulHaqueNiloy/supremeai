@@ -482,9 +482,39 @@ class SettingsValidationMixin:
 
     @classmethod
     def set_jwt_secret(cls, value: Any, info: Any = None) -> str:
+        """Validate JWT secret on Settings field assignment.
+
+        AUDIT-FIX (#1658 HIGH): আগে এই method টি একটি orphaned @classmethod
+        ছিল — কখনো @field_validator হিসেবে wire করা হয়নি, তাই এটি শুধু
+        tests থেকে direct call হতো। এখন এটি স্পষ্টভাবে নথিভুক্ত এবং
+        validate_production_completeness দ্বারা স্টার্টআপে কল করা হয়।
+
+        Behavior:
+        - Production: empty/missing → ValueError (fail-closed)
+        - Production: < 64 bytes → ValueError (fail-closed)
+        - Production: known-insecure defaults → ValueError (fail-closed)
+        - Non-production: empty → generate random (safe for dev)
+        - Non-production: non-empty → return as-is
+        """
         env = (info.data.get("env") if info and hasattr(info, "data") else None) or os.getenv(
             "ENV", "local"
         )
+        # AUDIT-FIX (#1658): পরিচিত insecure default values — কখনো accept নয়।
+        INSECURE_DEFAULTS = frozenset({
+            "change-me-in-production",
+            "change-me",
+            "changeme",
+            "secret",
+            "your-secret-key",
+            "default-secret-key",
+            "insecure",
+        })
+        if value and isinstance(value, str) and value.strip().lower() in INSECURE_DEFAULTS:
+            raise ValueError(
+                f"❌ JWT secret is set to a known insecure default ('{value}'). "
+                f"This is a CRITICAL security vulnerability — full auth bypass possible. "
+                f"Set SUPREMEAI_JWT_SECRET to a strong random value (>= 64 bytes)."
+            )
         if not value and env == "production":
             raise ValueError("JWT secret cannot be empty in production.")
         if not value or value is None:
@@ -501,14 +531,28 @@ class SettingsValidationMixin:
         test individual properties. Those tests already exercise their target
         validators directly, so cross-field completeness is skipped under pytest
         and never skipped by a real production process.
+
+        AUDIT-FIX (#1658 HIGH): এখন staging env-তেও jwt_secret validate হয় —
+        আগে শুধু production-এ হতো, staging-এ এড়িয়ে যেত।
         """
         if "pytest" in sys.modules or os.getenv("CI") == "true":
             return self
 
-        if self.env == "production":
+        if self.env in {"production", "staging"}:
+            # AUDIT-FIX (#1658): jwt_secret property-তে validate হয়, কিন্তু
+            # সেটি শুধু access হলেই trigger করে। এখানে explicit access করা
+            # হয় যাতে startup-এই fail-fast হয়।
             if hasattr(self, "_jwt_secret_cache"):
                 delattr(self, "_jwt_secret_cache")
-            _ = self.jwt_secret
+            # AUDIT-FIX (#1658): set_jwt_secret দিয়ে known-insecure defaults
+            # check করি — যদি কেউ "change-me-in-production" দিয়ে থাকে,
+            # এখানেই crash হবে।
+            try:
+                resolved = self.jwt_secret
+                # Extra guard: double-check resolved secret against insecure defaults
+                SettingsValidationMixin.set_jwt_secret(resolved, type(self))
+            except ValueError as exc:
+                raise ValueError(f"❌ JWT secret validation failed at startup: {exc}") from exc
 
             if not self.user_cors_origins and not self.admin_cors_origins:
                 # 🔧 Dynamic fallback: derive an origin from the already-resolved
