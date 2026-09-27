@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 606,
+    "backend_routes": 607,
     "frontend_unique_refs": 145,
     "matched": 272,
-    "orphan_routes": 334
+    "orphan_routes": 335
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -131,11 +131,12 @@
     "/api/chat/completion": 1,
     "/api/chat/prompt-action": 1,
     "/api/v1/voices": 1,
-    "/api/v1/stream_audio": 1
+    "/api/v1/stream_audio": 1,
+    "/api/webhooks/github": 1
   },
   "orphan_by_classification": {
     "unclassified-orphan": 257,
-    "internal": 45,
+    "internal": 46,
     "admin-only": 32
   },
   "orphans": [
@@ -2440,6 +2441,13 @@
       "method": "POST",
       "declared": "/api/v1/webhooks/telegram/callback",
       "resolved": "/api/v1/webhooks/telegram/callback",
+      "classification": "internal"
+    },
+    {
+      "file": "backend/api/routes/webhooks_github.py",
+      "method": "POST",
+      "declared": "/api/webhooks/github",
+      "resolved": "/api/webhooks/github",
       "classification": "internal"
     },
     {
