@@ -69,7 +69,7 @@ const EvolutionForgeCanvas = () => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [lastFlowId, setLastFlowId] = useState<string | null>(null);
   const [isDebateOpen, setIsDebateOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   interface DebateLogEntry {
     agentName: string;
     status: string;
