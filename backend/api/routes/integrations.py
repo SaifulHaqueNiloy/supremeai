@@ -100,6 +100,7 @@ def _verify_oauth_state(state: str, user_id: str) -> bool:
             return False
         return state_user == str(user_id)
     except Exception:
+        logger.debug("Exception swallowed in integrations (deliberate fallback)", exc_info=True)
         return False
 
 

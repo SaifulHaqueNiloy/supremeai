@@ -299,7 +299,6 @@ class SettingsSecretsMixin:
             )
         return self.supabase_database_url
 
-
     @property
     def supabase_db_ca_cert(self) -> str:
         return self._get_cached_secret("SUPABASE_DB_CA_CERT")
@@ -575,6 +574,9 @@ class SettingsSecretsMixin:
         try:
             return self._get_cached_secret("DISCORD_BOT_TOKEN")
         except Exception:
+            logger.debug(
+                "Exception swallowed in config_secrets (deliberate fallback)", exc_info=True
+            )
             return ""
 
     @property
@@ -647,7 +649,9 @@ class SettingsSecretsMixin:
         url = self._get_cached_secret("NEON_DATABASE_URL")
         # Ensure pooler endpoint is prioritized to eliminate connection exhaustion
         if url and ".c-4.ap-southeast-1.aws.neon.tech" in url and "-pooler" not in url:
-            url = url.replace(".c-4.ap-southeast-1.aws.neon.tech", "-pooler.c-4.ap-southeast-1.aws.neon.tech")
+            url = url.replace(
+                ".c-4.ap-southeast-1.aws.neon.tech", "-pooler.c-4.ap-southeast-1.aws.neon.tech"
+            )
         return url
 
     @property

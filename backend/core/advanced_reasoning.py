@@ -9,12 +9,15 @@ Multi-type reasoning engine for complex problem solving:
 
 from __future__ import annotations
 
+import logging
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class ReasoningType(StrEnum):
@@ -396,6 +399,10 @@ class AdvancedReasoningEngine:
                         )
                         alternatives.append(alt_chain)
                 except Exception:
+                    logger.debug(
+                        "Exception swallowed in advanced_reasoning (deliberate fallback)",
+                        exc_info=True,
+                    )
                     continue
 
         alternatives.sort(key=lambda x: x.overall_confidence, reverse=True)

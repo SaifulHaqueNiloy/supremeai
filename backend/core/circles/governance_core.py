@@ -26,6 +26,7 @@ Governed path (risky or durable work):
 from __future__ import annotations
 
 import asyncio
+import logging
 import threading
 import time
 from collections.abc import Awaitable, Callable
@@ -47,6 +48,9 @@ from core.circles.envelopes import (
     result_envelope_from_execution,
 )
 from core.circles.event_journal import CircleEventJournal, circle_event_journal
+
+logger = logging.getLogger(__name__)
+
 
 PolicyEvaluator = Callable[
     [ExecutionEnvelope], PolicyDecision | bool | Awaitable[PolicyDecision | bool]
@@ -297,6 +301,10 @@ class GovernanceCore:
                 try:
                     subscriber(event)
                 except Exception:  # noqa: BLE001 — fan-out must never break routing
+                    logger.debug(
+                        "Exception swallowed in governance_core (deliberate fallback)",
+                        exc_info=True,
+                    )
                     continue
 
 
