@@ -2502,8 +2502,28 @@
     {
       "evidence": [
         {
-          "line": 401,
+          "line": 408,
           "path": "backend/api/routes/session_takeover.py"
+        }
+      ],
+      "source": "identity",
+      "target": "research"
+    },
+    {
+      "evidence": [
+        {
+          "line": 50,
+          "path": "backend/tests/api/test_session_takeover.py"
+        }
+      ],
+      "source": "identity",
+      "target": "research"
+    },
+    {
+      "evidence": [
+        {
+          "line": 71,
+          "path": "backend/tests/api/test_session_takeover.py"
         }
       ],
       "source": "identity",
