@@ -2010,6 +2010,19 @@
     {
       "capability_signals": [
         "browser",
+        "capability",
+        "health",
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_health.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
         "memory"
       ],
       "classification": "human_review",
@@ -26886,5 +26899,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3070
+  "source_file_count": 3071
 }
