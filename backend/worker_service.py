@@ -194,6 +194,7 @@ def _redis_url() -> str | None:
 
         return getattr(settings, "redis_url", None)
     except Exception:
+        logger.debug("Exception swallowed in worker_service (deliberate fallback)", exc_info=True)
         return None
 
 
@@ -343,6 +344,7 @@ def _use_durable_idempotency() -> bool:
             or getattr(settings, "database_url", None)
         )
     except Exception:
+        logger.debug("Exception swallowed in worker_service (deliberate fallback)", exc_info=True)
         return False
 
 

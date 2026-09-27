@@ -70,6 +70,7 @@ def _findable(page: Any, selector: str, timeout_ms: int = 2000) -> bool:
         element = page.wait_for_selector(selector, timeout=timeout_ms)
         return element is not None
     except Exception:
+        logger.debug("Exception swallowed in action_cascade (deliberate fallback)", exc_info=True)
         return False
 
 
@@ -111,6 +112,9 @@ async def _try_accessible_role_click(page: Any, target: str) -> dict[str, Any] |
             raise
         except Exception:
             # Role probe miss — try the next accessible role.
+            logger.debug(
+                "Exception swallowed in action_cascade (deliberate fallback)", exc_info=True
+            )
             continue
     return None
 

@@ -13,10 +13,13 @@
 
 from __future__ import annotations
 
+import logging
 import os
 from collections.abc import Iterable
 
 from core.config_parsers import parse_origin_list
+
+logger = logging.getLogger(__name__)
 
 
 def _vault_origin_env(env_var: str) -> str:
@@ -37,6 +40,7 @@ def _vault_origin_env(env_var: str) -> str:
             return ""
         return settings.get_secret(env_var) or ""
     except Exception:  # pragma: no cover — defensive: boot must never crash here
+        logger.debug("Exception swallowed in cors_policy (deliberate fallback)", exc_info=True)
         return ""
 
 

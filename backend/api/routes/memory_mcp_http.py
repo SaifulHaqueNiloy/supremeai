@@ -66,6 +66,7 @@ def _mcp_admin_key() -> str:
             return ""
         return settings.get_secret("MCP_ADMIN_KEY") or ""
     except Exception:  # pragma: no cover — defensive, boot must never crash
+        logger.debug("Exception swallowed in memory_mcp_http (deliberate fallback)", exc_info=True)
         return ""
 
 

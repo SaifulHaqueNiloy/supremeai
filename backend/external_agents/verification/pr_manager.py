@@ -12,6 +12,7 @@ ISSUE-1575 (Part 6): the PR Manager — closes the external-agent lifecycle.
 
 from __future__ import annotations
 
+import logging
 import os
 import subprocess
 from abc import ABC, abstractmethod
@@ -24,6 +25,9 @@ from pydantic import BaseModel, Field
 from external_agents.contracts.code_artifact import CodeArtifact
 from external_agents.control.state_manager import AgentStateManager
 from external_agents.verification.git_verifier import GitVerifier, VerificationReport
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = ["PRResult", "PrManager", "SubprocessGitHubClient", "OwnershipLocks"]
 
@@ -166,7 +170,7 @@ class PrManager:
                     sm.complete(artifact.task_id, result={"pr": pr})
         except Exception:
             # Lifecycle bookkeeping must never un-do a merged verification.
-            pass
+            logger.debug("Exception swallowed in pr_manager (deliberate fallback)", exc_info=True)
 
     # ------------------------------------------------------------------
     def finalize_task(
