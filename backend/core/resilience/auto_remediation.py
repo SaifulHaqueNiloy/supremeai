@@ -48,9 +48,9 @@ def _count_swallow_only_handlers(code: str) -> int:
             isinstance(node.type, ast.Name) and node.type.id in {"Exception", "BaseException"}
         )
         body_only_silent = all(
-            isinstance(stmt, (ast.Pass, ast.Expr)) and (
-                isinstance(stmt, ast.Pass)
-                or isinstance(getattr(stmt, "value", None), ast.Constant)
+            isinstance(stmt, (ast.Pass, ast.Expr))
+            and (
+                isinstance(stmt, ast.Pass) or isinstance(getattr(stmt, "value", None), ast.Constant)
             )
             for stmt in node.body
         )
@@ -192,14 +192,16 @@ class AutoRemediation:
         fixed_code = await self._get_ai_patch(safe_path, original_code, line_number, issue)
 
         if not fixed_code:
-            _append_audit_trail({
-                "decision": "rejected",
-                "reason": "patch_generation_failed",
-                "file": file_path,
-                "line": line_number,
-                "severity": severity,
-                "tenant_id": tenant_id,
-            })
+            _append_audit_trail(
+                {
+                    "decision": "rejected",
+                    "reason": "patch_generation_failed",
+                    "file": file_path,
+                    "line": line_number,
+                    "severity": severity,
+                    "tenant_id": tenant_id,
+                }
+            )
             return {"success": False, "error": "AI failed to generate a secure patch"}
 
         # AUDIT-FIX (#1698): masking guard — a patch that only ADDS silent
@@ -209,15 +211,17 @@ class AutoRemediation:
         # (HITL) inside RemediationPipeline, but the mask check runs first so
         # a masking patch never even reaches the pipeline.
         if _patch_masks_root_cause(original_code, fixed_code):
-            _append_audit_trail({
-                "decision": "rejected",
-                "reason": "masks_root_cause",
-                "file": file_path,
-                "line": line_number,
-                "severity": severity,
-                "tenant_id": tenant_id,
-                "detail": "patch adds bare/broad silent except handlers",
-            })
+            _append_audit_trail(
+                {
+                    "decision": "rejected",
+                    "reason": "masks_root_cause",
+                    "file": file_path,
+                    "line": line_number,
+                    "severity": severity,
+                    "tenant_id": tenant_id,
+                    "detail": "patch adds bare/broad silent except handlers",
+                }
+            )
             logger.warning(
                 f"Auto-Remediation rejected for {safe_path}: patch only adds "
                 "silent exception handling without addressing the root cause "
@@ -241,14 +245,16 @@ class AutoRemediation:
         result = await pipeline.submit(tenant_id, issue, fixed_code, impact_score, [])
 
         if str(result).startswith("reject"):
-            _append_audit_trail({
-                "decision": "rejected",
-                "reason": str(result),
-                "file": file_path,
-                "line": line_number,
-                "severity": severity,
-                "tenant_id": tenant_id,
-            })
+            _append_audit_trail(
+                {
+                    "decision": "rejected",
+                    "reason": str(result),
+                    "file": file_path,
+                    "line": line_number,
+                    "severity": severity,
+                    "tenant_id": tenant_id,
+                }
+            )
             return {"success": False, "error": f"Patch rejected by pipeline: {result}"}
 
         # AUDIT-FIX (#1693): Record successful remediation in dedup cache.
@@ -258,17 +264,19 @@ class AutoRemediation:
             "count": prior_count + 1,
         }
         # AUDIT-FIX (#1698): permanent audit trail for the applied patch.
-        _append_audit_trail({
-            "decision": "applied",
-            "file": file_path,
-            "line": line_number,
-            "issue": issue,
-            "severity": severity,
-            "tenant_id": tenant_id,
-            "pipeline_id": str(result),
-            "impact_score": impact_score,
-            "remediation_count": prior_count + 1,
-        })
+        _append_audit_trail(
+            {
+                "decision": "applied",
+                "file": file_path,
+                "line": line_number,
+                "issue": issue,
+                "severity": severity,
+                "tenant_id": tenant_id,
+                "pipeline_id": str(result),
+                "impact_score": impact_score,
+                "remediation_count": prior_count + 1,
+            }
+        )
         # Cleanup very old entries (>1 day) to keep memory bounded
         cutoff = now - 86400
         stale = [k for k, v in self._remediation_history.items() if v.get("last_ts", 0) < cutoff]

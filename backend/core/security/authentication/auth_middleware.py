@@ -277,11 +277,7 @@ class AuthMiddleware:
         # (existing clients), then the httpOnly access cookie, then the
         # SSE-only query param (most leak-prone, stays last).
         cookie_token = _get_cookie_token(scope)
-        token = (
-            _get_bearer_token(headers)
-            or cookie_token
-            or _get_token_from_query(scope)
-        )
+        token = _get_bearer_token(headers) or cookie_token or _get_token_from_query(scope)
         cookie_csrf_verified = cookie_token is not None and _cookie_csrf_ok(scope)
 
         # বাংলা: is_bypass_allowed production guard সহ check করে (ENV=production → always False)

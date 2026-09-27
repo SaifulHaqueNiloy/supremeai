@@ -1287,6 +1287,15 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/alembic_migrations/versions/2026_09_27_193000_merge_learning_reports.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/alembic_migrations/versions/2f7b3c5f620e_add_missing_indexes.py"
     },
     {
@@ -1655,7 +1664,10 @@
       "path": "backend/api/routes/admin_dashboard/endpoints_events.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "capability",
+        "execute"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -1702,6 +1714,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/admin_dashboard/endpoints_router_cfg.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/admin_dashboard/endpoints_secrets_health.py"
     },
     {
       "capability_signals": [],
@@ -2738,6 +2760,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/memory_mcp_http.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/merge_learning.py"
     },
     {
       "capability_signals": [
@@ -9014,6 +9043,13 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/models/merge_learning_report.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/models/meta_ai.py"
     },
     {
@@ -11032,6 +11068,15 @@
     },
     {
       "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_feature_flags_endpoint.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "memory"
       ],
@@ -11120,6 +11165,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/routes/test_missions_boundaries.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_secrets_health_endpoint.py"
     },
     {
       "capability_signals": [],
@@ -11604,6 +11659,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/api/test_stream_chat_contract.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/test_sworm_adapter_contract.py"
     },
     {
       "capability_signals": [
@@ -12155,6 +12219,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/security/test_secure_credential_store_full.py"
+    },
+    {
+      "capability_signals": [
+        "memory",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/startup/test_orchestrator_tick_agent.py"
     },
     {
       "capability_signals": [
@@ -13977,6 +14051,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_zero_cost_redis_breaker_learning.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_zero_cost_wiring.py"
     },
     {
       "capability_signals": [
@@ -18031,7 +18115,10 @@
       "path": "frontend/src/commandcenter/modules/observe/HealthMap.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health",
+        "realtime"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
@@ -18125,7 +18212,9 @@
       "path": "frontend/src/commandcenter/modules/secure/RateLimits.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
@@ -18421,13 +18510,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/AdminDashboardHome.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/AuditLogsPanel.tsx"
     },
     {
       "capability_signals": [],
@@ -19029,15 +19111,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/shared/AdminTopNav.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/shared/DynamicPanel.tsx"
     },
     {
       "capability_signals": [
@@ -23433,6 +23506,15 @@
       "path": "scripts/agents/create_blocker_issue.py"
     },
     {
+      "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/agents/create_discovery_issue.py"
+    },
+    {
       "capability_signals": [
         "dispatch",
         "execute",
@@ -23453,6 +23535,19 @@
       ],
       "kind": "py",
       "path": "scripts/agents/heartbeat_ping.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "dispatch",
+        "health"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/agents/priority_queue_ledger.py"
     },
     {
       "capability_signals": [
@@ -24610,6 +24705,17 @@
       "path": "scripts/ci/reconcile_secrets_registry.py"
     },
     {
+      "capability_signals": [
+        "browser"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/record_merge_learning.py"
+    },
+    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [
@@ -25527,6 +25633,13 @@
       ],
       "kind": "py",
       "path": "scripts/git/optional_poetry.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/git/push_as_agent.py"
     },
     {
       "capability_signals": [],
@@ -26503,5 +26616,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3031
+  "source_file_count": 3042
 }

@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 605,
-    "frontend_unique_refs": 148,
+    "backend_routes": 607,
+    "frontend_unique_refs": 146,
     "matched": 273,
-    "orphan_routes": 332
+    "orphan_routes": 334
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -116,6 +116,8 @@
     "/api/memory/context": 1,
     "/api/memory/save": 1,
     "/api/memory/session": 1,
+    "/api/merge-learning/webhook": 1,
+    "/api/merge-learning/reports": 1,
     "/api/mobile/bff": 1,
     "/api/v1/scrape": 1,
     "/api/v1/browse": 1,
@@ -132,8 +134,8 @@
     "/api/v1/stream_audio": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 256,
-    "internal": 44,
+    "unclassified-orphan": 257,
+    "internal": 45,
     "admin-only": 32
   },
   "orphans": [
@@ -1636,6 +1638,20 @@
       "classification": "unclassified-orphan"
     },
     {
+      "file": "backend/api/routes/merge_learning.py",
+      "method": "POST",
+      "declared": "/api/merge-learning/webhook",
+      "resolved": "/api/merge-learning/webhook",
+      "classification": "internal"
+    },
+    {
+      "file": "backend/api/routes/merge_learning.py",
+      "method": "GET",
+      "declared": "/api/merge-learning/reports",
+      "resolved": "/api/merge-learning/reports",
+      "classification": "unclassified-orphan"
+    },
+    {
       "file": "backend/api/routes/mesh_mailbox.py",
       "method": "POST",
       "declared": "/api/v1/mesh/messages",
@@ -2903,8 +2919,7 @@
       "resolved": "/api/v1/admin/trusted-browsers",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/dashboard/SettingsPage.tsx",
-        "frontend/src/components/dashboard/SettingsPage.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
@@ -2914,7 +2929,7 @@
       "resolved": "/api/v1/admin/trusted-browsers/:param",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/dashboard/SettingsPage.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
@@ -2924,8 +2939,7 @@
       "resolved": "/api/v1/admin/trusted-browsers",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/dashboard/SettingsPage.tsx",
-        "frontend/src/components/dashboard/SettingsPage.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {

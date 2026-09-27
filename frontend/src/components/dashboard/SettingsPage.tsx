@@ -74,15 +74,21 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
   }, []);
 
   useEffect(() => {
-    apiClient.get<{ browsers: Array<{ id: string; created_at: number }> }>('/api/admin/trusted-browsers')
+    apiClient.get<{ browsers: Array<{ id: string; created_at: number }> }>('/admin/trusted-browsers')
       .then((data) => setTrustedBrowsers(data.browsers || []))
-      .catch(() => setTrustedBrowsers([]));
+      // Issue #1819: no longer silently swallow load errors — the empty-list
+      // render must not mask a dead endpoint (this exact silence hid the
+      // path mismatch that kept the feature dead).
+      .catch(() => {
+        setTrustedBrowsers([]);
+        setTrustedBrowserStatus('Unable to load trusted browsers.');
+      });
   }, []);
 
   const revokeBrowser = async (id: string) => {
     setTrustedBrowserStatus('Revoking...');
     try {
-      await apiClient.delete(`/api/admin/trusted-browsers/${encodeURIComponent(id)}`);
+      await apiClient.delete(`/admin/trusted-browsers/${encodeURIComponent(id)}`);
       setTrustedBrowsers((items) => items.filter((item) => item.id !== id));
       setTrustedBrowserStatus('Browser revoked.');
     } catch (error) {
@@ -93,7 +99,7 @@ export function SettingsPage({ theme, toggleTheme }: SettingsPageProps) {
   const revokeAllBrowsers = async () => {
     setTrustedBrowserStatus('Revoking all...');
     try {
-      await apiClient.delete('/api/admin/trusted-browsers');
+      await apiClient.delete('/admin/trusted-browsers');
       setTrustedBrowsers([]);
       setTrustedBrowserStatus('All trusted browsers revoked.');
     } catch (error) {

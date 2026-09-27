@@ -14,24 +14,25 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 858,
-    "frontend_unique_refs": 148,
+    "backend_routes": 861,
+    "frontend_unique_refs": 146,
     "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
-    "orphan_routes": 1,
-    "orphan_families": 1,
+    "orphan_routes": 2,
+    "orphan_families": 2,
     "api_only_routes": 303,
     "api_only_families": 158,
     "by_classification": {
       "user-facing": 166,
-      "admin-only": 346,
-      "internal": 38,
+      "admin-only": 347,
+      "internal": 39,
       "deprecated": 4,
       "api-only": 303,
-      "orphaned": 1
+      "orphaned": 2
     }
   },
   "orphan_families": {
+    "/api/merge-learning/reports": 1,
     "/render-ticket": 1
   },
   "api_only_families": {
@@ -1018,6 +1019,20 @@
       "mounted": true,
       "is_admin": true,
       "operation": "update_commandcenter_rules",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/secrets-health",
+      "declared": "/admin-api/secrets-health",
+      "deprecated": false,
+      "router_file": "backend/api/routes/admin_dashboard/endpoints_secrets_health.py",
+      "module": "api.routes.admin_dashboard.endpoints_secrets_health",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_secrets_health",
       "frontend_consumers": [],
       "classification": "admin-only"
     },
@@ -5585,6 +5600,34 @@
       "operation": "save_session",
       "frontend_consumers": [],
       "classification": "api-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/merge-learning/reports",
+      "declared": "/api/merge-learning/reports",
+      "deprecated": false,
+      "router_file": "backend/api/routes/merge_learning.py",
+      "module": "api.routes.merge_learning",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "get_merge_learning_reports",
+      "frontend_consumers": [],
+      "classification": "orphaned"
+    },
+    {
+      "method": "POST",
+      "path": "/api/merge-learning/webhook",
+      "declared": "/api/merge-learning/webhook",
+      "deprecated": false,
+      "router_file": "backend/api/routes/merge_learning.py",
+      "module": "api.routes.merge_learning",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "merge_learning_webhook",
+      "frontend_consumers": [],
+      "classification": "internal"
     },
     {
       "method": "POST",

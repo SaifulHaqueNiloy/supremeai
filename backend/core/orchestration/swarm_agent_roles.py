@@ -144,8 +144,7 @@ class CodeGeneratorAgent(SwarmAgentBase):
         self._publish(
             workspace,
             "generated_code",
-            workspace.work_product.setdefault("generated_code", {})
-            | {"main.py": code_output},
+            workspace.work_product.setdefault("generated_code", {}) | {"main.py": code_output},
         )
         workspace.log("CodeGeneratorAgent: Code successfully refined.")
 
