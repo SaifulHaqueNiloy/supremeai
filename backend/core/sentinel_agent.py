@@ -233,6 +233,33 @@ class SentinelAgent:
         except Exception as e:
             logger.exception(f"[SentinelAgent] Error triggering event: {e}")
 
+    def _zero_cost_ready(self) -> bool:
+        """True when the Zero-Cost orchestrator is initialized (issue #1830).
+
+        Checked cheaply and defensively — if the subsystem is absent or dark,
+        the sentinel keeps its legacy direct-probe path.
+        """
+        try:
+            from core.zero_cost_architecture.zero_cost_patch_phase1_4 import get_orchestrator
+
+            return bool(getattr(get_orchestrator(), "_initialized", False))
+        except Exception:
+            return False
+
+    async def _resilient_probe(self) -> None:
+        """Run one monitor cycle through the Zero-Cost resilience layer.
+
+        Feeds task_success/task_duration metrics into the learning engine so
+        /zero-cost/recommendations reflects real workload data.
+        """
+        from core.zero_cost_architecture.zero_cost_patch_phase1_4 import get_orchestrator
+
+        await get_orchestrator().execute_with_resilience(
+            self.monitor_endpoints,
+            circuit_breaker="sentinel_monitor",
+            timeout=55.0,
+        )
+
     async def run_periodic_loop(self):
         """
         The main async loop to be attached to FastAPI lifespan.
@@ -249,8 +276,22 @@ class SentinelAgent:
 
         try:
             while self.running:
-                # 1. Quick Heartbeat (60 seconds)
-                await self.monitor_endpoints()
+                # 1. Quick Heartbeat (60 seconds) — routed through the
+                # Zero-Cost resilience layer when it is initialized (issue
+                # #1830): every probe now feeds task_success/task_duration
+                # metrics into the learning engine, so /zero-cost/recommendations
+                # becomes data-derived instead of a hardcoded constant. The
+                # probe stays fail-soft: any resilience-layer failure falls
+                # back to a direct call so monitoring never stops.
+                probe_ok = False
+                if self._zero_cost_ready():
+                    try:
+                        await self._resilient_probe()
+                        probe_ok = True
+                    except Exception as exc:
+                        logger.warning(f"[SentinelAgent] Resilient probe failed: {exc}")
+                if not probe_ok:
+                    await self.monitor_endpoints()
 
                 # 2. Long Audit (Every 12 hours) - 12h = 720 minutes = 720 iterations of 60s
                 if audit_counter >= 720:
