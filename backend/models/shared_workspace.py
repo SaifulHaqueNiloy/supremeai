@@ -19,6 +19,14 @@ class SharedWorkspace(BaseModel):
     errors: list[str] = Field(
         default_factory=list, description="Errors encountered during execution"
     )
+    # Issue #1816: IntegrationAgent.run reads getattr(workspace, "kwargs", {})
+    # and api/routes/agent_action.py writes platform credentials/context here,
+    # but the field never existed — pydantic raised on the assignment and every
+    # platform-sync action 500'd. Declared now (additive, default empty).
+    kwargs: dict[str, Any] = Field(
+        default_factory=dict,
+        description="Extra call context (e.g. platform tokens/content) for DAG agents",
+    )
     # বাংলা মন্তব্য: প্রতিটি কাজের জন্য নির্ধারিত ইনটেন্ট এখানে সংরক্ষণ করা হবে, যা অর্কেস্ট্রেটরকে সঠিক DAG তৈরিতে সাহায্য করবে।
     intent: str = Field(
         default="general_task",
