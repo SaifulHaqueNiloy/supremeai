@@ -14,16 +14,16 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 861,
-    "frontend_unique_refs": 146,
-    "routes_with_frontend_consumer": 296,
+    "backend_routes": 860,
+    "frontend_unique_refs": 145,
+    "routes_with_frontend_consumer": 295,
     "unmounted_routes": 0,
     "orphan_routes": 2,
     "orphan_families": 2,
     "api_only_routes": 303,
     "api_only_families": 158,
     "by_classification": {
-      "user-facing": 166,
+      "user-facing": 165,
       "admin-only": 347,
       "internal": 39,
       "deprecated": 4,
@@ -5498,40 +5498,6 @@
       "classification": "api-only"
     },
     {
-      "method": "GET",
-      "path": "/api/memory/conversations",
-      "declared": "/api/memory/conversations",
-      "deprecated": false,
-      "router_file": "backend/api/routes/memory.py",
-      "module": "api.routes.memory",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "list_conversations",
-      "frontend_consumers": [
-        "frontend/src/components/admin/MemoryBrowser.tsx",
-        "frontend/src/pages/PublicPages.tsx"
-      ],
-      "classification": "user-facing"
-    },
-    {
-      "method": "POST",
-      "path": "/api/memory/conversations/messages",
-      "declared": "/api/memory/conversations/messages",
-      "deprecated": false,
-      "router_file": "backend/api/routes/memory.py",
-      "module": "api.routes.memory",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "save_message",
-      "frontend_consumers": [
-        "frontend/src/components/admin/MemoryBrowser.tsx",
-        "frontend/src/pages/PublicPages.tsx"
-      ],
-      "classification": "user-facing"
-    },
-    {
       "method": "DELETE",
       "path": "/api/memory/recall",
       "declared": "/api/memory/recall",
@@ -8004,7 +7970,9 @@
       "is_admin": false,
       "operation": "list_conversations",
       "frontend_consumers": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -8020,7 +7988,27 @@
       "is_admin": false,
       "operation": "create_conversation",
       "frontend_consumers": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
+      ],
+      "classification": "user-facing"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/conversations/:param/messages",
+      "declared": "/api/v1/conversations/{session_id}/messages",
+      "deprecated": false,
+      "router_file": "backend/api/routes/conversations.py",
+      "module": "api.routes.conversations",
+      "registry_prefix": "/api/v1",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_session_messages",
+      "frontend_consumers": [
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },
@@ -8036,7 +8024,9 @@
       "is_admin": false,
       "operation": "add_message",
       "frontend_consumers": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ],
       "classification": "user-facing"
     },

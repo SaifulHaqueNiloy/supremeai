@@ -6,9 +6,9 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 607,
-    "frontend_unique_refs": 146,
-    "matched": 273,
+    "backend_routes": 606,
+    "frontend_unique_refs": 145,
+    "matched": 272,
     "orphan_routes": 334
   },
   "orphan_by_family": {
@@ -4098,7 +4098,21 @@
       "resolved": "/api/v1/conversations",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/conversations.py",
+      "method": "GET",
+      "declared": "/conversations/{session_id}/messages",
+      "resolved": "/api/v1/conversations/:param/messages",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4108,7 +4122,9 @@
       "resolved": "/api/v1/conversations",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4118,7 +4134,9 @@
       "resolved": "/api/v1/conversations/:param/messages",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/customer/UserDashboard.tsx"
+        "frontend/src/components/admin/MemoryBrowser.tsx",
+        "frontend/src/components/customer/UserDashboard.tsx",
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
@@ -4585,28 +4603,6 @@
       "classification": "unclassified-orphan",
       "frontend": [
         "frontend/src/hooks/useAdminApi.ts"
-      ]
-    },
-    {
-      "file": "backend/api/routes/memory.py",
-      "method": "POST",
-      "declared": "/api/memory/conversations/messages",
-      "resolved": "/api/memory/conversations/messages",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/components/admin/MemoryBrowser.tsx",
-        "frontend/src/pages/PublicPages.tsx"
-      ]
-    },
-    {
-      "file": "backend/api/routes/memory.py",
-      "method": "GET",
-      "declared": "/api/memory/conversations",
-      "resolved": "/api/memory/conversations",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/components/admin/MemoryBrowser.tsx",
-        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {
