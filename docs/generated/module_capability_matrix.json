@@ -4274,15 +4274,6 @@
     },
     {
       "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/cache_manager.py"
-    },
-    {
-      "capability_signals": [
         "capability",
         "health"
       ],
@@ -7480,6 +7471,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/startup/services.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/startup/usage_metrics_aggregator.py"
     },
     {
       "capability_signals": [
@@ -11103,6 +11103,15 @@
       "path": "backend/tests/api/routes/test_global_memory_stats.py"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/api/routes/test_integrations_list.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -12497,13 +12506,6 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/tests/core/test_cache_manager_coverage.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/tests/core/test_cache_optimization.py"
     },
     {
@@ -13678,6 +13680,17 @@
       "path": "backend/tests/core/test_reasoning_orchestrator.py"
     },
     {
+      "capability_signals": [
+        "execute",
+        "health",
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_redis_budget_guard.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -14054,6 +14067,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_upload_validator.py"
+    },
+    {
+      "capability_signals": [
+        "health",
+        "register"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_usage_metrics_aggregator.py"
     },
     {
       "capability_signals": [
@@ -26703,5 +26726,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3051
+  "source_file_count": 3053
 }
