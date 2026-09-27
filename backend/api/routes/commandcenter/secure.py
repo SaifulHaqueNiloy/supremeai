@@ -1,6 +1,24 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_admin
+
+# #1656: typed payload replacing bare dict — WAF/governance rules must be
+# validated before write to prevent policy corruption.
+
+
+class RulesUpdatePayload(BaseModel):
+    """Payload for POST /secure/rules."""
+
+    model_config = {"extra": "forbid"}
+
+    rule_name: str = Field(..., min_length=1, max_length=255, description="Rule identifier")
+    action: str = Field(..., pattern="^(allow|block|warn)$", description="Rule action")
+    pattern: str = Field(
+        ..., min_length=1, max_length=2000, description="Rule pattern (regex/literal)"
+    )
+    description: str | None = Field(default=None, max_length=500)
+
 
 router = APIRouter(
     prefix="",
@@ -35,7 +53,7 @@ def get_rules():
 
 
 @router.post("/secure/rules")
-def update_rules(payload: dict):
+def update_rules(payload: RulesUpdatePayload):
     return {"message": "updated"}
 
 
