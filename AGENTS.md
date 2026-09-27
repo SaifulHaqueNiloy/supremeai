@@ -57,9 +57,9 @@ Slot acquisition: `python scripts/agents/acquire_role_slot.py --role <lane>` (CA
 4. **1 ISSUE = 1 BRANCH = 1 PR**: Keep changes atomic. Never bundle unrelated changes into one branch.
 5. **NARROWEST SOUND CHANGE**: Edit only what the claimed issue requires. No drive-by refactorings or unsolicited formatting sweeps.
 6. **PREREQUISITE BLOCKERS**: If a task requires an unrecorded fix, run `scripts/agents/create_blocker_issue.py` to create a GitHub issue. Never patch outside scope.
-7. **ALWAYS SYNC BEFORE PUSH**: Run `git fetch origin main && git merge origin/main` before every push. Never force-push.
+7. **ALWAYS SYNC BEFORE TEST & PUSH**: Run `git fetch origin main && git merge origin/main` BEFORE running verification tests and before every push. Never test against a stale baseline. Never force-push.
 8. **PUSH & PR**: Push to your acquired slot (`origin <lane>-<N>`), or — for docs-only changes — a `docs/<issue>-<slug>` branch (OPS-06 pattern). Open a PR targeting `main`. Title format: `type(scope): description (#<issue>)`.
-9. **ZERO REGRESSION**: All unit tests, pre-push checks, and Unified PR Gates must pass green before merge.
+9. **ZERO REGRESSION (FRESH MAIN BASELINE)**: All unit tests, pre-push checks, and Unified PR Gates must pass green against fresh `origin/main` before merge. Testing on stale branches without syncing is strictly prohibited.
 10. **NEVER IDLE (PRIORITY-FIRST CONTINUOUS LOOP)**: When a PR is created/merged, immediately claim the **highest-priority** unclaimed issue in your lane — priority order `P0-critical → P1-high → P2-medium → P3-low`, oldest first within a level ([`docs/agents/ISSUE_PRIORITY_POLICY.md`](docs/agents/ISSUE_PRIORITY_POLICY.md); queue: `./scripts/agents/next_claimable.sh <lane>`).
 11. **DISCOVERY-DRIVEN ISSUE CREATION**: If you discover a bug, security vulnerability, or architectural gap **unrelated to your current issue scope** while working, run `scripts/agents/create_discovery_issue.py` to create a new issue with `discovered-by:<your-role>` label. Do NOT fix it yourself unless you claim it after your current PR merges.
 12. **NO SELF-MERGE** (#2009): An agent MUST NOT approve or merge their own PR. At least 1 approving review from a different agent or human is required before merge. *(Closes violation vector 7.4.)*
