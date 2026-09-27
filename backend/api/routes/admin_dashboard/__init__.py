@@ -344,7 +344,7 @@ def get_costs_breakdown():
 
 
 from .endpoints_deploy import trigger_deploy  # noqa: E402  (registers route + re-export)
-from .endpoints_health import get_health_map  # noqa: E402  (registers route + re-export)
+from .endpoints_health import get_health_map  # noqa: E402  (re-export; shadow removed #2114)
 from .endpoints_metrics import (  # noqa: E402  (registers routes + re-export)
     get_metrics,
     get_providers,

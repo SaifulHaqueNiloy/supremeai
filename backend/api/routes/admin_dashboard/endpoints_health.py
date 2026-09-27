@@ -1,12 +1,20 @@
-"""Service health map endpoint (GET /admin-api/health-map) — Resolves #778 / OB-02."""
+"""Service health-map payload — real telemetry (Resolves #778 / OB-02).
+
+Path ownership note (#2114 route-shadow fix): the /admin-api/health-map
+PATH is owned by api.routes.health_aggregation (first-match since the #1833
+mount fix moved it off the double-prefixed /api/admin-api/... path). This
+module's former @router.get("/health-map") registration was a dead shadow —
+registered after health_aggregation in routers.py, it never served traffic.
+The payload below stays live through its three real callers: the
+/api/v1/admin/health alias (admin_v1.py), the WS dashboard feed
+(endpoints_ws.py) and the /api/v1/admin/dashboard composite.
+"""
 
 import time
 
-from api.routes.admin_dashboard import router
 from core.config import settings
 
 
-@router.get("/health-map")
 async def get_health_map():
     from core.health_check import health_checker
 
