@@ -65,6 +65,42 @@ _REDIS_QUOTA_SIGNATURES = (
 _REDIS_QUOTA_COOLDOWNS = (900.0, 1800.0, 3600.0, 3600.0)
 
 
+class _BudgetTrackingClient:
+    """Transparent proxy counting every executed Redis command (#1824).
+
+    বাংলা: SecureRedisManager-এর client-টি সব কনজিউমারকে দেওয়া হয় — তাই
+    budget tracking এখানেই বসানো হলো: প্রতিটি callable command-এ
+    manager._track_command() চলে। অ-কলেবল attribute (connection_pool ইত্যাদি)
+    অপরিবর্তিত pass-through হয়, তাই বিদ্যমান কোনো কনজিউমার ভাঙে না।
+    """
+
+    __slots__ = ("_inner", "_manager")
+
+    def __init__(self, inner: Any, manager: Any) -> None:
+        object.__setattr__(self, "_inner", inner)
+        object.__setattr__(self, "_manager", manager)
+
+    def __eq__(self, other: Any) -> bool:
+        # Transparent-proxy contract: compare against the inner client so
+        # equality checks (tests, caching by identity) keep behaving.
+        return object.__getattribute__(self, "_inner") == other
+
+    def __hash__(self) -> int:
+        return hash(object.__getattribute__(self, "_inner"))
+
+    def __getattr__(self, name: str) -> Any:
+        attr = getattr(object.__getattribute__(self, "_inner"), name)
+        if not callable(attr):
+            return attr
+        manager = object.__getattribute__(self, "_manager")
+
+        def _tracked(*args: Any, **kwargs: Any):
+            manager._track_command()
+            return attr(*args, **kwargs)
+
+        return _tracked
+
+
 class SecureRedisManager:
     # Issue #460 (Pillar 2): sibling free-tier account URLs, consulted in
     # order after the primary. With the current vault this yields a
@@ -99,6 +135,22 @@ class SecureRedisManager:
         self._quota_open_until = 0.0
         self._quota_trips = 0
         self._quota_announced = False
+        # Daily command budget guard (issue #1824 — ported from the dead
+        # core/cache_manager.py FreeTierCacheManager). Every executed command
+        # is counted via the tracking client proxy below; when the budget is
+        # exhausted the manager hands back None — the SAME fail-safe contract
+        # as the #437 quota breaker — so consumers engage their documented
+        # in-memory fallbacks instead of blowing the provider quota silently.
+        # REDIS_DAILY_LIMIT=0 disables the guard (paid/unlimited deployments).
+        try:
+            self._command_budget = int(os.getenv("REDIS_DAILY_LIMIT") or "9000")
+        except ValueError:
+            logger.warning("REDIS_DAILY_LIMIT is not an integer — budget guard disabled")
+            self._command_budget = 0
+        self._command_count = 0
+        self._command_date = None
+        self._budget_warned = False
+        self._budget_exhausted_logged = False
 
     @staticmethod
     def _resolve_secret(key: str) -> str:
@@ -144,6 +196,53 @@ class SecureRedisManager:
         """Classify an exception as provider quota exhaustion."""
         message = str(exc).lower()
         return any(sig in message for sig in _REDIS_QUOTA_SIGNATURES)
+
+    # ── Daily command budget guard (issue #1824) ────────────────────────────
+    @property
+    def budget_breaker_open(self) -> bool:
+        """True while the daily command budget is exhausted (no Redis attempts)."""
+        return self._command_budget > 0 and self._command_count >= self._command_budget
+
+    def _track_command(self, count: int = 1) -> None:
+        """Count executed Redis commands; reset daily (UTC). Warns at 80%,
+        logs an error at 100% (once per day)."""
+        from datetime import UTC, datetime
+
+        today = datetime.now(UTC).date()
+        if self._command_date != today:
+            self._command_date = today
+            self._command_count = 0
+            self._budget_warned = False
+            self._budget_exhausted_logged = False
+        self._command_count += count
+        if self._command_budget <= 0:
+            return
+        if self._command_count >= self._command_budget:
+            if not self._budget_exhausted_logged:
+                self._budget_exhausted_logged = True
+                logger.error(
+                    f"⛔ Redis daily command budget exhausted: "
+                    f"{self._command_count}/{self._command_budget} — budget breaker OPEN "
+                    "until midnight UTC (consumers engage in-memory fallbacks)"
+                )
+        elif not self._budget_warned and self._command_count >= int(self._command_budget * 0.8):
+            self._budget_warned = True
+            logger.warning(
+                f"⚠️ Redis daily command budget at 80%: "
+                f"{self._command_count}/{self._command_budget}"
+            )
+
+    def get_budget_status(self) -> dict:
+        """Observability snapshot of the daily command budget (#1824)."""
+        return {
+            "budget": self._command_budget,
+            "used": self._command_count,
+            "remaining": max(0, self._command_budget - self._command_count)
+            if self._command_budget > 0
+            else None,
+            "breaker_open": self.budget_breaker_open,
+            "enabled": self._command_budget > 0,
+        }
 
     @property
     def quota_breaker_open(self) -> bool:
@@ -322,13 +421,17 @@ class SecureRedisManager:
         # Quota breaker (issue #437): while tripped, hand back None so every
         # consumer engages its own documented in-memory fallback immediately —
         # no network round-trips against a quota-exhausted provider.
-        if self._client is not None and self.quota_breaker_open:
+        if self._client is not None and (self.quota_breaker_open or self.budget_breaker_open):
             return None
         # Issue #460 half-open probe: every pool tripped and the cooldown has
         # now expired → restart a clean probe cycle at pool 1.
         if self._tripped and len(self._tripped) >= len(self._urls) and not self.quota_breaker_open:
             await self._reset_federation_probe()
-        return self._client
+        # #1824: every handed-out client counts its commands against the
+        # daily budget (transparent proxy — consumer code unchanged).
+        if self._client is None:
+            return None
+        return _BudgetTrackingClient(self._client, self)
 
     @property
     def client(self) -> aioredis.Redis | None:
@@ -343,7 +446,9 @@ class SecureRedisManager:
         """
         # বাংলা: কোনো অবস্থাতেই event loop ব্লক করে এমন synchronous init করব না।
         # _initialized True না হলে None রিটার্ন করি — consumer fail-closed behaviour handle করবে।
-        return self._client
+        if self._client is None:
+            return None
+        return _BudgetTrackingClient(self._client, self)
 
     @property
     def is_connected(self) -> bool:

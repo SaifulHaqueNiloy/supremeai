@@ -14,16 +14,16 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 861,
+    "backend_routes": 862,
     "frontend_unique_refs": 145,
-    "routes_with_frontend_consumer": 295,
+    "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
     "orphan_routes": 2,
     "orphan_families": 2,
     "api_only_routes": 303,
     "api_only_families": 158,
     "by_classification": {
-      "user-facing": 165,
+      "user-facing": 166,
       "admin-only": 347,
       "internal": 40,
       "deprecated": 4,
@@ -9139,6 +9139,22 @@
       "operation": "resume_decision_via_token",
       "frontend_consumers": [],
       "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/integrations",
+      "declared": "/api/v1/integrations",
+      "deprecated": false,
+      "router_file": "backend/api/routes/integrations.py",
+      "module": "api.routes.integrations",
+      "registry_prefix": "/api/v1",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "list_integrations",
+      "frontend_consumers": [
+        "frontend/src/components/dashboard/ConnectedPlatformsVault.tsx"
+      ],
+      "classification": "user-facing"
     },
     {
       "method": "POST",
