@@ -393,7 +393,9 @@ class TestMissionsAPI:
         assert approved.status_code == 200, approved.text
         assert approved.json()["state"] == "assigned"
         assert approved.json()["strategy"] == "plan-a"
-        assert approved.json()["agent_id"] == "auto-agent-v1"
+        # #1829: the label now reflects the real routing decision (LLM-gateway
+        # executor lane), not the retired "auto-agent-v1" stub badge.
+        assert approved.json()["agent_id"] == "llm-gateway-direct"
 
         started = await client.post(f"{base}/start")
         assert started.status_code == 200
