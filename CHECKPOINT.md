@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 19:41 UTC
+- **Date:** 2026-09-27 20:04 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,13 +10,24 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.devcontainer/devcontainer.json`
-  - `docs/architecture/MULTI_PLATFORM_WORKSPACE_IMPLEMENTATION_ROADMAP.md`
-  - `.agents/rules/GROUND_TRUTH_AUDITING_DISCIPLINE.md`
-  - `docs/architecture/MULTI_PLATFORM_AGENT_WORKSPACE_PLAN.md`
-  - `.devcontainer/Dockerfile`
+  - `AGENTS.md`
   - `CHECKPOINT.md`
-  - `.devcontainer/setup.sh`
+  - `docs/generated/route_consumer_inventory.json`
+  - `docs/audit_reports/route_client_inventory.md`
+  - `.agents/rules/GROUND_TRUTH_AUDITING_DISCIPLINE.md`
+  - `docs/generated/module_capability_matrix.json`
+  - `docs/generated/route_consumer_inventory.md`
+  - `docs/agents/COLLECTIVE_AGENT_MEMORY_ARCHITECTURE.md`
+  - `backend/tests/api/routes/test_external_agents_admin.py`
+  - `backend/api/routes/external_agents_admin.py`
+  - `docs/agents/GOLDEN_RULES.md`
+  - `docs/generated/backend_import_graph.json`
+  - `backend/api/routers.py`
+  - `docs/architecture/MULTI_PLATFORM_AGENT_WORKSPACE_PLAN.md`
+  - `docs/audit_reports/route_client_inventory.json`
+  - `tests/unit/test_agent_solution_memory.py`
+  - `docs/architecture/MULTI_PLATFORM_WORKSPACE_IMPLEMENTATION_ROADMAP.md`
+  - `scripts/agents/agent_solution_memory.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
