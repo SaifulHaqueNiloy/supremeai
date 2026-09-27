@@ -18,21 +18,20 @@
     "frontend_unique_refs": 145,
     "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
-    "orphan_routes": 2,
-    "orphan_families": 2,
-    "api_only_routes": 302,
-    "api_only_families": 158,
+    "orphan_routes": 1,
+    "orphan_families": 1,
+    "api_only_routes": 303,
+    "api_only_families": 159,
     "by_classification": {
       "user-facing": 166,
       "admin-only": 347,
       "internal": 40,
       "deprecated": 4,
-      "api-only": 302,
-      "orphaned": 2
+      "api-only": 303,
+      "orphaned": 1
     }
   },
   "orphan_families": {
-    "/api/merge-learning/reports": 1,
     "/render-ticket": 1
   },
   "api_only_families": {
@@ -100,6 +99,7 @@
     "/api/memory/recall": 3,
     "/api/memory/save": 1,
     "/api/memory/session": 1,
+    "/api/merge-learning/reports": 1,
     "/api/mobile/bff": 1,
     "/api/reasoning/think": 2,
     "/api/research/:param": 1,
@@ -5579,7 +5579,7 @@
       "is_admin": false,
       "operation": "get_merge_learning_reports",
       "frontend_consumers": [],
-      "classification": "orphaned"
+      "classification": "api-only"
     },
     {
       "method": "POST",
