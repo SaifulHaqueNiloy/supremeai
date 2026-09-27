@@ -8,8 +8,11 @@ version: '2.2'
 role_pools:
   planner:
     app: planner-and-auditor
-    branch_pattern: 'planner-{N}'  # e.g., planner-1 ... planner-100 (constant role, dynamic number)
-    description: 'Planning & Codebase Architecture Auditor Pool. Fixed App, Fixed Rules.'
+    # #1864: planner = issue-output lane — NO branch slots. Plan/audit docs
+    # land via handoff:coder issues (charter §1 + invariant #23). PRs from
+    # planner-* branches are machine-blocked by the PR gate.
+    branch_slots: none  # issue-output lane — charter §1; PRs machine-blocked
+    description: 'Planning & Codebase Architecture Auditor Pool. Issue-output ONLY — no PRs, no branches (charter §1, #1864).'
   coder:
     app: coder
     branch_pattern: 'coder-{N}'    # e.g., coder-1 ... coder-100 (constant role, dynamic number)
@@ -61,6 +64,10 @@ acquisition_rules:
   reuse_protocol: 'reset to origin/main with --force-with-lease after winning CAS claim'
   new_branch_only_if: 'all existing <pool>-{N} branches have commits within the last 15 minutes (name same, number +1)'
   same_app_same_rules_per_pool: true
+  # #1864: planner pool is branchless (issue-output lane). acquire_lane_slot.sh
+  # (M2, #1860) MUST reject --pool planner with exit 2 + pointer to charter §1.
+  rejected_pools:
+    planner: 'issue-output lane — no branches (charter §1, #1864); create handoff:coder issues instead'
 
 # Legacy slot assignments (DEPRECATED v2.1 — migrate via legacy_migration_target, auto-expire via expires_on; tracked in #1439):
 slots:
