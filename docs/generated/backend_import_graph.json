@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3511,
+  "edge_count": 3513,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -4998,6 +4998,10 @@
     {
       "from": "core.errors.error_remediation",
       "to": "core.resilience.circuit_breaker"
+    },
+    {
+      "from": "core.evolution.merge_learning_learner",
+      "to": "core.logging_config"
     },
     {
       "from": "core.execution_adapters",
@@ -10216,6 +10220,10 @@
       "to": "core.contracts.policy"
     },
     {
+      "from": "tests.core.evolution.test_merge_learning_learner",
+      "to": "core.evolution.merge_learning_learner"
+    },
+    {
       "from": "tests.core.health.test_uptime_tracker_observability",
       "to": "core.health"
     },
@@ -14048,7 +14056,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2025,
+  "module_count": 2030,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14604,6 +14612,8 @@
     "core.errors.error_handler",
     "core.errors.error_pattern_db",
     "core.errors.error_remediation",
+    "core.evolution",
+    "core.evolution.merge_learning_learner",
     "core.evolution_module",
     "core.exceptions",
     "core.execution_adapters",
@@ -15410,6 +15420,8 @@
     "tests.core.contracts.test_redaction",
     "tests.core.contracts.test_security_policy",
     "tests.core.contracts.test_sqlite_store",
+    "tests.core.evolution",
+    "tests.core.evolution.test_merge_learning_learner",
     "tests.core.health.test_uptime_tracker_observability",
     "tests.core.intelligence.test_control_plane",
     "tests.core.intelligence.test_synaptic_risk",
@@ -15730,6 +15742,7 @@
     "tests.scripts.test_ci_failure_trend",
     "tests.scripts.test_coverage_cache_keys",
     "tests.scripts.test_coverage_quality_gate",
+    "tests.scripts.test_create_discovery_issue",
     "tests.scripts.test_gateway_context_m03",
     "tests.scripts.test_gateway_contract_m03",
     "tests.scripts.test_generate_firebase_config",
