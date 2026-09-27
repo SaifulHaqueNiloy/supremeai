@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 18:49 UTC
+- **Date:** 2026-09-27 19:23 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,19 +10,17 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/types.ts`
-  - `frontend/src/services/agentService.ts`
-  - `AGENTS.md`
-  - `frontend/src/components/admin/LiveLogs.tsx`
-  - `frontend/src/components/nodes/SkillNode.tsx`
   - `frontend/src/components/admin/shared/AdminSubTabContent.tsx`
+  - `.devcontainer/setup.sh`
   - `CHECKPOINT.md`
-  - `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx`
-  - `LESSONS_LEARNED.md`
-  - `.github/workflows/slot-registry-drift.yml`
-  - `docs/agents/AGENT_WORK_BOUNDARIES_CHARTER.md`
-  - `docs/master_docs/AGENT_SLOT_REGISTRY.yaml`
+  - `.devcontainer/devcontainer.json`
   - `frontend/src/components/nodes/AgentNode.tsx`
+  - `frontend/src/components/nodes/SkillNode.tsx`
+  - `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx`
+  - `frontend/src/services/agentService.ts`
+  - `frontend/src/types.ts`
+  - `.devcontainer/Dockerfile`
+  - `frontend/src/components/admin/LiveLogs.tsx`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
