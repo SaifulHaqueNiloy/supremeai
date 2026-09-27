@@ -8,7 +8,6 @@ from brain.supreme_learning_engine import get_learning_engine
 from context_engine import ContextBlock, ContextEngine, Section
 from context_engine.budget import context_engine_enabled
 from core.cache.multi_layer_cache import multi_layer_cache
-from core.resilience.circuit_breaker import RedisCircuitBreaker
 from core.i18n.language_directive import (
     build_language_directive,
     language_loop_enabled,
@@ -21,6 +20,7 @@ from core.orchestration.conversation_orchestrator import (
     ConversationCommand,
     get_conversation_orchestrator,
 )
+from core.resilience.circuit_breaker import RedisCircuitBreaker
 
 # Global circuit breaker instance
 main_llm_circuit = RedisCircuitBreaker(
