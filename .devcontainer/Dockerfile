@@ -1,11 +1,5 @@
 FROM mcr.microsoft.com/devcontainers/python:3.11
 
-# Install Node.js 24 LTS for modern frontend development & toolchains
-RUN curl -fsSL https://deb.nodesource.com/setup_24.x | bash - \
-    && apt-get install -y --no-install-recommends nodejs \
-    && npm install -g pnpm@latest \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
 # Install native database clients and build dependencies
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends \
