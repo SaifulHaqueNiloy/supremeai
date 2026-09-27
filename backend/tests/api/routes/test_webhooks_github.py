@@ -23,17 +23,31 @@ def _sign(body: bytes, secret: str = WEBHOOK_SECRET) -> str:
     return "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
 
 
-def _issue_payload(action: str = "opened", labels: list[str] | None = None, body: str = "") -> dict[str, Any]:
+def _issue_payload(
+    action: str = "opened", labels: list[str] | None = None, body: str = ""
+) -> dict[str, Any]:
     return {
         "action": action,
         "repository": {"full_name": "SaifulHaqueNiloy/supremeai"},
         "sender": {"login": "someuser"},
-        "issue": {"number": 123, "title": "Test issue", "labels": [{"name": l} for l in (labels or [])], "body": body},
+        "issue": {
+            "number": 123,
+            "title": "Test issue",
+            "labels": [{"name": l} for l in (labels or [])],
+            "body": body,
+        },
     }
 
 
-def _post(client: TestClient, payload: dict[str, Any], event: str = "issues", action: str | None = None,
-          signature: str | None = None, delivery: str = DELIVERY_ID, secret: str = WEBHOOK_SECRET):
+def _post(
+    client: TestClient,
+    payload: dict[str, Any],
+    event: str = "issues",
+    action: str | None = None,
+    signature: str | None = None,
+    delivery: str = DELIVERY_ID,
+    secret: str = WEBHOOK_SECRET,
+):
     body = json.dumps(payload).encode()
     headers = {
         "X-GitHub-Event": event,
@@ -44,8 +58,6 @@ def _post(client: TestClient, payload: dict[str, Any], event: str = "issues", ac
         headers["X-GitHub-Action"] = action
     if signature is not None:
         headers["X-Hub-Signature-256"] = signature
-    if secret is not None:
-        client.app.router  # no-op; secret handled via env in fixture
     return client.post("/api/webhooks/github", content=body, headers=headers)
 
 
@@ -85,7 +97,13 @@ def client(monkeypatch):
 class TestSignatureVerification:
     def test_valid_signature_processes(self, client):
         tc, _ = client
-        res = _post(tc, _issue_payload(), event="issues", action="opened", signature=_sign(json.dumps(_issue_payload()).encode()))
+        res = _post(
+            tc,
+            _issue_payload(),
+            event="issues",
+            action="opened",
+            signature=_sign(json.dumps(_issue_payload()).encode()),
+        )
         assert res.status_code == 200
         assert res.json()["normalized"]["number"] == 123
 
@@ -96,27 +114,46 @@ class TestSignatureVerification:
 
     def test_invalid_signature_rejected(self, client):
         tc, _ = client
-        res = _post(tc, _issue_payload(), event="issues", action="opened", signature=_sign(b"tampered"))
+        res = _post(
+            tc, _issue_payload(), event="issues", action="opened", signature=_sign(b"tampered")
+        )
         assert res.status_code == 401
 
     def test_wrong_secret_rejected(self, client):
         tc, _ = client
         body = json.dumps(_issue_payload()).encode()
-        res = _post(tc, _issue_payload(), event="issues", action="opened", signature=_sign(body, secret="other"))
+        res = _post(
+            tc,
+            _issue_payload(),
+            event="issues",
+            action="opened",
+            signature=_sign(body, secret="other"),
+        )
         assert res.status_code == 401
 
     def test_unconfigured_secret_rejected(self, client, monkeypatch):
         tc, _ = client
         monkeypatch.delenv("GITHUB_WEBHOOK_SECRET", raising=False)
-        res = _post(tc, _issue_payload(), event="issues", action="opened", signature=_sign(json.dumps(_issue_payload()).encode()))
+        res = _post(
+            tc,
+            _issue_payload(),
+            event="issues",
+            action="opened",
+            signature=_sign(json.dumps(_issue_payload()).encode()),
+        )
         assert res.status_code == 401
 
 
 class TestEventNormalization:
     def test_issue_opened_normalized(self, client):
         tc, _ = client
-        res = _post(tc, _issue_payload(), event="issues", action="opened",
-                    signature=_sign(json.dumps(_issue_payload()).encode()))
+        res = _post(
+            tc,
+            _issue_payload(),
+            event="issues",
+            action="opened",
+            signature=_sign(json.dumps(_issue_payload()).encode()),
+        )
         normalized = res.json()["normalized"]
         assert normalized["event"] == "issues"
         assert normalized["number"] == 123
@@ -125,7 +162,13 @@ class TestEventNormalization:
     def test_issue_labeled_with_handoff_label_parsed(self, client):
         tc, _ = client
         payload = _issue_payload(action="labeled", labels=["handoff:coder"])
-        res = _post(tc, payload, event="issues", action="labeled", signature=_sign(json.dumps(payload).encode()))
+        res = _post(
+            tc,
+            payload,
+            event="issues",
+            action="labeled",
+            signature=_sign(json.dumps(payload).encode()),
+        )
         normalized = res.json()["normalized"]
         assert normalized["handoff_label"] == "handoff:coder"
 
@@ -137,7 +180,13 @@ class TestEventNormalization:
             "sender": {"login": "someuser"},
             "pull_request": {"number": 77, "title": "fix: something", "head": {"ref": "coder-1"}},
         }
-        res = _post(tc, payload, event="pull_request", action="opened", signature=_sign(json.dumps(payload).encode()))
+        res = _post(
+            tc,
+            payload,
+            event="pull_request",
+            action="opened",
+            signature=_sign(json.dumps(payload).encode()),
+        )
         normalized = res.json()["normalized"]
         assert normalized["number"] == 77 and normalized["branch"] == "coder-1"
 
@@ -147,16 +196,34 @@ class TestEventNormalization:
             "action": "completed",
             "repository": {"full_name": "SaifulHaqueNiloy/supremeai"},
             "sender": {"login": "someuser"},
-            "workflow_run": {"id": 999, "name": "ci", "conclusion": "failure", "head_branch": "main", "html_url": "http://x"},
+            "workflow_run": {
+                "id": 999,
+                "name": "ci",
+                "conclusion": "failure",
+                "head_branch": "main",
+                "html_url": "http://x",
+            },
         }
-        res = _post(tc, payload, event="workflow_run", action="completed", signature=_sign(json.dumps(payload).encode()))
+        res = _post(
+            tc,
+            payload,
+            event="workflow_run",
+            action="completed",
+            signature=_sign(json.dumps(payload).encode()),
+        )
         assert res.status_code == 200
         assert res.json()["normalized"]["run_id"] == 999
 
     def test_irrelevant_action_ignored(self, client):
         tc, _ = client
         payload = _issue_payload(action="closed")
-        res = _post(tc, payload, event="issues", action="closed", signature=_sign(json.dumps(payload).encode()))
+        res = _post(
+            tc,
+            payload,
+            event="issues",
+            action="closed",
+            signature=_sign(json.dumps(payload).encode()),
+        )
         assert res.status_code == 202
         assert res.json()["status"] == "ignored"
 
@@ -164,7 +231,13 @@ class TestEventNormalization:
         tc, _ = client
         payload = _issue_payload()
         payload["repository"]["full_name"] = "other-org/other-repo"
-        res = _post(tc, payload, event="issues", action="opened", signature=_sign(json.dumps(payload).encode()))
+        res = _post(
+            tc,
+            payload,
+            event="issues",
+            action="opened",
+            signature=_sign(json.dumps(payload).encode()),
+        )
         assert res.status_code == 403
 
 
@@ -184,10 +257,22 @@ class TestReplayProtection:
 
     def test_different_deliveries_both_processed(self, client):
         tc, _ = client
-        first = _post(tc, _issue_payload(), event="issues", action="opened",
-                      signature=_sign(json.dumps(_issue_payload()).encode()), delivery="d-1")
-        second = _post(tc, _issue_payload(), event="issues", action="opened",
-                       signature=_sign(json.dumps(_issue_payload()).encode()), delivery="d-2")
+        first = _post(
+            tc,
+            _issue_payload(),
+            event="issues",
+            action="opened",
+            signature=_sign(json.dumps(_issue_payload()).encode()),
+            delivery="d-1",
+        )
+        second = _post(
+            tc,
+            _issue_payload(),
+            event="issues",
+            action="opened",
+            signature=_sign(json.dumps(_issue_payload()).encode()),
+            delivery="d-2",
+        )
         assert first.json()["status"] != "duplicate"
         assert second.json()["status"] != "duplicate"
 
@@ -196,12 +281,18 @@ class TestHandoffSchema:
     def test_valid_handoff_yaml_extracted(self, client):
         tc, _ = client
         handoff_yaml = (
-            "task: {issue: \"#123\", status: completed}\n"
+            'task: {issue: "#123", status: completed}\n'
             "handoff: {next_agent: implementation, trigger: issue_created}\n"
-            "constraints: {branch: \"feature/123\", scope: implementation-only}"
+            'constraints: {branch: "feature/123", scope: implementation-only}'
         )
         payload = _issue_payload(body=f"```yaml\n{handoff_yaml}\n```")
-        res = _post(tc, payload, event="issues", action="opened", signature=_sign(json.dumps(payload).encode()))
+        res = _post(
+            tc,
+            payload,
+            event="issues",
+            action="opened",
+            signature=_sign(json.dumps(payload).encode()),
+        )
         handoff = res.json()["handoff"]
         assert handoff["next_agent"] == "coder"  # implementation alias → coder
         assert handoff["issue"] == "123"
@@ -209,9 +300,15 @@ class TestHandoffSchema:
 
     def test_invalid_handoff_schema_audited_not_fatal(self, client):
         tc, _ = client
-        bad_yaml = "handoff: {next_agent: not-a-real-lane, trigger: x}\ntask: {issue: \"#1\"}"
+        bad_yaml = 'handoff: {next_agent: not-a-real-lane, trigger: x}\ntask: {issue: "#1"}'
         payload = _issue_payload(body=f"```yaml\n{bad_yaml}\n```")
-        res = _post(tc, payload, event="issues", action="opened", signature=_sign(json.dumps(payload).encode()))
+        res = _post(
+            tc,
+            payload,
+            event="issues",
+            action="opened",
+            signature=_sign(json.dumps(payload).encode()),
+        )
         # Ingestion survives; the malformed handoff is rejected + audit-logged (not silent).
         assert res.status_code == 200
         assert res.json()["handoff"] is None

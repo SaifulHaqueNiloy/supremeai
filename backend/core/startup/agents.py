@@ -320,8 +320,15 @@ async def start_background_services(app):
         if os.getenv("ENABLE_QUOTA_ENFORCER", "false").lower() == "true":
 
             async def _quota_enforcer_loop() -> None:
-                script_path = Path(__file__).resolve().parents[2] / "scripts" / "billing" / "quota_enforcer.py"
-                interval_seconds = max(1, int(os.getenv("QUOTA_ENFORCE_INTERVAL_HOURS", "24"))) * 3600
+                script_path = (
+                    Path(__file__).resolve().parents[2]
+                    / "scripts"
+                    / "billing"
+                    / "quota_enforcer.py"
+                )
+                interval_seconds = (
+                    max(1, int(os.getenv("QUOTA_ENFORCE_INTERVAL_HOURS", "24"))) * 3600
+                )
                 grace_hours = os.getenv("QUOTA_ENFORCE_GRACE_HOURS", "0")
                 dry_run = os.getenv("QUOTA_ENFORCE_DRY_RUN", "false").lower() == "true"
                 notify = os.getenv("QUOTA_ENFORCE_NOTIFY", "true").lower() == "true"
@@ -345,7 +352,9 @@ async def start_background_services(app):
                             logger.info("✅ Quota enforcement pass completed (scheduled).")
                         elif proc.returncode == 1:
                             # CLI convention: exit 1 = tenants over quota (alert already sent)
-                            logger.warning("⚠️ Quota enforcement pass: tenants over quota (alerts sent).")
+                            logger.warning(
+                                "⚠️ Quota enforcement pass: tenants over quota (alerts sent)."
+                            )
                         else:
                             logger.error(
                                 "❌ Quota enforcement pass failed "
@@ -362,11 +371,42 @@ async def start_background_services(app):
                 max_restarts=5,
                 restart_delay=60.0,
             )
-            logger.info("✅ QuotaEnforcer background task started (scheduled --enforce-all passes).")
+            logger.info(
+                "✅ QuotaEnforcer background task started (scheduled --enforce-all passes)."
+            )
         else:
-            logger.info("ℹ️ QuotaEnforcer disabled via environment variable (ENABLE_QUOTA_ENFORCER).")
+            logger.info(
+                "ℹ️ QuotaEnforcer disabled via environment variable (ENABLE_QUOTA_ENFORCER)."
+            )
     except Exception as exc:
         logger.warning(f"⚠️ QuotaEnforcer failed to start: {exc}")
+
+    # ── #1827: Usage Metrics Aggregator — daily pipeline writer ─────────────
+    # বাংলা: usage_metrics টেবিলে কেউ লিখত না — Usage dashboard স্থায়ী খালি।
+    # এই agent দৈনিক in-process collector + CostGuard aggregates থেকে delta
+    # snapshot লেখে (বিদ্যমান db.upsert_usage_metric ব্যবহার করে)। অ-ধ্বংসাত্মক
+    # (নিজের DB-তে metrics লেখা) — তাই ডিফল্ট চালু (LearningLoop প্যাটার্ন)।
+    try:
+        if os.getenv("ENABLE_USAGE_METRICS_AGGREGATOR", "true").lower() == "true":
+
+            async def _usage_metrics_loop() -> None:
+                from core.startup.usage_metrics_aggregator import run_usage_metrics_loop
+
+                interval = max(1, int(os.getenv("USAGE_METRICS_INTERVAL_HOURS", "24")))
+                await run_usage_metrics_loop(interval_hours=interval)
+
+            await agent_supervisor.start_agent(
+                "usage-metrics-aggregator",
+                lambda: _usage_metrics_loop(),
+                health_check_interval=3600,  # Check hourly (writes every 24h)
+                max_restarts=5,
+                restart_delay=60.0,
+            )
+            logger.info("✅ UsageMetricsAggregator background task started (daily usage rows).")
+        else:
+            logger.info("ℹ️ UsageMetricsAggregator disabled via environment variable.")
+    except Exception as exc:
+        logger.warning(f"⚠️ UsageMetricsAggregator failed to start: {exc}")
 
     # ── Sprint 3/4 (Self-Evolution Zero-Cost plan): Learning Loop ────────────
     # Observe layer: start the LearningStore flush task ALWAYS (it is the

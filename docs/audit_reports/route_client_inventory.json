@@ -8,8 +8,8 @@
   "totals": {
     "backend_routes": 607,
     "frontend_unique_refs": 145,
-    "matched": 272,
-    "orphan_routes": 335
+    "matched": 277,
+    "orphan_routes": 330
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -29,7 +29,6 @@
     "/api/v1/kaggle": 4,
     "/api/v1/llm-gateway": 4,
     "/api/v1/repos": 4,
-    "/api/v1/stream": 4,
     "/api/v1/tools-registry": 4,
     "/api/v1/gcp": 3,
     "/api/v1/skills": 3,
@@ -77,7 +76,6 @@
     "/api/byoc/deploy": 1,
     "/api/byoc/status": 1,
     "/api/v1/cache": 1,
-    "/api/chat/orchestrate": 1,
     "/api/chat/capabilities": 1,
     "/api/chat/tasks": 1,
     "/api/chat/get_completion": 1,
@@ -125,7 +123,7 @@
     "/api/share/list": 1,
     "/api/simulator/installed": 1,
     "/api/simulator/devices": 1,
-    "/api/stream/chat": 1,
+    "/api/v1/stream": 1,
     "/api/v1/swarm": 1,
     "/api/v1/syncguard": 1,
     "/api/chat/completion": 1,
@@ -135,7 +133,7 @@
     "/api/webhooks/github": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 257,
+    "unclassified-orphan": 252,
     "internal": 46,
     "admin-only": 32
   },
@@ -440,13 +438,6 @@
       "declared": "/cdc/health",
       "resolved": "/api/v1/cdc/health",
       "classification": "internal"
-    },
-    {
-      "file": "backend/api/routes/chat.py",
-      "method": "POST",
-      "declared": "/api/chat/orchestrate",
-      "resolved": "/api/chat/orchestrate",
-      "classification": "unclassified-orphan"
     },
     {
       "file": "backend/api/routes/chat.py",
@@ -2185,20 +2176,6 @@
       "classification": "unclassified-orphan"
     },
     {
-      "file": "backend/api/routes/stream.py",
-      "method": "POST",
-      "declared": "/api/stream/chat",
-      "resolved": "/api/stream/chat",
-      "classification": "unclassified-orphan"
-    },
-    {
-      "file": "backend/api/routes/stream_chat_sse.py",
-      "method": "POST",
-      "declared": "/api/v1/stream/chat",
-      "resolved": "/api/v1/stream/chat",
-      "classification": "unclassified-orphan"
-    },
-    {
       "file": "backend/api/routes/stream_chat_sse.py",
       "method": "POST",
       "declared": "/api/chat/stream",
@@ -2206,24 +2183,10 @@
       "classification": "unclassified-orphan"
     },
     {
-      "file": "backend/api/routes/stream_chat_sse.py",
-      "method": "GET",
-      "declared": "/api/v1/stream/chat",
-      "resolved": "/api/v1/stream/chat",
-      "classification": "unclassified-orphan"
-    },
-    {
       "file": "backend/api/routes/stream_hitl_sse.py",
       "method": "GET",
       "declared": "/api/v1/stream/hitl",
       "resolved": "/api/v1/stream/hitl",
-      "classification": "unclassified-orphan"
-    },
-    {
-      "file": "backend/api/routes/stream_voice_sse.py",
-      "method": "GET",
-      "declared": "/api/v1/stream/voice",
-      "resolved": "/api/v1/stream/voice",
       "classification": "unclassified-orphan"
     },
     {
@@ -3935,6 +3898,16 @@
       ]
     },
     {
+      "file": "backend/api/routes/chat.py",
+      "method": "POST",
+      "declared": "/api/chat/orchestrate",
+      "resolved": "/api/chat/orchestrate",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/pages/PublicPages.tsx"
+      ]
+    },
+    {
       "file": "backend/api/routes/chat_upload.py",
       "method": "POST",
       "declared": "/api/chat/upload/",
@@ -4519,6 +4492,16 @@
       "classification": "internal",
       "frontend": [
         "frontend/src/pages/PublicPages.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/integrations.py",
+      "method": "GET",
+      "declared": "/integrations",
+      "resolved": "/api/v1/integrations",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/components/dashboard/ConnectedPlatformsVault.tsx"
       ]
     },
     {
@@ -5184,6 +5167,36 @@
       "classification": "unclassified-orphan",
       "frontend": [
         "frontend/src/services/socialGrowthService.ts"
+      ]
+    },
+    {
+      "file": "backend/api/routes/stream.py",
+      "method": "POST",
+      "declared": "/api/stream/chat",
+      "resolved": "/api/stream/chat",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/pages/PublicPages.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/stream_chat_sse.py",
+      "method": "POST",
+      "declared": "/api/v1/stream/chat",
+      "resolved": "/api/v1/stream/chat",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/pages/PublicPages.tsx"
+      ]
+    },
+    {
+      "file": "backend/api/routes/stream_chat_sse.py",
+      "method": "GET",
+      "declared": "/api/v1/stream/chat",
+      "resolved": "/api/v1/stream/chat",
+      "classification": "unclassified-orphan",
+      "frontend": [
+        "frontend/src/pages/PublicPages.tsx"
       ]
     },
     {

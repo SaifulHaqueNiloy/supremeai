@@ -1,4 +1,9 @@
-# Merge Train Rollup — Concurrency-Gated Batch PR Consolidation (Issue #1711)
+# Integration Gate — Concurrency-Gated Batch PR Consolidation (Issue #1711; epic #1850
+# Phase C / issue #1855 — renamed from merge-train-rollup.yml, absorbed whole: same
+# single-flight semantics, same scripts, same governance; cron */20 -> */30 (D5) and the
+# auto-approve-internal-workflows watchdog folded in as the unblock-stalled-runs arm).
+# The old file remains as a dispatch-only husk pending Tier-3 deletion in the cleanup
+# phase (protected-scope deletion requires founder sign-off).
 # ============================================================================
 # Single-flight integration gate. While ONE batch CI run is active, every
 # subsequent ready PR waits in the `queue:pending-rollup` lane WITHOUT burning
@@ -19,7 +24,7 @@
 # Anti-recursion (Issue #1634): every step that pushes or creates PRs uses
 # `secrets.SELF_HEAL_PAT || github.token` — never a bare github.token.
 
-name: Merge Train Rollup (Concurrency-Gated Batch Integration)
+name: Integration Gate (Concurrency-Gated Batch Integration)
 
 on:
   pull_request:
@@ -27,7 +32,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "*/20 * * * *"
+    - cron: "*/30 * * * *"
   workflow_dispatch:
     inputs:
       max_batch:
@@ -57,6 +62,7 @@ permissions:
   pull-requests: write
   issues: write
   checks: read
+  actions: write   # folded watchdog arm (#1855): approve stalled action_required runs
 
 env:
   QUEUE_LABEL: queue:pending-rollup
@@ -243,6 +249,14 @@ jobs:
 
           MEMBER_LIST=$(echo "$MERGED" | tr ' ' '\n' | sed 's/^/- #/')
           {
+            # Rule #2 NO-CLAIM-NO-CODE (#1991, folded into pr-gate by #1858): batch
+            # PRs must carry exactly ONE issue reference — the merge train's own
+            # standing tracker #1711. Without this the Unified PR Gate BLOCKs the
+            # batch PR itself (observed: batch #2090, 2026-09-27), freezing every
+            # member and deadlocking the train. One link also satisfies Rule #4
+            # 1-ISSUE-1-PR (issue_count=1); member issues cascade-close on land.
+            echo "Refs #1711"
+            echo ""
             echo "## 🚂 Merge-Train Rollup Batch"
             echo ""
             echo "Single-flight integration of the file-disjoint PRs that accumulated"
@@ -516,3 +530,60 @@ jobs:
           gh pr comment "$BATCH_PR" --body-file /tmp/merge_train_approval.md
           echo "### 🔐 Batch #${BATCH_PR} awaits Tier-3 approval" >> "$GITHUB_STEP_SUMMARY"
 
+  # ------------------------------------------------------------------
+  # Unblock stalled internal runs (folded from auto-approve-internal-workflows.yml,
+  # epic #1850 Phase C / #1855). Same permissions class (actions:write), same tick.
+  # Root-cause shrink: ci-doctor now pushes with SELF_HEAL_PAT (this same change),
+  # so action_required lockouts become rare — this arm is a SAFETY NET. It shares
+  # the single-flight group, so while a batch CI is in flight it can lag by at most
+  # one batch duration (pending-run coalescing); the */30 tick re-fires it.
+  # Pagination fix (#1855): the legacy watchdog scanned a single per_page=100 page.
+  # ------------------------------------------------------------------
+  unblock-stalled-runs:
+    name: Unblock Stalled Internal Runs (watchdog)
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    steps:
+      - name: Scan & approve internal action-required runs (paginated)
+        env:
+          GH_TOKEN: ${{ secrets.SELF_HEAL_PAT || github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          echo "🔍 Scanning GitHub Actions for 'action_required' runs (paginated)..."
+          PAGE=1
+          APPROVED=0
+          FAILED=0
+          while : ; do
+            RESPONSE=$(gh api "repos/$GH_REPO/actions/runs?status=action_required&per_page=100&page=$PAGE" || echo '{"workflow_runs":[]}')
+            RUNS=$(echo "$RESPONSE" | jq -r '.workflow_runs[]? | select(.head_branch | test("^(agent-[a-zA-Z0-9_-]+|chore/.+|feat/.+|fix/.+|develop|main)")) | "\(.id):\(.head_branch):\(.name)"' || true)
+            if [ -n "$RUNS" ]; then
+            while IFS= read -r item; do
+              [ -z "$item" ] && continue
+              RUN_ID="${item%%:*}"
+              DETAILS="${item#*:}"
+              echo "Approving stalled run #$RUN_ID ($DETAILS)..."
+              HTTP_CODE=$(curl -s -o /tmp/approve_response.json -w "%{http_code}" \
+                -X POST \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                -H "X-GitHub-Api-Version: 2022-11-28" \
+                "https://api.github.com/repos/$GH_REPO/actions/runs/$RUN_ID/approve")
+              if [ "$HTTP_CODE" = "200" ] || [ "$HTTP_CODE" = "201" ] || [ "$HTTP_CODE" = "204" ]; then
+                echo "  ✅ approved"
+                APPROVED=$((APPROVED + 1))
+              else
+                echo "  ⚠️ HTTP $HTTP_CODE: $(cat /tmp/approve_response.json 2>/dev/null || true)"
+                FAILED=$((FAILED + 1))
+              fi
+            done <<< "$RUNS"
+            fi
+            COUNT=$(echo "$RESPONSE" | jq '.workflow_runs | length')
+            [ "$COUNT" -lt 100 ] && break
+            PAGE=$((PAGE + 1))
+          done
+          echo "Watchdog summary: approved=$APPROVED failed=$FAILED"

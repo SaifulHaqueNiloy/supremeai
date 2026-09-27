@@ -4,15 +4,15 @@
 
 - backend routes scanned: **607**
 - unique frontend `/api/...` refs: **145**
-- matched (frontend-reachable): **272**
-- orphan backend routes: **335** (121 route families)
+- matched (frontend-reachable): **277**
+- orphan backend routes: **330** (119 route families)
 
 ## Orphan classifications (heuristic — owners must ratify)
 
 | classification | count | next action |
 |---|---|---|
 | `internal` | 46 | document as internal; verify not publicly reachable |
-| `unclassified-orphan` | 257 | triage: user-facing wiring vs intentional API-only |
+| `unclassified-orphan` | 252 | triage: user-facing wiring vs intentional API-only |
 | `admin-only` | 32 | wire into admin UI or document as admin-API |
 
 ## Top orphan families

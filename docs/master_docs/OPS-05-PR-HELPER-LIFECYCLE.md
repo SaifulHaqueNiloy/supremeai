@@ -8,7 +8,7 @@
 > `🚦 Unified PR Gate` are green, the maintainer merges the PR manually.
 > The lifecycle description below is retained for historical reference only.
 
-> **Workflow:** `.github/workflows/pr-helper.yml` (Orchestrated by `.github/workflows/pr-pipeline.yml`) · **Scripts:** `.github/scripts/pr_helper/`
+> **Workflow:** `.github/workflows/pr-helper.yml` (Orchestrated by `.github/workflows/pr-gate.yml` (renamed from pr-pipeline.yml, epic #1850 Phase E)) · **Scripts:** `.github/scripts/pr_helper/`
 > **ফিলসফি:** PR একটি **state machine** — প্রতিটি PR-এর state শুধুমাত্র প্রমাণ (test delta, conflict, quality) দিয়ে নির্ধারিত হয়। GitHub/AWS/Google-এর মতো industry-standard state-based locking lifecycle।
 
 ## 🗺️ পূর্ণ Lifecycle Diagram

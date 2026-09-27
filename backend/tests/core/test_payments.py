@@ -13,12 +13,27 @@ client = TestClient(app)
 # Issue #1594: /checkout resolves identity via the centralized dependency
 # (api.deps.get_current_user_token). Tests override that dependency directly
 # for deterministic identity instead of depending on middleware/bypass env.
+#
+# FIX (#2088 fallout): the override used to be installed at MODULE level,
+# which pytest applies at COLLECTION time for the whole session — and it was
+# never torn down. Every later test in the process then resolved
+# get_current_user_token to this {"role": "user"} identity, silently breaking
+# admin-gated tests that rely on the real dependency path (observed in CI
+# core-unit: test_multicloud::test_cloud_distribution_endpoint — 403 instead
+# of 200, "Unauthorized admin access attempt by test-user-id"). Autouse
+# fixture + teardown keeps the override scoped to THIS file's tests only.
 from api.deps import get_current_user_token  # noqa: E402
 
-app.dependency_overrides[get_current_user_token] = lambda: {
-    "sub": "test-user-id",
-    "role": "user",
-}
+
+@pytest.fixture(autouse=True)
+def _payments_identity():
+    app.dependency_overrides[get_current_user_token] = lambda: {
+        "sub": "test-user-id",
+        "role": "user",
+    }
+    yield
+    app.dependency_overrides.pop(get_current_user_token, None)
+
 
 mock_token = jwt.encode(
     {"sub": "test-user-id", "user_id": "test-user-id", "role": "admin"},

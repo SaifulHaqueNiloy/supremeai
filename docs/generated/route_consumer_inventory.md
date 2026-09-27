@@ -5,31 +5,28 @@
 | metric | value |
 |---|---|
 | backend routes | 861 |
-| routes with frontend consumer | 295 |
+| routes with frontend consumer | 300 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
-| orphan routes (unclassified) | 2 |
-| orphan families | 2 |
-| api-only routes (allowlisted) | 303 |
+| orphan routes (unclassified) | 0 |
+| orphan families | 0 |
+| api-only routes (allowlisted) | 300 |
 | api-only families | 158 |
 
 ## Classification legend
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 165 | frontend consumer matched |
+| `user-facing` | 170 | frontend consumer matched |
 | `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 40 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 303 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
-| `orphaned` | 2 | no consumer and no classification — CI fails on NEW orphans |
+| `api-only` | 300 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
-## Orphan families (actionable — wire, classify or deprecate)
+## Orphan families
 
-| family | orphan routes |
-|---|---|
-| `/api/merge-learning/reports` | 1 |
-| `/render-ticket` | 1 |
+None — every route is classified or allowlisted. New orphans fail `tests/test_route_consumer_contract.py`.
 
 ## Intentionally API-only families (allowlisted — owner to prune as wiring lands)
 
@@ -65,7 +62,6 @@
 | `/api/chat/export` | 2 |
 | `/api/chat/get_completion` | 1 |
 | `/api/chat/learning` | 1 |
-| `/api/chat/orchestrate` | 1 |
 | `/api/chat/prompt-action` | 1 |
 | `/api/chat/search` | 1 |
 | `/api/chat/stream` | 2 |
@@ -99,6 +95,7 @@
 | `/api/memory/recall` | 3 |
 | `/api/memory/save` | 1 |
 | `/api/memory/session` | 1 |
+| `/api/merge-learning/reports` | 1 |
 | `/api/mobile/bff` | 1 |
 | `/api/reasoning/think` | 2 |
 | `/api/research/:param` | 1 |
@@ -111,7 +108,6 @@
 | `/api/simulator/session` | 3 |
 | `/api/skills/install` | 1 |
 | `/api/skills/uninstall` | 1 |
-| `/api/stream/chat` | 1 |
 | `/api/style/generate` | 1 |
 | `/api/style/learn` | 1 |
 | `/api/style/prompt` | 1 |
@@ -155,7 +151,7 @@
 | `/api/v1/runs` | 9 |
 | `/api/v1/sandbox` | 4 |
 | `/api/v1/scrape` | 1 |
-| `/api/v1/stream` | 4 |
+| `/api/v1/stream` | 1 |
 | `/api/v1/swarm` | 1 |
 | `/api/v1/syncguard` | 1 |
 | `/api/v1/tools-registry` | 4 |
@@ -183,6 +179,7 @@
 | `/pair/solve` | 1 |
 | `/payments/checkout` | 1 |
 | `/payments/plans` | 1 |
+| `/render-ticket` | 1 |
 | `/repos` | 2 |
 | `/repos/:param` | 2 |
 | `/task/execute` | 1 |
@@ -225,6 +222,7 @@
 | GET | `/admin-api/costs/breakdown` | `backend/api/routes/admin_dashboard/__init__.py` | admin-only | NONE |
 | GET | `/admin-api/customers` | `backend/api/routes/admin_dashboard/endpoints_crud.py` | admin-only | NONE |
 | GET | `/admin-api/data-export` | `backend/api/routes/admin_dashboard/__init__.py` | admin-only | NONE |
+| GET | `/admin-api/dependencies` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | POST | `/admin-api/deploy` | `backend/api/routes/admin_dashboard/endpoints_deploy.py` | admin-only | NONE |
 | GET | `/admin-api/deploy-gate` | `backend/api/routes/admin_dashboard/endpoints_command.py` | admin-only | NONE |
 | POST | `/admin-api/deploy-gate` | `backend/api/routes/admin_dashboard/endpoints_command.py` | admin-only | NONE |
@@ -234,7 +232,9 @@
 | POST | `/admin-api/feature-flags` | `backend/api/routes/admin_dashboard/endpoints_flags.py` | admin-only | NONE |
 | PUT | `/admin-api/feature-flags/:param` | `backend/api/routes/admin_dashboard/endpoints_flags.py` | admin-only | NONE |
 | POST | `/admin-api/gate/override` | `backend/api/routes/admin_dashboard/endpoints_gate.py` | admin-only | NONE |
+| GET | `/admin-api/health-aggregation` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | GET | `/admin-api/health-map` | `backend/api/routes/admin_dashboard/endpoints_health.py` | admin-only | NONE |
+| GET | `/admin-api/health-map` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | POST | `/admin-api/impersonate` | `backend/api/routes/admin_dashboard/endpoints_impersonate.py` | admin-only | NONE |
 | GET | `/admin-api/intelligence/insights` | `backend/api/routes/intelligence_insights.py` | admin-only | NONE |
 | GET | `/admin-api/intelligence/manual-tasks` | `backend/api/routes/intelligence_insights.py` | admin-only | NONE |
@@ -251,6 +251,7 @@
 | GET | `/admin-api/permissions` | `backend/api/routes/admin_dashboard/endpoints_crud.py` | admin-only | NONE |
 | GET | `/admin-api/ping-all` | `backend/api/routes/service_topology.py` | admin-only | NONE |
 | GET | `/admin-api/ping-service` | `backend/api/routes/service_topology.py` | admin-only | NONE |
+| GET | `/admin-api/provider-readiness` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | GET | `/admin-api/providers` | `backend/api/routes/admin_dashboard/endpoints_metrics.py` | admin-only | NONE |
 | GET | `/admin-api/rate-limits` | `backend/api/routes/admin_dashboard/endpoints_command.py` | admin-only | NONE |
 | GET | `/admin-api/reports` | `backend/api/routes/admin_dashboard/endpoints_events.py` | admin-only | NONE |
@@ -265,6 +266,7 @@
 | GET | `/admin-api/security/tasks` | `backend/api/routes/admin_dashboard/endpoints_security_memory.py` | admin-only | NONE |
 | GET | `/admin-api/service-categories` | `backend/api/routes/service_topology.py` | admin-only | NONE |
 | GET | `/admin-api/service-topology` | `backend/api/routes/service_topology.py` | admin-only | NONE |
+| GET | `/admin-api/service-uptime` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | GET | `/admin-api/sessions` | `backend/api/routes/admin_dashboard/endpoints_crud.py` | admin-only | NONE |
 | GET | `/admin-api/settings` | `backend/api/routes/admin_dashboard/endpoints_crud.py` | admin-only | NONE |
 | POST | `/admin-api/settings` | `backend/api/routes/admin_dashboard/endpoints_crud.py` | admin-only | NONE |
@@ -281,6 +283,7 @@
 | GET | `/admin-api/tenant-limits/tiers/defaults` | `backend/api/routes/tenant_admin.py` | admin-only | NONE |
 | POST | `/admin-api/tenants/:param/reset` | `backend/api/routes/admin_dashboard/endpoints_users.py` | admin-only | NONE |
 | POST | `/admin-api/tenants/:param/reset` | `backend/api/routes/tenant_admin.py` | admin-only | NONE |
+| POST | `/admin-api/test-service` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | GET | `/admin-api/users` | `backend/api/routes/admin_dashboard/endpoints_users.py` | admin-only | NONE |
 | POST | `/admin-api/users` | `backend/api/routes/admin_dashboard/endpoints_users.py` | admin-only | NONE |
 | DELETE | `/admin-api/users/:param` | `backend/api/routes/admin_dashboard/endpoints_users.py` | admin-only | NONE |
@@ -303,12 +306,6 @@
 | GET | `/admin/trusted-browsers` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
 | DELETE | `/admin/trusted-browsers/:param` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
 | POST | `/agent/plan` | `backend/tools/self_planner.py` | api-only | NONE |
-| GET | `/api/admin-api/dependencies` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
-| GET | `/api/admin-api/health-aggregation` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
-| GET | `/api/admin-api/health-map` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
-| GET | `/api/admin-api/provider-readiness` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
-| GET | `/api/admin-api/service-uptime` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
-| POST | `/api/admin-api/test-service` | `backend/api/routes/health_aggregation.py` | admin-only | NONE |
 | POST | `/api/admin/actions/:param` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | POST | `/api/admin/ai/assign` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/components/admin/AISurfaceAssignment.tsx` |
 | GET | `/api/admin/ai/assignment` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
@@ -498,7 +495,7 @@
 | GET | `/api/chat/export/formats` | `backend/api/routes/chat_export.py` | api-only | NONE |
 | POST | `/api/chat/get_completion` | `backend/api/routes/chat.py` | api-only | NONE |
 | GET | `/api/chat/learning/stats` | `backend/api/routes/chat.py` | api-only | NONE |
-| POST | `/api/chat/orchestrate` | `backend/api/routes/chat.py` | api-only | NONE |
+| POST | `/api/chat/orchestrate` | `backend/api/routes/chat.py` | user-facing | `frontend/src/pages/PublicPages.tsx` |
 | POST | `/api/chat/prompt-action` | `backend/api/routes/task.py` | api-only | NONE |
 | GET | `/api/chat/search` | `backend/api/routes/chat_search.py` | api-only | NONE |
 | POST | `/api/chat/stream` | `backend/api/routes/stream_chat_sse.py` | api-only | NONE |
@@ -559,7 +556,7 @@
 | POST | `/api/memory/recall` | `backend/api/routes/memory.py` | api-only | NONE |
 | POST | `/api/memory/save` | `backend/api/routes/memory.py` | api-only | NONE |
 | POST | `/api/memory/session` | `backend/api/routes/memory.py` | api-only | NONE |
-| GET | `/api/merge-learning/reports` | `backend/api/routes/merge_learning.py` | orphaned | NONE |
+| GET | `/api/merge-learning/reports` | `backend/api/routes/merge_learning.py` | api-only | NONE |
 | POST | `/api/merge-learning/webhook` | `backend/api/routes/merge_learning.py` | internal | NONE |
 | POST | `/api/mobile/bff/orchestrate` | `backend/api/routes/mobile_bff.py` | api-only | NONE |
 | GET | `/api/preferences` | `backend/api/routes/preferences.py` | user-facing | `frontend/src/contexts/ThemeProvider.tsx`, `frontend/src/i18n/I18nProvider.tsx`, `frontend/src/pages/ProfilePage.tsx` (+1 more) |
@@ -616,7 +613,7 @@
 | GET | `/api/skills/search` | `backend/api/routes/skills.py` | user-facing | `frontend/src/components/admin/EnhancedSkillMarketplace.tsx`, `frontend/src/hooks/useAdminApi.ts` |
 | POST | `/api/skills/search` | `backend/api/routes/skills.py` | user-facing | `frontend/src/components/admin/EnhancedSkillMarketplace.tsx`, `frontend/src/hooks/useAdminApi.ts` |
 | DELETE | `/api/skills/uninstall` | `backend/api/routes/skills.py` | api-only | NONE |
-| POST | `/api/stream/chat` | `backend/api/routes/stream.py` | api-only | NONE |
+| POST | `/api/stream/chat` | `backend/api/routes/stream.py` | user-facing | `frontend/src/pages/PublicPages.tsx` |
 | POST | `/api/style/generate` | `backend/tools/learning/style_learner.py` | api-only | NONE |
 | POST | `/api/style/learn` | `backend/tools/learning/style_learner.py` | api-only | NONE |
 | GET | `/api/style/prompt` | `backend/tools/learning/style_learner.py` | api-only | NONE |
@@ -795,6 +792,7 @@
 | POST | `/api/v1/hitl/reject/:param` | `backend/api/routes/approval_manager.py` | admin-only | `frontend/src/data/hooks.ts` |
 | POST | `/api/v1/hitl/reject/:param` | `backend/api/routes/hitl_admin.py` | admin-only | `frontend/src/data/hooks.ts` |
 | GET | `/api/v1/hitl/resume/:param` | `backend/api/routes/hitl_admin.py` | admin-only | NONE |
+| GET | `/api/v1/integrations` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
 | POST | `/api/v1/integrations/discover` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/OneLinerMCPConnect.test.tsx`, `frontend/src/components/dashboard/OneLinerMCPConnect.tsx` |
 | GET | `/api/v1/integrations/github/callback` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
 | GET | `/api/v1/integrations/github/link` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
@@ -914,10 +912,9 @@
 | POST | `/api/v1/social/drafts/:param/approve` | `backend/api/routes/social_growth.py` | user-facing | `frontend/src/services/socialGrowthService.ts` |
 | POST | `/api/v1/social/pause` | `backend/api/routes/social_growth.py` | user-facing | `frontend/src/services/socialGrowthService.ts` |
 | POST | `/api/v1/social/resume` | `backend/api/routes/social_growth.py` | user-facing | `frontend/src/services/socialGrowthService.ts` |
-| GET | `/api/v1/stream/chat` | `backend/api/routes/stream_chat_sse.py` | api-only | NONE |
-| POST | `/api/v1/stream/chat` | `backend/api/routes/stream_chat_sse.py` | api-only | NONE |
+| GET | `/api/v1/stream/chat` | `backend/api/routes/stream_chat_sse.py` | user-facing | `frontend/src/pages/PublicPages.tsx` |
+| POST | `/api/v1/stream/chat` | `backend/api/routes/stream_chat_sse.py` | user-facing | `frontend/src/pages/PublicPages.tsx` |
 | GET | `/api/v1/stream/hitl` | `backend/api/routes/stream_hitl_sse.py` | api-only | NONE |
-| GET | `/api/v1/stream/voice` | `backend/api/routes/stream_voice_sse.py` | api-only | NONE |
 | GET | `/api/v1/swarm/stream` | `backend/api/routes/swarm_stream.py` | api-only | NONE |
 | POST | `/api/v1/syncguard/audit` | `backend/api/routes/syncguard.py` | api-only | NONE |
 | POST | `/api/v1/tasks` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
@@ -1018,7 +1015,7 @@
 | POST | `/payments/checkout` | `backend/api/routes/payments.py` | api-only | NONE |
 | GET | `/payments/plans` | `backend/api/routes/payments.py` | api-only | NONE |
 | POST | `/payments/webhook` | `backend/api/routes/payments.py` | internal | NONE |
-| POST | `/render-ticket` | `backend/api/routes/browser/_render_proxy.py` | orphaned | NONE |
+| POST | `/render-ticket` | `backend/api/routes/browser/_render_proxy.py` | api-only | NONE |
 | GET | `/repos` | `backend/api/routes/repos.py` | api-only | NONE |
 | POST | `/repos` | `backend/api/routes/repos.py` | api-only | NONE |
 | DELETE | `/repos/:param` | `backend/api/routes/repos.py` | api-only | NONE |

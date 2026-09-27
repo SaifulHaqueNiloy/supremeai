@@ -10,8 +10,14 @@
 #   3. CAS check: যদি অন্য assignee থাকে → আমি lose, exit 1
 #   4. LOCK:     status:in-progress label যোগ করি (atomic via gh issue edit)
 #
+# AUDIT-FIX (#1838): --skip-assign flag added. GitHub App bots (e.g.
+# supremeai-coder-1-bot[bot]) get 403 Forbidden on /assignees API — they
+# cannot be assigned. With --skip-assign the CLAIM/VERIFY steps are
+# replaced by a LABEL-based pre-check + LOCK (status:in-progress label,
+# the canonical lock per AGENTS.md §3).
+#
 # Usage:
-#   scripts/ci/atomic_claim.sh <issue_number> <agent_name> [--status-label status:in-progress]
+#   scripts/ci/atomic_claim.sh <issue_number> <agent_name> [--status-label <label>] [--skip-assign]
 #
 # Exit codes:
 #   0 = claim successful (this agent owns the issue now)
@@ -21,13 +27,46 @@
 set -euo pipefail
 
 # ─── Args ────────────────────────────────────────────────────────────────
-ISSUE_NUMBER="${1:-}"
-AGENT_NAME="${2:-}"
-STATUS_LABEL="${3:-status:in-progress}"
+# (#1838) flag parsing — backwards compatible with positional args.
+SKIP_ASSIGN=false
+FORCE=false
+STATUS_LABEL="status:in-progress"
+POSITIONAL=()
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --skip-assign|--skip-assign=true)
+      SKIP_ASSIGN=true
+      shift
+      ;;
+    --force)
+      FORCE=true
+      shift
+      ;;
+    --status-label)
+      shift
+      STATUS_LABEL="${1:-status:in-progress}"
+      shift
+      ;;
+    --status-label=*)
+      STATUS_LABEL="${1#*=}"
+      shift
+      ;;
+    *)
+      POSITIONAL+=("$1")
+      shift
+      ;;
+  esac
+done
+ISSUE_NUMBER="${POSITIONAL[0]:-}"
+AGENT_NAME="${POSITIONAL[1]:-}"
 
 if [ -z "$ISSUE_NUMBER" ] || [ -z "$AGENT_NAME" ]; then
-  echo "Usage: $0 <issue_number> <agent_name> [status_label]" >&2
-  echo "Example: $0 900 agent-1" >&2
+  echo "Usage: $0 <issue_number> <agent_name> [--status-label <label>] [--skip-assign]" >&2
+  echo "  --skip-assign      Skip assignee step (for GitHub App bots that get 403)" >&2
+  echo "  --status-label     Override the status label (default: status:in-progress)" >&2
+  echo "Examples:" >&2
+  echo "  $0 900 agent-1                          # Human operator claim" >&2
+  echo "  $0 900 agent-3-coder-1 --skip-assign   # Bot claim (skips 403)" >&2
   exit 2
 fi
 
@@ -41,34 +80,112 @@ fi
 : "${GH_REPO:?GH_REPO env var required}"
 
 # ─── Pre-check: already claimed? ────────────────────────────────────────
-echo "🔍 Pre-checking issue #$ISSUE_NUMBER for existing assignees..."
+echo "🔍 Pre-checking issue #$ISSUE_NUMBER for existing claim..."
+
+# AUDIT-FIX (#2008): Rule #13 "ONE ACTIVE CLAIM PER AGENT" — check if this
+# agent already has another issue with status:in-progress before claiming.
+# Uses label-based check (works for bots that can't be assigned via API).
+ACTIVE_CLAIMS=$(gh issue list --label "$STATUS_LABEL" --state open --json number,title --limit 50 2>/dev/null || echo "[]")
+ACTIVE_COUNT=$(echo "$ACTIVE_CLAIMS" | python3 -c "
+import json, sys
+try:
+    issues = json.load(sys.stdin)
+    print(len(issues))
+except:
+    print(0)
+" 2>/dev/null || echo "0")
+
+if [ "$ACTIVE_COUNT" -gt 0 ]; then
+  # Check if any of the active claims have THIS agent's audit comment
+  MY_ACTIVE=$(echo "$ACTIVE_CLAIMS" | python3 -c "
+import json, sys, subprocess
+issues = json.load(sys.stdin)
+me = '$AGENT_NAME'
+my_issues = []
+for issue in issues:
+    num = issue.get('number')
+    try:
+        comments = subprocess.run(['gh', 'issue', 'view', str(num), '--json', 'comments', '-q', '.comments[].body'],
+            capture_output=True, text=True, timeout=10)
+        if me in comments.stdout:
+            my_issues.append(f'#{num}: {issue.get(\"title\",\"\")[:60]}')
+    except:
+        pass
+if my_issues:
+    print('\\n'.join(my_issues))
+else:
+    print('')
+" 2>/dev/null || echo "")
+
+  if [ -n "$MY_ACTIVE" ]; then
+    echo "⚠️  WARNING: You already have $STATUS_LABEL on these issues (Rule #13: ONE ACTIVE CLAIM PER AGENT):"
+    echo "$MY_ACTIVE" | sed 's/^/    /'
+    echo ""
+    echo "Complete or release the current claim before claiming another."
+    echo "Use --force to override (with caution)."
+    # (--force is parsed in the Args loop above — "$@" is consumed by then)
+    if [ "$FORCE" != "true" ]; then
+      echo "❌ Claim blocked by Rule #13. Use --force to override."
+      exit 1
+    else
+      echo "⚡ --force override: proceeding despite active claims"
+    fi
+  fi
+fi
+
 EXISTING_ASSIGNEES=$(gh issue view "$ISSUE_NUMBER" --json assignees -q '.assignees[].login' 2>/dev/null || echo "")
 
-if [ -n "$EXISTING_ASSIGNEES" ]; then
-  # Check if it's me already (idempotent retry)
-  if echo "$EXISTING_ASSIGNEES" | grep -qFx "$AGENT_NAME"; then
-    echo "✅ Issue #$ISSUE_NUMBER already assigned to me ($AGENT_NAME) — idempotent success"
-    # Ensure status label is present
-    gh issue edit "$ISSUE_NUMBER" --add-label "$STATUS_LABEL" 2>/dev/null || true
-    exit 0
+# AUDIT-FIX (#1838): When --skip-assign is used (bot mode), check the
+# status:in-progress LABEL instead of assignees — that's the canonical lock.
+if [ "$SKIP_ASSIGN" = "true" ]; then
+  EXISTING_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels -q '.labels[].name' 2>/dev/null || echo "")
+  if echo "$EXISTING_LABELS" | grep -qFx "$STATUS_LABEL"; then
+    # Check if this agent already posted an audit comment (idempotent)
+    EXISTING_COMMENTS=$(gh issue view "$ISSUE_NUMBER" --json comments -q '.comments[].body' 2>/dev/null || echo "")
+    if echo "$EXISTING_COMMENTS" | grep -q "Atomic Claim.*$AGENT_NAME"; then
+      echo "✅ Issue #$ISSUE_NUMBER already claimed by me ($AGENT_NAME) — idempotent success"
+      exit 0
+    fi
+    echo "❌ Issue #$ISSUE_NUMBER already has '$STATUS_LABEL' label (claimed by another agent)"
+    echo "Claim failed — race lost."
+    exit 1
   fi
-  echo "❌ Issue #$ISSUE_NUMBER already has assignee(s):"
-  echo "$EXISTING_ASSIGNEES" | sed 's/^/  - /'
-  echo "Claim failed — race lost."
-  exit 1
+  echo "  No existing '$STATUS_LABEL' label — proceeding to LOCK"
+else
+  if [ -n "$EXISTING_ASSIGNEES" ]; then
+    # Check if it's me already (idempotent retry)
+    if echo "$EXISTING_ASSIGNEES" | grep -qFx "$AGENT_NAME"; then
+      echo "✅ Issue #$ISSUE_NUMBER already assigned to me ($AGENT_NAME) — idempotent success"
+      # Ensure status label is present
+      gh issue edit "$ISSUE_NUMBER" --add-label "$STATUS_LABEL" 2>/dev/null || true
+      exit 0
+    fi
+    echo "❌ Issue #$ISSUE_NUMBER already has assignee(s):"
+    echo "$EXISTING_ASSIGNEES" | sed 's/^/  - /'
+    echo "Claim failed — race lost."
+    exit 1
+  fi
 fi
 
 # ─── STEP 1: CLAIM (optimistic) ──────────────────────────────────────────
-echo "🎯 Claiming issue #$ISSUE_NUMBER as $AGENT_NAME..."
-gh issue edit "$ISSUE_NUMBER" --add-assignee "$AGENT_NAME" 2>&1 | sed 's/^/  /' || {
-  echo "❌ Claim command failed"
-  exit 1
-}
+if [ "$SKIP_ASSIGN" = "true" ]; then
+  # (#1838) Bot mode — skip assignee step entirely. GitHub App bots get 403
+  # on /assignees API. The canonical lock (AGENTS.md §3) is the label.
+  echo "🎯 Bot mode (--skip-assign): skipping assignee step"
+else
+  echo "🎯 Claiming issue #$ISSUE_NUMBER as $AGENT_NAME..."
+  gh issue edit "$ISSUE_NUMBER" --add-assignee "$AGENT_NAME" 2>&1 | sed 's/^/  /' || {
+    echo "❌ Claim command failed"
+    exit 1
+  }
+fi
 
 # ─── STEP 2: VERIFY (Compare-And-Swap check) ───────────────────────────
 # CRITICAL: GitHub's --add-assignee is APPEND, not REPLACE.
 # If two agents called simultaneously, BOTH might be in the assignees list.
 # We must verify we are the ONLY assignee (or at least the first one).
+# (#1838) Bot mode skips this — no assignee write happened, nothing to CAS.
+if [ "$SKIP_ASSIGN" != "true" ]; then
 echo "🔍 Verifying claim..."
 sleep 1  # Brief delay to let any concurrent claims settle
 
@@ -103,6 +220,7 @@ for a in d.get('assignees', []):
     gh issue edit "$ISSUE_NUMBER" --remove-assignee "$other" 2>/dev/null || true
   done
 fi
+fi # SKIP_ASSIGN (STEP 2 CAS verify — human mode only)
 
 # ─── STEP 3: LOCK — add status label + drop stale unclaimed label ─────────
 echo "🔒 Adding status label '$STATUS_LABEL'..."
@@ -119,6 +237,46 @@ echo "🧹 Removing stale 'status:unclaimed' label (issue #1909)..."
 gh issue edit "$ISSUE_NUMBER" --remove-label "status:unclaimed" 2>&1 | sed 's/^/  /' || {
   echo "⚠️ Failed to remove status:unclaimed (non-fatal — claim still valid)"
 }
+
+# ─── STEP 3.5: POST-VERIFY — TOCTOU hardening (issue #1989) ─────────────
+# বাংলা: label add করার পরেই অবস্থা re-read করা বাধ্যতামূলক — add-assignee
+# ও add-label দুটোই APPEND; verify ও label-এর মাঝামাঝি সময়ে আরেকটি agent
+# ঢুকে গেলে শুধু আগের CAS check তা ধরত না। নিচের re-read নিশ্চিত করে:
+#   (a) আমি এখনো একমাত্র/প্রথম assignee, এবং
+#   (b) status label সত্যিই বসেছে।
+# ব্যর্থ হলে নিজের label সরিয়ে (release) exit 1 — double-claim অসম্ভব।
+echo "🔎 Post-verify: re-reading issue state (issue #1989)..."
+sleep 1
+FINAL_JSON=$(gh issue view "$ISSUE_NUMBER" --json assignees,labels 2>/dev/null || echo "{}")
+if [ "$SKIP_ASSIGN" != "true" ]; then
+  # (#1838) assignee re-check only makes sense when we wrote an assignee.
+  ME_STILL_ASSIGNED=$(echo "$FINAL_JSON" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+me = '$AGENT_NAME'
+print('yes' if any(a.get('login') == me for a in d.get('assignees', [])) else 'no')
+")
+  if [ "$ME_STILL_ASSIGNED" != "yes" ]; then
+    echo "❌ Post-verify FAILED: I am no longer an assignee (raced and evicted) — releasing $STATUS_LABEL..."
+    gh issue edit "$ISSUE_NUMBER" --remove-label "$STATUS_LABEL" 2>/dev/null || true
+    exit 1
+  fi
+fi
+FINAL_HAS_LABEL=$(echo "$FINAL_JSON" | python3 -c "
+import json, sys
+d = json.load(sys.stdin)
+want = '$STATUS_LABEL'
+print('yes' if any(l.get('name') == want for l in d.get('labels', [])) else 'no')
+")
+if [ "$FINAL_HAS_LABEL" != "yes" ]; then
+  echo "⚠️ status label missing after add — retrying once..."
+  gh issue edit "$ISSUE_NUMBER" --add-label "$STATUS_LABEL" 2>/dev/null || true
+fi
+if [ "$SKIP_ASSIGN" = "true" ]; then
+  echo "  ✅ Post-verify passed: status label present (bot mode)"
+else
+  echo "  ✅ Post-verify passed: sole assignee + status label present"
+fi
 
 # ─── STEP 4: Post claim timestamp comment (for audit trail) ────────────
 CLAIM_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
