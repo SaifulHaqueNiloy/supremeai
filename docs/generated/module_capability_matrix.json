@@ -11667,6 +11667,15 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/tests/api/test_sworm_adapter_contract.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/tests/api/test_task_endpoints.py"
     },
     {
@@ -14042,6 +14051,16 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_zero_cost_redis_breaker_learning.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "health"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_zero_cost_wiring.py"
     },
     {
       "capability_signals": [
@@ -18096,7 +18115,10 @@
       "path": "frontend/src/commandcenter/modules/observe/HealthMap.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health",
+        "realtime"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
@@ -18190,7 +18212,9 @@
       "path": "frontend/src/commandcenter/modules/secure/RateLimits.tsx"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "health"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
@@ -18486,13 +18510,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/AdminDashboardHome.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/AuditLogsPanel.tsx"
     },
     {
       "capability_signals": [],
@@ -19094,15 +19111,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/admin/shared/AdminTopNav.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/shared/DynamicPanel.tsx"
     },
     {
       "capability_signals": [
@@ -23531,6 +23539,19 @@
     {
       "capability_signals": [
         "browser",
+        "dispatch",
+        "health"
+      ],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/agents/priority_queue_ledger.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
         "dispatch"
       ],
       "classification": "dormant_or_dynamic",
@@ -26595,5 +26616,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3041
+  "source_file_count": 3042
 }

@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3516,
+  "edge_count": 3521,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -10060,6 +10060,18 @@
       "to": "core.app"
     },
     {
+      "from": "tests.api.test_sworm_adapter_contract",
+      "to": "api.deps"
+    },
+    {
+      "from": "tests.api.test_sworm_adapter_contract",
+      "to": "core.app"
+    },
+    {
+      "from": "tests.api.test_sworm_adapter_contract",
+      "to": "core.zero_cost_architecture.swarm_orchestrator_integration"
+    },
+    {
       "from": "tests.api.test_task_endpoints",
       "to": "core.app"
     },
@@ -11629,6 +11641,14 @@
     },
     {
       "from": "tests.core.test_zero_cost_redis_breaker_learning",
+      "to": "core.zero_cost_architecture.zero_cost_patch_phase1_4"
+    },
+    {
+      "from": "tests.core.test_zero_cost_wiring",
+      "to": "core.zero_cost_architecture.zero_cost_patch_phase1_4"
+    },
+    {
+      "from": "tests.core.test_zero_cost_wiring",
       "to": "core.zero_cost_architecture.zero_cost_patch_phase1_4"
     },
     {
@@ -14068,7 +14088,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2013,
+  "module_count": 2015,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -15390,6 +15410,7 @@
     "tests.api.test_session_takeover",
     "tests.api.test_skills_routes",
     "tests.api.test_stream_chat_contract",
+    "tests.api.test_sworm_adapter_contract",
     "tests.api.test_task_endpoints",
     "tests.api.test_task_router",
     "tests.api.test_webhooks_ai",
@@ -15670,6 +15691,7 @@
     "tests.core.test_voice_stream",
     "tests.core.test_zero_cost_phase1_queue",
     "tests.core.test_zero_cost_redis_breaker_learning",
+    "tests.core.test_zero_cost_wiring",
     "tests.database.test_session_degradation_regression",
     "tests.engine.test_cost_optimizer",
     "tests.engine.test_smart_router",

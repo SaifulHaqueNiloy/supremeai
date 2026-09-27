@@ -162,7 +162,13 @@ class ZeroCostConfig(BaseModel):
 
     # --- Global Settings ---
     SELF_HEALING_ENABLED: bool = Field(
-        default_factory=lambda: os.getenv("SELF_HEALING", "true").lower() == "true",
+        # Issue #1830: the documented/validated key is SELF_HEALING_ENABLED
+        # (.env.example + core/config_validator.py) but the field only read
+        # SELF_HEALING — the documented key had no effect. Canonical name
+        # first, legacy name as backward-compat fallback.
+        default_factory=lambda: (
+            os.getenv("SELF_HEALING_ENABLED", os.getenv("SELF_HEALING", "true")).lower() == "true"
+        ),
         description="Master switch for self-healing features",
     )
     OBSERVABILITY_DETAILED: bool = Field(
@@ -808,6 +814,17 @@ class UpstashRedisClient:
             )
         else:
             logger.warning("UpstashRedisClient disabled (no URL configured)")
+
+    @property
+    def is_connected(self) -> bool:
+        """Sync config-level connectivity signal (issue #1830).
+
+        ``/zero-cost/health`` reads ``redis.is_connected``; the class only
+        exposed the async ``health_check()`` before, so the endpoint raised
+        AttributeError → 500. True when Upstash is configured; live
+        reachability is reported by :meth:`health_check`.
+        """
+        return self._enabled
 
     async def _get_session(self) -> aiohttp.ClientSession | None:
         """Lazy initialization of HTTP session for Upstash REST API."""
@@ -1749,6 +1766,37 @@ class PerformanceLearningEngine:
                 return sum(values) / len(values) if values else None
         return None
 
+    def get_learning_metrics(self) -> dict[str, dict[str, Any]]:
+        """Summarize recorded metric samples per metric name (issue #1830).
+
+        ``api/routes/zero_cost.py`` (/zero-cost/metrics + /zero-cost/recommendations)
+        referenced this method but it NEVER existed → AttributeError → 500 on
+        both endpoints, which is why recommendations never showed real data.
+        The summary matches the shape those endpoints read: duration-like
+        metrics carry ``p95_duration``; the op-level error ratio is attached
+        as ``error_rate`` (failures / (successes + failures)).
+        """
+        summary: dict[str, dict[str, Any]] = {}
+        for name, samples in self._metric_samples.items():
+            values = [v for _, v in samples if isinstance(v, (int, float))]
+            entry: dict[str, Any] = {"sample_count": len(samples)}
+            if values:
+                ordered = sorted(values)
+                entry["avg"] = sum(values) / len(values)
+                if "duration" in name or "latency" in name:
+                    p95_index = min(len(ordered) - 1, int(len(ordered) * 0.95))
+                    entry["p95_duration"] = ordered[p95_index]
+            summary[name] = entry
+
+        successes = len(self._metric_samples.get("task_success", []))
+        failures = len(self._metric_samples.get("task_failure", []))
+        total = successes + failures
+        error_rate = (failures / total) if total else 0.0
+        for name in summary:
+            if "duration" in name or "latency" in name:
+                summary[name]["error_rate"] = error_rate
+        return summary
+
     def get_learning_status(self) -> dict[str, Any]:
         """Get current learning engine status."""
         return {
@@ -1846,6 +1894,15 @@ class ZeroCostOrchestrator:
         self._start_time: float | None = None
 
         logger.info("ZeroCostOrchestrator initialized")
+
+    @property
+    def circuit_breakers(self) -> dict[str, AdaptiveCircuitBreaker]:
+        """Public read view of the breaker registry (issue #1830).
+
+        /zero-cost/metrics iterates this registry; it previously referenced a
+        nonexistent public attribute → AttributeError → 500.
+        """
+        return self._circuit_breakers
 
     async def initialize(self) -> None:
         """

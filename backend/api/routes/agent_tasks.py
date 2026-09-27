@@ -62,25 +62,31 @@ async def execute_swarm(request: Request, body: SwarmExecuteRequest):
         session_id,
         _correlation_id(request),
     )
-    # Issue #1816: the ZeroCost wrapper's real contract is
-    # ZeroCostSwarmOrchestrator(config) + execute_task(prompt, user_id) ->
-    # ExecutionResult. The previous call used nonexistent constructor kwargs
-    # (user_id/session_id/task_prompt) and a nonexistent execute() method, so
-    # this endpoint raised TypeError before doing anything.
+    # Issue #1816 fix: the adapter's real signature is
+    # ZeroCostSwarmOrchestrator(config: ZeroCostConfig | None = None) — the old
+    # user_id/session_id/task_prompt kwargs raised TypeError before anything
+    # ran, and it exposes execute_task()/execute_batch() (no execute()). The
+    # ExecutionResult carries .workspace (SharedWorkspace) whose payload lives
+    # in .work_product — there are no generated_code/architecture_design
+    # attributes on the model.
     orchestrator = ZeroCostSwarmOrchestrator()
     result = await orchestrator.execute_task(body.task, body.user_id)
     workspace = result.workspace
 
     return {
-        "status": "completed",
+        "status": result.status or "completed",
         "session_id": session_id,
-        "task_id": result.task_id,
         "results": {
+            "task_id": result.task_id,
             "passed_qa": workspace.test_results.get("passed", False),
             "feedback": workspace.test_results.get("feedback", ""),
-            # SharedWorkspace is domain-agnostic: the work product carries the
-            # generated code / document / analysis under well-known keys.
+            "generated_code": workspace.work_product.get(
+                "generated_code", workspace.work_product.get("code")
+            ),
+            "architecture": workspace.work_product.get(
+                "architecture", workspace.work_product.get("architecture_design")
+            ),
             "work_product": workspace.work_product,
-            "errors": workspace.errors,
+            "errors": result.errors or workspace.errors,
         },
     }

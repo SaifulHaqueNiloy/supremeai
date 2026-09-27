@@ -268,6 +268,34 @@ async def app_lifespan(app):
             )
         )
 
+    # Zero-Cost Architecture subsystem (issue #1830): adaptive circuit
+    # breakers + learning engine + in-process queue (2k+ lines, heavily
+    # unit-tested) shipped DARK — lifespan_manager() was never referenced by
+    # this module, so /api/v1/zero-cost/health reported "initializing" forever
+    # and the learning engine never received a single metric. Mirrors the
+    # documented usage (lifespan_manager docstring): initialize() before
+    # yield, shutdown() after. Fail-soft: a broken zero-cost subsystem must
+    # not block boot (house degraded-mode pattern).
+    try:
+        from core.zero_cost_architecture.zero_cost_patch_phase1_4 import get_orchestrator
+
+        zc_orchestrator = get_orchestrator()
+        await zc_orchestrator.initialize()
+        app.state.zero_cost_orchestrator = zc_orchestrator
+        logger.info("✅ Zero-Cost Architecture initialized (queue + learning engine live).")
+    except Exception as e:
+        logger.error(f"Zero-Cost Architecture init failed (continuing in degraded mode): {e}")
+        error_event_bus.emit(
+            ErrorEvent(
+                module="lifespan",
+                error_type="ZERO_COST_INIT_FAILED",
+                message=str(e)[:200],
+                severity="WARNING",
+                structured_context=ErrorContext(module="auto_fixed"),
+                context={"component": "zero_cost_orchestrator"},
+            )
+        )
+
     # Background maintenance and agents are kept in a dedicated startup module.
     from core.startup.agents import start_background_services
 
@@ -287,6 +315,16 @@ async def app_lifespan(app):
         )
 
     yield  # এখানে অ্যাপ্লিকেশন ট্রাফিক রিসিভ করবে
+
+    # Zero-Cost Architecture shutdown (issue #1830): stop queue worker +
+    # learning engine gracefully. Fail-soft — shutdown must always continue.
+    try:
+        from core.zero_cost_architecture.zero_cost_patch_phase1_4 import get_orchestrator
+
+        await get_orchestrator().shutdown()
+        logger.info("🛑 Zero-Cost Architecture shut down.")
+    except Exception as e:
+        logger.warning(f"Zero-Cost Architecture shutdown skipped: {e}")
 
     from core.shutdown import shutdown_services
 
