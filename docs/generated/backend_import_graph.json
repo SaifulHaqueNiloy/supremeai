@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3532,
+  "edge_count": 3528,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -4962,18 +4962,6 @@
     {
       "from": "core.enum_guard",
       "to": "core.logging_config"
-    },
-    {
-      "from": "core.env_validator",
-      "to": "core.config_classification"
-    },
-    {
-      "from": "core.env_validator",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.env_validator",
-      "to": "core.secret_policy"
     },
     {
       "from": "core.errors.error_bus",
@@ -10900,10 +10888,6 @@
       "to": "core.enum_guard"
     },
     {
-      "from": "tests.core.test_env_validator_coverage",
-      "to": "core.env_validator"
-    },
-    {
       "from": "tests.core.test_episodic_memory",
       "to": "memory.episodic_memory"
     },
@@ -14132,7 +14116,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2039,
+  "module_count": 2037,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14683,7 +14667,6 @@
     "core.effective_policy",
     "core.embeddings",
     "core.enum_guard",
-    "core.env_validator",
     "core.errors",
     "core.errors.error_bus",
     "core.errors.error_handler",
@@ -15624,7 +15607,6 @@
     "tests.core.test_effective_policy",
     "tests.core.test_embeddings_coverage",
     "tests.core.test_enum_guard",
-    "tests.core.test_env_validator_coverage",
     "tests.core.test_episodic_memory",
     "tests.core.test_error_pattern_db",
     "tests.core.test_error_remediation",
