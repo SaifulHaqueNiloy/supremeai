@@ -18566,13 +18566,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/Onboarding/StepApiKey.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/Onboarding/StepFirstChat.tsx"
     },
     {
@@ -26805,5 +26798,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3062
+  "source_file_count": 3061
 }
