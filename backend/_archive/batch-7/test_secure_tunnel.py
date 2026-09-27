@@ -1,5 +1,4 @@
 import pytest
-
 from p2p.secure_tunnel import SecureTunnel
 
 
