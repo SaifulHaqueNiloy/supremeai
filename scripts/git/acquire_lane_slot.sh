@@ -123,13 +123,12 @@ branch_exists() {
 create_ref() {
   # Atomic create — the CAS primitive for FREE slots. On failure fills
   # CREATE_ERR with gh's stderr so the caller can classify 422-races.
-  local b="$1" sha="$2" out rc
-  set +e
-  out=$("$GH_CMD" api -X POST "repos/$OWNER/$REPO/git/refs" \
-        -f "ref=refs/heads/$b" -f "sha=$sha" 2>&1)
-  rc=$?
-  set -e
-  CREATE_ERR="$out"
+  # (`out=$(...) || rc=$?` captures the exit code while errexit stays ON —
+  #  toggling errexit off is itself a Guardian-Lite dangerous-shell finding.)
+  local b="$1" sha="$2" rc=0
+  CREATE_ERR=""
+  CREATE_ERR=$("$GH_CMD" api -X POST "repos/$OWNER/$REPO/git/refs" \
+        -f "ref=refs/heads/$b" -f "sha=$sha" 2>&1) || rc=$?
   return "$rc"
 }
 
