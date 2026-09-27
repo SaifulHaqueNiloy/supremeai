@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 16:32 UTC
+- **Date:** 2026-09-27 16:36 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,22 +10,8 @@
   - (see git log for details)
 
 ## Files Changed
-  - `docs/generated/backend_import_graph.json`
-  - `docs/generated/module_capability_matrix.json`
-  - `backend/core/evolution/merge_learning_learner.py`
-  - `LESSONS_LEARNED.md`
-  - `docs/archive/lessons_2026-09.md`
-  - `scripts/agents/create_discovery_issue.py`
-  - `backend/core/evolution/__init__.py`
-  - `backend/core/config_fields.py`
-  - `backend/tests/core/evolution/__init__.py`
-  - `backend/core/self_evolution/self_evolution_agent.py`
-  - `backend/tests/core/evolution/test_merge_learning_learner.py`
-  - `CHECKPOINT.md`
-  - `backend/core/config_classification.py`
   - `.github/workflows/slot-registry-drift.yml`
-  - `.env.example`
-  - `backend/tests/scripts/test_create_discovery_issue.py`
+  - `CHECKPOINT.md`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
