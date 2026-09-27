@@ -29,8 +29,8 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from core.cache.redis_manager import redis_manager
-from core.orchestration.handoff_schema import extract_handoff_from_text, handoff_summary
 from core.logging_config import logger
+from core.orchestration.handoff_schema import extract_handoff_from_text, handoff_summary
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks-orchestration"])
 
@@ -65,7 +65,9 @@ def _verify_signature(payload: bytes, signature_header: str | None) -> bool:
     return True
 
 
-def _normalize_event(event: str, action: str | None, payload: dict[str, Any]) -> dict[str, Any] | None:
+def _normalize_event(
+    event: str, action: str | None, payload: dict[str, Any]
+) -> dict[str, Any] | None:
     """Parse + normalize a supported GitHub event into the orchestration shape.
 
     Returns None for unsupported/irrelevant event-action combos (logged).
@@ -130,13 +132,17 @@ async def _claim_delivery(key: str) -> bool:
     """
     client = await redis_manager.get_client_async()
     if client is None:
-        logger.warning("[webhook-audit] dedup store unavailable — delivery processed without replay guard")
+        logger.warning(
+            "[webhook-audit] dedup store unavailable — delivery processed without replay guard"
+        )
         return True
     try:
         was_set = await client.set(key, "1", nx=True, ex=DEDUP_TTL_SECONDS)
         return bool(was_set)
     except Exception as exc:
-        logger.warning(f"[webhook-audit] dedup store error ({exc}) — processing without replay guard")
+        logger.warning(
+            f"[webhook-audit] dedup store error ({exc}) — processing without replay guard"
+        )
         return True
 
 
@@ -159,8 +165,12 @@ async def github_webhook(request: Request) -> JSONResponse:
 
     repo = (payload.get("repository") or {}).get("full_name", "")
     if repo != _allowed_repository():
-        logger.error(f"[webhook-audit] REJECTED reason=repo_mismatch repo={repo} delivery={delivery_id}")
-        return JSONResponse(status_code=403, content={"detail": "repository not managed by this tenant"})
+        logger.error(
+            f"[webhook-audit] REJECTED reason=repo_mismatch repo={repo} delivery={delivery_id}"
+        )
+        return JSONResponse(
+            status_code=403, content={"detail": "repository not managed by this tenant"}
+        )
 
     if event not in SUPPORTED_EVENTS:
         logger.info(f"[webhook-audit] ignored unsupported event={event} delivery={delivery_id}")
@@ -168,7 +178,9 @@ async def github_webhook(request: Request) -> JSONResponse:
 
     normalized = _normalize_event(event, action, payload)
     if normalized is None:
-        return JSONResponse(status_code=202, content={"status": "ignored", "event": event, "action": action})
+        return JSONResponse(
+            status_code=202, content={"status": "ignored", "event": event, "action": action}
+        )
 
     key = _dedup_key(normalized, delivery_id or "missing-delivery-id")
     if not await _claim_delivery(key):
@@ -183,7 +195,9 @@ async def github_webhook(request: Request) -> JSONResponse:
         except Exception as rejection:
             # extract/parse already audit-logged; ingestion continues — the
             # event itself is still processed, the malformed handoff is not.
-            logger.warning(f"[webhook-audit] handoff rejected (logged) delivery={delivery_id}: {rejection}")
+            logger.warning(
+                f"[webhook-audit] handoff rejected (logged) delivery={delivery_id}: {rejection}"
+            )
 
     route = {
         "status": "processed",

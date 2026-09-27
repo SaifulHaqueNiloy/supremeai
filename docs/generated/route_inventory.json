@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "7fb088dbd70aca13ca89de65616520505b03964cf7a1eb07cc85cf17d1eea273",
-  "route_count": 762,
+  "source_sha256": "57f27f7accaa979eaed20b214001053abce1cfa90c07ab14a0b7cb0a799b6075",
+  "route_count": 761,
   "routes": [
     {
       "method": "GET",
@@ -12016,24 +12016,6 @@
         "SSE HITL Stream"
       ],
       "summary": "Stream Hitl Sse",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/stream/voice",
-      "operation_id": "stream_voice_sse_api_v1_stream_voice_get",
-      "tags": [
-        "SSE Voice Stream"
-      ],
-      "summary": "Stream Voice Sse",
       "auth": {
         "required": false,
         "schemes": []
