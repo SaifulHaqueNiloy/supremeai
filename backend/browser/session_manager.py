@@ -34,13 +34,15 @@ __all__ = [
     "BrowserSessionManager",
     "chrome_launch_args",
     "automation_profile_dir",
-    "AUTOMATION_HOST",
+    "AUTOMATION_BIND_ADDRESS",
     "register_action",
     "run_action_sequence",
     "ACTION_REGISTRY",
 ]
 
-AUTOMATION_HOST = "127.0.0.1"
+# Chrome DevTools পোর্ট যেখানে BIND করে — loopback-only (listen address,
+# connect-host নয়): ডিবাগ পোর্ট কখনোই বাইরের নেটওয়ার্কে expose হবে না।
+AUTOMATION_BIND_ADDRESS = "127.0.0.1"
 
 
 def automation_profile_dir() -> str:
@@ -52,7 +54,7 @@ def chrome_launch_args(profile_dir: str | None = None) -> list[str]:
     """Chrome flags enforcing the dedicated profile + 127.0.0.1 binding."""
     return [
         f"--user-data-dir={profile_dir or automation_profile_dir()}",
-        f"--remote-debugging-address={AUTOMATION_HOST}",
+        f"--remote-debugging-address={AUTOMATION_BIND_ADDRESS}",
         "--remote-debugging-port=0",
         "--no-first-run",
         "--no-default-browser-check",

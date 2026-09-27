@@ -1,12 +1,5 @@
 {
-  "boundary_violations": [
-    {
-      "line": 23,
-      "reason": "private cross-domain import",
-      "source": "backend/tests/security/test_render_ticket_auth.py",
-      "target": "backend/api/routes/browser/_render_proxy.py"
-    }
-  ],
+  "boundary_violations": [],
   "cycles": [],
   "domain_count": 9,
   "domains": [
@@ -139,7 +132,7 @@
     {
       "evidence": [
         {
-          "line": 23,
+          "line": 24,
           "path": "backend/external_agents/providers/zai.py"
         }
       ],
@@ -569,7 +562,7 @@
     {
       "evidence": [
         {
-          "line": 22,
+          "line": 23,
           "path": "backend/external_agents/providers/zai.py"
         }
       ],
@@ -3299,7 +3292,7 @@
     {
       "evidence": [
         {
-          "line": 198,
+          "line": 292,
           "path": "backend/api/routes/browser/_crown_jewel.py"
         }
       ],
@@ -4709,7 +4702,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 20,
           "path": "backend/core/middleware/security.py"
         }
       ],

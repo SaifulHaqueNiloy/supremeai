@@ -209,18 +209,25 @@ class FreeTierOptimizedVectorStore:
                 created = row.get("created_at")
                 session = sessions.setdefault(
                     sid,
-                    {"session_id": sid, "created_at": created, "updated_at": created, "exchanges": []},
+                    {
+                        "session_id": sid,
+                        "created_at": created,
+                        "updated_at": created,
+                        "exchanges": [],
+                    },
                 )
-                session["exchanges"].insert(0, {"content": str(row.get("content") or ""), "created_at": created})
+                session["exchanges"].insert(
+                    0, {"content": str(row.get("content") or ""), "created_at": created}
+                )
                 if created:
                     if not session["created_at"] or created < session["created_at"]:
                         session["created_at"] = created
                     if not session["updated_at"] or created > session["updated_at"]:
                         session["updated_at"] = created
 
-            ordered = sorted(
-                sessions.values(), key=lambda s: s["updated_at"] or "", reverse=True
-            )[:limit]
+            ordered = sorted(sessions.values(), key=lambda s: s["updated_at"] or "", reverse=True)[
+                :limit
+            ]
             for session in ordered:
                 # বাংলা: ফ্রি-টিয়ার মেমরি বাঁচাতে প্রতি session-এ শেষ N এক্সচেঞ্জ
                 session["exchanges"] = session["exchanges"][-max_exchanges:]

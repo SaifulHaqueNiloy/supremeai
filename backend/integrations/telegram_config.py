@@ -23,7 +23,7 @@ Env vars:
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 def _env_int(name: str, default: int) -> int:
@@ -43,7 +43,10 @@ class MeshTelegramConfig:
 
     bot_token: str = ""
     admin_chat_id: str = ""
-    tower_base_url: str = "http://127.0.0.1:8000"
+    # unguarded-localhost idiom: local-dev fallback only — production-এ Tower
+    # URL অবশ্যই MESH_TOWER_BASE_URL থেকে আসবে; silent localhost default ভুল
+    # হোস্টে connect করাত (regression-scanner HIGH finding)।
+    tower_base_url: str = field(default_factory=lambda: _default_tower_base_url())
     tower_admin_token: str = ""
     hitl_ask_timeout_sec: int = 300  # স্পেক: ৫ মিনিট উত্তর না এলে auto-defer (আবার জিজ্ঞেস)
     defer_limit: int = 3  # স্পেক: ৩ defer এর পরে আর উত্তর না এলে auto-reject
@@ -66,12 +69,21 @@ class MeshTelegramConfig:
         return str(chat_id).strip() == self.admin_chat_id.strip()
 
 
+def _default_tower_base_url() -> str:
+    """Local-dev fallback only — production must set MESH_TOWER_BASE_URL."""
+    from core.config import settings
+
+    if settings.env == "local":
+        return "http://127.0.0.1:8000"
+    return ""
+
+
 def load_mesh_telegram_config() -> MeshTelegramConfig:
     """env → :class:`MeshTelegramConfig` (প্রতিটি process শুরুতে একবার)।"""
     return MeshTelegramConfig(
         bot_token=os.getenv("TELEGRAM_BOT_TOKEN", "").strip(),
         admin_chat_id=os.getenv("ADMIN_TELEGRAM_CHAT_ID", "").strip(),
-        tower_base_url=os.getenv("MESH_TOWER_BASE_URL", "").strip() or "http://127.0.0.1:8000",
+        tower_base_url=os.getenv("MESH_TOWER_BASE_URL", "").strip() or _default_tower_base_url(),
         tower_admin_token=os.getenv("TOWER_ADMIN_TOKEN", "").strip(),
         hitl_ask_timeout_sec=_env_int("MESH_TG_HITL_ASK_TIMEOUT_SEC", 300),
         defer_limit=_env_int("MESH_TG_HITL_DEFER_LIMIT", 3),

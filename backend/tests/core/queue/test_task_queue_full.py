@@ -288,13 +288,16 @@ class TestWorkerLoop:
 # ---------------------------------------------------------------------------
 # _process_task
 # ---------------------------------------------------------------------------
-def _install_fake_ws_manager(monkeypatch, broadcast: AsyncMock) -> MagicMock:
-    fake_mod = types.ModuleType("api.routes.websocket_agent")
-    fake_manager = MagicMock()
-    fake_manager.broadcast_to_user = broadcast
-    fake_mod.manager = fake_manager
-    monkeypatch.setitem(sys.modules, "api.routes.websocket_agent", fake_mod)
-    return fake_manager
+def _install_fake_pubsub(monkeypatch, publish: AsyncMock) -> MagicMock:
+    # #1832: task completion now broadcasts via core.messaging.pubsub.global_pubsub
+    # (live SSE dashboard_events channel) — the old websocket_agent.manager was
+    # an unmounted orphan with zero possible subscribers.
+    from core.messaging import pubsub as pubsub_mod
+
+    fake_pubsub = MagicMock()
+    fake_pubsub.publish = publish
+    monkeypatch.setattr(pubsub_mod, "global_pubsub", fake_pubsub)
+    return fake_pubsub
 
 
 class TestProcessTask:
@@ -314,8 +317,8 @@ class TestProcessTask:
 
     async def test_success_persists_and_broadcasts(self, monkeypatch):
         q = RedisTaskQueue()
-        broadcast = AsyncMock()
-        _install_fake_ws_manager(monkeypatch, broadcast)
+        publish = AsyncMock()
+        _install_fake_pubsub(monkeypatch, publish)
 
         async def handler(data: dict) -> dict:
             return {"done": True}
@@ -334,17 +337,19 @@ class TestProcessTask:
         completed = json.loads(redis.set.await_args_list[-1].args[1])
         assert completed["result"] == {"done": True}
 
-        broadcast.assert_awaited_once()
-        args = broadcast.await_args.args
-        assert args[0] == "user-9"
-        ws_payload = json.loads(args[1])
-        assert ws_payload["type"] == "task_completed"
-        assert ws_payload["task_id"] == "t2"
+        publish.assert_awaited_once()
+        args = publish.await_args.args
+        assert args[0] == "dashboard_events"
+        msg = args[1]
+        assert msg["type"] == "task_completed"
+        assert msg["task_id"] == "t2"
+        assert msg["user_id"] == "user-9"
+        assert msg["result"] == {"done": True}
 
     async def test_broadcast_failure_is_silenced(self, monkeypatch):
         q = RedisTaskQueue()
-        broadcast = AsyncMock(side_effect=RuntimeError("websocket down"))
-        _install_fake_ws_manager(monkeypatch, broadcast)
+        publish = AsyncMock(side_effect=RuntimeError("pubsub down"))
+        _install_fake_pubsub(monkeypatch, publish)
 
         async def handler(data: dict) -> str:
             return "ok"

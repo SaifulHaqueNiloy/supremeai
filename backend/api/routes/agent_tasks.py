@@ -76,6 +76,7 @@ async def execute_swarm(request: Request, body: SwarmExecuteRequest):
     return {
         "status": result.status or "completed",
         "session_id": session_id,
+        "task_id": result.task_id,
         "results": {
             "task_id": result.task_id,
             "passed_qa": workspace.test_results.get("passed", False),

@@ -10,6 +10,7 @@ Version: 1.0.0
 import asyncio
 import os
 import re
+import sys
 import time
 
 from fastapi import Request, Response
@@ -258,7 +259,20 @@ class RequestValidationMiddleware(BaseHTTPMiddleware):
         # 1) Redis-authoritative path (aggregate-safe across instances)
         client = None
         try:
-            from core.cache.redis_manager import redis_manager
+            # (#2098) Patch-proof + shadow-proof manager resolution.
+            # বাংলা: `from core.cache.redis_manager import redis_manager` লিখলে
+            # core/cache/__init__-এর same-name re-export shadow দিয়ে গিয়ে
+            # package attribute-এ বসা REAL singleton instance পেয়ে যেতে পারে —
+            # টেস্টের module-attr monkeypatch বাইপাস হয়ে যায় (CI-only 4×
+            # "Event loop is closed" failure, issue #2098)। sys.modules-first
+            # lookup সবসময় আসল module object-এর (patch-করা) attribute দেয়।
+            # Production-এ দুই পথই একই singleton দেয় — behavior identical।
+            rm_module = sys.modules.get("core.cache.redis_manager")
+            if rm_module is None:
+                from importlib import import_module
+
+                rm_module = import_module("core.cache.redis_manager")
+            redis_manager = rm_module.redis_manager
 
             client = await redis_manager.get_client_async()
         except Exception as exc:  # noqa: BLE001 — any redis failure falls back

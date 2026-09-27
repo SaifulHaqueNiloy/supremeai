@@ -1,5 +1,13 @@
 import Dexie, { type Table } from 'dexie';
-import { apiClient } from '../services/apiClient';
+
+// #1835: the offline-first background-sync machinery (syncQueue table,
+// startBackgroundSync, exponential-retry flush loop) is REMOVED — it was
+// inert: startBackgroundSync had zero callers and the /api/v1/sync/{table}
+// endpoints it targeted never existed, so any queued write would retry a
+// 404 eight times and be silently stranded. Honest deletion over a dead
+// promise. The Dexie stores + scope helpers stay: authStore uses them for
+// per-user data isolation, and the local tables remain available for
+// future real offline features.
 
 export interface ChatMessage {
   id?: number;
@@ -29,22 +37,7 @@ export interface UserPreference {
   syncedAt?: number | null;
 }
 
-export interface SyncQueueItem {
-  id?: number;
-  scope: string;
-  table: 'chats' | 'conversations' | 'preferences';
-  recordId: string | number;
-  operation: 'create' | 'update' | 'delete';
-  payload: unknown;
-  queuedAt: number;
-  attempts: number;
-  nextAttemptAt: number;
-  lastError?: string;
-}
-
 let activeScope: string | null = null;
-let syncTimer: ReturnType<typeof setInterval> | null = null;
-let syncInFlight = false;
 
 export const setLocalDataScope = (scope: string | null): void => {
   activeScope = scope?.trim() || null;
@@ -56,12 +49,11 @@ export const clearLocalDataScope = async (): Promise<void> => {
   const scope = activeScope;
   activeScope = null;
   if (!scope || typeof indexedDB === 'undefined') return;
-  await localDb.transaction('rw', localDb.chats, localDb.conversations, localDb.preferences, localDb.syncQueue, async () => {
+  await localDb.transaction('rw', localDb.chats, localDb.conversations, localDb.preferences, async () => {
     await Promise.all([
       localDb.chats.where('scope').equals(scope).delete(),
       localDb.conversations.where('scope').equals(scope).delete(),
       localDb.preferences.where('scope').equals(scope).delete(),
-      localDb.syncQueue.where('scope').equals(scope).delete(),
     ]);
   });
 };
@@ -70,7 +62,6 @@ class SupremeAILocalDB extends Dexie {
   conversations!: Table<Conversation, number>;
   chats!: Table<ChatMessage, number>;
   preferences!: Table<UserPreference, string>;
-  syncQueue!: Table<SyncQueueItem, number>;
 
   constructor() {
     super('SupremeAI');
@@ -86,72 +77,16 @@ class SupremeAILocalDB extends Dexie {
       preferences: '[scope+key], scope, updatedAt, syncedAt',
       syncQueue: '++id, [scope+table], [scope+recordId], scope, queuedAt, attempts, nextAttemptAt',
     }).upgrade(async (tx) => {
-      for (const table of [tx.table('conversations'), tx.table('chats'), tx.table('preferences'), tx.table('syncQueue')]) {
+      for (const table of [tx.table('conversations'), tx.table('chats'), tx.table('preferences')]) {
         await table.toCollection().modify((record) => { record.scope = 'legacy:unscoped'; });
       }
+    });
+    // #1835: the syncQueue table is deleted — its only writer (the removed
+    // sync machinery) never shipped a working backend to flush it.
+    this.version(3).stores({
+      syncQueue: null,
     });
   }
 }
 
 export const localDb = new SupremeAILocalDB();
-
-const MAX_ATTEMPTS = 8;
-const BASE_RETRY_MS = 5_000;
-
-const syncPending = async (): Promise<void> => {
-  if (syncInFlight || !navigator.onLine || !activeScope) return;
-  syncInFlight = true;
-  try {
-    const pending = await localDb.syncQueue
-      .where('[scope+table]')
-      .between([activeScope, Dexie.minKey], [activeScope, Dexie.maxKey])
-      .filter((item) => item.nextAttemptAt <= Date.now() && item.attempts < MAX_ATTEMPTS)
-      .limit(10)
-      .toArray();
-
-    for (const item of pending) {
-      try {
-        const method = item.operation === 'create' ? 'POST' : item.operation === 'update' ? 'PUT' : 'DELETE';
-        const path = `/api/v1/sync/${item.table}`;
-        const payload = { scope: item.scope, ...(item.payload as Record<string, unknown>) };
-        if (method === 'POST') {
-          await apiClient.post(path, payload);
-        } else if (method === 'PUT') {
-          await apiClient.put(path, payload);
-        } else {
-          await apiClient.delete(path, { body: JSON.stringify(payload) });
-        }
-        await localDb.syncQueue.delete(item.id!);
-      } catch (error) {
-        const attempts = item.attempts + 1;
-        await localDb.syncQueue.update(item.id!, {
-          attempts,
-          lastError: error instanceof Error ? error.message : 'Unknown sync error',
-          nextAttemptAt: Date.now() + Math.min(BASE_RETRY_MS * 2 ** item.attempts, 5 * 60_000),
-        });
-      }
-    }
-  } finally {
-    syncInFlight = false;
-  }
-};
-
-export const startBackgroundSync = (): (() => void) => {
-  if (typeof window === 'undefined' || syncTimer) return () => undefined;
-  syncTimer = setInterval(() => { void syncPending(); }, 30_000);
-  window.addEventListener('online', syncPending);
-  void syncPending();
-  return () => {
-    if (syncTimer) clearInterval(syncTimer);
-    syncTimer = null;
-    window.removeEventListener('online', syncPending);
-  };
-};
-
-export const syncNow = syncPending;
-export const MAX_SYNC_ATTEMPTS = MAX_ATTEMPTS;
-
-export function createSyncQueueItem(input: Omit<SyncQueueItem, 'scope' | 'attempts' | 'nextAttemptAt'>): SyncQueueItem {
-  if (!activeScope) throw new Error('Cannot queue offline data without an authenticated scope');
-  return { ...input, scope: activeScope, attempts: 0, nextAttemptAt: Date.now() };
-}

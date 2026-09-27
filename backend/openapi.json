@@ -417,7 +417,7 @@
           "browser"
         ],
         "summary": "Set Task Complete",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u099f\u09be\u09b8\u09cd\u0995 \u09b8\u09ab\u09b2\u09ad\u09be\u09ac\u09c7 \u09b8\u09ae\u09cd\u09aa\u09a8\u09cd\u09a8 \u09b9\u09b2\u09c7 \u0995\u09b2 \u0995\u09b0\u09c1\u09a8",
+        "description": "বাংলা মন্তব্য: টাস্ক সফলভাবে সম্পন্ন হলে কল করুন",
         "operationId": "set_task_complete_api_browser_tasks__id__complete_post",
         "parameters": [
           {
@@ -458,7 +458,7 @@
           "browser"
         ],
         "summary": "Set Task Failed",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u099f\u09be\u09b8\u09cd\u0995 \u09ac\u09cd\u09af\u09b0\u09cd\u09a5 \u09b9\u09b2\u09c7 \u0995\u09b2 \u0995\u09b0\u09c1\u09a8",
+        "description": "বাংলা মন্তব্য: টাস্ক ব্যর্থ হলে কল করুন",
         "operationId": "set_task_failed_api_browser_tasks__id__fail_post",
         "parameters": [
           {
@@ -620,7 +620,7 @@
           "browser"
         ],
         "summary": "Semantic Click",
-        "description": "L4: Click by meaning \u2014 matches natural language intent to dynamic DOM embeddings.",
+        "description": "L4: Click by meaning — matches natural language intent to dynamic DOM embeddings.",
         "operationId": "semantic_click_api_browser_semantic_click_post",
         "requestBody": {
           "content": {
@@ -660,7 +660,7 @@
           "browser"
         ],
         "summary": "Smart Click",
-        "description": "L4 Cascade: Semantic DOM \u2192 Vision Grounding Fallback \u2192 HITL Takeover.",
+        "description": "L4 Cascade: Semantic DOM → Vision Grounding Fallback → HITL Takeover.",
         "operationId": "smart_click_api_browser_smart_click_post",
         "requestBody": {
           "content": {
@@ -1746,7 +1746,7 @@
           "browser"
         ],
         "summary": "List Sessions",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09b8\u09ac \u09b8\u09c7\u09b6\u09a8 \u09a4\u09be\u09b2\u09bf\u0995\u09be \u09b0\u09bf\u099f\u09be\u09b0\u09cd\u09a8 \u0995\u09b0\u09c7",
+        "description": "বাংলা মন্তব্য: সব সেশন তালিকা রিটার্ন করে",
         "operationId": "list_sessions_api_browser_sessions_get",
         "responses": {
           "200": {
@@ -1764,7 +1764,7 @@
           "browser"
         ],
         "summary": "Create Session",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09a8\u09a4\u09c1\u09a8 \u09b8\u09c7\u09b6\u09a8 \u09a4\u09c8\u09b0\u09bf \u0995\u09b0\u09c7",
+        "description": "বাংলা মন্তব্য: নতুন সেশন তৈরি করে",
         "operationId": "create_session_api_browser_sessions_post",
         "requestBody": {
           "content": {
@@ -1804,7 +1804,7 @@
           "browser"
         ],
         "summary": "Get Session",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09a8\u09bf\u09b0\u09cd\u09a6\u09bf\u09b7\u09cd\u099f \u09b8\u09c7\u09b6\u09a8 \u09b0\u09bf\u099f\u09be\u09b0\u09cd\u09a8 \u0995\u09b0\u09c7",
+        "description": "বাংলা মন্তব্য: নির্দিষ্ট সেশন রিটার্ন করে",
         "operationId": "get_session_api_browser_sessions__session_id__get",
         "parameters": [
           {
@@ -1843,7 +1843,7 @@
           "browser"
         ],
         "summary": "Update Session",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09ac\u09bf\u09a6\u09cd\u09af\u09ae\u09be\u09a8 \u09b8\u09c7\u09b6\u09a8 \u0986\u09aa\u09a1\u09c7\u099f \u0995\u09b0\u09c7",
+        "description": "বাংলা মন্তব্য: বিদ্যমান সেশন আপডেট করে",
         "operationId": "update_session_api_browser_sessions__session_id__put",
         "parameters": [
           {
@@ -1892,7 +1892,7 @@
           "browser"
         ],
         "summary": "Delete Session",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09b8\u09c7\u09b6\u09a8 \u09ae\u09c1\u099b\u09c7 \u09ab\u09c7\u09b2\u09c7",
+        "description": "বাংলা মন্তব্য: সেশন মুছে ফেলে",
         "operationId": "delete_session_api_browser_sessions__session_id__delete",
         "parameters": [
           {
@@ -2704,7 +2704,7 @@
           "health"
         ],
         "summary": "Get Full Health",
-        "description": "Full health check \u2014 runs ALL registered checks.",
+        "description": "Full health check — runs ALL registered checks.",
         "operationId": "get_full_health_health_full_get",
         "responses": {
           "200": {
@@ -2728,7 +2728,7 @@
           "health"
         ],
         "summary": "Get Full Health",
-        "description": "Full health check \u2014 runs ALL registered checks.",
+        "description": "Full health check — runs ALL registered checks.",
         "operationId": "get_full_health_health_get",
         "responses": {
           "200": {
@@ -2752,7 +2752,7 @@
           "health"
         ],
         "summary": "Readiness Probe",
-        "description": "Readiness probe \u2014 is the service ready to accept traffic?",
+        "description": "Readiness probe — is the service ready to accept traffic?",
         "operationId": "readiness_probe_health_ready_get",
         "responses": {
           "200": {
@@ -2776,7 +2776,7 @@
           "health"
         ],
         "summary": "Liveness Probe",
-        "description": "Liveness probe \u2014 is the process alive? Kubernetes uses this for restarts.",
+        "description": "Liveness probe — is the process alive? Kubernetes uses this for restarts.",
         "operationId": "liveness_probe_health_live_get",
         "responses": {
           "200": {
@@ -2800,7 +2800,7 @@
           "health"
         ],
         "summary": "Get Full Health",
-        "description": "Full health check \u2014 runs ALL registered checks.",
+        "description": "Full health check — runs ALL registered checks.",
         "operationId": "get_full_health_api_v1_health_full_get",
         "responses": {
           "200": {
@@ -2841,7 +2841,7 @@
           "health"
         ],
         "summary": "Readiness Probe",
-        "description": "Readiness probe \u2014 is the service ready to accept traffic?",
+        "description": "Readiness probe — is the service ready to accept traffic?",
         "operationId": "readiness_probe_api_v1_health_ready_get",
         "responses": {
           "200": {
@@ -2865,7 +2865,7 @@
           "health"
         ],
         "summary": "Liveness Probe",
-        "description": "Liveness probe \u2014 is the process alive? Kubernetes uses this for restarts.",
+        "description": "Liveness probe — is the process alive? Kubernetes uses this for restarts.",
         "operationId": "liveness_probe_api_v1_health_live_get",
         "responses": {
           "200": {
@@ -2886,7 +2886,7 @@
     "/": {
       "get": {
         "summary": "Root",
-        "description": "\u09aa\u09be\u09ac\u09b2\u09bf\u0995 \u09b0\u09c1\u099f \u098f\u09a8\u09cd\u09a1\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f \u2014 \u09ac\u09c7\u09b8\u09bf\u0995 \u09b8\u09be\u09b0\u09cd\u09ad\u09bf\u09b8 \u09a4\u09a5\u09cd\u09af \u098f\u09ac\u0982 \u09b9\u09c7\u09b2\u09a5 \u099a\u09c7\u0995 \u09b2\u09bf\u0982\u0995 \u09a6\u09c7\u09af\u09bc\u0964",
+        "description": "পাবলিক রুট এন্ডপয়েন্ট — বেসিক সার্ভিস তথ্য এবং হেলথ চেক লিংক দেয়।",
         "operationId": "root__head",
         "responses": {
           "200": {
@@ -2901,7 +2901,7 @@
       },
       "head": {
         "summary": "Root",
-        "description": "\u09aa\u09be\u09ac\u09b2\u09bf\u0995 \u09b0\u09c1\u099f \u098f\u09a8\u09cd\u09a1\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f \u2014 \u09ac\u09c7\u09b8\u09bf\u0995 \u09b8\u09be\u09b0\u09cd\u09ad\u09bf\u09b8 \u09a4\u09a5\u09cd\u09af \u098f\u09ac\u0982 \u09b9\u09c7\u09b2\u09a5 \u099a\u09c7\u0995 \u09b2\u09bf\u0982\u0995 \u09a6\u09c7\u09af\u09bc\u0964",
+        "description": "পাবলিক রুট এন্ডপয়েন্ট — বেসিক সার্ভিস তথ্য এবং হেলথ চেক লিংক দেয়।",
         "operationId": "root__head",
         "responses": {
           "200": {
@@ -7225,7 +7225,7 @@
           "knowledge-graph"
         ],
         "summary": "Get Skill Graph",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09ab\u09cd\u09b0\u09a8\u09cd\u099f\u098f\u09a8\u09cd\u09a1\u09c7 \u09ad\u09bf\u099c\u09cd\u09af\u09c1\u09af\u09bc\u09be\u09b2\u09be\u0987\u099c \u0995\u09b0\u09be\u09b0 \u099c\u09a8\u09cd\u09af \u0997\u09cd\u09b0\u09be\u09ab\u09c7\u09b0 \u09b8\u09ae\u09b8\u09cd\u09a4 \u09a8\u09cb\u09a1 \u098f\u09ac\u0982 \u09b0\u09bf\u09b2\u09c7\u09b6\u09a8\u09b6\u09bf\u09aa (Edges) \u09ab\u09c7\u099a \u0995\u09b0\u09ac\u09c7\u0964\n\u098f\u099f\u09bf React Flow \u09ac\u09be D3.js \u098f\u09b0 \u0989\u09aa\u09af\u09cb\u0997\u09c0 \u09a1\u09c7\u099f\u09be \u09b8\u09cd\u099f\u09cd\u09b0\u09be\u0995\u099a\u09be\u09b0 \u09b0\u09bf\u099f\u09be\u09b0\u09cd\u09a8 \u0995\u09b0\u09c7\u0964",
+        "description": "বাংলা মন্তব্য: ফ্রন্টএন্ডে ভিজ্যুয়ালাইজ করার জন্য গ্রাফের সমস্ত নোড এবং রিলেশনশিপ (Edges) ফেচ করবে।\nএটি React Flow বা D3.js এর উপযোগী ডেটা স্ট্রাকচার রিটার্ন করে।",
         "operationId": "get_skill_graph_api_v1_graph_skills_get",
         "responses": {
           "200": {
@@ -7260,7 +7260,7 @@
           "knowledge-graph"
         ],
         "summary": "Get Learning Path",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09a6\u09c1\u099f\u09bf \u09b8\u09cd\u0995\u09bf\u09b2\u09c7\u09b0 \u09ae\u09a7\u09cd\u09af\u09c7 \u0985\u09aa\u09cd\u099f\u09bf\u09ae\u09be\u0987\u099c\u09a1 \u09b2\u09be\u09b0\u09cd\u09a8\u09bf\u0982 \u09aa\u09be\u09a5 \u09ac\u09c7\u09b0 \u0995\u09b0\u09ac\u09c7\u0964",
+        "description": "বাংলা মন্তব্য: দুটি স্কিলের মধ্যে অপ্টিমাইজড লার্নিং পাথ বের করবে।",
         "operationId": "get_learning_path_api_v1_graph_path_get",
         "security": [
           {
@@ -7479,7 +7479,7 @@
           "auth"
         ],
         "summary": "Refresh Token Endpoint",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be: \u09b0\u09bf\u09ab\u09cd\u09b0\u09c7\u09b6 \u099f\u09cb\u0995\u09c7\u09a8 \u09a6\u09bf\u09af\u09bc\u09c7 \u09a8\u09a4\u09c1\u09a8 \u0985\u09cd\u09af\u09be\u0995\u09cd\u09b8\u09c7\u09b8 \u099f\u09cb\u0995\u09c7\u09a8 \u09aa\u09cd\u09b0\u09a6\u09be\u09a8\u0964\n\ntype=refresh \u099a\u09c7\u0995 \u0995\u09b0\u09c7 access token \u09b0\u09bf\u09ab\u09cd\u09b0\u09c7\u09b6\u09c7 \u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u09b0\u09cb\u09a7 \u0995\u09b0\u09be \u09b9\u09af\u09bc \u2014 token confusion \u09aa\u09cd\u09b0\u09a4\u09bf\u09b0\u09cb\u09a7\u0964",
+        "description": "বাংলা: রিফ্রেশ টোকেন দিয়ে নতুন অ্যাক্সেস টোকেন প্রদান।\n\ntype=refresh চেক করে access token রিফ্রেশে ব্যবহার রোধ করা হয় — token confusion প্রতিরোধ।",
         "operationId": "refresh_token_endpoint_api_v1_auth_refresh_post",
         "requestBody": {
           "content": {
@@ -7547,7 +7547,7 @@
           "auth"
         ],
         "summary": "Logout",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af (\u09a8\u09a4\u09c1\u09a8 \u098f\u09a8\u09cd\u09a1\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f): \u0986\u0997\u09c7 /logout \u09b0\u09c1\u099f\u099f\u09be\u0987 \u099b\u09bf\u09b2 \u09a8\u09be (\u09a4\u09be\u0987 404\n\u0986\u09b8\u09a4)\u0964 JWT stateless \u09ac\u09b2\u09c7 \u09b8\u09a4\u09cd\u09af\u09bf\u0995\u09be\u09b0\u09c7\u09b0 \"invalidate\" \u09b8\u09ae\u09cd\u09ad\u09ac \u09a8\u09be, \u0995\u09bf\u09a8\u09cd\u09a4\u09c1 \u0987\u09a4\u09bf\u09ae\u09a7\u09cd\u09af\u09c7\u0987\n\u0995\u09cb\u09a1\u09ac\u09c7\u09b8\u09c7 \u09a5\u09be\u0995\u09be Redis-\u09ac\u09cd\u09af\u09be\u0995\u09a1 blacklist (core/security/revoke_token,\nis_token_revoked -- admin_auth.py-\u09a4\u09c7 \u09af\u09c7\u09ad\u09be\u09ac\u09c7 \u09ac\u09cd\u09af\u09ac\u09b9\u09c3\u09a4 \u09b9\u09af\u09bc) \u09aa\u09c1\u09a8\u0983\u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u0995\u09b0\u09c7\n\u099f\u09cb\u0995\u09c7\u09a8\u09c7\u09b0 jti \u09ac\u09cd\u09b2\u09cd\u09af\u09be\u0995\u09b2\u09bf\u09b8\u09cd\u099f \u0995\u09b0\u09c7 \u09a6\u09c7\u0993\u09af\u09bc\u09be \u09b9\u099a\u09cd\u099b\u09c7\u0964 \u098f\u09b0\u09aa\u09b0 optional_current_user\n(\u0989\u09aa\u09b0\u09c7) revoke-\u099a\u09c7\u0995 \u0995\u09b0\u09c7, \u09a4\u09be\u0987 \u098f\u0987 \u099f\u09cb\u0995\u09c7\u09a8 \u09a6\u09bf\u09af\u09bc\u09c7 /me \u0986\u09b0 \u0995\u09be\u099c \u0995\u09b0\u09ac\u09c7 \u09a8\u09be\u0964\n\n\u09ac\u09be\u0982\u09b2\u09be (JWT-COOKIE-MIGRATION): auth cookie \u09a5\u09be\u0995\u09b2\u09c7 \u09b8\u09c7\u0997\u09c1\u09b2\u09cb\u0993 \u0995\u09cd\u09b2\u09bf\u09af\u09bc\u09be\u09b0 \u0995\u09b0\u09be \u09b9\u099a\u09cd\u099b\u09c7\u0964",
+        "description": "বাংলা মন্তব্য (নতুন এন্ডপয়েন্ট): আগে /logout রুটটাই ছিল না (তাই 404\nআসত)। JWT stateless বলে সত্যিকারের \"invalidate\" সম্ভব না, কিন্তু ইতিমধ্যেই\nকোডবেসে থাকা Redis-ব্যাকড blacklist (core/security/revoke_token,\nis_token_revoked -- admin_auth.py-তে যেভাবে ব্যবহৃত হয়) পুনঃব্যবহার করে\nটোকেনের jti ব্ল্যাকলিস্ট করে দেওয়া হচ্ছে। এরপর optional_current_user\n(উপরে) revoke-চেক করে, তাই এই টোকেন দিয়ে /me আর কাজ করবে না।\n\nবাংলা (JWT-COOKIE-MIGRATION): auth cookie থাকলে সেগুলোও ক্লিয়ার করা হচ্ছে।",
         "operationId": "logout_api_v1_auth_logout_post",
         "responses": {
           "200": {
@@ -8005,7 +8005,7 @@
           "analytics"
         ],
         "summary": "Get Business Metrics",
-        "description": "Get active user analytics and aggregate token usage metrics.\n\n\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09ac\u09cd\u09af\u09ac\u09b8\u09be\u09af\u09bc\u09bf\u0995 \u09ae\u09c7\u099f\u09cd\u09b0\u09bf\u0995\u09cd\u09b8 (DAU, MAU, \u099f\u09cb\u0995\u09c7\u09a8 \u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u0993 \u09ab\u09cd\u09b0\u09bf-\u099f\u09bf\u09af\u09bc\u09be\u09b0 \u0985\u09aa\u099f\u09bf\u09ae\u09be\u0987\u099c\u09c7\u09b6\u09a8 \u09b9\u09bf\u09b8\u09be\u09ac) \u09b0\u09bf\u099f\u09be\u09b0\u09cd\u09a8 \u0995\u09b0\u09c7\u0964",
+        "description": "Get active user analytics and aggregate token usage metrics.\n\nবাংলা মন্তব্য: ব্যবসায়িক মেট্রিক্স (DAU, MAU, টোকেন ব্যবহার ও ফ্রি-টিয়ার অপটিমাইজেশন হিসাব) রিটার্ন করে।",
         "operationId": "get_business_metrics_api_v1_analytics_business_get",
         "responses": {
           "200": {
@@ -8387,7 +8387,7 @@
           "Global Config"
         ],
         "summary": "Get Public Config",
-        "description": "\u09aa\u09be\u09ac\u09b2\u09bf\u0995 \u0995\u09a8\u0444\u09bf\u0997 \u09a1\u09c7\u099f\u09be \u09b8\u09b0\u09be\u09b8\u09b0\u09bf \u09ac\u09cd\u09b0\u09be\u0989\u099c\u09be\u09b0 \u098f\u09ac\u0982 CDN (Cloudflare/Vercel) \u098f \u0995\u09cd\u09af\u09be\u09b6 \u0995\u09b0\u09ac\u09c7,\n\u09af\u09be\u09a4\u09c7 \u09aa\u09cd\u09b0\u09a4\u09bf\u09ac\u09be\u09b0 \u09ac\u09cd\u09af\u09be\u0995\u098f\u09a8\u09cd\u09a1 \u09b8\u09be\u09b0\u09cd\u09ad\u09be\u09b0\u09c7 \u09b9\u09bf\u099f \u09a8\u09be \u0986\u09b8\u09c7\u0964",
+        "description": "পাবলিক কনфিগ ডেটা সরাসরি ব্রাউজার এবং CDN (Cloudflare/Vercel) এ ক্যাশ করবে,\nযাতে প্রতিবার ব্যাকএন্ড সার্ভারে হিট না আসে।",
         "operationId": "get_public_config_config_public_get",
         "responses": {
           "200": {
@@ -8407,7 +8407,7 @@
           "Global Config"
         ],
         "summary": "Get Config Validation Report",
-        "description": "specs/001 close-out: \u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8 env-\u098f\u09b0 \u09b8\u09ce configuration truth (admin-only).\n\n\u09ac\u09be\u0982\u09b2\u09be: MASTER_PLAN Phase 1 \u2014 required env vars, \u09ab\u09b0\u09ae\u09cd\u09af\u09be\u099f, \u0993 CORS unification\nstatus \u098f\u0995 \u0995\u09b2\u09c7 \u099c\u09be\u09a8\u09be\u09af\u09bc\u0964 \u0995\u09cb\u09a8\u09cb \u09ad\u09c1\u09af\u09bc\u09be 'ok' \u09a8\u09c7\u0987 \u2014 \u09b8\u09ae\u09b8\u09cd\u09af\u09be \u09a5\u09be\u0995\u09b2\u09c7 status=error + fix\nsuggestion \u09af\u09be\u09af\u09bc (No Silent Failure)\u0964 \u09b0\u09c1\u099f\u09c7\u09b0 \u0986\u0997\u09c7 \u09a1\u09bf\u0995\u09cd\u09b2\u09c7\u09af\u09bc\u09be\u09b0 \u0995\u09b0\u09be \u09ac\u09be\u09a7\u09cd\u09af\u09a4\u09be\u09ae\u09c2\u09b2\u0995,\n\u09a8\u0987\u09b2\u09c7 /{key} \u09aa\u09be\u09a5 \u098f\u099f\u09be\u0995\u09c7 \u0997\u09bf\u09b2\u09c7 \u09ab\u09c7\u09b2\u09c7\u0964",
+        "description": "specs/001 close-out: বর্তমান env-এর সৎ configuration truth (admin-only).\n\nবাংলা: MASTER_PLAN Phase 1 — required env vars, ফরম্যাট, ও CORS unification\nstatus এক কলে জানায়। কোনো ভুয়া 'ok' নেই — সমস্যা থাকলে status=error + fix\nsuggestion যায় (No Silent Failure)। রুটের আগে ডিক্লেয়ার করা বাধ্যতামূলক,\nনইলে /{key} পাথ এটাকে গিলে ফেলে।",
         "operationId": "get_config_validation_report_config_validation_report_get",
         "responses": {
           "200": {
@@ -9494,7 +9494,7 @@
           "Skill Catalog Infrastructure"
         ],
         "summary": "Get Active Skill Catalog",
-        "description": "\u09ab\u09be\u0987\u09b2 \u09b8\u09bf\u09b8\u09cd\u099f\u09c7\u09ae\u09c7\u09b0 manifests/ \u09ab\u09cb\u09b2\u09cd\u09a1\u09be\u09b0 \u09b8\u09cd\u0995\u09cd\u09af\u09be\u09a8 \u0995\u09b0\u09c7 \u09a1\u09cd\u09af\u09be\u09b6\u09ac\u09cb\u09b0\u09cd\u09a1\u09c7\u09b0 \u099c\u09a8\u09cd\u09af\n\u09b8\u09ae\u09b8\u09cd\u09a4 \u09ad\u09c7\u09b0\u09bf\u09ab\u09be\u0987\u09a1 \u09b8\u09cd\u0995\u09bf\u09b2 \u09ae\u09cd\u09af\u09be\u09a8\u09bf\u09ab\u09c7\u09b8\u09cd\u099f \u09a1\u09be\u0987\u09a8\u09be\u09ae\u09bf\u0995\u09be\u09b2\u09bf \u09b0\u09c7\u09a8\u09cd\u09a1\u09be\u09b0 \u0995\u09b0\u09c7\u0964",
+        "description": "ফাইল সিস্টেমের manifests/ ফোল্ডার স্ক্যান করে ড্যাশবোর্ডের জন্য\nসমস্ত ভেরিফাইড স্কিল ম্যানিফেস্ট ডাইনামিকালি রেন্ডার করে।",
         "operationId": "get_active_skill_catalog_api_skills_catalog_get",
         "responses": {
           "200": {
@@ -9682,7 +9682,7 @@
           "Workspace Files"
         ],
         "summary": "Write File",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: IDE editor \u09a5\u09c7\u0995\u09c7 save \u2014 \u09b6\u09c1\u09a7\u09c1\u09ae\u09be\u09a4\u09cd\u09b0 caller-\u098f\u09b0 \u09a8\u09bf\u099c\u09c7\u09b0 tenant-scoped\nworkspace-\u098f, path-traversal protection \u09b8\u09b9\u0964",
+        "description": "বাংলা মন্তব্য: IDE editor থেকে save — শুধুমাত্র caller-এর নিজের tenant-scoped\nworkspace-এ, path-traversal protection সহ।",
         "operationId": "write_file_api_files__file_path__put",
         "parameters": [
           {
@@ -9733,7 +9733,7 @@
           "Workspace Files"
         ],
         "summary": "Read File",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: write_file-\u098f\u09b0 \u09b8\u0999\u09cd\u0997\u09c0 GET \u2014 \u098f\u0995\u0987 safety boundary \u09aa\u09c1\u09a8\u09b0\u09cd\u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u0995\u09b0\u09c7\u0964",
+        "description": "বাংলা মন্তব্য: write_file-এর সঙ্গী GET — একই safety boundary পুনর্ব্যবহার করে।",
         "operationId": "read_file_api_files__file_path__get",
         "parameters": [
           {
@@ -10222,7 +10222,7 @@
           "api-keys"
         ],
         "summary": "List All Keys",
-        "description": "List ALL API keys across users \u2014 admin only.",
+        "description": "List ALL API keys across users — admin only.",
         "operationId": "list_all_keys_api_api_keys_all_get",
         "parameters": [
           {
@@ -10622,7 +10622,7 @@
           "api-keys"
         ],
         "summary": "Bulk Delete",
-        "description": "Bulk delete API keys \u2014 admin only.",
+        "description": "Bulk delete API keys — admin only.",
         "operationId": "bulk_delete_api_api_keys_admin_bulk_delete_post",
         "requestBody": {
           "content": {
@@ -10941,7 +10941,7 @@
     "/api/v1/agent/learn": {
       "post": {
         "summary": "Commit To Memory",
-        "description": "\u09b6\u09c1\u09a7\u09c1\u09ae\u09be\u09a4\u09cd\u09b0 \u09ad\u09c7\u09b0\u09bf\u09ab\u09be\u09df\u09c7\u09a1 \u098f\u09ac\u0982 \u0995\u09be\u099c \u0995\u09b0\u09be \u0995\u09cb\u09a1\u0997\u09c1\u09b2\u09cb\u0987 \u09ae\u09c7\u09ae\u09cb\u09b0\u09bf \u09ad\u09b2\u09cd\u099f\u09c7 \u09b8\u09c7\u09ad \u09b9\u09ac\u09c7\u0964\n\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: user_id \u09af\u09cb\u0997 \u0995\u09b0\u09be \u09b9\u09af\u09bc\u09c7\u099b\u09c7 tenant-scoped memory \u099c\u09a8\u09cd\u09af (cache poisoning \u09aa\u09cd\u09b0\u09a4\u09bf\u09b0\u09cb\u09a7)",
+        "description": "শুধুমাত্র ভেরিফায়েড এবং কাজ করা কোডগুলোই মেমোরি ভল্টে সেভ হবে।\nবাংলা মন্তব্য: user_id যোগ করা হয়েছে tenant-scoped memory জন্য (cache poisoning প্রতিরোধ)",
         "operationId": "commit_to_memory_api_v1_agent_learn_post",
         "requestBody": {
           "content": {
@@ -11014,7 +11014,7 @@
     "/api/v1/integrations/github/link": {
       "get": {
         "summary": "Link Github",
-        "description": "\u0987\u0989\u099c\u09be\u09b0\u0995\u09c7 GitHub OAuth \u09b2\u0997\u0987\u09a8 \u09aa\u09c7\u0987\u099c\u09c7 \u09b0\u09bf\u09a1\u09be\u0987\u09b0\u09c7\u0995\u09cd\u099f \u0995\u09b0\u09c7\u0964\nCSRF \u09aa\u09cd\u09b0\u099f\u09c7\u0995\u09b6\u09a8\u09c7\u09b0 \u099c\u09a8\u09cd\u09af HMAC \u09b8\u09be\u0987\u09a8\u09a1 \u09b8\u09cd\u099f\u09c7\u099f \u099f\u09cb\u0995\u09c7\u09a8 \u099c\u09c7\u09a8\u09be\u09b0\u09c7\u099f \u0995\u09b0\u09c7 \u09af\u09c1\u0995\u09cd\u09a4 \u0995\u09b0\u09be \u09b9\u09df\u0964",
+        "description": "ইউজারকে GitHub OAuth লগইন পেইজে রিডাইরেক্ট করে।\nCSRF প্রটেকশনের জন্য HMAC সাইনড স্টেট টোকেন জেনারেট করে যুক্ত করা হয়।",
         "operationId": "link_github_api_v1_integrations_github_link_get",
         "responses": {
           "200": {
@@ -11031,7 +11031,7 @@
     "/api/v1/integrations/github/callback": {
       "get": {
         "summary": "Github Callback",
-        "description": "GitHub OAuth \u0995\u09b2\u09ac\u09cd\u09af\u09be\u0995 \u09b9\u09cd\u09af\u09be\u09a8\u09cd\u09a1\u09b2\u09be\u09b0\u0964\n\u0995\u09cb\u09a1 \u098f\u0995\u09cd\u09b8\u099a\u09c7\u099e\u09cd\u099c \u0995\u09b0\u09be\u09b0 \u0986\u0997\u09c7 \u0985\u09ac\u09b6\u09cd\u09af\u0987 \u09b8\u09be\u0987\u09a8\u09a1 \u09b8\u09cd\u099f\u09c7\u099f \u09ad\u09cd\u09af\u09be\u09b2\u09bf\u09a1\u09c7\u099f \u0995\u09b0\u09c7 CSRF \u0985\u09cd\u09af\u09be\u099f\u09be\u0995 \u09ac\u09cd\u09b2\u0995 \u0995\u09b0\u09c7\u0964",
+        "description": "GitHub OAuth কলব্যাক হ্যান্ডলার।\nকোড এক্সচেঞ্জ করার আগে অবশ্যই সাইনড স্টেট ভ্যালিডেট করে CSRF অ্যাটাক ব্লক করে।",
         "operationId": "github_callback_api_v1_integrations_github_callback_get",
         "parameters": [
           {
@@ -11079,7 +11079,7 @@
     "/api/v1/integrations/discover": {
       "post": {
         "summary": "Discover Integration",
-        "description": "**1-Line Connect** \u2014 URL \u0987\u09a8\u09aa\u09c1\u099f \u09a6\u09bf\u09b2\u09c7 MCP/AI Provider/Webhook auto-detect\u0964\n\nDetection order: MCP handshake (``/.well-known/mcp.json``) \u2192 AI provider\npattern \u2192 webhook reachability fallback\u0964",
+        "description": "**1-Line Connect** — URL ইনপুট দিলে MCP/AI Provider/Webhook auto-detect।\n\nDetection order: MCP handshake (``/.well-known/mcp.json``) → AI provider\npattern → webhook reachability fallback।",
         "operationId": "discover_integration_api_v1_integrations_discover_post",
         "requestBody": {
           "content": {
@@ -11305,7 +11305,7 @@
           "SSE HITL Stream"
         ],
         "summary": "Stream Hitl Sse",
-        "description": "SSE replacement for ``ws://.../ws/hitl`` (HITL approval events).\n\nReturns events of type ``HITL_REVIEW_REQUIRED`` from the global\n``error_event_bus`` \u2014 same source as the existing WebSocket route.",
+        "description": "SSE replacement for ``ws://.../ws/hitl`` (HITL approval events).\n\nReturns events of type ``HITL_REVIEW_REQUIRED`` from the global\n``error_event_bus`` — same source as the existing WebSocket route.",
         "operationId": "stream_hitl_sse_api_v1_stream_hitl_get",
         "responses": {
           "200": {
@@ -12134,61 +12134,6 @@
         }
       }
     },
-    "/api/v1/stream/voice": {
-      "get": {
-        "tags": [
-          "SSE Voice Stream"
-        ],
-        "summary": "Stream Voice Sse",
-        "description": "SSE replacement for ``ws://.../ws/voice``.\n\nHalf-duplex: client POSTs audio to /api/v1/voice/upload to get a transcript,\nthen opens this SSE endpoint with ?text=<transcript> to receive TTS audio\nback as a base64-encoded 'audio' event.\n\nFor full-duplex realtime voice (rare on free-tier), keep using WS behind\nWS_FALLBACK=true.",
-        "operationId": "stream_voice_sse_api_v1_stream_voice_get",
-        "parameters": [
-          {
-            "name": "text",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "description": "Text to synthesize to speech",
-              "title": "Text"
-            },
-            "description": "Text to synthesize to speech"
-          },
-          {
-            "name": "lang",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "description": "Language code",
-              "default": "bn",
-              "title": "Lang"
-            },
-            "description": "Language code"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/dashboard/stream": {
       "get": {
         "tags": [
@@ -12256,7 +12201,7 @@
           "image-to-code"
         ],
         "summary": "Api Figma To Component",
-        "description": "Figma/UI screenshot \u2192 React/Flutter component\u0964",
+        "description": "Figma/UI screenshot → React/Flutter component।",
         "operationId": "api_figma_to_component_tools_image_to_component_post",
         "requestBody": {
           "content": {
@@ -12297,7 +12242,7 @@
           "image-to-code"
         ],
         "summary": "Api Extract Palette",
-        "description": "UI screenshot \u2192 color palette + CSS variables\u0964",
+        "description": "UI screenshot → color palette + CSS variables।",
         "operationId": "api_extract_palette_tools_image_to_palette_post",
         "requestBody": {
           "content": {
@@ -12338,7 +12283,7 @@
           "image-to-code"
         ],
         "summary": "Api Detect Tree",
-        "description": "UI screenshot \u2192 component hierarchy\u0964",
+        "description": "UI screenshot → component hierarchy।",
         "operationId": "api_detect_tree_tools_image_to_tree_post",
         "requestBody": {
           "content": {
@@ -12808,7 +12753,7 @@
           "comment-thread-ai"
         ],
         "summary": "Handle Comment",
-        "description": "Handle a PR review comment \u2014 propose fix and optionally auto-reply.",
+        "description": "Handle a PR review comment — propose fix and optionally auto-reply.",
         "operationId": "handle_comment_api_comment_ai_handle_comment_post",
         "requestBody": {
           "content": {
@@ -13848,7 +13793,7 @@
           "sandbox"
         ],
         "summary": "Create Sandbox",
-        "description": "\u09a8\u09a4\u09c1\u09a8 persistent sandbox \u09b8\u09c7\u09b6\u09a8 \u09a4\u09c8\u09b0\u09bf \u0995\u09b0\u09c7 (owner \u09b0\u09c7\u099c\u09bf\u09b8\u09cd\u099f\u09cd\u09b0\u09bf \u0995\u09b0\u09be \u09b9\u09af\u09bc)\u0964",
+        "description": "নতুন persistent sandbox সেশন তৈরি করে (owner রেজিস্ট্রি করা হয়)।",
         "operationId": "create_sandbox_api_v1_sandbox_create_post",
         "requestBody": {
           "content": {
@@ -13892,7 +13837,7 @@
           "sandbox"
         ],
         "summary": "Execute Command",
-        "description": "\u09b8\u09cd\u09af\u09be\u09a8\u09cd\u09a1\u09ac\u0995\u09cd\u09b8 \u09b8\u09c7\u09b6\u09a8\u09c7 \u098f\u0995\u099f\u09bf \u0995\u09ae\u09be\u09a8\u09cd\u09a1 \u09b0\u09be\u09a8 \u0995\u09b0\u09c7 (\u09b6\u09c1\u09a7\u09c1 owner)\u0964",
+        "description": "স্যান্ডবক্স সেশনে একটি কমান্ড রান করে (শুধু owner)।",
         "operationId": "execute_command_api_v1_sandbox__sandbox_id__execute_post",
         "parameters": [
           {
@@ -13947,7 +13892,7 @@
           "sandbox"
         ],
         "summary": "Stream Logs",
-        "description": "\u09b2\u09be\u0987\u09ad \u09b2\u0997 \u09b8\u09cd\u099f\u09cd\u09b0\u09bf\u09ae\u09bf\u0982 (Server-Sent Events) \u2014 \u09b6\u09c1\u09a7\u09c1 owner\u0964\n\n\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: orchestrator-\u098f persistent log-tail API \u09a8\u09c7\u0987, \u09a4\u09be\u0987 \u0995\u09ae\u09be\u09a8\u09cd\u09a1 \u09b0\u09be\u09a8 \u0995\u09b0\u09c7\nstdout/stderr \u09b2\u09be\u0987\u09a8-\u09ac\u09be\u0987-\u09b2\u09be\u0987\u09a8 SSE \u09b9\u09bf\u09b8\u09c7\u09ac\u09c7 \u09b8\u09cd\u099f\u09cd\u09b0\u09bf\u09ae \u0995\u09b0\u09be \u09b9\u099a\u09cd\u099b\u09c7\u0964",
+        "description": "লাইভ লগ স্ট্রিমিং (Server-Sent Events) — শুধু owner।\n\nবাংলা মন্তব্য: orchestrator-এ persistent log-tail API নেই, তাই কমান্ড রান করে\nstdout/stderr লাইন-বাই-লাইন SSE হিসেবে স্ট্রিম করা হচ্ছে।",
         "operationId": "stream_logs_api_v1_sandbox__sandbox_id__logs_get",
         "parameters": [
           {
@@ -14007,7 +13952,7 @@
           "sandbox"
         ],
         "summary": "Destroy Sandbox",
-        "description": "\u09b8\u09cd\u09af\u09be\u09a8\u09cd\u09a1\u09ac\u0995\u09cd\u09b8 \u09b8\u09c7\u09b6\u09a8 \u0993 \u09a4\u09be\u09b0 \u09ad\u09b2\u09bf\u0989\u09ae \u09ae\u09c1\u099b\u09c7 \u09ab\u09c7\u09b2\u09c7 (\u09b6\u09c1\u09a7\u09c1 owner)\u0964",
+        "description": "স্যান্ডবক্স সেশন ও তার ভলিউম মুছে ফেলে (শুধু owner)।",
         "operationId": "destroy_sandbox_api_v1_sandbox__sandbox_id__delete",
         "parameters": [
           {
@@ -14052,7 +13997,7 @@
           "sandbox"
         ],
         "summary": "List Sandboxes",
-        "description": "\u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8 \u0987\u0989\u099c\u09be\u09b0\u09c7\u09b0 \u09b8\u09cd\u09af\u09be\u09a8\u09cd\u09a1\u09ac\u0995\u09cd\u09b8 \u09b8\u09c7\u09b6\u09a8\u09c7\u09b0 \u09a4\u09be\u09b2\u09bf\u0995\u09be\u0964\n\nSECURITY FIX: \u0986\u0997\u09c7 \u09b8\u09ac \u0987\u0989\u099c\u09be\u09b0\u09c7\u09b0 \u09b8\u09ac sandbox id \u09ab\u09c7\u09b0\u09a4 \u09a6\u09bf\u09a4 (info leak) \u2014\n\u098f\u0996\u09a8 \u09b6\u09c1\u09a7\u09c1 requester-\u098f\u09b0 \u09ae\u09be\u09b2\u09bf\u0995\u09be\u09a8\u09be\u09a7\u09c0\u09a8 \u09b8\u09c7\u09b6\u09a8\u0997\u09c1\u09b2\u09cb\u0964",
+        "description": "বর্তমান ইউজারের স্যান্ডবক্স সেশনের তালিকা।\n\nSECURITY FIX: আগে সব ইউজারের সব sandbox id ফেরত দিত (info leak) —\nএখন শুধু requester-এর মালিকানাধীন সেশনগুলো।",
         "operationId": "list_sandboxes_api_v1_sandbox_list_get",
         "responses": {
           "200": {
@@ -14076,7 +14021,7 @@
           "pr-review"
         ],
         "summary": "Github Webhook",
-        "description": "GitHub \u09a5\u09c7\u0995\u09c7 PR webhook \u09b0\u09bf\u09b8\u09bf\u09ad \u0995\u09b0\u09c7 \u0985\u099f\u09cb-\u09b0\u09bf\u09ad\u09bf\u0989 \u099f\u09cd\u09b0\u09bf\u0997\u09be\u09b0 \u0995\u09b0\u09c7\u0964",
+        "description": "GitHub থেকে PR webhook রিসিভ করে অটো-রিভিউ ট্রিগার করে।",
         "operationId": "github_webhook_api_v1_pr_review_webhook_post",
         "responses": {
           "200": {
@@ -14096,7 +14041,7 @@
           "pr-review"
         ],
         "summary": "Get Review Status",
-        "description": "\u09a8\u09bf\u09b0\u09cd\u09a6\u09bf\u09b7\u09cd\u099f PR-\u098f\u09b0 \u09b0\u09bf\u09ad\u09bf\u0989 \u09b8\u09cd\u099f\u09cd\u09af\u09be\u099f\u09be\u09b8 \u09ab\u09c7\u09b0\u09a4 \u09a6\u09c7\u09af\u09bc\u0964",
+        "description": "নির্দিষ্ট PR-এর রিভিউ স্ট্যাটাস ফেরত দেয়।",
         "operationId": "get_review_status_api_v1_pr_review__pr_id__status_get",
         "parameters": [
           {
@@ -15186,7 +15131,7 @@
           "Billing & Credit Wallet"
         ],
         "summary": "Get Billing Analytics",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be: CostDashboard.tsx-\u098f\u09b0 \u09aa\u09cd\u09b0\u09be\u09a5\u09ae\u09bf\u0995 \u09a1\u09c7\u099f\u09be \u09b8\u09cb\u09b0\u09cd\u09b8\u0964\n\nFIX (API-contract audit): \u09ab\u09cd\u09b0\u09a8\u09cd\u099f\u098f\u09a8\u09cd\u09a1 \u09a6\u09c0\u09b0\u09cd\u0998\u09a6\u09bf\u09a8 GET /api/billing/analytics\n\u0995\u09b2 \u0995\u09b0\u099b\u09bf\u09b2 \u0995\u09bf\u09a8\u09cd\u09a4\u09c1 \u098f\u09a8\u09cd\u09a1\u09aa\u09af\u09bc\u09c7\u09a8\u09cd\u099f\u099f\u09bf \u099b\u09bf\u09b2\u0987 \u09a8\u09be \u2192 404 \u2192 \u09aa\u09c7\u099c 'Error loading cost\nmetrics' \u09a6\u09c7\u0996\u09be\u09a4\u0964 ``total_spent`` \u09b8\u09a4\u09cd\u09af\u09bf\u0995\u09be\u09b0\u09c7\u09b0 \u09ae\u09be\u09a8 (cost_guard Redis \u0995\u09be\u0989\u09a8\u09cd\u099f\u09be\u09b0\naggregate); \u09ac\u09be\u0995\u09bf \u09ab\u09bf\u09b2\u09cd\u09a1\u0997\u09c1\u09b2\u09cb \u098f\u0996\u09a8 \u0987\u099a\u09cd\u099b\u09be\u0995\u09c3\u09a4 0 \u2014 \u09ab\u09cd\u09b0\u09a8\u09cd\u099f\u098f\u09a8\u09cd\u09a1\u09c7\u09b0 `||` \u09a1\u09bf\u09ab\u09b2\u09cd\u099f\nfallback \u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u0995\u09b0\u09ac\u09c7\u0964 \u09ad\u09ac\u09bf\u09b7\u09cd\u09af\u09a4\u09c7 usage_metrics/cost_auditor \u09a6\u09bf\u09af\u09bc\u09c7 \u09b8\u09ae\u09c3\u09a6\u09cd\u09a7\n\u0995\u09b0\u09be \u09af\u09be\u09ac\u09c7\u0964",
+        "description": "বাংলা: CostDashboard.tsx-এর প্রাথমিক ডেটা সোর্স।\n\nFIX (API-contract audit): ফ্রন্টএন্ড দীর্ঘদিন GET /api/billing/analytics\nকল করছিল কিন্তু এন্ডপয়েন্টটি ছিলই না → 404 → পেজ 'Error loading cost\nmetrics' দেখাত। ``total_spent`` সত্যিকারের মান (cost_guard Redis কাউন্টার\naggregate); বাকি ফিল্ডগুলো এখন ইচ্ছাকৃত 0 — ফ্রন্টএন্ডের `||` ডিফল্ট\nfallback ব্যবহার করবে। ভবিষ্যতে usage_metrics/cost_auditor দিয়ে সমৃদ্ধ\nকরা যাবে।",
         "operationId": "get_billing_analytics_api_billing_analytics_get",
         "responses": {
           "200": {
@@ -15430,7 +15375,7 @@
     "/api/v1/health/agents": {
       "get": {
         "summary": "Agents Health Check",
-        "description": "Per-agent health heartbeat (backend/frontend parity audit fix).\n\nFrontend consumers that previously received 404:\n  - GET  /api/v1/health/agents             (useSwarmGraph \u2014 2s heartbeat poll)\n  - POST /api/v1/health/agents {agent_ids} (MockSwarmProvider \u2014 swarm metrics)\nReturns the agent_supervisor health map keyed by agent name. Requested ids\nthat have no supervisor entry are reported as ``status=\"unknown\"`` so clients\nalways receive a complete, predictable key set.",
+        "description": "Per-agent health heartbeat (backend/frontend parity audit fix).\n\nFrontend consumers that previously received 404:\n  - GET  /api/v1/health/agents             (useSwarmGraph — 2s heartbeat poll)\n  - POST /api/v1/health/agents {agent_ids} (MockSwarmProvider — swarm metrics)\nReturns the agent_supervisor health map keyed by agent name. Requested ids\nthat have no supervisor entry are reported as ``status=\"unknown\"`` so clients\nalways receive a complete, predictable key set.",
         "operationId": "agents_health_check_api_v1_health_agents_get",
         "requestBody": {
           "content": {
@@ -15472,7 +15417,7 @@
       },
       "post": {
         "summary": "Agents Health Check",
-        "description": "Per-agent health heartbeat (backend/frontend parity audit fix).\n\nFrontend consumers that previously received 404:\n  - GET  /api/v1/health/agents             (useSwarmGraph \u2014 2s heartbeat poll)\n  - POST /api/v1/health/agents {agent_ids} (MockSwarmProvider \u2014 swarm metrics)\nReturns the agent_supervisor health map keyed by agent name. Requested ids\nthat have no supervisor entry are reported as ``status=\"unknown\"`` so clients\nalways receive a complete, predictable key set.",
+        "description": "Per-agent health heartbeat (backend/frontend parity audit fix).\n\nFrontend consumers that previously received 404:\n  - GET  /api/v1/health/agents             (useSwarmGraph — 2s heartbeat poll)\n  - POST /api/v1/health/agents {agent_ids} (MockSwarmProvider — swarm metrics)\nReturns the agent_supervisor health map keyed by agent name. Requested ids\nthat have no supervisor entry are reported as ``status=\"unknown\"`` so clients\nalways receive a complete, predictable key set.",
         "operationId": "agents_health_check_api_v1_health_agents_post",
         "requestBody": {
           "content": {
@@ -16120,7 +16065,7 @@
           "self-evolution-engine"
         ],
         "summary": "Get Evolution Metrics",
-        "description": "Plan \u00a720 observability: one autonomous-evolution dashboard payload.\n\nEvery number is MEASURED from the durable learning store or the\nimprovement-proposal lifecycle \u2014 nothing is fabricated. When the store\nis unavailable the endpoint reports ``available: false`` instead of\ninventing values.",
+        "description": "Plan §20 observability: one autonomous-evolution dashboard payload.\n\nEvery number is MEASURED from the durable learning store or the\nimprovement-proposal lifecycle — nothing is fabricated. When the store\nis unavailable the endpoint reports ``available: false`` instead of\ninventing values.",
         "operationId": "get_evolution_metrics_api_v1_evolution_metrics_get",
         "responses": {
           "200": {
@@ -16510,7 +16455,7 @@
           "layer-6-agent-breeding"
         ],
         "summary": "Run Breeding Cycle",
-        "description": "Run a full breeding cycle: select parents \u2192 breed \u2192 evaluate \u2192 promote.",
+        "description": "Run a full breeding cycle: select parents → breed → evaluate → promote.",
         "operationId": "run_breeding_cycle_api_v1_meta_ai_breed_post",
         "requestBody": {
           "content": {
@@ -17059,7 +17004,7 @@
           "admin-dashboard"
         ],
         "summary": "Get Providers",
-        "description": "FIX (final-test 2026-09-13): \u098f\u0987 endpoint \u0986\u0997\u09c7 \u09e7\u09e6\u09e6% \u09ad\u09c1\u09af\u09bc\u09be hardcoded \u09a1\u09c7\u099f\u09be \u09a6\u09bf\u09a4 \u2014\n\u09b8\u09ac provider-\u098f \u098f\u0995\u0987 \u0995\u09be\u09b2\u09cd\u09aa\u09a8\u09bf\u0995 latency_history [115,118,120,122,119,121,120],\nrate_limit 90/100, \u0986\u09b0 api_key_valid: True\u0964 \u0985\u09aa\u09be\u09b0\u09c7\u099f\u09b0 \u09a1\u09cd\u09af\u09be\u09b6\u09ac\u09cb\u09b0\u09cd\u09a1 \u09ad\u09c1\u09b2 \u09a4\u09a5\u09cd\u09af \u09a6\u09c7\u0996\u09be\u099a\u09cd\u099b\u09bf\u09b2\u0964\n\n\u098f\u0996\u09a8 ProviderRegistry (services/dynamic_ai) \u09a5\u09c7\u0995\u09c7 \u0986\u09b8\u09b2 \u09aa\u09b0\u09bf\u09b8\u0982\u0996\u09cd\u09af\u09be\u09a8 \u09b0\u09bf\u09aa\u09cb\u09b0\u09cd\u099f \u0995\u09b0\u09c7:\n- \u0986\u09b8\u09b2 success/failure \u0995\u09be\u0989\u09a8\u09cd\u099f\u09be\u09b0, \u0997\u09a1\u09bc latency, \u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8 status\n- \u0995\u09cb\u09a8\u09cb probe \u09a1\u09c7\u099f\u09be \u09a8\u09be \u09a5\u09be\u0995\u09b2\u09c7 \u09b8\u09ce \"unknown\" \u2014 \u09ad\u09c1\u09af\u09bc\u09be \"healthy\" \u09a8\u09af\u09bc\n- API key \u09a8\u09be \u09a5\u09be\u0995\u09b2\u09c7 \"not_configured\"",
+        "description": "FIX (final-test 2026-09-13): এই endpoint আগে ১০০% ভুয়া hardcoded ডেটা দিত —\nসব provider-এ একই কাল্পনিক latency_history [115,118,120,122,119,121,120],\nrate_limit 90/100, আর api_key_valid: True। অপারেটর ড্যাশবোর্ড ভুল তথ্য দেখাচ্ছিল।\n\nএখন ProviderRegistry (services/dynamic_ai) থেকে আসল পরিসংখ্যান রিপোর্ট করে:\n- আসল success/failure কাউন্টার, গড় latency, বর্তমান status\n- কোনো probe ডেটা না থাকলে সৎ \"unknown\" — ভুয়া \"healthy\" নয়\n- API key না থাকলে \"not_configured\"",
         "operationId": "get_providers_admin_api_providers_get",
         "responses": {
           "200": {
@@ -17632,7 +17577,7 @@
           "admin-dashboard"
         ],
         "summary": "Create Feature Flag",
-        "description": "Create or update a feature flag (idempotent \u2014 matches by name).",
+        "description": "Create or update a feature flag (idempotent — matches by name).",
         "operationId": "create_feature_flag_admin_api_feature_flags_post",
         "requestBody": {
           "content": {
@@ -18009,7 +17954,7 @@
           "admin-dashboard"
         ],
         "summary": "List Command Agents",
-        "description": "List runtime agents for the Command Center Agents/Tasks tabs.\n\n\u09ac\u09be\u0982\u09b2\u09be: \u09ac\u09b0\u09cd\u09a4\u09ae\u09be\u09a8\u09c7 autonomous agent runtime \u09a5\u09c7\u0995\u09c7 \u09b2\u09be\u0987\u09ad \u09a1\u09c7\u099f\u09be \u09a8\u09be \u09a5\u09be\u0995\u09be\u09df \u0996\u09be\u09b2\u09bf \u09b2\u09bf\u09b8\u09cd\u099f\n\u09b0\u09bf\u099f\u09be\u09b0\u09cd\u09a8 \u0995\u09b0\u09c7 (frontend graceful-\u09ad\u09be\u09ac\u09c7 'no agents' \u09a6\u09c7\u0996\u09be\u09df)\u0964 \u098f\u099f\u09bf 404 error-\u098f\u09b0 \u09ac\u09a6\u09b2\u09c7\n\u09b8\u09a0\u09bf\u0995 200 \u09b0\u09c7\u09b8\u09cd\u09aa\u09a8\u09cd\u09b8 \u09a6\u09c7\u09df\u0964",
+        "description": "List runtime agents for the Command Center Agents/Tasks tabs.\n\nবাংলা: বর্তমানে autonomous agent runtime থেকে লাইভ ডেটা না থাকায় খালি লিস্ট\nরিটার্ন করে (frontend graceful-ভাবে 'no agents' দেখায়)। এটি 404 error-এর বদলে\nসঠিক 200 রেস্পন্স দেয়।",
         "operationId": "list_command_agents_admin_api_agents_get",
         "responses": {
           "200": {
@@ -19489,7 +19434,7 @@
           "Core Admin"
         ],
         "summary": "Verify Otp",
-        "description": "Validate a JIT OTP issued by AntiHackingContextMiddleware and promote the\npending (mismatched) context to trusted, so the admin isn't re-challenged\non their next request from this IP/fingerprint.\n\n\u09ac\u09be\u0982\u09b2\u09be: \u0985\u09cd\u09af\u09be\u09a1\u09ae\u09bf\u09a8 OTP \u09b8\u09be\u09ac\u09ae\u09bf\u099f \u0995\u09b0\u09b2\u09c7 \u098f\u0996\u09be\u09a8\u09c7 \u09ad\u09cd\u09af\u09be\u09b2\u09bf\u09a1\u09c7\u099f \u09b9\u09af\u09bc \u098f\u09ac\u0982 \u09b8\u09ab\u09b2 \u09b9\u09b2\u09c7 Redis-\u098f\n\u099f\u09cd\u09b0\u09be\u09b8\u09cd\u099f\u09c7\u09a1 \u0995\u09a8\u099f\u09c7\u0995\u09cd\u09b8\u099f (last_context) \u0986\u09aa\u09a1\u09c7\u099f \u09b9\u09af\u09bc\u09c7 \u09af\u09be\u09af\u09bc\u0964",
+        "description": "Validate a JIT OTP issued by AntiHackingContextMiddleware and promote the\npending (mismatched) context to trusted, so the admin isn't re-challenged\non their next request from this IP/fingerprint.\n\nবাংলা: অ্যাডমিন OTP সাবমিট করলে এখানে ভ্যালিডেট হয় এবং সফল হলে Redis-এ\nট্রাস্টেড কনটেক্সট (last_context) আপডেট হয়ে যায়।",
         "operationId": "verify_otp_api_admin_verify_otp_post",
         "requestBody": {
           "content": {
@@ -19659,7 +19604,7 @@
           "Core Admin"
         ],
         "summary": "Refresh System Configs",
-        "description": "Hot-Reload model registries and system thresholds from the database without a restart.\n\nPATCH v4 (2026-08-30): Replaced `asyncio.gather(6 \u00d7 sync_from_db(db))` with\nsequential `await` statements on the SAME shared `AsyncSession`. The\ngather pattern triggered asyncpg `isce` (\"concurrent operations are not\npermitted\") in production because SQLAlchemy AsyncSession does not support\nconcurrent operations on a single underlying connection. This is the\nsame fix already applied to `core/startup/services.py` in commit 3b6e09db05.",
+        "description": "Hot-Reload model registries and system thresholds from the database without a restart.\n\nPATCH v4 (2026-08-30): Replaced `asyncio.gather(6 × sync_from_db(db))` with\nsequential `await` statements on the SAME shared `AsyncSession`. The\ngather pattern triggered asyncpg `isce` (\"concurrent operations are not\npermitted\") in production because SQLAlchemy AsyncSession does not support\nconcurrent operations on a single underlying connection. This is the\nsame fix already applied to `core/startup/services.py` in commit 3b6e09db05.",
         "operationId": "refresh_system_configs_api_admin_configs_refresh_post",
         "responses": {
           "200": {
@@ -19679,7 +19624,7 @@
           "Core Admin"
         ],
         "summary": "Infrastructure Agents Status",
-        "description": "\u09b8\u09ac \u09ea\u099f\u09be infrastructure agent-\u098f\u09b0 overview: enabled \u0995\u09bf\u09a8\u09be, \u09b8\u0982\u0995\u09cd\u09b7\u09bf\u09aa\u09cd\u09a4 \u09ac\u09bf\u09ac\u09b0\u09a3\u0964",
+        "description": "সব ৪টা infrastructure agent-এর overview: enabled কিনা, সংক্ষিপ্ত বিবরণ।",
         "operationId": "infrastructure_agents_status_api_admin_infrastructure_status_get",
         "responses": {
           "200": {
@@ -19699,7 +19644,7 @@
           "Core Admin"
         ],
         "summary": "Cost Optimization Report",
-        "description": "Cost optimization \u09b0\u09bf\u09aa\u09cb\u09b0\u09cd\u099f \u2014 spending, opportunities, forecast\u0964",
+        "description": "Cost optimization রিপোর্ট — spending, opportunities, forecast।",
         "operationId": "cost_optimization_report_api_admin_infrastructure_cost_report_get",
         "responses": {
           "200": {
@@ -19719,7 +19664,7 @@
           "Core Admin"
         ],
         "summary": "Cost Forecast",
-        "description": "Cost forecast \u2014 \u09aa\u09b0\u09c7\u09b0 N \u09a6\u09bf\u09a8\u09c7\u09b0 projected cost (linear projection)\u0964",
+        "description": "Cost forecast — পরের N দিনের projected cost (linear projection)।",
         "operationId": "cost_forecast_api_admin_infrastructure_cost_forecast_get",
         "parameters": [
           {
@@ -19761,7 +19706,7 @@
           "Core Admin"
         ],
         "summary": "Performance Summary",
-        "description": "Performance tuning summary \u2014 \u0997\u09a4 N \u0998\u09a8\u09cd\u099f\u09be\u09b0 metrics + recommendations\u0964",
+        "description": "Performance tuning summary — গত N ঘন্টার metrics + recommendations।",
         "operationId": "performance_summary_api_admin_infrastructure_performance_summary_get",
         "parameters": [
           {
@@ -19803,7 +19748,7 @@
           "Core Admin"
         ],
         "summary": "Backup History",
-        "description": "Backup history \u2014 \u09b8\u09be\u09ae\u09cd\u09aa\u09cd\u09b0\u09a4\u09bf\u0995 backups-\u098f\u09b0 \u09a4\u09be\u09b2\u09bf\u0995\u09be (Redis \u09a5\u09c7\u0995\u09c7)\u0964",
+        "description": "Backup history — সাম্প্রতিক backups-এর তালিকা (Redis থেকে)।",
         "operationId": "backup_history_api_admin_infrastructure_disaster_recovery_backups_get",
         "parameters": [
           {
@@ -19845,7 +19790,7 @@
           "Core Admin"
         ],
         "summary": "Trigger Manual Backup",
-        "description": "Manual backup trigger \u2014 admin \u099a\u09be\u0987\u09b2\u09c7 \u098f\u0996\u09a8\u0987 backup \u09a4\u09c8\u09b0\u09bf \u0995\u09b0\u09a4\u09c7 \u09aa\u09be\u09b0\u09c7\u0964",
+        "description": "Manual backup trigger — admin চাইলে এখনই backup তৈরি করতে পারে।",
         "operationId": "trigger_manual_backup_api_admin_infrastructure_disaster_recovery_backup_post",
         "parameters": [
           {
@@ -19887,7 +19832,7 @@
           "Core Admin"
         ],
         "summary": "Backup Schedule Recommendations",
-        "description": "Backup schedule recommendations \u2014 full/incremental frequency + retention \u09aa\u09b0\u09be\u09ae\u09b0\u09cd\u09b6\u0964",
+        "description": "Backup schedule recommendations — full/incremental frequency + retention পরামর্শ।",
         "operationId": "backup_schedule_recommendations_api_admin_infrastructure_disaster_recovery_schedule_get",
         "responses": {
           "200": {
@@ -19907,7 +19852,7 @@
           "Core Admin"
         ],
         "summary": "Auto Scaling Status",
-        "description": "Auto-scaling status \u2014 \u09b8\u09be\u09ae\u09cd\u09aa\u09cd\u09b0\u09a4\u09bf\u0995 scaling actions (Redis \u09a5\u09c7\u0995\u09c7)\u0964",
+        "description": "Auto-scaling status — সাম্প্রতিক scaling actions (Redis থেকে)।",
         "operationId": "auto_scaling_status_api_admin_infrastructure_auto_scaling_status_get",
         "parameters": [
           {
@@ -19949,7 +19894,7 @@
           "Core Admin"
         ],
         "summary": "Get Automation Workflows",
-        "description": "Fetch all automation workflows with full metadata (Plan Section 5).\n\u09ac\u09be\u0982\u09b2\u09be: \u0986\u0997\u09c7 \u09b6\u09c1\u09a7\u09c1 {key: route} dict \u09ab\u09c7\u09b0\u09a4 \u09a6\u09bf\u09a4\u0964 \u098f\u0996\u09a8 \u09aa\u09cd\u09b0\u09a4\u09bf\u099f\u09bf workflow-\u098f\u09b0\nfull policy (timeout, retries, sync/async, sensitive, enabled, version)\n\u09a6\u09c7\u0996\u09be\u09af\u09bc \u2014 admin UI-\u09a4\u09c7 workflow management \u09b8\u09b9\u099c \u0995\u09b0\u09c7\u0964",
+        "description": "Fetch all automation workflows with full metadata (Plan Section 5).\nবাংলা: আগে শুধু {key: route} dict ফেরত দিত। এখন প্রতিটি workflow-এর\nfull policy (timeout, retries, sync/async, sensitive, enabled, version)\nদেখায় — admin UI-তে workflow management সহজ করে।",
         "operationId": "get_automation_workflows_api_admin_automation_workflows_get",
         "responses": {
           "200": {
@@ -19969,7 +19914,7 @@
           "Core Admin"
         ],
         "summary": "List All Integrations",
-        "description": "Plan Section 29: \u09b8\u09ac optional integration-\u098f\u09b0 overview\u0964\nAdmin dashboard-\u098f \u09a6\u09c7\u0996\u09be\u09a8\u09cb\u09b0 \u099c\u09a8\u09cd\u09af status, scope, fallback \u09b8\u09b9\u0964\n\u0995\u09cb\u09a8\u09cb secret expose \u0995\u09b0\u09c7 \u09a8\u09be\u0964",
+        "description": "Plan Section 29: সব optional integration-এর overview।\nAdmin dashboard-এ দেখানোর জন্য status, scope, fallback সহ।\nকোনো secret expose করে না।",
         "operationId": "list_all_integrations_api_admin_integrations_get",
         "responses": {
           "200": {
@@ -19989,7 +19934,7 @@
           "Core Admin"
         ],
         "summary": "Get Integration Health",
-        "description": "Plan Section 29: \u098f\u0995\u099f\u09bf specific integration-\u098f\u09b0 detailed health/status\u0964\n\u09ad\u09c1\u09b2 key \u09a6\u09bf\u09b2\u09c7 404\u0964 Secret \u0995\u0996\u09a8\u09cb expose \u09b9\u09af\u09bc \u09a8\u09be\u0964",
+        "description": "Plan Section 29: একটি specific integration-এর detailed health/status।\nভুল key দিলে 404। Secret কখনো expose হয় না।",
         "operationId": "get_integration_health_api_admin_integrations__key__health_get",
         "parameters": [
           {
@@ -20030,7 +19975,7 @@
           "Core Admin"
         ],
         "summary": "List Automation Executions",
-        "description": "Plan Section 7: automation execution history (audit trail)\u0964\noptional filters: workflow_key, status\u0964 \u09b8\u09b0\u09cd\u09ac\u09b6\u09c7\u09b7 `limit` \u099f\u09be execution \u09a6\u09c7\u0996\u09be\u09af\u09bc\u0964",
+        "description": "Plan Section 7: automation execution history (audit trail)।\noptional filters: workflow_key, status। সর্বশেষ `limit` টা execution দেখায়।",
         "operationId": "list_automation_executions_api_admin_automation_executions_get",
         "parameters": [
           {
@@ -20092,7 +20037,7 @@
           "Core Admin"
         ],
         "summary": "Get Execution By Event",
-        "description": "Plan Section 7: \u098f\u0995\u099f\u09bf specific event_id-\u098f\u09b0 \u09b8\u09ac execution attempts \u09a6\u09c7\u0996\u09be\u09af\u09bc\n(retry history \u09b8\u09b9)\u0964",
+        "description": "Plan Section 7: একটি specific event_id-এর সব execution attempts দেখায়\n(retry history সহ)।",
         "operationId": "get_execution_by_event_api_admin_automation_executions__event_id__get",
         "parameters": [
           {
@@ -20257,7 +20202,7 @@
           "Traffic Control"
         ],
         "summary": "Get Live Traffic",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be \u09ae\u09a8\u09cd\u09a4\u09ac\u09cd\u09af: \u09b0\u09bf\u09df\u09c7\u09b2-\u099f\u09be\u0987\u09ae \u099f\u09cd\u09b0\u09be\u09ab\u09bf\u0995, p95 \u09b2\u09cd\u09af\u09be\u099f\u09c7\u09a8\u09cd\u09b8\u09bf \u098f\u09ac\u0982 \u0985\u09cd\u09af\u09be\u09b0\u09b0 \u09b0\u09c7\u099f\u0964\n\u098f\u099f\u09bf \u09b8\u09cd\u099f\u09c1\u09a1\u09bf\u0993 \u0995\u09cd\u09b2\u09be\u09df\u09c7\u09a8\u09cd\u099f \u09ac\u09be \u09ab\u09cd\u09b2\u09be\u099f\u09be\u09b0 \u09a1\u09cd\u09af\u09be\u09b6\u09ac\u09cb\u09b0\u09cd\u09a1\u09c7 \u09b2\u09be\u0987\u09ad \u09b8\u09cd\u099f\u09cd\u09b0\u09bf\u09ae\u09bf\u0982 \u098f\u09b0 \u099c\u09a8\u09cd\u09af \u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0 \u09b9\u09ac\u09c7\u0964\n\n\u09b0\u09c7\u09b8\u09cd\u09aa\u09a8\u09cd\u09b8 \u09b6\u09c7\u09aa: TrafficData = { current_rps, window_30min, distribution }\n(frontend flat shape \u0985\u09a8\u09c1\u09af\u09be\u09df\u09c0 \u2014 wrapper \u09a8\u09df)\u0964",
+        "description": "বাংলা মন্তব্য: রিয়েল-টাইম ট্রাফিক, p95 ল্যাটেন্সি এবং অ্যারর রেট।\nএটি স্টুডিও ক্লায়েন্ট বা ফ্লাটার ড্যাশবোর্ডে লাইভ স্ট্রিমিং এর জন্য ব্যবহার হবে।\n\nরেস্পন্স শেপ: TrafficData = { current_rps, window_30min, distribution }\n(frontend flat shape অনুযায়ী — wrapper নয়)।",
         "operationId": "get_live_traffic_api_admin_traffic_live_get",
         "responses": {
           "200": {
@@ -20281,7 +20226,7 @@
           "Admin Librarian"
         ],
         "summary": "Get Quarantine Queue",
-        "description": "\u0995\u09cb\u09df\u09be\u09b0\u09c7\u09a8\u09cd\u099f\u09be\u0987\u09a8\u09c7 \u09a5\u09be\u0995\u09be \u09aa\u09c7\u09a8\u09cd\u09a1\u09bf\u0982 \u09b8\u09cd\u0995\u09bf\u09b2\u0997\u09c1\u09b2\u09cb\u09b0 \u09b2\u09bf\u09b8\u09cd\u099f \u09a1\u09cd\u09af\u09be\u09b6\u09ac\u09cb\u09b0\u09cd\u09a1\u09c7 \u09aa\u09be\u09a0\u09be\u09df",
+        "description": "কোয়ারেন্টাইনে থাকা পেন্ডিং স্কিলগুলোর লিস্ট ড্যাশবোর্ডে পাঠায়",
         "operationId": "get_quarantine_queue_api_api_admin_librarian_queue_get",
         "responses": {
           "200": {
@@ -20308,7 +20253,7 @@
           "Admin Librarian"
         ],
         "summary": "Process Skill Action",
-        "description": "Admin \u098f\u09b0 \u0985\u09cd\u09af\u09be\u0995\u09b6\u09a8 \u09b0\u09bf\u0995\u09cb\u09af\u09bc\u09c7\u09b8\u09cd\u099f \u0997\u09cd\u09b0\u09b9\u09a3 \u0995\u09b0\u09c7 \u09b8\u09be\u09a5\u09c7 \u09b8\u09be\u09a5\u09c7 \u09e8\u09e6\u09e6 OK \u09b0\u09c7\u09b8\u09aa\u09a8\u09cd\u09b8 \u09a6\u09c7\u09af\u09bc\u0964\n\u09ad\u09be\u09b0\u09c0 \u09ab\u09be\u0987\u09b2 \u0985\u09aa\u09be\u09b0\u09c7\u09b6\u09a8 \u098f\u09ac\u0982 \u09a1\u09bf\u09b8\u09cd\u0995 \u09b0\u09be\u0987\u099f \u09ac\u09cd\u09af\u09be\u0995\u0997\u09cd\u09b0\u09be\u0989\u09a8\u09cd\u09a1\u09c7 \u09aa\u09cd\u09b0\u09b8\u09c7\u09b8 \u09b9\u09af\u09bc\u0964",
+        "description": "Admin এর অ্যাকশন রিকোয়েস্ট গ্রহণ করে সাথে সাথে ২০০ OK রেসপন্স দেয়।\nভারী ফাইল অপারেশন এবং ডিস্ক রাইট ব্যাকগ্রাউন্ডে প্রসেস হয়।",
         "operationId": "process_skill_action_api_api_admin_librarian_process_post",
         "requestBody": {
           "content": {
@@ -20742,7 +20687,7 @@
           "Admin Workspaces"
         ],
         "summary": "Bind Target Repository",
-        "description": "\u09a1\u09be\u0987\u09a8\u09be\u09ae\u09bf\u0995\u09cd\u09af\u09be\u09b2\u09bf \u09a8\u09a4\u09c1\u09a8 \u098f\u0995\u099f\u09bf \u099f\u09be\u09b0\u09cd\u0997\u09c7\u099f \u09b0\u09c7\u09aa\u09cb \u09ac\u09be \u09aa\u09cd\u09b2\u09cd\u09af\u09be\u099f\u09ab\u09b0\u09cd\u09ae \u09ac\u09be\u0987\u09a8\u09cd\u09a1 \u0993 \u09b0\u09c7\u099c\u09bf\u09b8\u09cd\u099f\u09be\u09b0 \u0995\u09b0\u09c7\u0964",
+        "description": "ডাইনামিক্যালি নতুন একটি টার্গেট রেপো বা প্ল্যাটফর্ম বাইন্ড ও রেজিস্টার করে।",
         "operationId": "bind_target_repository_admin_api_workspaces_bind_target_post",
         "parameters": [
           {
@@ -20802,7 +20747,7 @@
           "Admin Workspaces"
         ],
         "summary": "List Target Repositories",
-        "description": "\u09b0\u09c7\u099c\u09bf\u09b8\u09cd\u099f\u09be\u09b0\u09cd\u09a1 \u09b8\u09ae\u09b8\u09cd\u09a4 \u09e7\u09e6\u09e6+ \u099f\u09be\u09b0\u09cd\u0997\u09c7\u099f \u09b0\u09c7\u09aa\u09cb \u0993 \u09aa\u09cd\u09b2\u09cd\u09af\u09be\u099f\u09ab\u09b0\u09cd\u09ae\u09c7\u09b0 \u09a4\u09be\u09b2\u09bf\u0995\u09be \u09b0\u09bf\u099f\u09be\u09b0\u09cd\u09a8 \u0995\u09b0\u09c7\u0964",
+        "description": "রেজিস্টার্ড সমস্ত ১০০+ টার্গেট রেপো ও প্ল্যাটফর্মের তালিকা রিটার্ন করে।",
         "operationId": "list_target_repositories_admin_api_workspaces_targets_get",
         "responses": {
           "200": {
@@ -24538,7 +24483,7 @@
           "Command Center"
         ],
         "summary": "Command Metrics",
-        "description": "Aggregated system metrics for admin Command Center.\n\nReturns background service status, system resources, cache stats,\nand error counts \u2014 all in one call.",
+        "description": "Aggregated system metrics for admin Command Center.\n\nReturns background service status, system resources, cache stats,\nand error counts — all in one call.",
         "operationId": "command_metrics_admin_api_commandcenter_metrics_get",
         "responses": {
           "200": {
@@ -25663,7 +25608,7 @@
           "crawler-admin"
         ],
         "summary": "Enable Policy",
-        "description": "Activates a policy \u2014 governed scout crawl \u098f\u0987 policy-\u0987 follow \u0995\u09b0\u09ac\u09c7\u0964",
+        "description": "Activates a policy — governed scout crawl এই policy-ই follow করবে।",
         "operationId": "enable_policy_api_v1_admin_crawler_policies__policy_id__enable_post",
         "parameters": [
           {
@@ -25706,7 +25651,7 @@
           "crawler-admin"
         ],
         "summary": "Disable Policy",
-        "description": "Deactivates a policy \u2014 fail-closed: inactive policy \u0995\u09bf\u099b\u09c1\u0987 authorize \u0995\u09b0\u09c7 \u09a8\u09be\u0964",
+        "description": "Deactivates a policy — fail-closed: inactive policy কিছুই authorize করে না।",
         "operationId": "disable_policy_api_v1_admin_crawler_policies__policy_id__disable_post",
         "parameters": [
           {
@@ -25898,7 +25843,7 @@
           "connections"
         ],
         "summary": "My Workspace",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be: backend-authoritative user \u09b8\u09cd\u0995\u09cb\u09aa \u2014 \u09b6\u09c1\u09a7\u09c1 \u09af\u09be user \u09ac\u09cd\u09af\u09ac\u09b9\u09be\u09b0/\u0985\u09a8\u09c1\u09ae\u09cb\u09a6\u09bf\u09a4, \u09a4\u09be\u0987 \u09ab\u09c7\u09b0\u09a4\u0964",
+        "description": "বাংলা: backend-authoritative user স্কোপ — শুধু যা user ব্যবহার/অনুমোদিত, তাই ফেরত।",
         "operationId": "my_workspace_api_v1_connections_my_workspace_get",
         "parameters": [
           {
@@ -25940,7 +25885,7 @@
           "connections"
         ],
         "summary": "Detect Connection",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be: URL paste \u0995\u09b0\u09b2\u09c7\u0987 \u0995\u09c0 \u09a7\u09b0\u09a8\u09c7\u09b0 connection \u09b8\u09c7\u099f\u09be \u09b6\u09a8\u09be\u0995\u09cd\u09a4 \u0995\u09b0\u09c7 (Acid Test 10)\u0964",
+        "description": "বাংলা: URL paste করলেই কী ধরনের connection সেটা শনাক্ত করে (Acid Test 10)।",
         "operationId": "detect_connection_api_v1_connections_detect_post",
         "parameters": [
           {
@@ -25992,7 +25937,7 @@
           "connections"
         ],
         "summary": "Register Connection",
-        "description": "\u09ac\u09be\u0982\u09b2\u09be: custom tool \u09a8\u09bf\u09ac\u09a8\u09cd\u09a7\u09a8 \u2014 governed path, audit log, tenant-scoped capability\u0964\n\nPhase 1 (One connection registry): \u0986\u0997\u09c7 registration \u09b6\u09c1\u09a7\u09c1 capability registry-\u09a4\u09c7\n\u09af\u09c7\u09a4, ConnectionRegistry (supremeai_connections \u099f\u09c7\u09ac\u09bf\u09b2) \u09ab\u09be\u0981\u0995\u09be \u09a5\u09be\u0995\u09a4 \u098f\u09ac\u0982\nconnection_id \u099b\u09bf\u09b2 \u09ad\u09c1\u09af\u09bc\u09be (fabricated)\u0964 \u098f\u0996\u09a8 \u09a6\u09c1\u099f\u09cb \u09b0\u09c7\u099c\u09bf\u09b8\u09cd\u099f\u09cd\u09b0\u09bf\u09a4\u09c7\u0987 write-through \u09b9\u09af\u09bc \u2014\nDB persist \u09b9\u09b2\u09c7 \u09b8\u09a4\u09cd\u09af\u09bf\u0995\u09be\u09b0\u09c7\u09b0 connection record id \u09ab\u09c7\u09b0\u09a4 \u09af\u09be\u09af\u09bc; persist \u09a8\u09be \u09b9\u09b2\u09c7\u0993\ncapability path \u0995\u09be\u099c \u099a\u09be\u09b2\u09bf\u09af\u09bc\u09c7 \u09af\u09be\u09af\u09bc (Graceful Degradation, \u09b8\u0999\u09cd\u0997\u09c7 \u09b8\u09ce warning log)\u0964",
+        "description": "বাংলা: custom tool নিবন্ধন — governed path, audit log, tenant-scoped capability।\n\nPhase 1 (One connection registry): আগে registration শুধু capability registry-তে\nযেত, ConnectionRegistry (supremeai_connections টেবিল) ফাঁকা থাকত এবং\nconnection_id ছিল ভুয়া (fabricated)। এখন দুটো রেজিস্ট্রিতেই write-through হয় —\nDB persist হলে সত্যিকারের connection record id ফেরত যায়; persist না হলেও\ncapability path কাজ চালিয়ে যায় (Graceful Degradation, সঙ্গে সৎ warning log)।",
         "operationId": "register_connection_api_v1_connections_register_post",
         "parameters": [
           {
@@ -26607,7 +26552,7 @@
           "agent_review_workflow"
         ],
         "summary": "Execute Trio",
-        "description": "Run the Gemini \u2192 Kilo \u2192 Cline pipeline and return the full result.",
+        "description": "Run the Gemini → Kilo → Cline pipeline and return the full result.",
         "operationId": "execute_trio_api_v1_agent_review_workflow_execute_post",
         "requestBody": {
           "content": {
@@ -27358,7 +27303,7 @@
           "diagram-to-architecture"
         ],
         "summary": "Api To Terraform",
-        "description": "\u09a1\u09be\u09af\u09bc\u09be\u0997\u09cd\u09b0\u09be\u09ae \u2192 Terraform HCL\u0964",
+        "description": "ডায়াগ্রাম → Terraform HCL।",
         "operationId": "api_to_terraform_diagram_to_terraform_post",
         "requestBody": {
           "content": {
@@ -27398,7 +27343,7 @@
           "diagram-to-architecture"
         ],
         "summary": "Api To Kubernetes",
-        "description": "\u09a1\u09be\u09af\u09bc\u09be\u0997\u09cd\u09b0\u09be\u09ae \u2192 Kubernetes YAML\u0964",
+        "description": "ডায়াগ্রাম → Kubernetes YAML।",
         "operationId": "api_to_kubernetes_diagram_to_kubernetes_post",
         "requestBody": {
           "content": {
@@ -27438,7 +27383,7 @@
           "diagram-to-architecture"
         ],
         "summary": "Api To Schema",
-        "description": "ER \u09a1\u09be\u09af\u09bc\u09be\u0997\u09cd\u09b0\u09be\u09ae \u2192 SQLAlchemy/Prisma schema\u0964",
+        "description": "ER ডায়াগ্রাম → SQLAlchemy/Prisma schema।",
         "operationId": "api_to_schema_diagram_to_schema_post",
         "requestBody": {
           "content": {
@@ -27918,7 +27863,7 @@
           "missions"
         ],
         "summary": "Approve Mission",
-        "description": "PLANNED \u2192 APPROVED \u2192 ASSIGNED (auto-assigns strategy + agent).",
+        "description": "PLANNED → APPROVED → ASSIGNED (auto-assigns strategy + agent).",
         "operationId": "approve_mission_api_v1_missions__mission_id__approve_post",
         "parameters": [
           {
@@ -27978,7 +27923,7 @@
           "missions"
         ],
         "summary": "Start Mission",
-        "description": "ASSIGNED \u2192 RUNNING (Phase 01 in_progress).",
+        "description": "ASSIGNED → RUNNING (Phase 01 in_progress).",
         "operationId": "start_mission_api_v1_missions__mission_id__start_post",
         "parameters": [
           {
@@ -28098,7 +28043,7 @@
           "missions"
         ],
         "summary": "Fail Mission",
-        "description": "RUNNING \u2192 FAILED with a failure reason.",
+        "description": "RUNNING → FAILED with a failure reason.",
         "operationId": "fail_mission_api_v1_missions__mission_id__fail_post",
         "parameters": [
           {
@@ -28158,7 +28103,7 @@
           "missions"
         ],
         "summary": "Repair Mission",
-        "description": "FAILED \u2192 REPAIRING \u2192 rotate strategy / reset phases \u2192 RUNNING (or\nterminal FAILED when no strategy options remain).",
+        "description": "FAILED → REPAIRING → rotate strategy / reset phases → RUNNING (or\nterminal FAILED when no strategy options remain).",
         "operationId": "repair_mission_api_v1_missions__mission_id__repair_post",
         "parameters": [
           {
@@ -28501,7 +28446,7 @@
           "mcp-hub"
         ],
         "summary": "Update Client",
-        "description": "Role/provider update only \u2014 cross-tenant objects are 404 (not 403).",
+        "description": "Role/provider update only — cross-tenant objects are 404 (not 403).",
         "operationId": "update_client_api_v1_mcp_clients__client_id__patch",
         "parameters": [
           {
@@ -28554,7 +28499,7 @@
           "mcp-hub"
         ],
         "summary": "Revoke Client",
-        "description": "Soft revoke \u2014 the row is kept for audit, tokens stop being honoured.",
+        "description": "Soft revoke — the row is kept for audit, tokens stop being honoured.",
         "operationId": "revoke_client_api_v1_mcp_clients__client_id__delete",
         "parameters": [
           {
@@ -28599,7 +28544,7 @@
           "mcp-hub"
         ],
         "summary": "Rotate Client Token",
-        "description": "Rotate the client token \u2014 plaintext appears in THIS response only.",
+        "description": "Rotate the client token — plaintext appears in THIS response only.",
         "operationId": "rotate_client_token_api_v1_mcp_clients__client_id__rotate_post",
         "parameters": [
           {
@@ -28644,7 +28589,7 @@
           "runs"
         ],
         "summary": "Create Run",
-        "description": "Create a run \u2014 returns the ``run_id`` ack immediately (async boundary).\n\nIdentity (``user_id``) is always the authenticated principal. If the\ncaller supplies an ``idempotency_key`` that already exists, the existing\nrun's ack is returned (200 semantics via 201-with-same-id).",
+        "description": "Create a run — returns the ``run_id`` ack immediately (async boundary).\n\nIdentity (``user_id``) is always the authenticated principal. If the\ncaller supplies an ``idempotency_key`` that already exists, the existing\nrun's ack is returned (200 semantics via 201-with-same-id).",
         "operationId": "create_run_api_v1_runs_post",
         "requestBody": {
           "required": true,
@@ -29619,7 +29564,7 @@
         },
         "type": "object",
         "title": "AgentHealthFilter",
-        "description": "Optional request body for POST /health/agents \u2014 filter by agent ids."
+        "description": "Optional request body for POST /health/agents — filter by agent ids."
       },
       "AgentStatsResponse": {
         "properties": {
@@ -30290,7 +30235,7 @@
           "url"
         ],
         "title": "BindTargetRequest",
-        "description": "\u09b0\u09c7\u09aa\u09cb \u09ac\u09be \u09aa\u09cd\u09b2\u09cd\u09af\u09be\u099f\u09ab\u09b0\u09cd\u09ae \u09ac\u09be\u0987\u09a8\u09cd\u09a1\u09bf\u0982 \u09b0\u09bf\u0995\u09cb\u09af\u09bc\u09c7\u09b8\u09cd\u099f \u09b8\u09cd\u0995\u09bf\u09ae\u09be\u0964"
+        "description": "রেপো বা প্ল্যাটফর্ম বাইন্ডিং রিকোয়েস্ট স্কিমা।"
       },
       "Body_api_detect_tree_tools_image_to_tree_post": {
         "properties": {
@@ -35059,7 +35004,7 @@
           "goal_text"
         ],
         "title": "MissionCreate",
-        "description": "POST /api/v1/missions request body.\n\n``owner_id`` is NOT accepted here \u2014 identity is ALWAYS derived from the\nauthenticated principal (JWT ``sub``), never from the request body."
+        "description": "POST /api/v1/missions request body.\n\n``owner_id`` is NOT accepted here — identity is ALWAYS derived from the\nauthenticated principal (JWT ``sub``), never from the request body."
       },
       "MissionOut": {
         "properties": {
@@ -35873,7 +35818,7 @@
           "FULL_CONTROL"
         ],
         "title": "PermissionScope",
-        "description": "\u09aa\u09be\u09b0\u09ae\u09bf\u09b6\u09a8 \u09b8\u09cd\u0995\u09cb\u09aa \u098f\u09a8\u09be\u09ae - \u09b0\u09bf\u09a1-\u0985\u09a8\u09b2\u09bf \u09ac\u09a8\u09be\u09ae \u09ab\u09c1\u09b2-\u0995\u09a8\u09cd\u099f\u09cd\u09b0\u09cb\u09b2\u0964"
+        "description": "পারমিশন স্কোপ এনাম - রিড-অনলি বনাম ফুল-কন্ট্রোল।"
       },
       "PhaseSpec": {
         "properties": {
@@ -36137,7 +36082,7 @@
         },
         "type": "object",
         "title": "PolicyUpdatePayload",
-        "description": "Partial update \u2014 \u09b6\u09c1\u09a7\u09c1 \u09aa\u09be\u09a0\u09be\u09a8\u09cb \u09ab\u09bf\u09b2\u09cd\u09a1 \u09ac\u09a6\u09b2\u09be\u09af\u09bc (None = unchanged)\u0964"
+        "description": "Partial update — শুধু পাঠানো ফিল্ড বদলায় (None = unchanged)।"
       },
       "PolicyUpdateRequest": {
         "properties": {
@@ -37500,7 +37445,7 @@
           "retry_class"
         ],
         "title": "RunClassifyRequest",
-        "description": "Failure classification \u2014 the fixed 8-class retry taxonomy."
+        "description": "Failure classification — the fixed 8-class retry taxonomy."
       },
       "RunCreate": {
         "properties": {
@@ -37683,7 +37628,7 @@
           "run_type"
         ],
         "title": "RunCreate",
-        "description": "Creation request \u2014 the async boundary returns a ``run_id`` ack."
+        "description": "Creation request — the async boundary returns a ``run_id`` ack."
       },
       "RunEventOut": {
         "properties": {
@@ -38058,7 +38003,7 @@
           "updated_at"
         ],
         "title": "RunOut",
-        "description": "Canonical run view \u2014 the M1 verdict field list, serialized."
+        "description": "Canonical run view — the M1 verdict field list, serialized."
       },
       "RunRetryRequest": {
         "properties": {
@@ -38089,7 +38034,7 @@
         },
         "type": "object",
         "title": "RunRetryRequest",
-        "description": "Retry scheduling \u2014 RUNNING -> RETRYING under budget + guard."
+        "description": "Retry scheduling — RUNNING -> RETRYING under budget + guard."
       },
       "RunTransitionRequest": {
         "properties": {
@@ -38128,7 +38073,7 @@
           "to"
         ],
         "title": "RunTransitionRequest",
-        "description": "Lifecycle transition request \u2014 ``to`` must be a legal next state."
+        "description": "Lifecycle transition request — ``to`` must be a legal next state."
       },
       "RunUsageRequest": {
         "properties": {
@@ -38159,7 +38104,7 @@
         },
         "type": "object",
         "title": "RunUsageRequest",
-        "description": "Usage report \u2014 admission-controlled against the run's budgets."
+        "description": "Usage report — admission-controlled against the run's budgets."
       },
       "SAMLAssertionRequest": {
         "properties": {
@@ -39624,7 +39569,7 @@
           "API_ENDPOINT"
         ],
         "title": "TargetPlatformType",
-        "description": "\u099f\u09be\u09b0\u09cd\u0997\u09c7\u099f \u09aa\u09cd\u09b2\u09cd\u09af\u09be\u099f\u09ab\u09b0\u09cd\u09ae \u099f\u09be\u0987\u09aa \u098f\u09a8\u09be\u09ae\u0964"
+        "description": "টার্গেট প্ল্যাটফর্ম টাইপ এনাম।"
       },
       "TargetResponse": {
         "properties": {
@@ -39673,7 +39618,7 @@
           "can_write"
         ],
         "title": "TargetResponse",
-        "description": "\u099f\u09be\u09b0\u09cd\u0997\u09c7\u099f \u09b0\u09c7\u09b8\u09aa\u09a8\u09cd\u09b8 \u09b8\u09cd\u0995\u09bf\u09ae\u09be\u0964"
+        "description": "টার্গেট রেসপন্স স্কিমা।"
       },
       "TaskDeliverRequest": {
         "properties": {
@@ -40206,7 +40151,7 @@
         },
         "type": "object",
         "title": "TemplateUseRequest",
-        "description": "Body for the 'use' endpoint \u2014 provides variable values."
+        "description": "Body for the 'use' endpoint — provides variable values."
       },
       "TenantLimitCreate": {
         "properties": {
