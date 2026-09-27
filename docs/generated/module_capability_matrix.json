@@ -1944,6 +1944,7 @@
       "capability_signals": [
         "browser",
         "execute",
+        "health",
         "register"
       ],
       "classification": "human_review",
@@ -1995,6 +1996,19 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/browser/_crown_jewel.py"
+    },
+    {
+      "capability_signals": [
+        "browser",
+        "capability",
+        "health",
+        "memory",
+        "register"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/browser/_health.py"
     },
     {
       "capability_signals": [
@@ -2111,18 +2125,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/browser_action_registry.py"
-    },
-    {
-      "capability_signals": [
-        "browser",
-        "capability",
-        "health",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/api/routes/browser_routes.py"
     },
     {
       "capability_signals": [
@@ -4497,15 +4499,6 @@
       "path": "backend/core/circles/registry.py"
     },
     {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/circuit_breaker.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -6706,7 +6699,8 @@
     {
       "capability_signals": [
         "execute",
-        "health"
+        "health",
+        "memory"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -10700,6 +10694,15 @@
       "path": "backend/tests/adaptive_engine/test_platform_learner.py"
     },
     {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/adaptive_engine/test_supabase_vector_backend.py"
+    },
+    {
       "capability_signals": [],
       "classification": "test",
       "entrypoints": [],
@@ -10996,7 +10999,8 @@
         "browser",
         "capability",
         "health",
-        "memory"
+        "memory",
+        "register"
       ],
       "classification": "test",
       "entrypoints": [],
@@ -14806,7 +14810,8 @@
     },
     {
       "capability_signals": [
-        "browser"
+        "browser",
+        "execute"
       ],
       "classification": "test",
       "entrypoints": [],
@@ -15225,6 +15230,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/services/test_living_engine.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/services/test_memory_cosine_dim_tolerance.py"
     },
     {
       "capability_signals": [
@@ -26728,5 +26742,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3052
+  "source_file_count": 3053
 }
