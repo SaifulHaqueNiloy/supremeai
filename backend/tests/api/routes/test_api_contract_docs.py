@@ -48,7 +48,13 @@ class TestHealthAggregationMount:
         router_text = HEALTH_AGG.read_text(encoding="utf-8")
         assert 'prefix="/admin-api"' in router_text
         frontend = (
-            REPO_ROOT / "frontend" / "src" / "components" / "admin" / "infra" / "ServiceHealthMonitor.tsx"
+            REPO_ROOT
+            / "frontend"
+            / "src"
+            / "components"
+            / "admin"
+            / "infra"
+            / "ServiceHealthMonitor.tsx"
         ).read_text(encoding="utf-8")
         assert "/admin-api/health-aggregation" in frontend
         assert "/api/admin-api" not in frontend, "frontend must not call the double-prefixed path"
