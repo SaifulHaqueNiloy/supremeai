@@ -20,6 +20,7 @@ flowchart LR
   n_capability_1ebf3e7637e518f88f62["Deep Research"]
   n_capability_221f4abc23701d2ed343["Global Memory"]
   n_capability_223b7358f0f4eef50645["User Conversations"]
+  n_capability_23c258e01ba33f22e1b7["external-agents"]
   n_capability_2a03c0d6c37e1a6864fa["Admin Librarian"]
   n_capability_31e8f1f6324662c46afd["service-topology"]
   n_capability_32d2a3b54ad2841cc87a["mobile-bff"]
@@ -488,6 +489,7 @@ flowchart LR
   n_route_6abae4870ee578e2a398["DELETE /api/share/{share_id}"]
   n_route_6abf0736692864314d1e["POST /admin-api/feature-flags"]
   n_route_6b74ec555674a062b317["POST /admin-api/tenant-limits/{tenant_id}/reset"]
+  n_route_6b762ba15adfb8b66160["POST /api/v1/external-agents/jobs"]
   n_route_6b76aed214ee331857ad["GET /api/browser/health"]
   n_route_6b86f0d5687b82c60161["DELETE /api/artifacts/{artifact_id}"]
   n_route_6b9ceb778507fd86b3f5["POST /api/stream/chat"]
@@ -520,6 +522,7 @@ flowchart LR
   n_route_730d2051ccc1fb57720c["POST /api/browser/automation/sessions"]
   n_route_738e63e62c0822dd3b05["GET /api/v1/admin/config"]
   n_route_73e523abfb2be5e2f572["POST /tools/image-to-code"]
+  n_route_73fffe0e50a7b95ad2c8["GET /api/v1/external-agents/jobs/{job_id}"]
   n_route_749f296776a271a29fce["GET /admin-api/users"]
   n_route_74f0c7b3fac339985c64["POST /api/chat/orchestrate"]
   n_route_759830217356b89224d8["PATCH /api/conversations/{conversation_id}/merge"]
@@ -847,6 +850,7 @@ flowchart LR
   n_route_d30bf4b682831184a092["GET /api/api-keys/all"]
   n_route_d31644fb33b57047e2e2["POST /marketplace/search"]
   n_route_d32582e9114aa970625a["GET /api/preferences/{user_id}/stream"]
+  n_route_d3481d9841bcf80cd97a["DELETE /api/v1/external-agents/jobs/{job_id}"]
   n_route_d3596f081c6ef01832b6["GET /api/v1/ecosystem/tasks"]
   n_route_d3f668ee8a362e6e1bbc["POST /pair/solve"]
   n_route_d3fe7bb6745ab6f75442["GET /api/skills/search"]
@@ -1351,6 +1355,7 @@ flowchart LR
   n_contract_9337269577d524de529e -->|defines| n_route_6abae4870ee578e2a398
   n_contract_9337269577d524de529e -->|defines| n_route_6abf0736692864314d1e
   n_contract_9337269577d524de529e -->|defines| n_route_6b74ec555674a062b317
+  n_contract_9337269577d524de529e -->|defines| n_route_6b762ba15adfb8b66160
   n_contract_9337269577d524de529e -->|defines| n_route_6b76aed214ee331857ad
   n_contract_9337269577d524de529e -->|defines| n_route_6b86f0d5687b82c60161
   n_contract_9337269577d524de529e -->|defines| n_route_6b9ceb778507fd86b3f5
@@ -1383,6 +1388,7 @@ flowchart LR
   n_contract_9337269577d524de529e -->|defines| n_route_730d2051ccc1fb57720c
   n_contract_9337269577d524de529e -->|defines| n_route_738e63e62c0822dd3b05
   n_contract_9337269577d524de529e -->|defines| n_route_73e523abfb2be5e2f572
+  n_contract_9337269577d524de529e -->|defines| n_route_73fffe0e50a7b95ad2c8
   n_contract_9337269577d524de529e -->|defines| n_route_749f296776a271a29fce
   n_contract_9337269577d524de529e -->|defines| n_route_74f0c7b3fac339985c64
   n_contract_9337269577d524de529e -->|defines| n_route_759830217356b89224d8
@@ -1710,6 +1716,7 @@ flowchart LR
   n_contract_9337269577d524de529e -->|defines| n_route_d30bf4b682831184a092
   n_contract_9337269577d524de529e -->|defines| n_route_d31644fb33b57047e2e2
   n_contract_9337269577d524de529e -->|defines| n_route_d32582e9114aa970625a
+  n_contract_9337269577d524de529e -->|defines| n_route_d3481d9841bcf80cd97a
   n_contract_9337269577d524de529e -->|defines| n_route_d3596f081c6ef01832b6
   n_contract_9337269577d524de529e -->|defines| n_route_d3f668ee8a362e6e1bbc
   n_contract_9337269577d524de529e -->|defines| n_route_d3fe7bb6745ab6f75442
@@ -2250,6 +2257,7 @@ flowchart LR
   n_route_6abf0736692864314d1e -->|exposes| n_capability_a43b0ca14c88d4f2694d
   n_route_6abf0736692864314d1e -->|requires| n_control_8beb2443d48d78613952
   n_route_6b74ec555674a062b317 -->|exposes| n_capability_654aa14b05faffbe9b54
+  n_route_6b762ba15adfb8b66160 -->|exposes| n_capability_23c258e01ba33f22e1b7
   n_route_6b76aed214ee331857ad -->|exposes| n_capability_f007deed71db690a50ee
   n_route_6b86f0d5687b82c60161 -->|exposes| n_capability_8907ae938c1d48ec41d3
   n_route_6b9ceb778507fd86b3f5 -->|exposes| n_capability_71416b9610c0e597a155
@@ -2283,6 +2291,7 @@ flowchart LR
   n_route_738e63e62c0822dd3b05 -->|requires| n_control_8beb2443d48d78613952
   n_route_73e523abfb2be5e2f572 -->|exposes| n_capability_48e36bfcf9acb468662b
   n_route_73e523abfb2be5e2f572 -->|exposes| n_capability_75439a8e077189d31fd2
+  n_route_73fffe0e50a7b95ad2c8 -->|exposes| n_capability_23c258e01ba33f22e1b7
   n_route_749f296776a271a29fce -->|exposes| n_capability_a43b0ca14c88d4f2694d
   n_route_749f296776a271a29fce -->|requires| n_control_8beb2443d48d78613952
   n_route_74f0c7b3fac339985c64 -->|exposes| n_capability_54f1fd5fdfa5c6f9130b
@@ -2643,6 +2652,7 @@ flowchart LR
   n_route_d30bf4b682831184a092 -->|exposes| n_capability_11634991d0e09f25dcf9
   n_route_d31644fb33b57047e2e2 -->|exposes| n_capability_784f9b65fa5c3eda80db
   n_route_d32582e9114aa970625a -->|exposes| n_capability_1dcf4ffcc88123a8421d
+  n_route_d3481d9841bcf80cd97a -->|exposes| n_capability_23c258e01ba33f22e1b7
   n_route_d3596f081c6ef01832b6 -->|exposes| n_capability_7c9e50d25eb42729ca81
   n_route_d3f668ee8a362e6e1bbc -->|exposes| n_capability_e21bbba2a5e3e77f203e
   n_route_d3fe7bb6745ab6f75442 -->|exposes| n_capability_199084c23fd34aafdc71
