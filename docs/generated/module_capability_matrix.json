@@ -4111,41 +4111,6 @@
       "path": "backend/core/base.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/behavioral_intelligence/__init__.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/behavioral_intelligence/policy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/behavioral_intelligence/schema.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/behavioral_intelligence/state_estimator.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/behavioral_intelligence/strategy_router.py"
-    },
-    {
       "capability_signals": [
         "browser"
       ],
@@ -8228,16 +8193,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/evolution/change_proposal.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/evolution/evolution_orchestrator.py"
     },
     {
       "capability_signals": [],
