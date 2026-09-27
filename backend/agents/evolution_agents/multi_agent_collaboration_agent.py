@@ -14,10 +14,10 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.logging_config import logger
-from services.llm.llm_router import LLMRouter
 
 COLLAB_CACHE_TTL = 300
 
@@ -63,8 +63,8 @@ class MultiAgentCollaborationAgent:
     Coordinates complex interactions between multiple agents.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm = llm_router or ModelRouter()
         self.cache = get_cache()
         self._agents: dict[str, AgentCapability] = {}
         self._tasks: dict[str, CollaborationTask] = {}
@@ -108,14 +108,14 @@ class MultiAgentCollaborationAgent:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=config_cache.get("multi_agent_collaboration_agent_max_tokens", 1000),
             )
             import json
 
-            content = result.get("content", "{}")
+            content = result.get("text", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             decomposition = TaskDecomposition(
                 original_task=task_description,

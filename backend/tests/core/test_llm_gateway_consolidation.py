@@ -8,12 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
-
-# বাংলা মন্তব্য: isinstance ফেইল হওয়ার কারণে core এর পরিবর্তে backend.core ব্যবহার করা হলো
-# কারণ llm_router.py ফাইলটি backend.core থেকেই ইম্পোর্ট করে।
-from core.resilience.circuit_breaker import CircuitBreaker
 from core.resilience.circuit_breaker_manager import get_circuit_breaker_manager
-from services.llm.llm_router import LLMRouter
 
 
 @pytest.fixture
@@ -22,10 +17,10 @@ def llm_gateway():
     return LLMGateway()
 
 
-@pytest.fixture
-def llm_router():
-    """Create a test LLMRouter instance."""
-    return LLMRouter()
+# NOTE (Phase-2.1, issue #2249): the legacy services/llm LLMRouter fixture and
+# its shared-circuit-breaker test were retired together with the module —
+# the canonical stack (core/llm/llm_gateway + brain/model_router) is covered
+# by the gateway tests below.
 
 
 @pytest.mark.asyncio
@@ -61,18 +56,10 @@ async def test_gateway_has_rate_limit_handling(llm_gateway):
     )
 
 
-@pytest.mark.asyncio
-async def test_router_uses_shared_circuit_breaker(llm_router):
-    """Test that the router uses the shared circuit breaker."""
-    # Mock a provider call that triggers circuit breaker
-    provider_name = "test_provider"
-    cb = llm_router._get_or_create_circuit_breaker(provider_name)
-
-    assert isinstance(cb, CircuitBreaker), "Router should use CircuitBreaker instances"
-
-    # Verify it's using the shared manager by checking against global manager
-    shared_cb = get_circuit_breaker_manager().get_circuit_breaker(provider_name)
-    assert cb is shared_cb, "Router should use shared circuit breaker"
+# RETIRED with services/llm/llm_router.py (issue #2249):
+#   test_router_uses_shared_circuit_breaker — asserted the legacy router's
+#   breaker wiring; the gateway/shared-manager behaviour remains covered by
+#   test_gateway_429_handling_simulation + test_circuit_breaker_state_sharing.
 
 
 @pytest.mark.asyncio
@@ -113,7 +100,6 @@ async def test_gateway_429_handling_simulation(llm_gateway):
 async def test_provider_taxonomy_consistency():
     """Test that provider taxonomies are more consistent between gateways."""
     get_llm_gateway()
-    LLMRouter()
 
     # The provider → settings-key map moved to module level during the
     # gateway registry refactor; the instance no longer carries it.
