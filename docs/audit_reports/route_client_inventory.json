@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 608,
+    "backend_routes": 607,
     "frontend_unique_refs": 145,
     "matched": 273,
-    "orphan_routes": 335
+    "orphan_routes": 334
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -29,7 +29,6 @@
     "/api/v1/kaggle": 4,
     "/api/v1/llm-gateway": 4,
     "/api/v1/repos": 4,
-    "/api/v1/stream": 4,
     "/api/v1/tools-registry": 4,
     "/api/v1/gcp": 3,
     "/api/v1/skills": 3,
@@ -43,6 +42,7 @@
     "/api/v1/plugins": 3,
     "/api/v1/sandbox": 3,
     "/api/simulator/session": 3,
+    "/api/v1/stream": 3,
     "/api/v1/zero-cost": 3,
     "/api/billing/webhook": 2,
     "/api/v1/cdc": 2,
@@ -135,7 +135,7 @@
     "/api/webhooks/github": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 257,
+    "unclassified-orphan": 256,
     "internal": 46,
     "admin-only": 32
   },
@@ -2217,13 +2217,6 @@
       "method": "GET",
       "declared": "/api/v1/stream/hitl",
       "resolved": "/api/v1/stream/hitl",
-      "classification": "unclassified-orphan"
-    },
-    {
-      "file": "backend/api/routes/stream_voice_sse.py",
-      "method": "GET",
-      "declared": "/api/v1/stream/voice",
-      "resolved": "/api/v1/stream/voice",
       "classification": "unclassified-orphan"
     },
     {

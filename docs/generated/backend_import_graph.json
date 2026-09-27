@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3527,
+  "edge_count": 3511,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -3356,18 +3356,6 @@
       "to": "core.messaging.event_bus"
     },
     {
-      "from": "api.routes.stream_voice_sse",
-      "to": "api.deps"
-    },
-    {
-      "from": "api.routes.stream_voice_sse",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "api.routes.stream_voice_sse",
-      "to": "services.voice_service"
-    },
-    {
       "from": "api.routes.swarm_stream",
       "to": "api.deps"
     },
@@ -3538,38 +3526,6 @@
     {
       "from": "api.routes.webhooks_github",
       "to": "core.orchestration.handoff_schema"
-    },
-    {
-      "from": "api.routes.websocket_agent",
-      "to": "core.automation.models"
-    },
-    {
-      "from": "api.routes.websocket_agent",
-      "to": "core.llm.llm_gateway"
-    },
-    {
-      "from": "api.routes.websocket_agent",
-      "to": "core.llm.llm_gateway.context"
-    },
-    {
-      "from": "api.routes.websocket_agent",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "api.routes.websocket_agent",
-      "to": "core.prompt_handler"
-    },
-    {
-      "from": "api.routes.websocket_agent",
-      "to": "core.queue.task_queue"
-    },
-    {
-      "from": "api.routes.websocket_agent",
-      "to": "core.security"
-    },
-    {
-      "from": "api.routes.websocket_agent",
-      "to": "database.supabase_client"
     },
     {
       "from": "api.routes.websocket_hitl",
@@ -10116,26 +10072,6 @@
       "to": "core.config"
     },
     {
-      "from": "tests.api.test_websocket_agent",
-      "to": "api.routes.websocket_agent"
-    },
-    {
-      "from": "tests.api.test_websocket_agent",
-      "to": "api.routes.websocket_agent"
-    },
-    {
-      "from": "tests.api.test_websocket_agent",
-      "to": "core.config"
-    },
-    {
-      "from": "tests.api.test_websocket_compaction",
-      "to": "api.routes.websocket_agent"
-    },
-    {
-      "from": "tests.api.test_websocket_compaction",
-      "to": "core.prompt_handler"
-    },
-    {
       "from": "tests.api.test_websocket_hitl",
       "to": "api.routes.websocket_hitl"
     },
@@ -14112,7 +14048,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2023,
+  "module_count": 2020,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14464,7 +14400,6 @@
     "api.routes.stream",
     "api.routes.stream_chat_sse",
     "api.routes.stream_hitl_sse",
-    "api.routes.stream_voice_sse",
     "api.routes.swarm_stream",
     "api.routes.syncguard",
     "api.routes.task",
@@ -14480,7 +14415,6 @@
     "api.routes.voice",
     "api.routes.webhooks_ai",
     "api.routes.webhooks_github",
-    "api.routes.websocket_agent",
     "api.routes.websocket_hitl",
     "api.routes.websocket_voice",
     "api.routes.workspace_capabilities",
@@ -15444,8 +15378,6 @@
     "tests.api.test_task_endpoints",
     "tests.api.test_task_router",
     "tests.api.test_webhooks_ai",
-    "tests.api.test_websocket_agent",
-    "tests.api.test_websocket_compaction",
     "tests.api.test_websocket_hitl",
     "tests.api.test_worker_service",
     "tests.api.test_workspaces_route",
@@ -15670,6 +15602,7 @@
     "tests.core.test_rate_limit_quota_fallback",
     "tests.core.test_rate_limiter_lua_invariants",
     "tests.core.test_rbac",
+    "tests.core.test_realtime_topology",
     "tests.core.test_reasoning_orchestrator",
     "tests.core.test_redis_budget_guard",
     "tests.core.test_redis_cache",
