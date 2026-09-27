@@ -168,6 +168,19 @@ class ZeroCostSwarmOrchestrator:
                 initial_recovery_timeout=self.config.CIRCUIT_BREAKER_COOLDOWN_SECONDS,
             )
 
+    async def run_dag_for_workspace(
+        self, workspace: SharedWorkspace, user_id: str = "default_user_session"
+    ) -> SharedWorkspace:
+        """Forward to the original orchestrator's DAG runner (issue #1816).
+
+        The ZeroCost wrapper composes ``SwarmOrchestrator`` as
+        ``self._original_orchestrator`` but never forwarded this method, so
+        ``api/routes/agent_action.py`` platform-integration sync actions
+        (Slack/Notion/GitHub) raised AttributeError → 500 on every call.
+        Signature mirrors ``SwarmOrchestrator.run_dag_for_workspace``.
+        """
+        return await self._original_orchestrator.run_dag_for_workspace(workspace, user_id)
+
     async def execute_task(
         self,
         prompt: str,
