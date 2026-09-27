@@ -4,8 +4,8 @@
 
 | metric | value |
 |---|---|
-| backend routes | 861 |
-| routes with frontend consumer | 295 |
+| backend routes | 862 |
+| routes with frontend consumer | 296 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 2 |
@@ -17,7 +17,7 @@
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 165 | frontend consumer matched |
+| `user-facing` | 166 | frontend consumer matched |
 | `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 40 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
@@ -795,6 +795,7 @@
 | POST | `/api/v1/hitl/reject/:param` | `backend/api/routes/approval_manager.py` | admin-only | `frontend/src/data/hooks.ts` |
 | POST | `/api/v1/hitl/reject/:param` | `backend/api/routes/hitl_admin.py` | admin-only | `frontend/src/data/hooks.ts` |
 | GET | `/api/v1/hitl/resume/:param` | `backend/api/routes/hitl_admin.py` | admin-only | NONE |
+| GET | `/api/v1/integrations` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
 | POST | `/api/v1/integrations/discover` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/OneLinerMCPConnect.test.tsx`, `frontend/src/components/dashboard/OneLinerMCPConnect.tsx` |
 | GET | `/api/v1/integrations/github/callback` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
 | GET | `/api/v1/integrations/github/link` | `backend/api/routes/integrations.py` | user-facing | `frontend/src/components/dashboard/ConnectedPlatformsVault.tsx` |
