@@ -280,37 +280,6 @@ async def get_service_uptime(service: str = Query(...), hours: int = Query(24, g
     }
 
 
-@router.get("/health-map")
-async def get_health_map():
-    """
-    Simplified health map for quick status checks.
-    Used by HealthBanner component.
-    """
-    services = await check_all_services()
-    overall_status, _ = calculate_overall_status(services)
-
-    # Group by provider/type
-    health_map = {}
-    for svc in services:
-        # Extract provider from name
-        if "backend" in svc.name:
-            provider = "render"
-        elif "worker" in svc.name:
-            provider = "cloudflare"
-        elif "scraper" in svc.name:
-            provider = "railway"
-        else:
-            provider = "other"
-
-        if provider not in health_map or health_map[provider]["status"] == "healthy":
-            health_map[provider] = {
-                "status": svc.status if svc.status != "healthy" else "healthy",
-                "service": svc.display_name,
-            }
-
-    return health_map
-
-
 @router.get("/provider-readiness")
 async def get_provider_readiness():
     """Return safe model diagnostics; readiness is never inferred from key presence."""
