@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "6021fa754d33040c38f3077b62cdf6f7d17816587c2dd2c1bc01a746858067b4",
-  "route_count": 863,
+  "source_sha256": "dc13e058136296c78c1ec3c867ecad2850c343d17f166fa297660694c8c9b2b8",
+  "route_count": 866,
   "routes": [
     {
       "method": "GET",
@@ -11267,6 +11267,60 @@
         "schemes": [
           "HTTPBearer"
         ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/external-agents/jobs",
+      "operation_id": "delegate_job_api_v1_external_agents_jobs_post",
+      "tags": [
+        "external-agents"
+      ],
+      "summary": "Delegate Job",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/external-agents/jobs/{job_id}",
+      "operation_id": "cancel_job_api_v1_external_agents_jobs__job_id__delete",
+      "tags": [
+        "external-agents"
+      ],
+      "summary": "Cancel Job",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/external-agents/jobs/{job_id}",
+      "operation_id": "get_job_api_v1_external_agents_jobs__job_id__get",
+      "tags": [
+        "external-agents"
+      ],
+      "summary": "Get Job",
+      "auth": {
+        "required": false,
+        "schemes": []
       },
       "tenant_scope": "unclassified",
       "persistence": "unclassified",
