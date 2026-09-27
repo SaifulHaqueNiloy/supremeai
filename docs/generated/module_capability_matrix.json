@@ -26187,7 +26187,9 @@
       "path": "scripts/quality/docs_drift_check.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "browser"
+      ],
       "classification": "human_review",
       "entrypoints": [
         "main"

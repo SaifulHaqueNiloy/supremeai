@@ -132,7 +132,7 @@
     {
       "evidence": [
         {
-          "line": 23,
+          "line": 24,
           "path": "backend/external_agents/providers/zai.py"
         }
       ],
@@ -562,7 +562,7 @@
     {
       "evidence": [
         {
-          "line": 22,
+          "line": 23,
           "path": "backend/external_agents/providers/zai.py"
         }
       ],

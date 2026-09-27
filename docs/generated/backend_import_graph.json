@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3510,
+  "edge_count": 3511,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -7718,6 +7718,10 @@
     {
       "from": "external_agents.providers.registry",
       "to": "external_agents.contracts.task_contract"
+    },
+    {
+      "from": "external_agents.providers.zai",
+      "to": "core.config"
     },
     {
       "from": "external_agents.providers.zai",
