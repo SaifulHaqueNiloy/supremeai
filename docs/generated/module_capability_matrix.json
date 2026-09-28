@@ -2,10 +2,10 @@
   "functional_module_count": 190,
   "functional_module_inventory": "MODULES_LIST.md",
   "functional_status_counts": {
-    "broken": 3,
+    "broken": 5,
     "env_dependent": 3,
-    "operational": 124,
-    "partially_wired": 60,
+    "operational": 123,
+    "partially_wired": 59,
     "planned": 0
   },
   "inventory_type": "source_file_capability",
@@ -857,20 +857,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/agents/evolution_agents/adversarial_defense_agent.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/agents/evolution_agents/federated_learning_agent.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/agents/evolution_agents/meta_learning_agent.py"
     },
     {
       "capability_signals": [
@@ -1808,15 +1794,6 @@
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/api/routes/agent_action.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/api/routes/agent_breeding.py"
     },
     {
@@ -1830,7 +1807,6 @@
     },
     {
       "capability_signals": [
-        "execute",
         "register"
       ],
       "classification": "dormant_or_dynamic",
@@ -2646,7 +2622,6 @@
     },
     {
       "capability_signals": [
-        "execute",
         "health",
         "memory",
         "register"
@@ -3498,13 +3473,6 @@
       "path": "backend/brain/reasoning_orchestrator.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/brain/supreme_learning_engine.py"
-    },
-    {
       "capability_signals": [
         "execute"
       ],
@@ -3582,15 +3550,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/browser/session_manager.py"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/browser/swarm_browser.py"
     },
     {
       "capability_signals": [
@@ -5248,16 +5207,6 @@
     },
     {
       "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/intelligence/swarm_consensus.py"
-    },
-    {
-      "capability_signals": [
         "memory"
       ],
       "classification": "human_review",
@@ -5340,7 +5289,8 @@
     },
     {
       "capability_signals": [
-        "dispatch"
+        "dispatch",
+        "mcp"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -5349,8 +5299,29 @@
     },
     {
       "capability_signals": [
+        "execute",
+        "mcp"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/kernel/audit_chain.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/core/kernel/audit_logger.py"
+    },
+    {
+      "capability_signals": [
         "capability",
-        "dispatch"
+        "dispatch",
+        "mcp"
       ],
       "classification": "human_review",
       "entrypoints": [],
@@ -5739,16 +5710,6 @@
     {
       "capability_signals": [
         "execute",
-        "mcp"
-      ],
-      "classification": "adapter",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/mcp_audit_chain.py"
-    },
-    {
-      "capability_signals": [
-        "execute",
         "mcp",
         "register"
       ],
@@ -5983,16 +5944,6 @@
     },
     {
       "capability_signals": [
-        "execute",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/observability/audit_logger.py"
-    },
-    {
-      "capability_signals": [
         "health"
       ],
       "classification": "human_review",
@@ -6172,22 +6123,6 @@
       "path": "backend/core/orchestration/conversation_orchestrator.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/orchestration/crew_departments.py"
-    },
-    {
-      "capability_signals": [
-        "browser"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/orchestration/handoff_schema.py"
-    },
-    {
       "capability_signals": [
         "dispatch"
       ],
@@ -6205,27 +6140,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/orchestration/periodic_task_scheduler.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/orchestration/swarm_agent_roles.py"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "execute",
-        "mcp",
-        "register"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/orchestration/swarm_orchestrator.py"
     },
     {
       "capability_signals": [
@@ -7265,13 +7179,6 @@
       "path": "backend/core/self_evolution/evolution_react_agent.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/self_evolution/federated_learning/fed_learning.py"
-    },
-    {
       "capability_signals": [
         "execute"
       ],
@@ -7641,18 +7548,6 @@
     },
     {
       "capability_signals": [
-        "dispatch",
-        "execute",
-        "health",
-        "register"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/tier8/swarm_coordination_agent.py"
-    },
-    {
-      "capability_signals": [
         "execute",
         "health",
         "register"
@@ -7679,15 +7574,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/type_sync_bus.py"
-    },
-    {
-      "capability_signals": [
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/unified_learning.py"
     },
     {
       "capability_signals": [
@@ -7761,19 +7647,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/zero_cost_architecture/__init__.py"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "execute",
-        "health",
-        "memory",
-        "register"
-      ],
-      "classification": "adapter",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/zero_cost_architecture/swarm_orchestrator_integration.py"
     },
     {
       "capability_signals": [
@@ -8973,13 +8846,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/models/execution_policy.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/models/handoff_event.py"
     },
     {
       "capability_signals": [],
@@ -10185,7 +10051,9 @@
       "path": "backend/services/dynamic_ai/circuit_breaker.py"
     },
     {
-      "capability_signals": [],
+      "capability_signals": [
+        "memory"
+      ],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -11219,15 +11087,6 @@
     },
     {
       "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/routes/test_swarm_adapter_contracts.py"
-    },
-    {
-      "capability_signals": [
         "execute",
         "mcp",
         "memory",
@@ -11680,15 +11539,6 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/tests/api/test_sworm_adapter_contract.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/tests/api/test_task_endpoints.py"
     },
     {
@@ -12044,26 +11894,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/orchestration/test_spoke_contracts.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/core/orchestration/test_swarm_agent_roles_full.py"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "execute",
-        "mcp"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/core/orchestration/test_swarm_orchestrator.py"
     },
     {
       "capability_signals": [
@@ -13501,13 +13331,6 @@
       "path": "backend/tests/core/test_optional_services.py"
     },
     {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/core/test_orchestrators_crew.py"
-    },
-    {
       "capability_signals": [
         "health"
       ],
@@ -13934,15 +13757,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/core/test_stream.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/core/test_swarm_orchestrator.py"
     },
     {
       "capability_signals": [],
@@ -24530,6 +24344,15 @@
     },
     {
       "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/cleanup_stale_branches.py"
+    },
+    {
+      "capability_signals": [],
       "classification": "canonical",
       "entrypoints": [
         "main"
@@ -24594,6 +24417,15 @@
       ],
       "kind": "py",
       "path": "scripts/ci/env_mode_guard.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/generate_agents_md.py"
     },
     {
       "capability_signals": [],
@@ -24713,6 +24545,17 @@
       ],
       "kind": "py",
       "path": "scripts/ci/infisical_loader.py"
+    },
+    {
+      "capability_signals": [
+        "health"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/issue_queue_manager.py"
     },
     {
       "capability_signals": [],
@@ -26742,5 +26585,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3053
+  "source_file_count": 3035
 }
