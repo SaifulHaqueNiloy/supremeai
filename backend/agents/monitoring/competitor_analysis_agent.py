@@ -12,9 +12,9 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.logging_config import logger
-from services.llm.llm_router import LLMRouter
 
 COMPETITOR_CACHE_TTL = 86400  # 24 hours
 
@@ -90,8 +90,8 @@ class CompetitorAnalysisAgent:
     Tracks releases, benchmarks, and feature comparisons.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm = llm_router or ModelRouter()
         self.cache = get_cache()
         self._competitors = dict(DEFAULT_COMPETITORS)
         self._tracked_features: list[CompetitorFeature] = []

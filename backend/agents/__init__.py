@@ -15,16 +15,6 @@ try:
 except ImportError:
     ChurnProphet = None
 try:
-    from .ephemeral_executor import (
-        EphemeralExecutor,
-        ExecutionResult,
-        ExecutionStatus,
-        ResourceQuota,
-        SecurityScanner,
-    )
-except ImportError:
-    EphemeralExecutor = ExecutionResult = ExecutionStatus = ResourceQuota = SecurityScanner = None
-try:
     from .headless_terminal_agent import HeadlessTerminalAgent
 except ImportError:
     HeadlessTerminalAgent = None

@@ -392,6 +392,38 @@ def capture_screenshot(body: ScreenshotRequest):
     return Response(content=png_bytes, media_type="image/png")
 
 
+@router.post("/screenshots")
+async def save_screenshot_to_gallery(
+    userId: str | None = None, url: str | None = None, timestamp: int | None = None
+):
+    """Save screenshot metadata to the gallery (actual image uploaded separately).
+
+    Ported verbatim from the retired ``api/routes/browser_routes.py`` (#2258
+    route consolidation) to preserve the live frontend contract —
+    ``admin-browser/useBrowserActions.ts`` fires this POST after a successful
+    capture (fire-and-forget, errors swallowed client-side).
+
+    HONESTY NOTE (audit Class G, flagged not fixed here): the legacy handler
+    never persisted anything — it fabricates a storage location and reports
+    ``success: True`` unconditionally. That behaviour is preserved verbatim
+    to keep this PR a pure route consolidation; making the endpoint honest
+    (real gallery store or an explicit 501) is deferred to the gallery
+    persistence follow-up.
+    """
+    import hashlib
+    import time as _time
+
+    gallery_entry = {
+        "id": f"shot_{int(_time.time())}_{hashlib.md5((url or '').encode()).hexdigest()[:8]}",
+        "userId": userId,
+        "url": url,
+        "capturedAt": timestamp or int(_time.time()),
+        "storageLocation": f"screenshots/{userId or 'anonymous'}/{int(_time.time())}.png",
+    }
+
+    return {"success": True, "galleryEntry": gallery_entry, "message": "Screenshot metadata saved"}
+
+
 # -----------------------------
 
 

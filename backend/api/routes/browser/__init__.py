@@ -81,7 +81,7 @@ from core.neon_repository import (  # noqa: F401  (module-attr parity)
 from core.neon_repository import (  # noqa: F401  (module-attr parity)
     update_task_status as update_neon_task_status,
 )
-from core.observability.audit_logger import AuditLogger  # noqa: F401  (module-attr parity)
+from core.kernel.audit_logger import AuditLogger  # noqa: F401  (module-attr parity)
 from core.security.secure_credential_store import (  # noqa: F401  (module-attr parity)
     SecureCredentialStore,
 )
@@ -156,7 +156,12 @@ from ._crown_jewel import (  # noqa: F401,E402  (re-exports)
     browse_session,
     capture_screenshot,
     execute_step,
+    save_screenshot_to_gallery,
     security_scan,
+)
+from ._health import (  # noqa: F401,E402  (re-exports)
+    browser_service_health,
+    public_router,  # dependency-free /health probe (#1490 contract, #2258 port)
 )
 from ._learning import (  # noqa: F401,E402  (re-exports)
     SYSTEM_LEARNING,

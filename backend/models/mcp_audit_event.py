@@ -7,12 +7,12 @@ docs/governance/mcp_audit_retention.md)।
 
 Hash chain: প্রতিটি event-এ `prev_hash` (আগের event-এর entry_hash, tenant-scope)
 এবং `entry_hash` = sha256(prev_hash + canonical JSON payload) — চেইনের যেকোনো
-record বদলালে `audit_verify` ধরে ফেলে (core/mcp_audit_chain.py)।
+record বদলালে `audit_verify` ধরে ফেলে (core/kernel/audit_chain.py)।
 
 Constitution Compliance:
   - Law #19 (Observable): per-agent, per-tool, per-args verified trail
   - Law #12 (Verify Before Trust): audit_verify + anomaly rules
-  - Law #1 (Centralized): single chain store — core/mcp_audit_chain.py
+  - Law #1 (Centralized): single chain store — core/kernel/audit_chain.py
 """
 
 from __future__ import annotations

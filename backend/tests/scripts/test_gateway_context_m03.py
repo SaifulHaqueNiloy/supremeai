@@ -146,9 +146,10 @@ class TestGatewayContextGate:
     def test_current_tree_has_zero_violations(self):
         violations, total = context_gate.scan()
         assert violations == []
-        # ৮ serving route-ফাইলে ১২টি inference কল-সাইট — সব context-বহন।
+        # ৭ serving route-ফাইলে ১১টি inference কল-সাইট — সব context-বহন।
         # (#1832: websocket_agent.py orphan route removed — call-sites dropped 14→12.)
-        assert total >= 12
+        # (#2258: browser_routes.py retired — shadowed legacy call-site dropped 12→11.)
+        assert total >= 11
 
     def test_baseline_is_zero(self):
         assert context_gate.BASELINE == 0
@@ -212,7 +213,8 @@ class TestGatewayContextGate:
             "slash_commands.py",
             "stream_chat_sse.py",
             "scheduled_tasks.py",
-            "browser_routes.py",
+            # "browser_routes.py" removed (#2258): the legacy double-mounted
+            # module was retired; its shadowed ai-action never executed.
             "deep_research.py",
         }
         assert expected == files_with_calls
