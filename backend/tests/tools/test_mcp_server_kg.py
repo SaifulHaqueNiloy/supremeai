@@ -575,24 +575,15 @@ class TestUnknownToolDispatch:
 
 
 # =============================================================================
-# MCP Tower gap-3 (#927) — agent mailbox tools E2E (real AgentMailbox core)
+# MCP Tower gap-3 (#927) — agent mailbox tools retired in Step-2.3
 # =============================================================================
 
 
-@pytest.fixture
-def fresh_mailbox():
-    """Isolated process-wide mailbox per test — real core, no mocks."""
-    from core.agent_mailbox import reset_agent_mailbox_for_tests
-
-    reset_agent_mailbox_for_tests()
-    yield
-    reset_agent_mailbox_for_tests()
-
-
 class TestAgentMailboxTools:
-    """A→B send → B inbox → ack E2E + reply_to + tenant isolation (issue #927)."""
+    """Prove mailbox tools return graceful retired responses (issue #2276, Step-2.3)."""
 
-    async def test_send_inbox_ack_e2e(self, fresh_mailbox: Any, audit_spy: AuditRecorder) -> None:
+    async def test_retired_mailbox_tools(self) -> None:
+        # বাংলা মন্তব্য: [Step-2.3] ইন-মেমোরি মেইলবক্স অবসরে যাওয়ার পর MCP কল যাতে ক্র্যাশ না করে তা যাচাই।
         sent = _json(
             await mcp_server.handle_call_tool(
                 "agent_send",
@@ -604,150 +595,35 @@ class TestAgentMailboxTools:
                 },
             )
         )
-        assert sent["message_id"].startswith("msg-")
-        assert sent["acked"] is False
+        assert sent["status"] == "retired"
 
         inbox = _json(
             await mcp_server.handle_call_tool(
                 "agent_inbox", {"tenant_id": "tenant-927", "agent_id": "coder-1"}
             )
         )
-        assert inbox["count"] == 1
-        assert inbox["messages"][0]["message_id"] == sent["message_id"]
-        assert inbox["messages"][0]["body"] == {"task": "build"}
+        assert inbox["count"] == 0
+        assert inbox["status"] == "retired"
 
         acked = _json(
             await mcp_server.handle_call_tool(
                 "agent_ack",
                 {
                     "tenant_id": "tenant-927",
-                    "message_id": sent["message_id"],
+                    "message_id": "msg-123",
                     "agent_id": "coder-1",
                 },
             )
         )
-        assert acked["acked"] is True
-
-        unread = _json(
-            await mcp_server.handle_call_tool(
-                "agent_inbox",
-                {"tenant_id": "tenant-927", "agent_id": "coder-1", "unread_only": True},
-            )
-        )
-        assert unread["count"] == 0, "acked message drops out of unread_only view"
-
-        # Real policy engine auto-allows (R1) and audits every mailbox call (gap-4).
-        tools_used = [c["tool"] for c in audit_spy.calls]
-        assert tools_used == ["agent_send", "agent_inbox", "agent_ack", "agent_inbox"]
-        assert all(c["decision"] == "ALLOW" and c["risk"] == "R1" for c in audit_spy.calls)
-        assert all(c["error"] is None for c in audit_spy.calls)
-        assert all(c["tenant"] == "tenant-927" for c in audit_spy.calls)
-
-    async def test_missing_tenant_rejected_like_other_tools(
-        self, fresh_mailbox: Any, audit_spy: AuditRecorder
-    ) -> None:
-        """MCP audit contract: explicit tenant required — clean error, no crash."""
-        payload = _json(
-            await mcp_server.handle_call_tool("agent_send", {"from_agent": "a", "to_agent": "b"})
-        )
-        assert payload == {"error": "tenant_id is required"}
-        assert audit_spy.calls == []
-
-    async def test_reply_to_threading(self, fresh_mailbox: Any) -> None:
-        tenant = {"tenant_id": "tenant-927"}
-        parent = _json(
-            await mcp_server.handle_call_tool(
-                "agent_send",
-                {**tenant, "from_agent": "planner-1", "to_agent": "coder-1"},
-            )
-        )
-        reply = _json(
-            await mcp_server.handle_call_tool(
-                "agent_send",
-                {
-                    **tenant,
-                    "from_agent": "coder-1",
-                    "to_agent": "planner-1",
-                    "reply_to": parent["message_id"],
-                    "body": {"result": "done"},
-                },
-            )
-        )
-        assert reply["reply_to"] == parent["message_id"]
-
-        inbox = _json(
-            await mcp_server.handle_call_tool("agent_inbox", {**tenant, "agent_id": "planner-1"})
-        )
-        assert inbox["count"] == 1
-        assert inbox["messages"][0]["message_id"] == reply["message_id"]
-
-        # unknown reply_to → surfaced as handler error text (fail-closed, not silent)
-        text = _text(
-            await mcp_server.handle_call_tool(
-                "agent_send",
-                {**tenant, "from_agent": "a", "to_agent": "b", "reply_to": "msg-unknown"},
-            )
-        )
-        assert "Error gathering graph context:" in text
-        assert "reply_to" in text
-
-    async def test_tenant_isolation(self, fresh_mailbox: Any) -> None:
-        sent = _json(
-            await mcp_server.handle_call_tool(
-                "agent_send",
-                {"tenant_id": "tenant-927", "from_agent": "planner-1", "to_agent": "coder-1"},
-            )
-        )
-        # cross-tenant ack → PermissionError surfaces (403-equivalent at REST)
-        text = _text(
-            await mcp_server.handle_call_tool(
-                "agent_ack",
-                {
-                    "tenant_id": "tenant-acme",
-                    "message_id": sent["message_id"],
-                    "agent_id": "coder-1",
-                },
-            )
-        )
-        assert "cross-tenant" in text
-        # other tenant cannot see the message at all
-        inbox = _json(
-            await mcp_server.handle_call_tool(
-                "agent_inbox", {"tenant_id": "tenant-acme", "agent_id": "coder-1"}
-            )
-        )
-        assert inbox["count"] == 0
-        assert inbox["tenant_id"] == "tenant-acme"
-
-    async def test_topic_subscribe_gates_broadcast(self, fresh_mailbox: Any) -> None:
-        tenant = {"tenant_id": "tenant-927"}
-        await mcp_server.handle_call_tool(
-            "agent_send",
-            {
-                **tenant,
-                "from_agent": "planner-1",
-                "to_agent": "*",
-                "topic": "deploy-events",
-                "body": {"env": "staging"},
-            },
-        )
-        before = _json(
-            await mcp_server.handle_call_tool("agent_inbox", {**tenant, "agent_id": "coder-1"})
-        )
-        assert before["count"] == 0, "unsubscribed agents do not see topic broadcasts"
+        assert acked["status"] == "acknowledged"
 
         sub = _json(
             await mcp_server.handle_call_tool(
                 "topic_subscribe",
-                {**tenant, "agent_id": "coder-1", "topics": ["deploy-events"]},
+                {"tenant_id": "tenant-927", "agent_id": "coder-1", "topics": ["deploy-events"]},
             )
         )
-        assert sub["topics"] == ["deploy-events"]
-
-        after = _json(
-            await mcp_server.handle_call_tool("agent_inbox", {**tenant, "agent_id": "coder-1"})
-        )
-        assert after["count"] == 1, "subscribed agents now see the topic broadcast"
+        assert sub["status"] == "retired"
 
 
 # =============================================================================
