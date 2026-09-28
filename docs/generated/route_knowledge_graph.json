@@ -1,5 +1,5 @@
 {
-  "edge_count": 1814,
+  "edge_count": 1800,
   "edges": [
     {
       "relation": "defines",
@@ -769,11 +769,6 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:30e412ad111f64604ded"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
       "target": "route:30fdc569c60aca7902f3"
     },
     {
@@ -870,11 +865,6 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:38130e4686060fe64cdf"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
-      "target": "route:3835fee744ec998f8f84"
     },
     {
       "relation": "defines",
@@ -1399,11 +1389,6 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:5a16662d77adf87d101a"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
       "target": "route:5a2c63baff5cd769eb4d"
     },
     {
@@ -1605,11 +1590,6 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:65e1073d0d8f31835a67"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
-      "target": "route:66235cbf9afc2671343e"
     },
     {
       "relation": "defines",
@@ -2390,11 +2370,6 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:944e6b5d1e749a905f00"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
-      "target": "route:94e4af96ee4a7ec1b001"
     },
     {
       "relation": "defines",
@@ -3354,11 +3329,6 @@
     {
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
-      "target": "route:ca213d76f78a100648fe"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
       "target": "route:cbfa2dffeb5f4a83f5fa"
     },
     {
@@ -3755,11 +3725,6 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:e00ecf4638da1f5ad769"
-    },
-    {
-      "relation": "defines",
-      "source": "contract:9337269577d524de529e",
-      "target": "route:e02ca6f196fd24e8b5b7"
     },
     {
       "relation": "defines",
@@ -5168,11 +5133,6 @@
     },
     {
       "relation": "exposes",
-      "source": "route:30e412ad111f64604ded",
-      "target": "capability:8844832fd69d152a37eb"
-    },
-    {
-      "relation": "exposes",
       "source": "route:30fdc569c60aca7902f3",
       "target": "capability:a43b0ca14c88d4f2694d"
     },
@@ -5290,11 +5250,6 @@
       "relation": "exposes",
       "source": "route:38130e4686060fe64cdf",
       "target": "capability:4f37e94fae8492dcc314"
-    },
-    {
-      "relation": "exposes",
-      "source": "route:3835fee744ec998f8f84",
-      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -5863,11 +5818,6 @@
     },
     {
       "relation": "exposes",
-      "source": "route:5a16662d77adf87d101a",
-      "target": "capability:8844832fd69d152a37eb"
-    },
-    {
-      "relation": "exposes",
       "source": "route:5a2c63baff5cd769eb4d",
       "target": "capability:72855172876d0c8c22dd"
     },
@@ -6090,11 +6040,6 @@
       "relation": "exposes",
       "source": "route:65e1073d0d8f31835a67",
       "target": "capability:694feb872c40bb7b24c2"
-    },
-    {
-      "relation": "exposes",
-      "source": "route:66235cbf9afc2671343e",
-      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -6930,11 +6875,6 @@
       "relation": "exposes",
       "source": "route:944e6b5d1e749a905f00",
       "target": "capability:42799ccf5edeff5be5c5"
-    },
-    {
-      "relation": "exposes",
-      "source": "route:94e4af96ee4a7ec1b001",
-      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -8008,11 +7948,6 @@
     },
     {
       "relation": "exposes",
-      "source": "route:ca213d76f78a100648fe",
-      "target": "capability:8844832fd69d152a37eb"
-    },
-    {
-      "relation": "exposes",
       "source": "route:cbfa2dffeb5f4a83f5fa",
       "target": "capability:e8d45e28b9f99f76daf1"
     },
@@ -8445,11 +8380,6 @@
       "relation": "exposes",
       "source": "route:e00ecf4638da1f5ad769",
       "target": "capability:b0d73027f6f805b5fd6c"
-    },
-    {
-      "relation": "exposes",
-      "source": "route:e02ca6f196fd24e8b5b7",
-      "target": "capability:8844832fd69d152a37eb"
     },
     {
       "relation": "exposes",
@@ -9072,7 +9002,7 @@
       "target": "control:8beb2443d48d78613952"
     }
   ],
-  "node_count": 1011,
+  "node_count": 1003,
   "nodes": [
     {
       "id": "capability:0304e05cfc30a6eece57",
@@ -9483,11 +9413,6 @@
       "id": "capability:87fc969d29426b491116",
       "kind": "capability",
       "label": "simulator"
-    },
-    {
-      "id": "capability:8844832fd69d152a37eb",
-      "kind": "capability",
-      "label": "mesh-mailbox"
     },
     {
       "id": "capability:8907ae938c1d48ec41d3",
@@ -11350,16 +11275,6 @@
       }
     },
     {
-      "id": "route:30e412ad111f64604ded",
-      "kind": "route",
-      "label": "POST /api/v1/mesh/subscriptions",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "mesh_subscribe_topics_api_v1_mesh_subscriptions_post",
-        "owner": "unassigned"
-      }
-    },
-    {
       "id": "route:30fdc569c60aca7902f3",
       "kind": "route",
       "label": "POST /admin-api/cost-caps",
@@ -11556,16 +11471,6 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "store_long_term_memory_endpoint_unified_memory_long_term_store_post",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:3835fee744ec998f8f84",
-      "kind": "route",
-      "label": "POST /api/v1/mesh/messages",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "mesh_send_message_api_v1_mesh_messages_post",
         "owner": "unassigned"
       }
     },
@@ -12610,16 +12515,6 @@
       }
     },
     {
-      "id": "route:5a16662d77adf87d101a",
-      "kind": "route",
-      "label": "GET /api/v1/mesh/messages/stats",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "mesh_message_stats_api_v1_mesh_messages_stats_get",
-        "owner": "unassigned"
-      }
-    },
-    {
       "id": "route:5a2c63baff5cd769eb4d",
       "kind": "route",
       "label": "POST /api/v1/plugins/community/submit",
@@ -13026,16 +12921,6 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "backup_history_api_admin_infrastructure_disaster_recovery_backups_get",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:66235cbf9afc2671343e",
-      "kind": "route",
-      "label": "POST /api/v1/mesh/messages/{message_id}/ack",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "mesh_ack_message_api_v1_mesh_messages__message_id__ack_post",
         "owner": "unassigned"
       }
     },
@@ -14596,16 +14481,6 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "admin_match_policy_api_v1_ecosystem_admin_policies_match_get",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:94e4af96ee4a7ec1b001",
-      "kind": "route",
-      "label": "GET /api/v1/mesh/subscriptions",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "mesh_list_subscriptions_api_v1_mesh_subscriptions_get",
         "owner": "unassigned"
       }
     },
@@ -16520,16 +16395,6 @@
       }
     },
     {
-      "id": "route:ca213d76f78a100648fe",
-      "kind": "route",
-      "label": "GET /api/v1/mesh/messages/inbox",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "mesh_message_inbox_api_v1_mesh_messages_inbox_get",
-        "owner": "unassigned"
-      }
-    },
-    {
       "id": "route:cbfa2dffeb5f4a83f5fa",
       "kind": "route",
       "label": "POST /api/browser/ai-action",
@@ -17326,16 +17191,6 @@
       "metadata": {
         "auth_required": false,
         "operation_id": "process_audio_voice_process_audio_post",
-        "owner": "unassigned"
-      }
-    },
-    {
-      "id": "route:e02ca6f196fd24e8b5b7",
-      "kind": "route",
-      "label": "POST /api/v1/mesh/messages/purge",
-      "metadata": {
-        "auth_required": false,
-        "operation_id": "mesh_purge_messages_api_v1_mesh_messages_purge_post",
         "owner": "unassigned"
       }
     },
@@ -18442,5 +18297,5 @@
   ],
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "043152205a5221f1ff7962c1bef5bb244221435e3afa2f29cc618c686d1eb557"
+  "source_sha256": "2ac05270a32d3d507bae00cbda7becf8a5b9386f5524ce55c4c79c4762da145f"
 }

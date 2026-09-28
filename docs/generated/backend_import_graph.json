@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3432,
+  "edge_count": 3421,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -2868,10 +2868,6 @@
       "to": "core.task_router"
     },
     {
-      "from": "api.routes.mesh_mailbox",
-      "to": "core.agent_mailbox"
-    },
-    {
       "from": "api.routes.mesh_tasks",
       "to": "core.task_router"
     },
@@ -4009,10 +4005,6 @@
     },
     {
       "from": "core.agent_heartbeat",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.agent_mailbox",
       "to": "core.logging_config"
     },
     {
@@ -9508,14 +9500,6 @@
       "to": "core.presence_registry"
     },
     {
-      "from": "tests.api.routes.test_mesh_mailbox",
-      "to": "api.routes.mesh_mailbox"
-    },
-    {
-      "from": "tests.api.routes.test_mesh_mailbox",
-      "to": "core.agent_mailbox"
-    },
-    {
       "from": "tests.api.routes.test_mesh_tasks",
       "to": "api.routes.mesh"
     },
@@ -9834,10 +9818,6 @@
     {
       "from": "tests.byoc.test_container_orchestrator",
       "to": "byoc.container_orchestrator"
-    },
-    {
-      "from": "tests.byoc.test_resource_manager",
-      "to": "byoc.resource_manager"
     },
     {
       "from": "tests.conftest",
@@ -11508,10 +11488,6 @@
       "to": "p2p.credit_system"
     },
     {
-      "from": "tests.p2p_tests.test_secure_tunnel",
-      "to": "p2p.secure_tunnel"
-    },
-    {
       "from": "tests.rag.test_hybrid_retriever",
       "to": "core.rag.hybrid_retriever"
     },
@@ -11758,10 +11734,6 @@
     {
       "from": "tests.security.test_codegen_gate_fail_closed",
       "to": "tools.code.safe_executor"
-    },
-    {
-      "from": "tests.security.test_codegen_gate_fail_closed",
-      "to": "tools.ephemeral_synthesizer"
     },
     {
       "from": "tests.security.test_cross_tenant_isolation",
@@ -12330,14 +12302,6 @@
     {
       "from": "tests.test_supreme_kernel",
       "to": "core.kernel.interface"
-    },
-    {
-      "from": "tests.test_swarm_and_ephemeral",
-      "to": "core.security.codegen_gate"
-    },
-    {
-      "from": "tests.test_swarm_and_ephemeral",
-      "to": "tools.ephemeral_synthesizer"
     },
     {
       "from": "tests.test_synaptic_dream_loop",
@@ -13108,14 +13072,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "tools.ephemeral_synthesizer",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "tools.ephemeral_synthesizer",
-      "to": "core.security.codegen_gate"
-    },
-    {
       "from": "tools.freebuff_client",
       "to": "tools.cli_process_delegator"
     },
@@ -13732,7 +13688,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2000,
+  "module_count": 1997,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13787,6 +13743,10 @@
     "_archive.batch-6.metrics_collector",
     "_archive.batch-6.pgbouncer_pool",
     "_archive.batch-6.tenant_db",
+    "_archive.batch-7.resource_manager",
+    "_archive.batch-7.secure_tunnel",
+    "_archive.batch-7.test_resource_manager",
+    "_archive.batch-7.test_secure_tunnel",
     "adapters",
     "adapters.base_adapter",
     "adapters.business_adapter",
@@ -14043,7 +14003,6 @@
     "api.routes.memory_mcp_http",
     "api.routes.merge_learning",
     "api.routes.mesh",
-    "api.routes.mesh_mailbox",
     "api.routes.mesh_tasks",
     "api.routes.meta_ai",
     "api.routes.metrics",
@@ -14137,7 +14096,6 @@
     "byoc",
     "byoc.cloud_connector",
     "byoc.container_orchestrator",
-    "byoc.resource_manager",
     "conftest",
     "context",
     "context.budget",
@@ -14156,7 +14114,6 @@
     "core.advanced_reasoning",
     "core.agent_factory",
     "core.agent_heartbeat",
-    "core.agent_mailbox",
     "core.agent_registry",
     "core.agent_review_workflow",
     "core.agent_supervisor",
@@ -14758,7 +14715,6 @@
     "monitoring.metrics_collector",
     "p2p",
     "p2p.credit_system",
-    "p2p.secure_tunnel",
     "pipelines",
     "pipelines.code_to_db_sync",
     "pipelines.synthetic_data_pipeline",
@@ -14981,7 +14937,6 @@
     "tests.api.routes.test_memory_feedback_path",
     "tests.api.routes.test_memory_mcp_http",
     "tests.api.routes.test_mesh_heartbeat",
-    "tests.api.routes.test_mesh_mailbox",
     "tests.api.routes.test_mesh_tasks",
     "tests.api.routes.test_missions_autonomous",
     "tests.api.routes.test_missions_boundaries",
@@ -15048,7 +15003,6 @@
     "tests.brain.test_economic_optimizer",
     "tests.byoc.test_cloud_connector",
     "tests.byoc.test_container_orchestrator",
-    "tests.byoc.test_resource_manager",
     "tests.ci.pr_helper.test_ai_fix_generator",
     "tests.ci.pr_helper.test_intelligent_decision",
     "tests.cloud_db_load_test",
@@ -15247,6 +15201,7 @@
     "tests.core.test_multi_tenant_isolation",
     "tests.core.test_multicloud",
     "tests.core.test_nats_messaging",
+    "tests.core.test_no_silent_exception_swallow",
     "tests.core.test_optional_services",
     "tests.core.test_origin_validator",
     "tests.core.test_output_validator",
@@ -15360,7 +15315,6 @@
     "tests.monitoring.test_cost_auditor",
     "tests.orchestration.test_master_cognitive_orchestrator",
     "tests.p2p_tests.test_credit_system",
-    "tests.p2p_tests.test_secure_tunnel",
     "tests.rag.test_hybrid_retriever",
     "tests.runs.test_run_adoption",
     "tests.runs.test_run_api",
@@ -15397,6 +15351,7 @@
     "tests.scripts.test_import_knowledge_base_rollback",
     "tests.scripts.test_plan_backend_test_groups",
     "tests.scripts.test_resolve_production_targets",
+    "tests.scripts.test_validate_pr_metadata",
     "tests.security.test_admin_fail_closed",
     "tests.security.test_adversarial_webhook_signatures",
     "tests.security.test_auth",
@@ -15488,7 +15443,6 @@
     "tests.test_strategic_patches.test_cognitive_router",
     "tests.test_strategic_patches.test_cognitive_router_contract",
     "tests.test_supreme_kernel",
-    "tests.test_swarm_and_ephemeral",
     "tests.test_synaptic_dream_loop",
     "tests.test_task_gateway",
     "tests.test_tenant_di",
@@ -15635,7 +15589,6 @@
     "tools.devops.github_agent",
     "tools.devops.on_premise_deployer",
     "tools.ensemble_router",
-    "tools.ephemeral_synthesizer",
     "tools.freebuff_client",
     "tools.graph_service",
     "tools.headless_agent_registry",

@@ -11,7 +11,7 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 - ✅ `frontend_e2e_specs=4` → tree reality: **4**
 - ✅ `frontend_test_files=112` → tree reality: **112**
 - ✅ `missions_tests=62` → tree reality: **62**
-- ❌ `registered_routes=761` → tree reality: **862**  ← দাবি ও বাস্তব মিলছে না
+- ❌ `registered_routes=761` → tree reality: **855**  ← দাবি ও বাস্তব মিলছে না
 
 ## STATUS.md referenced repo paths
 
