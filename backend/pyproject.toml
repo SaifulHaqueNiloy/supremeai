@@ -181,7 +181,7 @@ pytest-html = "^4.1.1"
 # python-docx generates a real .docx (PK zip container). Both were implicit
 # dev dependencies (used by api/routes/slash_commands.py and chat_export.py)
 # but not declared — CI failed with "PDF export requires reportlab".
-reportlab = "^4.4"
+reportlab = ">=4.4,<6.0"
 python-docx = "^1.1"
 [build-system]
 requires = ["poetry-core"]
