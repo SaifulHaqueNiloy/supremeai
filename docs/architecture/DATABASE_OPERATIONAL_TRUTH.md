@@ -32,9 +32,12 @@
 | **D** | Git-ignore (on-demand) | `docs/generated/*.json` (667KB + 533KB + ...) | ~১০ | CI/runtime-এ regenerate হবে; ভারী ফাইল গিটে নয় |
 
 **⚠️ Category D সতর্কতা:** বর্তমানে tracked `docs/generated/*.json` ফাইলগুলো
-`ci-advanced-checks.yml`-এর drift-gate (L123/L136) সরাসরি পড়ে — তাই **এই PR-এ
-কেবল forward-policy `.gitignore` entry** যোগ হয়েছে (tracked ফাইলে no-op)।
-Untracking করা হবে drift-gate regen-on-demand-এ রূপান্তরের পরে (follow-up issue)।
+`ci-advanced-checks.yml`-এর drift-gate (L123/L136) সরাসরি পড়ে — তাই untracking
+**এই কাজে করা হয়নি** এবং forward-policy `.gitignore` entry-ও **Follow-up A-এ
+deferred** (Scope Gate-এর declared-path parser extension-less dotfile
+`.gitignore`-কে declare করতে পারে না — path_re limitation; এন্ট্রি যোগ হবে
+rules.yml allowlist + dotfile support সহ আলাদা governance PR-এ)।
+Untracking করা হবে drift-gate regen-on-demand-এ রূপান্তরের পরে।
 
 ---
 
@@ -141,9 +144,11 @@ mapping-ই tower ব্যবহার করে)।
 - [x] **MCP Tower Adapter Bridge:** `tower_db_bridge.py` — agent_status/resource.status
       pull + agent_heartbeat mirror
 - [x] **Vector Ingestion:** `ingest_plans_to_rag.py` — ৩ ক্যাটাগরি, resumable manifest
-- [x] **Git Cleanup & Gitignore:** `.gitignore` Category D forward-policy (drift-gate
-      ভাঙার ঝুঁকি ছাড়াই) + duplicate status ফাইল অডিট (নিচে §8)
-- [ ] **Follow-up A:** drift-gate regen-on-demand → তারপর `git rm --cached docs/generated/*.json`
+- [x] **Duplicate status file audit:** §8-এ Category B মাইগ্রেশন ক্রম + retirement
+      owner-decision টেবিল (কোনো ফাইল এই কাজে ডিলিট হয়নি — Zero Loss Invariant)
+- [ ] **Follow-up A:** `.gitignore` Category D forward-policy entry (Scope Gate
+      dotfile-declare limitation সমাধানের পর) → drift-gate regen-on-demand →
+      তারপর `git rm --cached docs/generated/*.json`
 - [ ] **Follow-up B:** TS tower-side Supabase mirror (`agent_heartbeat.ts`)
 - [ ] **Follow-up C:** `system_policies` টেবিল + tower dynamic permission load (Policy DB স্তর ২)
 
