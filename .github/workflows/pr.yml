@@ -134,33 +134,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyyaml pytest
 
-      - name: 🔐 Verification Gate (test logs check)
+      - name: 🛡️ Constitutional Gates Execution (All Gates)
+        env:
+          PYTHONPATH: .github/scripts
         run: |
-          python .github/scripts/constitution/gates.py run_verification_gate "$PR_NUMBER"
-
-      - name: 🪁 Lease Gate (slot & branch lease check)
-        run: |
-          python .github/scripts/constitution/gates.py run_lease_gate "$PR_NUMBER"
-
-      - name: 🎯 Scope Gate (declared files vs diff check)
-        run: |
-          python .github/scripts/constitution/gates.py run_scope_gate "$PR_NUMBER"
-
-      - name: 📜 AGENTS.md ↔ rules.yml sync check
-        run: |
+          set -euo pipefail
+          python -m constitution.gates all --pr "$PR_NUMBER"
           python scripts/ci/generate_agents_md.py --check
-
-      - name: 🛡️ Test Guard Gate (no test delete/skip)
-        run: |
-          python .github/scripts/constitution/gates.py run_test_guard_gate "$PR_NUMBER"
-
-      - name: ⛓️ Predecessor Group Merge Hold Gate
-        run: |
-          python .github/scripts/constitution/gates.py run_predecessor_gate "$PR_NUMBER"
-
-      - name: 🚫 Self-Merge Gate
-        run: |
-          python .github/scripts/constitution/gates.py run_self_merge_gate "$PR_NUMBER"
 
       - name: 💥 Cross-PR File Collision Check
         run: |
