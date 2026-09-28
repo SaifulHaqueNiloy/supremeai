@@ -152,9 +152,8 @@ class GeminiWriter:
 class KiloReviewer:
     """Stage 2: Code Reviewer using Kilo Code.
 
-    Delegates to the existing ``GuardianAgent`` and ``ReflectionAgent``
-    from ``crew_departments.py`` which implement Kilo Code's rule-based
-    review logic. Falls back to the ``kilocode`` CLI / local rules.
+    Review strategy: ``kilocode`` CLI first, then local rule-based review
+    (the backend swarm-role reviewers were retired with Step-2.2, plan §4.2).
     """
 
     def __init__(self) -> None:
@@ -175,56 +174,6 @@ class KiloReviewer:
         suggestions: list[str] = []
         review_notes: list[str] = []
         confidence = 0.9
-
-        # Strategy 1: Backend GuardianAgent + ReflectionAgent
-        try:
-            from core.orchestration.crew_departments import (
-                GuardianAgent,
-                ReflectionAgent,
-            )
-            from models.shared_workspace import SharedWorkspace
-
-            workspace = SharedWorkspace(
-                task_id=f"review-{datetime.now(UTC).timestamp()}",
-                original_prompt=f"Review {language} code in {filepath or 'untitled'}",
-            )
-            workspace.work_product["code_to_review"] = code
-            workspace.work_product["language"] = language
-            workspace.work_product["filepath"] = filepath
-
-            guardian = GuardianAgent()
-            reflection = ReflectionAgent()
-
-            try:
-                approved, feedback = await guardian.validate(workspace, "default_user")
-                review_notes.append(f"Guardian review: approved={approved}")
-                if feedback:
-                    review_notes.append(f"Guardian feedback: {feedback}")
-                    if "violation" in feedback.lower() or "issue" in feedback.lower():
-                        issues.append(
-                            {
-                                "type": "guardian_violation",
-                                "message": feedback[:500],
-                                "severity": "warning",
-                                "source": "kilo-guardian",
-                            }
-                        )
-                    else:
-                        suggestions.append(feedback)
-            except Exception as exc:
-                logger.debug(f"[KiloReviewer] Guardian.validate unavailable: {exc}")
-
-            try:
-                await reflection.run(workspace, "default_user")
-                reflection_output = workspace.work_product.get("reflection_output", "")
-                if reflection_output:
-                    review_notes.append(f"Reflection: {reflection_output[:500]}")
-                    suggestions.append(reflection_output[:200])
-            except Exception as exc:
-                logger.debug(f"[KiloReviewer] Reflection.run unavailable: {exc}")
-
-        except ImportError:
-            logger.info("[KiloReviewer] Backend GuardianAgent not available, trying CLI ...")
 
         # Strategy 2: Try kilocode CLI
         if not issues and not suggestions:
