@@ -143,7 +143,8 @@ export const useStore = create<SupremeState>((set) => ({
     set({ isForging: true, forgeFeedback: "🧠 Self-Evolution Core is structuring your request...", forgeSuccessCode: null });
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data = await apiClient.post<any>('/api/v1/evolution/forge'  # #2206: router mounted under /api/v1, {
+      // #2206: router mounted under /api/v1
+      const data = await apiClient.post<any>('/api/v1/evolution/forge', {
         skill_name: skillName,
         user_demand: userDemand,
       });
