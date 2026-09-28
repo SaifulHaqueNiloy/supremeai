@@ -232,9 +232,16 @@ class AutoSkillCreator:
 
         start_time = time.time()
 
-        from skills.schema import UniversalSkillSchema
+        # UniversalSkillSchema imported inside try block below (#2206)
 
         from core.llm.llm_gateway import llm_gateway
+
+        # #2206: moved inside try block (skills.schema is at repo root, not in backend/ Docker image)
+        try:
+            from skills.schema import UniversalSkillSchema
+        except ModuleNotFoundError:
+            logger.warning("skills.schema not available (production image) — using fallback dict")
+            UniversalSkillSchema = None
 
         logger.info(
             f"🧠 Self-Evolution Triggered: Designing skill '{skill_name}' for demand: '{user_demand}'"
@@ -386,14 +393,18 @@ class AutoSkillCreator:
                 )
                 raise SecurityError(f"Governance violation: {reason}")
 
-            try:
-                uss = UniversalSkillSchema(**schema_dict)
-            except Exception as e:
-                logger.error(f"❌ USS Validation failed: {e}")
-                return {
-                    "success": False,
-                    "error": f"USS Validation Exception: {e!s}",
-                }
+            if UniversalSkillSchema is None:
+                logger.warning("skills.schema unavailable — skipping USS validation")
+                uss = schema_dict  # fallback: use raw dict
+            else:
+                try:
+                    uss = UniversalSkillSchema(**schema_dict)
+                except Exception as e:
+                    logger.error(f"❌ USS Validation failed: {e}")
+                    return {
+                        "success": False,
+                        "error": f"USS Validation Exception: {e!s}",
+                    }
 
             # ৫. Quarantine Zone & Automated Testing Loop
             quarantine_dir.mkdir(parents=True, exist_ok=True)

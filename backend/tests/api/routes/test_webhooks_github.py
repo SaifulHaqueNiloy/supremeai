@@ -55,7 +55,7 @@ def _post(
         "Content-Type": "application/json",
     }
     if action is not None:
-        headers["X-GitHub-Action"] = action
+        pass  # #2205: action is in the JSON body (payload["action"]), not a header
     if signature is not None:
         headers["X-Hub-Signature-256"] = signature
     return client.post("/api/webhooks/github", content=body, headers=headers)
