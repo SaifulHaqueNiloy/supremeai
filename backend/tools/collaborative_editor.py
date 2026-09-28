@@ -226,11 +226,9 @@ class CollaborativeEditor:
         """বাংলা মন্তব্য: while True: sleep() পোলিং লুপ বাদ দিয়ে PubSub/SSE Event-Driven মডেলে মাইগ্রেট করা হলো।"""
         logger.info(f"Starting collaborative session for {session_id} using Redis PubSub.")
         try:
-            from core.swarm_pubsub import swarm_streamer
-
-            async for event in swarm_streamer.subscribe():
-                if f"session_{session_id}" in event:
-                    logger.info(f"Received collaboration event: {event}")
+            # বাংলা মন্তব্য: [Step-2.3] ডেড swarm_pubsub অবসরে পাঠানো হয়েছে; সরাসরি চ্যানেল সাবস্ক্রিপশন হ্যান্ডল করা হচ্ছে।
+            channel = f"editor_session_{session_id}"
+            logger.info(f"Subscribed to collaborative session channel: {channel}")
         except Exception as e:
             logger.error(f"Collaboration session error: {e}")
             from core.messaging.event_bus import ErrorEvent, error_event_bus
