@@ -1,7 +1,6 @@
 """Fail-closed gate for in-process execution of LLM-generated code (issue #704).
 
-#704 (P2): ``backend/tools/ephemeral_synthesizer.py`` and
-``backend/services/tool_forge.py`` execute LLM-generated Python via in-process
+#704 (P2): ``backend/services/tool_forge.py`` executes LLM-generated Python via in-process
 ``exec()`` with a restricted ``__builtins__`` namespace. Restricted builtins are
 NOT a security boundary (attribute-chain escapes are well known), so running
 model-generated code inside the API process is a sandbox-escape / RCE risk.
