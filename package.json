@@ -68,7 +68,7 @@
     "@types/ioredis": "^5.0.0",
     "@types/node": "^24.13.3",
     "@webcontainer/api": "^1.6.4",
-    "dotenv": "^17.4.2",
+    "dotenv": "^18.0.4",
     "ioredis": "^5.11.1",
     "rollup": "^4.63.0"
   }
