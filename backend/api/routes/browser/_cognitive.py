@@ -1,5 +1,5 @@
 """SupremeBrowser advanced cognitive suite endpoints (L4 semantic click,
-L4 cascade, L5 autonomous goal, L5+ swarm exploration).
+L4 cascade, L5 autonomous goal).
 
 Split out of the former single-module api/routes/browser.py verbatim.
 Heavy browser/ dependencies are imported lazily inside the handlers,
@@ -17,11 +17,6 @@ from api.routes.browser._tasks import GoalRequest
 class SemanticClickRequest(BaseModel):
     target: str
     context: str = ""
-
-
-class SwarmExploreRequest(BaseModel):
-    site: str
-    sub_goals: list[str]
 
 
 @router.post("/semantic-click")
@@ -82,14 +77,4 @@ async def run_autonomous_goal(req: GoalRequest):
 
     agent = AutonomousBrowserAgent(session=None)
     result = await agent.achieve(req.goal)
-    return result
-
-
-@router.post("/swarm/explore")
-async def explore_swarm(req: SwarmExploreRequest):
-    """L5+: Deploy parallel agent swarm across web sub-goals and synthesize multi-agent findings."""
-    from browser.swarm_browser import SwarmBrowser
-
-    swarm = SwarmBrowser()
-    result = await swarm.explore(req.site, req.sub_goals)
     return result

@@ -142,12 +142,6 @@ ALL_ROUTERS = [
         "is_critical": False,
     },
     {"path": "api.routes.admin_v1", "prefix": "", "is_admin": False, "is_critical": False},
-    {
-        "path": "api.routes.agent_action",
-        "prefix": "/api/v1",
-        "is_admin": False,
-        "is_critical": False,
-    },
     # {"path": "api.routes.websocket_hitl", "prefix": "", "is_admin": False, "is_critical": False},
     # R10 FIX: SSE stream for the HITL route
     {"path": "api.routes.stream_hitl_sse", "prefix": "", "is_admin": False, "is_critical": False},

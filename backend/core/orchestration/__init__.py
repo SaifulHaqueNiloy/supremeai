@@ -5,7 +5,6 @@ from .cognitive_pipeline_dispatcher import (
     get_master_orchestrator,
 )
 from .periodic_task_scheduler import Orchestrator, PeriodicTaskScheduler
-from .swarm_orchestrator import SwarmOrchestrator
 
 __all__ = [
     "CognitivePipelineDispatcher",
@@ -14,5 +13,4 @@ __all__ = [
     "get_master_orchestrator",
     "PeriodicTaskScheduler",
     "Orchestrator",
-    "SwarmOrchestrator",
 ]
