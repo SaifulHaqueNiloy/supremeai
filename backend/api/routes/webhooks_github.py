@@ -154,13 +154,14 @@ async def github_webhook(request: Request) -> JSONResponse:
 
     event = request.headers.get("X-GitHub-Event", "")
     delivery_id = request.headers.get("X-GitHub-Delivery", "")
-    action = request.headers.get("X-GitHub-Action")
 
     try:
         payload = json.loads(raw or b"{}")
     except ValueError:
         logger.error(f"[webhook-audit] REJECTED reason=invalid_json delivery={delivery_id}")
         return JSONResponse(status_code=422, content={"detail": "invalid JSON payload"})
+
+    action = payload.get("action")  # #2205: GitHub puts action in body, not header
 
     repo = (payload.get("repository") or {}).get("full_name", "")
     if repo != _allowed_repository():

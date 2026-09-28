@@ -10,7 +10,15 @@ import os
 from enum import StrEnum
 from typing import Any
 
-import psycopg2
+# বাংলা মন্তব্য: psycopg2 অপশনাল mcp-tools গ্রুপের ডিপেন্ডেন্সি — ড্রাইভার-বিহীন
+# পরিবেশেও (লোকাল স্যান্ডবক্স/লাইট CI) মডিউল লোড যেন ক্র্যাশ না করে সে জন্য
+# সেফ ইমপোর্ট (supabase_client.py কনভেনশন)। লেজি ইমপোর্ট নয় — কারণ
+# tests/tools/mcp টেস্টগুলো mn.psycopg2 মডিউল অ্যাট্রিবিউটে মাংকিপ্যাচ করে,
+# সে কন্ট্র্যাক্ট সংরক্ষণ করা আবশ্যক (#2334)।
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -46,6 +54,9 @@ def _get_connection(db_url: str | None = None):
     """PostgreSQL কানেকশন পায়।"""
     target_url = db_url or _get_neon_db_url()
     if not target_url or target_url.startswith("sqlite"):
+        return None
+    if psycopg2 is None:
+        logger.error("psycopg2 driver not installed — Neon DB connection unavailable (#2334)")
         return None
     try:
         conn = psycopg2.connect(target_url)
