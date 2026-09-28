@@ -77,11 +77,22 @@ async def initialize_independent_services(app):
                 # production would allow the live schema to drift from the application.
                 if os.getenv("AUTO_MIGRATE", "true").lower() == "true":
                     try:
+                        # #2204: scripts/db/auto_migrate.py exists at repo root,
+                        # NOT inside the backend/ Docker context. In production
+                        # (backend-only image), this import fails → was raising
+                        # fatal. Now: try import, graceful skip if not found
+                        # (migrations should run in CI/deploy pipeline, not
+                        # necessarily at app boot).
                         from scripts.db.auto_migrate import run_migrations
 
                         logger.info("🔄 Running automatic Alembic migrations on startup...")
                         await asyncio.to_thread(run_migrations)
                         logger.info("✅ Automatic Alembic migrations completed.")
+                    except ModuleNotFoundError:
+                        logger.info(
+                            "ℹ️ Auto-migrate module not in image (production) — "
+                            "migrations run via CI/deploy pipeline. Skipping."
+                        )
                     except Exception as mig_err:
                         if settings.env == "production":
                             logger.critical("❌ Production database migration failed: %s", mig_err)
