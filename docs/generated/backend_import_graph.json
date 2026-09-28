@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3425,
+  "edge_count": 3424,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -5844,10 +5844,6 @@
       "to": "core.security.tool_gateway"
     },
     {
-      "from": "core.orchestration.master_cognitive_orchestrator",
-      "to": "core.orchestration.cognitive_pipeline_dispatcher"
-    },
-    {
       "from": "core.orchestration.periodic_task_scheduler",
       "to": "core.logging_config"
     },
@@ -11493,7 +11489,7 @@
     },
     {
       "from": "tests.orchestration.test_master_cognitive_orchestrator",
-      "to": "core.orchestration.master_cognitive_orchestrator"
+      "to": "core.orchestration.cognitive_pipeline_dispatcher"
     },
     {
       "from": "tests.p2p_tests.test_credit_system",
@@ -13704,7 +13700,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1999,
+  "module_count": 1998,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14391,7 +14387,6 @@
     "core.orchestration.cloud_sandbox_orchestrator",
     "core.orchestration.cognitive_pipeline_dispatcher",
     "core.orchestration.conversation_orchestrator",
-    "core.orchestration.master_cognitive_orchestrator",
     "core.orchestration.periodic_task_scheduler",
     "core.orchestration.trio_pipeline",
     "core.otp_router",
