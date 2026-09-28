@@ -169,7 +169,7 @@ jobs:
       - name: Install Test Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml pytest ruff pytest-asyncio anyio
+          pip install pyyaml pytest ruff pytest-asyncio anyio httpx
 
       - name: Constitution & Gates Self-Test
         run: |

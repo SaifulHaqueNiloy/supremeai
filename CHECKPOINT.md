@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-28 20:13 UTC
+- **Date:** 2026-09-28 20:15 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,22 +10,10 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/workflows/auto-delete-closed-pr-branch.yml`
-  - `.github/workflows/pr.yml`
   - `.github/scripts/constitution/gates.py`
-  - `.github/workflows/main.yml`
-  - `.github/workflows/system-gates.yml`
-  - `backend/alembic_migrations/versions/2026_09_28_194500_database_operational_truth.py`
-  - `backend/core/ai_memory/repository.py`
-  - `scripts/ci/generate_agents_md.py`
-  - `.github/workflows/ci.yml`
   - `CHECKPOINT.md`
-  - `.github/workflows/artifact-regen.yml`
-  - `.github/constitution/rules.yml`
-  - `.github/workflows/integration-gate.yml`
-  - `.github/workflows/pr-gate.yml`
-  - `AGENTS.md`
-  - `.github/workflows/merge-train.yml`
+  - `.github/workflows/main.yml`
+  - `.github/workflows/pr.yml`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
