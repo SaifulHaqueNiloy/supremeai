@@ -19,7 +19,7 @@
 - **লেসন:** (১) source-level/unit test pattern (app fixture ছাড়া) security tier-এ দ্রুত ও নির্ভরযোগ্য — `tests/security/` অটো critical-tier; (২) "scanner-এ vulnerability type আছে" ≠ "অ্যাপ নিরাপদ" — প্রতিটি control-এর behavior-level test দরকার; (৩) pre-existing env-related failures (`aiosqlite`-না-থাকা, MCP `getaddrinfo` mock) static audit-কে যাচাই করার সময় baseline-এ আলাদা করতে হয়; (৪) credential-less staging ছাড়া DAST/IDOR runtime test সম্ভব না — `ZAP_DAST_GATE.md` deploy-gate design-এ লক করা হয়েছে।
 
 - **সমস্যা:** ব্যাকএন্ড এপিআই, ফ্রন্টএন্ড ওয়েব অ্যাপ, ডকুমেন্টেশন, এআই এজেন্ট বা রিমোট কানেকশনে bare `http://localhost...` লিঙ্ক দিলে রিমোট এআই বা ক্লাউড সার্ভিস সার্ভিসগুলোর সাথে কানেকশন ফেইল করে।
-- **ফিক্স:** `AGENTS.md`-তে ইউনিভার্সাল রুল ৬ সিস্টেম-ওয়াইড বিস্তৃত করা হয়েছে—সামগ্রিক SupremeAI প্রজেক্টের (Backend APIs, Frontend, Docs, MCP, AI Agents) যেকোনো কানেকশন বা নির্দেশনায় bare `localhost` ব্যবহার সম্পূর্ণ নিষিদ্ধ। সবসময় প্রডাকশন ডোমেইন লিঙ্ক (`https://...onrender.com`) অথবা লাইভ টানেল এন্ডপয়েন্ট (`cloudflared`/`ngrok`) রেকমেন্ড করতে হবে।
+- **ফিক্স:** `AGENTS.md`-তে ইউনিভার্সাল রুল ৬ সিস্টেম-ওয়াইড বিস্তৃত করা হয়েছে—সামগ্রিক SupremeAI প্রজেক্টের (Backend APIs, Frontend, Docs, MCP, AI Agents) যেকোনো কানেকশন বা নির্দেশনায় bare `localhost` ব্যবহার সম্পূর্ণ নিষিদ্ধ। সবসময় প্রডাকশন ডোমেইন লিঙ্ক (`https://<production-domain>`) অথবা লাইভ টানেল এন্ডপয়েন্ট (`cloudflared`/`ngrok`) রেকমেন্ড করতে হবে।
 - **লেসন:** ক্লাউড সার্ভিস বা রিমোট ক্লায়েন্ট কখনো ডিভাইসের লোকাল লুপব্যাক আইপি (`127.0.0.1`/`localhost`) এক্সেস করতে পারে না; পুরো সুপ্রিমএআই ইকোসিস্টেমে পাবলিকলি এক্সেসিবল এন্ডপয়েন্ট বা টানেল বাধ্যতামূলক।
 
 ---
