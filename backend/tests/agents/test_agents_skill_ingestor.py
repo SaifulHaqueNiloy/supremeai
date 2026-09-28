@@ -171,3 +171,36 @@ class TestSkillIngestorIngestMCP:
             # Should return a dict with success status
             assert isinstance(result, dict)
             assert result.get("success") is True, result
+
+
+class TestSkillIngestorHarvestedScanner:
+    """Step-2.5 (#2328): checks harvested from the retired ephemeral_synthesizer scanner."""
+
+    @pytest.mark.parametrize(
+        "code",
+        [
+            "import shutil",
+            "from shutil import rmtree",
+            "import builtins",
+            "from builtins import open",
+            "x = __import__('o' + 's')",
+            "g = globals()",
+            "l = locals()",
+            "import os.path",
+            "from os.path import join",
+            "import requests",
+        ],
+    )
+    def test_harvested_patterns_blocked(self, code):
+        with patch("backend.agents.skill_ingestor.DockerSandbox"):
+            from backend.agents.skill_ingestor import SkillIngestor
+
+            is_safe, _ = SkillIngestor().static_ast_safety_check(code)
+            assert is_safe is False
+
+    def test_safe_code_still_passes(self):
+        with patch("backend.agents.skill_ingestor.DockerSandbox"):
+            from backend.agents.skill_ingestor import SkillIngestor
+
+            code = "import json\ndef execute(p): return json.dumps(p)"
+            assert SkillIngestor().static_ast_safety_check(code) == (True, "AST verified.")
