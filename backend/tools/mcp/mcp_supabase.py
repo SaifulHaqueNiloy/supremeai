@@ -12,6 +12,15 @@ import os
 from enum import StrEnum
 from typing import Any
 
+# বাংলা মন্তব্য: psycopg2 অপশনাল mcp-tools গ্রুপের ডিপেন্ডেন্সি — ড্রাইভার-বিহীন
+# পরিবেশেও (লোকাল স্যান্ডবক্স/লাইট CI) মডিউল লোড যেন ক্র্যাশ না করে সে জন্য
+# সেফ ইমপোর্ট (mcp_neon.py #2334 কনভেনশন)। লেজি ইমপোর্ট নয় — কারণ
+# tests/tools/mcp টেস্টগুলো ms.psycopg2 মডিউল অ্যাট্রিবিউটে মাংকিপ্যাচ করে,
+# সে কন্ট্র্যাক্ট সংরক্ষণ করা আবশ্যক (#2365, #2332 regression)।
+try:
+    import psycopg2
+except ImportError:
+    psycopg2 = None
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -79,13 +88,10 @@ def _get_connection():
     supabase_db_url = _get_supabase_db_url()
     if not supabase_db_url or supabase_db_url.startswith("sqlite"):
         return None
+    if psycopg2 is None:
+        logger.error("psycopg2 driver not installed — Supabase DB connection unavailable (#2365)")
+        return None
     try:
-        # বাংলা মন্তব্য: psycopg2 কেবল এই কানেকশন পাথেই দরকার — লেজি ইমপোর্ট
-        # রাখায় ড্রাইভার-বিহীন পরিবেশেও (লোকাল স্যান্ডবক্স/লাইট CI) মডিউল লোড
-        # ও ইউনিট টেস্ট চলে; ড্রাইভার অনুপস্থিত হলে নিচের except পাথ
-        # স্ট্যান্ডার্ড "Failed to connect" আচরণে নেমে আসে (#2329)।
-        import psycopg2
-
         conn = psycopg2.connect(supabase_db_url)
         return conn
     except Exception as e:
