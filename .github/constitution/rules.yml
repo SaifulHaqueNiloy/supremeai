@@ -334,8 +334,9 @@ lease_policy:
   bot_branch_regex: '^([a-z0-9]+)-([0-9]+)([-_.].+)?$'
   exempt_authors: ["dependabot[bot]", "github-actions[bot]", "renovate[bot]"]
   docs_branch_prefix: "docs/"
-  # Flexible Group Branching (#2378): group/* branches lease by group membership
-  # (active claim on a group:<name> issue), not by slot pattern.
+  # Flexible Group Branching (#2378): group/* branches lease by group claim
+  # participation (claim comment on a group:<name> issue — active or completed),
+  # not by slot pattern.
   group_branch_prefix: "group/"
   mesh_advisory_env: "SUPREME_MESH_URL"
 

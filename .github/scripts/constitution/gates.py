@@ -363,8 +363,10 @@ def check_lease(author: str, branch: str, policy: dict) -> tuple[bool, str]:
     if branch.startswith(docs_prefix):
         return True, f"docs branch '{branch}' allowed for slot {lane}-{slot}"
     # Flexible Group Branching (#2378): group/* branches lease by group
-    # membership, not slot pattern — the PR author must hold an active claim
-    # on an issue carrying the matching `group:<name>` label.
+    # participation, not slot pattern — the PR author must have a claim comment
+    # (active or completed) on an open issue carrying the matching
+    # `group:<name>` label. Historical participation is accepted because the
+    # group PR stays open after each member's claim is released.
     group_prefix = policy.get("group_branch_prefix", DEFAULT_LEASE_POLICY["group_branch_prefix"])
     if branch.startswith(group_prefix):
         return _group_lease_check(author, lane, slot, branch[len(group_prefix):].strip("/"))
@@ -389,22 +391,18 @@ def _group_lease_check(author: str, lane: str, slot: str, group_name: str) -> tu
     """Group-branch lease (#2378 Flexible Group Branching Protocol).
 
     # বাংলা মন্তব্য: Connected Work মডেলে একাধিক bot একই group/<name> ব্রাঞ্চে
-    # কাজ করে — তাই slot-pattern নয়, গ্রুপ-সদস্যতা যাচাই হয়: PR author-এর
-    # slot-identity সংশ্লিষ্ট group:<name> লেবেলযুক্ত কোনো status:in-progress
-    # ইস্যুর claim comment-এ থাকতে হবে। API না চললে advisory pass
-    # (mesh-advisory pattern — CI কখনো mesh/API uptime-এর ওপর hard-depend করে না)।
+    # কাজ করে এবং গ্রুপ PR সদস্যের claim release হওয়ার পরেও খোলা থাকে — তাই
+    # যাচাই হয় গ্রুপ-অংশগ্রহণ: PR author-এর slot-identity সংশ্লিষ্ট group:<name>
+    # লেবেলযুক্ত কোনো খোলা ইস্যুর claim comment-এ থাকতে হবে (সক্রিয় বা সম্পন্ন —
+    # দুটোই গণ্য)। API না চললে advisory pass (mesh-advisory pattern — CI
+    # কখনো API uptime-এর ওপর hard-depend করে না)।
     """
     identities = {author, author.removesuffix("-bot"), f"{lane}-{slot}"}
     label = f"group:{group_name}"
     try:
         query = f"repos/{_repo()}/issues?labels={urllib.parse.quote(label)}&state=open&per_page=50"
         issues = gh_api(query) or []
-        active = []
-        for iss in issues:
-            lbls = {l.get("name", "") for l in (iss.get("labels") or [])}
-            if "status:in-progress" in lbls:
-                active.append(iss)
-        for iss in active[:10]:
+        for iss in issues[:10]:
             num = iss.get("number")
             try:
                 comments = gh_api(f"repos/{_repo()}/issues/{num}/comments?per_page=50") or []
@@ -414,17 +412,18 @@ def _group_lease_check(author: str, lane: str, slot: str, group_name: str) -> tu
                 text = c.get("body") or ""
                 if any(ident and ident in text for ident in identities):
                     return True, (
-                        f"group branch 'group/{group_name}' allowed: active claim found on "
-                        f"#{num} for '{author}' (slot {lane}-{slot})"
+                        f"group branch 'group/{group_name}' allowed: claim participation found "
+                        f"on #{num} for '{author}' (slot {lane}-{slot})"
                     )
-        if not active:
+        if not issues:
             return False, (
-                f"group branch 'group/{group_name}' has no active claim — an agent must hold "
-                f"status:in-progress on a '{label}' issue before pushing to the group branch (#2378)"
+                f"group branch 'group/{group_name}' has no open '{label}' issue — group lease "
+                f"unverifiable; open/claim a group issue before pushing (#2378)"
             )
         return False, (
-            f"author '{author}' (slot {lane}-{slot}) has no active claim on any '{label}' issue "
-            f"— claim a group issue before pushing to 'group/{group_name}' (#2378)"
+            f"author '{author}' (slot {lane}-{slot}) has no claim participation on any "
+            f"'{label}' issue — run atomic_claim.sh on a group issue before pushing "
+            f"to 'group/{group_name}' (#2378)"
         )
     except Exception as err:  # noqa: BLE001 — CI cannot hard-depend on API uptime
         print(f"::warning::group lease check unavailable ({err}) — advisory pass for 'group/{group_name}'")
