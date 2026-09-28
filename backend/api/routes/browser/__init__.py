@@ -129,8 +129,6 @@ from ._automation import (  # noqa: F401,E402  (re-exports)
 )
 from ._cognitive import (  # noqa: F401,E402  (re-exports)
     SemanticClickRequest,
-    SwarmExploreRequest,
-    explore_swarm,
     run_autonomous_goal,
     semantic_click,
     smart_click,

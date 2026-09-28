@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3489,
+  "edge_count": 3432,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -474,14 +474,6 @@
     {
       "from": "agents.evolution_agents.adversarial_defense_agent",
       "to": "core.cache"
-    },
-    {
-      "from": "agents.evolution_agents.federated_learning_agent",
-      "to": "core.unified_learning"
-    },
-    {
-      "from": "agents.evolution_agents.meta_learning_agent",
-      "to": "core.unified_learning"
     },
     {
       "from": "agents.evolution_agents.multi_agent_collaboration_agent",
@@ -1412,34 +1404,6 @@
       "to": "core.messaging.event_bus"
     },
     {
-      "from": "api.routes.agent_action",
-      "to": "api.dependencies"
-    },
-    {
-      "from": "api.routes.agent_action",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "api.routes.agent_action",
-      "to": "core.security.security_vault"
-    },
-    {
-      "from": "api.routes.agent_action",
-      "to": "core.security.tool_gateway"
-    },
-    {
-      "from": "api.routes.agent_action",
-      "to": "core.zero_cost_architecture.swarm_orchestrator_integration"
-    },
-    {
-      "from": "api.routes.agent_action",
-      "to": "database.session"
-    },
-    {
-      "from": "api.routes.agent_action",
-      "to": "models.integration"
-    },
-    {
       "from": "api.routes.agent_breeding",
       "to": "core.config"
     },
@@ -1490,10 +1454,6 @@
     {
       "from": "api.routes.agent_tasks",
       "to": "core.logging_config"
-    },
-    {
-      "from": "api.routes.agent_tasks",
-      "to": "core.zero_cost_architecture.swarm_orchestrator_integration"
     },
     {
       "from": "api.routes.agent_workspace",
@@ -1741,6 +1701,10 @@
     },
     {
       "from": "api.routes.browser",
+      "to": "core.kernel.audit_logger"
+    },
+    {
+      "from": "api.routes.browser",
       "to": "core.logging_config"
     },
     {
@@ -1766,10 +1730,6 @@
     {
       "from": "api.routes.browser",
       "to": "core.neon_repository"
-    },
-    {
-      "from": "api.routes.browser",
-      "to": "core.observability.audit_logger"
     },
     {
       "from": "api.routes.browser",
@@ -1825,7 +1785,7 @@
     },
     {
       "from": "api.routes.browser._credentials",
-      "to": "core.observability.audit_logger"
+      "to": "core.kernel.audit_logger"
     },
     {
       "from": "api.routes.browser._credentials",
@@ -2050,10 +2010,6 @@
     {
       "from": "api.routes.chat",
       "to": "api.deps"
-    },
-    {
-      "from": "api.routes.chat",
-      "to": "brain.supreme_learning_engine"
     },
     {
       "from": "api.routes.chat",
@@ -3512,10 +3468,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "api.routes.webhooks_github",
-      "to": "core.orchestration.handoff_schema"
-    },
-    {
       "from": "api.routes.websocket_hitl",
       "to": "core.config"
     },
@@ -3872,10 +3824,6 @@
       "to": "tools.code.cot_reasoner"
     },
     {
-      "from": "brain.supreme_learning_engine",
-      "to": "core.unified_learning"
-    },
-    {
       "from": "brain.task_execution_engine",
       "to": "core.logging_config"
     },
@@ -3933,22 +3881,6 @@
     },
     {
       "from": "browser.session_manager",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "browser.swarm_browser",
-      "to": "brain.reasoning_orchestrator"
-    },
-    {
-      "from": "browser.swarm_browser",
-      "to": "browser.autonomous_browser"
-    },
-    {
-      "from": "browser.swarm_browser",
-      "to": "browser.session_manager"
-    },
-    {
-      "from": "browser.swarm_browser",
       "to": "core.logging_config"
     },
     {
@@ -5156,10 +5088,6 @@
       "to": "core.intelligence.models"
     },
     {
-      "from": "core.intelligence.swarm_consensus",
-      "to": "core.logging_config"
-    },
-    {
       "from": "core.intelligence.verification",
       "to": "core.intelligence.models"
     },
@@ -5209,11 +5137,47 @@
     },
     {
       "from": "core.kernel",
+      "to": "core.kernel.audit_chain"
+    },
+    {
+      "from": "core.kernel",
+      "to": "core.kernel.audit_logger"
+    },
+    {
+      "from": "core.kernel",
       "to": "core.kernel.dispatcher"
     },
     {
       "from": "core.kernel",
       "to": "core.kernel.interface"
+    },
+    {
+      "from": "core.kernel.audit_chain",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.kernel.audit_chain",
+      "to": "models.mcp_audit_event"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.config"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.degraded_mode"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.persistence"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.persistence.write_behind"
     },
     {
       "from": "core.kernel.dispatcher",
@@ -5230,6 +5194,10 @@
     {
       "from": "core.kernel.dispatcher",
       "to": "core.circles.registry"
+    },
+    {
+      "from": "core.kernel.dispatcher",
+      "to": "core.kernel.audit_logger"
     },
     {
       "from": "core.kernel.dispatcher",
@@ -5584,14 +5552,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "core.mcp_audit_chain",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.mcp_audit_chain",
-      "to": "models.mcp_audit_event"
-    },
-    {
       "from": "core.mcp_client",
       "to": "core.config"
     },
@@ -5756,26 +5716,6 @@
       "to": "core.config"
     },
     {
-      "from": "core.observability.audit_logger",
-      "to": "core.config"
-    },
-    {
-      "from": "core.observability.audit_logger",
-      "to": "core.degraded_mode"
-    },
-    {
-      "from": "core.observability.audit_logger",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.observability.audit_logger",
-      "to": "core.persistence"
-    },
-    {
-      "from": "core.observability.audit_logger",
-      "to": "core.persistence.write_behind"
-    },
-    {
       "from": "core.observability.log_batcher",
       "to": "core.logging_config"
     },
@@ -5904,14 +5844,6 @@
       "to": "core.security.tool_gateway"
     },
     {
-      "from": "core.orchestration.crew_departments",
-      "to": "core.orchestration.swarm_agent_roles"
-    },
-    {
-      "from": "core.orchestration.handoff_schema",
-      "to": "core.logging_config"
-    },
-    {
       "from": "core.orchestration.master_cognitive_orchestrator",
       "to": "core.orchestration.cognitive_pipeline_dispatcher"
     },
@@ -5934,66 +5866,6 @@
     {
       "from": "core.orchestration.periodic_task_scheduler",
       "to": "core.self_evolution.skill_graph"
-    },
-    {
-      "from": "core.orchestration.swarm_agent_roles",
-      "to": "core.llm.llm_gateway"
-    },
-    {
-      "from": "core.orchestration.swarm_agent_roles",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.orchestration.swarm_agent_roles",
-      "to": "core.skill_manager"
-    },
-    {
-      "from": "core.orchestration.swarm_agent_roles",
-      "to": "models.shared_workspace"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.agent_factory"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.intelligence"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.intelligence.manual_tasks"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.mcp_client"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.orchestration.swarm_agent_roles"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.resilience.circuit_breaker"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.skill_manager"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.skills.core_skills"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "core.skills.integrations"
-    },
-    {
-      "from": "core.orchestration.swarm_orchestrator",
-      "to": "models.shared_workspace"
     },
     {
       "from": "core.orchestration.trio_pipeline",
@@ -6732,10 +6604,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "core.self_evolution.federated_learning.fed_learning",
-      "to": "core.unified_learning"
-    },
-    {
       "from": "core.self_evolution.fitness_engine",
       "to": "core.logging_config"
     },
@@ -7056,10 +6924,6 @@
       "to": "core.tier8.skill_marketplace_curator"
     },
     {
-      "from": "core.tier8",
-      "to": "core.tier8.swarm_coordination_agent"
-    },
-    {
       "from": "core.tier8.agent_evolution_engine",
       "to": "core.base"
     },
@@ -7132,34 +6996,6 @@
       "to": "core.observability.telemetry"
     },
     {
-      "from": "core.tier8.swarm_coordination_agent",
-      "to": "core.base"
-    },
-    {
-      "from": "core.tier8.swarm_coordination_agent",
-      "to": "core.config"
-    },
-    {
-      "from": "core.tier8.swarm_coordination_agent",
-      "to": "core.llm.llm_gateway"
-    },
-    {
-      "from": "core.tier8.swarm_coordination_agent",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.tier8.swarm_coordination_agent",
-      "to": "core.observability.telemetry"
-    },
-    {
-      "from": "core.tier8.swarm_coordination_agent",
-      "to": "core.swarm_pubsub"
-    },
-    {
-      "from": "core.tier8.swarm_coordination_agent",
-      "to": "services.config_service"
-    },
-    {
       "from": "core.tier8.tier8_integration",
       "to": "core.health.health_monitor"
     },
@@ -7222,22 +7058,6 @@
     {
       "from": "core.utils.lazy_loader",
       "to": "core.logging_config"
-    },
-    {
-      "from": "core.zero_cost_architecture.swarm_orchestrator_integration",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.zero_cost_architecture.swarm_orchestrator_integration",
-      "to": "core.orchestration.swarm_orchestrator"
-    },
-    {
-      "from": "core.zero_cost_architecture.swarm_orchestrator_integration",
-      "to": "core.zero_cost_architecture.zero_cost_patch_phase1_4"
-    },
-    {
-      "from": "core.zero_cost_architecture.swarm_orchestrator_integration",
-      "to": "models.shared_workspace"
     },
     {
       "from": "core.zero_cost_architecture.zero_cost_patch_phase1_4",
@@ -8121,10 +7941,6 @@
     },
     {
       "from": "models.execution_policy",
-      "to": "models.base"
-    },
-    {
-      "from": "models.handoff_event",
       "to": "models.base"
     },
     {
@@ -9037,7 +8853,11 @@
     },
     {
       "from": "services.dynamic_ai.learning_engine",
-      "to": "core.unified_learning"
+      "to": "core.learning"
+    },
+    {
+      "from": "services.dynamic_ai.learning_engine",
+      "to": "core.logging_config"
     },
     {
       "from": "services.dynamic_ai.local_fallback",
@@ -9165,15 +8985,15 @@
     },
     {
       "from": "services.knowledge_qa",
+      "to": "core.kernel.audit_logger"
+    },
+    {
+      "from": "services.knowledge_qa",
       "to": "core.llm.llm_gateway"
     },
     {
       "from": "services.knowledge_qa",
       "to": "core.logging_config"
-    },
-    {
-      "from": "services.knowledge_qa",
-      "to": "core.observability.audit_logger"
     },
     {
       "from": "services.knowledge_qa",
@@ -9736,10 +9556,6 @@
       "to": "api.routes.slash_commands"
     },
     {
-      "from": "tests.api.routes.test_swarm_adapter_contracts",
-      "to": "models.shared_workspace"
-    },
-    {
       "from": "tests.api.test_admin",
       "to": "api.dependencies"
     },
@@ -9972,18 +9788,6 @@
       "to": "core.app"
     },
     {
-      "from": "tests.api.test_sworm_adapter_contract",
-      "to": "api.deps"
-    },
-    {
-      "from": "tests.api.test_sworm_adapter_contract",
-      "to": "core.app"
-    },
-    {
-      "from": "tests.api.test_sworm_adapter_contract",
-      "to": "core.zero_cost_architecture.swarm_orchestrator_integration"
-    },
-    {
       "from": "tests.api.test_task_endpoints",
       "to": "core.app"
     },
@@ -10190,22 +9994,6 @@
     {
       "from": "tests.core.orchestration.test_spoke_contracts",
       "to": "core.orchestration.conversation_orchestrator"
-    },
-    {
-      "from": "tests.core.orchestration.test_swarm_agent_roles_full",
-      "to": "core.orchestration"
-    },
-    {
-      "from": "tests.core.orchestration.test_swarm_agent_roles_full",
-      "to": "core.orchestration.swarm_agent_roles"
-    },
-    {
-      "from": "tests.core.orchestration.test_swarm_agent_roles_full",
-      "to": "models.shared_workspace"
-    },
-    {
-      "from": "tests.core.orchestration.test_swarm_orchestrator",
-      "to": "core.orchestration.swarm_orchestrator"
     },
     {
       "from": "tests.core.orchestration.test_synthetic_business_workflows",
@@ -11005,7 +10793,7 @@
     },
     {
       "from": "tests.core.test_mcp_audit_chain",
-      "to": "core.mcp_audit_chain"
+      "to": "core.kernel.audit_chain"
     },
     {
       "from": "tests.core.test_mcp_audit_chain",
@@ -11086,14 +10874,6 @@
     {
       "from": "tests.core.test_nats_messaging",
       "to": "core.messaging.nats_messaging"
-    },
-    {
-      "from": "tests.core.test_orchestrators_crew",
-      "to": "core.orchestration.crew_departments"
-    },
-    {
-      "from": "tests.core.test_orchestrators_crew",
-      "to": "models.shared_workspace"
     },
     {
       "from": "tests.core.test_origin_validator",
@@ -11394,10 +11174,6 @@
     {
       "from": "tests.core.test_stream",
       "to": "core.app"
-    },
-    {
-      "from": "tests.core.test_swarm_orchestrator",
-      "to": "models.shared_workspace"
     },
     {
       "from": "tests.core.test_swarm_pubsub",
@@ -12221,7 +11997,7 @@
     },
     {
       "from": "tests.services.test_monitoring",
-      "to": "core.observability.audit_logger"
+      "to": "core.kernel.audit_logger"
     },
     {
       "from": "tests.services.test_monitoring",
@@ -12554,10 +12330,6 @@
     {
       "from": "tests.test_supreme_kernel",
       "to": "core.kernel.interface"
-    },
-    {
-      "from": "tests.test_swarm_and_ephemeral",
-      "to": "core.intelligence.swarm_consensus"
     },
     {
       "from": "tests.test_swarm_and_ephemeral",
@@ -13545,15 +13317,15 @@
     },
     {
       "from": "tools.mcp.mcp_server",
+      "to": "core.kernel.audit_chain"
+    },
+    {
+      "from": "tools.mcp.mcp_server",
       "to": "core.logging_config"
     },
     {
       "from": "tools.mcp.mcp_server",
       "to": "core.mcp_audit"
-    },
-    {
-      "from": "tools.mcp.mcp_server",
-      "to": "core.mcp_audit_chain"
     },
     {
       "from": "tools.mcp.mcp_server",
@@ -13960,7 +13732,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2021,
+  "module_count": 2000,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14060,8 +13832,6 @@
     "agents.domain.bangla_nlp_agent",
     "agents.evolution_agents",
     "agents.evolution_agents.adversarial_defense_agent",
-    "agents.evolution_agents.federated_learning_agent",
-    "agents.evolution_agents.meta_learning_agent",
     "agents.evolution_agents.multi_agent_collaboration_agent",
     "agents.governance",
     "agents.governance.bias_detection_agent",
@@ -14169,7 +13939,6 @@
     "api.routes.admin_v1",
     "api.routes.advanced_router",
     "api.routes.agent",
-    "api.routes.agent_action",
     "api.routes.agent_breeding",
     "api.routes.agent_registry",
     "api.routes.agent_tasks",
@@ -14356,7 +14125,6 @@
     "brain.parallel_cloud_router",
     "brain.performance_aware_router",
     "brain.reasoning_orchestrator",
-    "brain.supreme_learning_engine",
     "brain.task_execution_engine",
     "brain.user_digital_twin",
     "browser.action_cascade",
@@ -14365,7 +14133,6 @@
     "browser.browsing_memory",
     "browser.semantic_dom",
     "browser.session_manager",
-    "browser.swarm_browser",
     "browser.vision_grounding",
     "byoc",
     "byoc.cloud_connector",
@@ -14545,7 +14312,6 @@
     "core.intelligence.models",
     "core.intelligence.precognitive_risk",
     "core.intelligence.router",
-    "core.intelligence.swarm_consensus",
     "core.intelligence.synaptic_memory",
     "core.intelligence.verification",
     "core.intelligent_cache",
@@ -14557,6 +14323,8 @@
     "core.ip_blocklist_manager",
     "core.kaggle_orchestrator",
     "core.kernel",
+    "core.kernel.audit_chain",
+    "core.kernel.audit_logger",
     "core.kernel.dispatcher",
     "core.kernel.interface",
     "core.knowledge_base",
@@ -14604,7 +14372,6 @@
     "core.markdown_indexer",
     "core.mcp_allowlist",
     "core.mcp_audit",
-    "core.mcp_audit_chain",
     "core.mcp_client",
     "core.mcp_policy",
     "core.memory",
@@ -14631,7 +14398,6 @@
     "core.monitoring",
     "core.neon_repository",
     "core.observability",
-    "core.observability.audit_logger",
     "core.observability.interfaces",
     "core.observability.log_batcher",
     "core.observability.metrics_registry",
@@ -14651,12 +14417,8 @@
     "core.orchestration.cloud_sandbox_orchestrator",
     "core.orchestration.cognitive_pipeline_dispatcher",
     "core.orchestration.conversation_orchestrator",
-    "core.orchestration.crew_departments",
-    "core.orchestration.handoff_schema",
     "core.orchestration.master_cognitive_orchestrator",
     "core.orchestration.periodic_task_scheduler",
-    "core.orchestration.swarm_agent_roles",
-    "core.orchestration.swarm_orchestrator",
     "core.orchestration.trio_pipeline",
     "core.otp_router",
     "core.output_validator",
@@ -14774,7 +14536,6 @@
     "core.self_evolution.digital_twin.topology",
     "core.self_evolution.evolution_engine",
     "core.self_evolution.evolution_react_agent",
-    "core.self_evolution.federated_learning.fed_learning",
     "core.self_evolution.fitness_engine",
     "core.self_evolution.neural_symbolic.integration",
     "core.self_evolution.performance_oracle",
@@ -14815,11 +14576,9 @@
     "core.tier8.codebase_refactor_proposer",
     "core.tier8.self_improvement_agent",
     "core.tier8.skill_marketplace_curator",
-    "core.tier8.swarm_coordination_agent",
     "core.tier8.tier8_integration",
     "core.tool_loop",
     "core.type_sync_bus",
-    "core.unified_learning",
     "core.unified_memory",
     "core.universal_rules",
     "core.upload_validator",
@@ -14829,7 +14588,6 @@
     "core.utils.lazy_loader",
     "core.utils.time_utils",
     "core.zero_cost_architecture",
-    "core.zero_cost_architecture.swarm_orchestrator_integration",
     "core.zero_cost_architecture.zero_cost_patch_phase1_4",
     "database",
     "database.db_repository",
@@ -14966,7 +14724,6 @@
     "models.evolution",
     "models.execution_log",
     "models.execution_policy",
-    "models.handoff_event",
     "models.integration",
     "models.local_model_handler",
     "models.localization",
@@ -15232,7 +14989,6 @@
     "tests.api.routes.test_session_stream",
     "tests.api.routes.test_slash_commands_full",
     "tests.api.routes.test_surf_endpoints_retired",
-    "tests.api.routes.test_swarm_adapter_contracts",
     "tests.api.routes.test_tenant_admin_isolation",
     "tests.api.routes.test_webhooks_github",
     "tests.api.test_admin",
@@ -15283,7 +15039,6 @@
     "tests.api.test_session_takeover",
     "tests.api.test_skills_routes",
     "tests.api.test_stream_chat_contract",
-    "tests.api.test_sworm_adapter_contract",
     "tests.api.test_task_endpoints",
     "tests.api.test_task_router",
     "tests.api.test_webhooks_ai",
@@ -15324,8 +15079,6 @@
     "tests.core.orchestration.test_conversation_orchestrator",
     "tests.core.orchestration.test_hub_spokes",
     "tests.core.orchestration.test_spoke_contracts",
-    "tests.core.orchestration.test_swarm_agent_roles_full",
-    "tests.core.orchestration.test_swarm_orchestrator",
     "tests.core.orchestration.test_synthetic_business_workflows",
     "tests.core.orchestration.test_trio_pipeline",
     "tests.core.plugins",
@@ -15495,7 +15248,6 @@
     "tests.core.test_multicloud",
     "tests.core.test_nats_messaging",
     "tests.core.test_optional_services",
-    "tests.core.test_orchestrators_crew",
     "tests.core.test_origin_validator",
     "tests.core.test_output_validator",
     "tests.core.test_output_validator_coverage",
@@ -15548,7 +15300,6 @@
     "tests.core.test_stategraph",
     "tests.core.test_stealth_networking",
     "tests.core.test_stream",
-    "tests.core.test_swarm_orchestrator",
     "tests.core.test_swarm_pubsub",
     "tests.core.test_swarm_pubsub_extended",
     "tests.core.test_target_registry",

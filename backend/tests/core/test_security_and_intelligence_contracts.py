@@ -5,7 +5,6 @@ Verifies importability + interface for:
 - ast_scanner (blocks eval, __import__, os.system in sandbox code)
 - api_key_limiter (rate limiting for API key auth)
 - intelligence.verification (external factual verification)
-- intelligence.swarm_consensus (multi-agent consensus)
 - learning.store (persistent learning store)
 - learning.loop (observe→analyze→propose loop)
 - cache.semantic_cache (vector similarity cache)
@@ -59,13 +58,6 @@ class TestIntelligenceVerificationContract:
         from core.intelligence.verification import VerificationEngine
 
         assert VerificationEngine is not None
-
-
-class TestSwarmConsensusContract:
-    def test_importable(self):
-        from core.intelligence.swarm_consensus import SwarmConsensusEngine
-
-        assert SwarmConsensusEngine is not None
 
 
 class TestLearningStoreContract:
