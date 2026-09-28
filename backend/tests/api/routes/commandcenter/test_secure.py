@@ -37,7 +37,9 @@ def test_commandcenter_secure_rules():
     resp = client.get("/admin-api/commandcenter/secure/rules", headers=ADMIN_HEADERS)
     assert resp.status_code == 200
     post_resp = client.post(
-        "/admin-api/commandcenter/secure/rules", json={"rule": "test"}, headers=ADMIN_HEADERS
+        "/admin-api/commandcenter/secure/rules",
+        json={"rule_name": "test_rule", "action": "allow", "pattern": ".*"},
+        headers=ADMIN_HEADERS,
     )
     assert post_resp.status_code == 200
 
