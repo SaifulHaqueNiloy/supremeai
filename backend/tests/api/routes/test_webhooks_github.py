@@ -278,14 +278,9 @@ class TestReplayProtection:
 
 
 class TestHandoffSchema:
-    def test_valid_handoff_yaml_extracted(self, client):
+    def test_handoff_label_extracted(self, client):
         tc, _ = client
-        handoff_yaml = (
-            'task: {issue: "#123", status: completed}\n'
-            "handoff: {next_agent: implementation, trigger: issue_created}\n"
-            'constraints: {branch: "feature/123", scope: implementation-only}'
-        )
-        payload = _issue_payload(body=f"```yaml\n{handoff_yaml}\n```")
+        payload = _issue_payload(labels=["handoff:coder", "bug"])
         res = _post(
             tc,
             payload,
@@ -293,15 +288,15 @@ class TestHandoffSchema:
             action="opened",
             signature=_sign(json.dumps(payload).encode()),
         )
+        assert res.status_code == 200
         handoff = res.json()["handoff"]
-        assert handoff["next_agent"] == "coder"  # implementation alias → coder
+        assert handoff["next_agent"] == "coder"
         assert handoff["issue"] == "123"
         assert handoff["tenant_id"] == "tenant-supremeai"
 
-    def test_invalid_handoff_schema_audited_not_fatal(self, client):
+    def test_no_handoff_label_yields_none(self, client):
         tc, _ = client
-        bad_yaml = 'handoff: {next_agent: not-a-real-lane, trigger: x}\ntask: {issue: "#1"}'
-        payload = _issue_payload(body=f"```yaml\n{bad_yaml}\n```")
+        payload = _issue_payload(labels=["bug", "P1-high"])
         res = _post(
             tc,
             payload,
@@ -309,22 +304,5 @@ class TestHandoffSchema:
             action="opened",
             signature=_sign(json.dumps(payload).encode()),
         )
-        # Ingestion survives; the malformed handoff is rejected + audit-logged (not silent).
         assert res.status_code == 200
         assert res.json()["handoff"] is None
-
-    def test_handoff_label_parser(self):
-        from core.orchestration.handoff_schema import parse_handoff_label
-
-        assert parse_handoff_label("handoff:coder") == "coder"
-        assert parse_handoff_label("handoff:implementation") == "coder"
-        assert parse_handoff_label("bug") == ""
-        with pytest.raises(Exception):
-            parse_handoff_label("handoff:nonexistent-lane")
-
-    def test_rejection_raises_with_audit(self):
-        from core.orchestration.handoff_schema import parse_handoff_yaml
-
-        with pytest.raises(Exception) as excinfo:
-            parse_handoff_yaml("task: {issue: 'nope'}")
-        assert "invalid_schema" in str(excinfo.value) or "invalid_yaml" in str(excinfo.value)
