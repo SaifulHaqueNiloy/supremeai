@@ -1507,11 +1507,25 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
     ),
     ConfigSpec(
+        "LLM_PROVIDER_KEYS",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.VAULT, ConfigSource.ENV}),
+        frozenset({"backend", "ai"}),
+        description="Single vault secret holding a JSON map of LLM provider API keys consumed by the AI assignment pipeline.",
+    ),
+    ConfigSpec(
         "LOAD_TEST_TOKEN",
         frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
         frozenset({ConfigSource.VAULT, ConfigSource.ENV}),
         frozenset({"backend"}),
         description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
+    ),
+    ConfigSpec(
+        "LOVABLE_API_TOKEN",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "ai"}),
+        description="API token for the Lovable adapter in the MCP adapters layer.",
     ),
     ConfigSpec(
         "MINIO_ACCESS_KEY",
@@ -1927,6 +1941,34 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
     ),
     ConfigSpec(
+        "UPSTASH_REDIS_SECONDARY_REST_TOKEN",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "infra"}),
+        description="REST token for the secondary Upstash Redis shard (URL/TOKEN pair consumed by the redis chain and config secrets).",
+    ),
+    ConfigSpec(
+        "UPSTASH_REDIS_TERTIARY_REST_TOKEN",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "infra"}),
+        description="REST token for the tertiary Upstash Redis shard (URL/TOKEN pair consumed by the redis chain and config secrets).",
+    ),
+    ConfigSpec(
+        "UPSTASH_REDIS_QUATERNARY_REST_TOKEN",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "infra"}),
+        description="REST token for the quaternary Upstash Redis shard (URL/TOKEN pair consumed by the redis chain and config secrets).",
+    ),
+    ConfigSpec(
+        "UPSTASH_REDIS_QUINARY_REST_TOKEN",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "infra"}),
+        description="REST token for the quinary Upstash Redis shard (URL/TOKEN pair consumed by the redis chain and config secrets).",
+    ),
+    ConfigSpec(
         "VERCEL_OIDC_TOKEN",
         frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
         frozenset({ConfigSource.VAULT, ConfigSource.ENV}),
@@ -2096,6 +2138,20 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="AES-GCM encryption key for browser-saved credentials vault.",
     ),
     ConfigSpec(
+        "BROWSER_CREDENTIALS_FAIL_CLOSED",
+        frozenset({ConfigClass.OPTIONAL}),
+        frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
+        frozenset({"backend", "security"}),
+        description="Boolean policy flag (default true): refuse plaintext fallback when the browser credential store is unavailable. Matches the sensitive-key heuristic via its CREDENTIAL substring but is not a secret.",
+    ),
+    ConfigSpec(
+        "BROWSER_VAULT_KEY",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "security"}),
+        description="Fernet (base64) key encrypting the browser session vault; constructor injection is the documented alternative.",
+    ),
+    ConfigSpec(
         "CLOUDFLARE_GLOBAL_API_KEY",
         frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
         frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
@@ -2222,6 +2278,13 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="GitHub personal access token for MCP GitHub integration.",
     ),
     ConfigSpec(
+        "GITHUB_WEBHOOK_SECRET",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "infra", "security"}),
+        description="Shared secret used to verify GitHub webhook HMAC signatures on backend webhook routes.",
+    ),
+    ConfigSpec(
         "HF_API_KEY",
         frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
         frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
@@ -2256,6 +2319,13 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
         frozenset({"backend", "mcp"}),
         description="Client API key for Model Context Protocol bridge access.",
+    ),
+    ConfigSpec(
+        "MCP_CLIENT_REGISTRY_KEY",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"infra", "mcp"}),
+        description="Key securing the MCP client registry policy store in the MCP control plane.",
     ),
     ConfigSpec(
         "MISSION_CONTROL_API_TOKEN",
@@ -2342,6 +2412,13 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Passphrase/key for encrypting automated offsite database backups.",
     ),
     ConfigSpec(
+        "SUPREMEAI_CLOUD_SANDBOX_KEY",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "security"}),
+        description="API key authenticating the backend to the cloud sandbox provider (CloudSandboxProvider).",
+    ),
+    ConfigSpec(
         "TOGETHER_API_KEY",
         frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
         frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
@@ -2354,6 +2431,13 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
         frozenset({"apps", "security"}),
         description="Admin secret for Mission Control Tower backend service.",
+    ),
+    ConfigSpec(
+        "TOWER_ADMIN_TOKEN",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "security"}),
+        description="Admin token used by Telegram integrations to authenticate against the Tower service.",
     ),
     ConfigSpec(
         "TOWER_AUTH_TOKEN",
@@ -2403,6 +2487,13 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({ConfigSource.ENV, ConfigSource.CODE_DEFAULT}),
         frozenset({"ci"}),
         description="Whether to skip authentication checks during smoke test suites.",
+    ),
+    ConfigSpec(
+        "ZCODE_MCP_TOKEN",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
+        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
+        frozenset({"backend", "ai"}),
+        description="Bearer token for the Z.AI MCP provider used by external agent providers.",
     ),
 )
 

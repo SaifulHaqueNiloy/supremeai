@@ -12,7 +12,6 @@ import os
 from enum import StrEnum
 from typing import Any
 
-import psycopg2
 from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -81,6 +80,12 @@ def _get_connection():
     if not supabase_db_url or supabase_db_url.startswith("sqlite"):
         return None
     try:
+        # বাংলা মন্তব্য: psycopg2 কেবল এই কানেকশন পাথেই দরকার — লেজি ইমপোর্ট
+        # রাখায় ড্রাইভার-বিহীন পরিবেশেও (লোকাল স্যান্ডবক্স/লাইট CI) মডিউল লোড
+        # ও ইউনিট টেস্ট চলে; ড্রাইভার অনুপস্থিত হলে নিচের except পাথ
+        # স্ট্যান্ডার্ড "Failed to connect" আচরণে নেমে আসে (#2329)।
+        import psycopg2
+
         conn = psycopg2.connect(supabase_db_url)
         return conn
     except Exception as e:
