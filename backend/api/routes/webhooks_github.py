@@ -30,7 +30,6 @@ from fastapi.responses import JSONResponse
 
 from core.cache.redis_manager import redis_manager
 from core.logging_config import logger
-from core.orchestration.handoff_schema import extract_handoff_from_text, handoff_summary
 
 router = APIRouter(prefix="/api/webhooks", tags=["webhooks-orchestration"])
 
@@ -187,22 +186,20 @@ async def github_webhook(request: Request) -> JSONResponse:
         logger.info(f"[webhook-audit] replay suppressed delivery={delivery_id} key={key}")
         return JSONResponse(status_code=200, content={"status": "duplicate", "dedup_key": key})
 
-    # Embedded handoff document (issue bodies/comments) validated when present.
+    # Handoff label metadata (handoff:<lane>) parsed directly from issue labels.
     handoff = None
-    if event == "issues":
-        try:
-            handoff = extract_handoff_from_text(normalized.get("body_excerpt") or "")
-        except Exception as rejection:
-            # extract/parse already audit-logged; ingestion continues — the
-            # event itself is still processed, the malformed handoff is not.
-            logger.warning(
-                f"[webhook-audit] handoff rejected (logged) delivery={delivery_id}: {rejection}"
-            )
+    if normalized.get("handoff_label"):
+        target_role = str(normalized["handoff_label"]).removeprefix("handoff:").strip()
+        handoff = {
+            "next_agent": target_role,
+            "issue": str(normalized.get("number") or ""),
+            "tenant_id": "tenant-supremeai",
+        }
 
     route = {
         "status": "processed",
         "normalized": normalized,
-        "handoff": handoff_summary(handoff) if handoff else None,
+        "handoff": handoff,
         "dedup_key": key,
         "tenant_id": "tenant-supremeai",
     }
