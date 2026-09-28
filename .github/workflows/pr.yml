@@ -86,7 +86,7 @@ jobs:
   # 2. Branch Naming Guard
   # ---------------------------------------------------------------------------
   branch-guard:
-    name: "🌿 Branch Naming Guard"
+    name: "Branch Naming Guard"
     needs: context
     if: needs.context.outputs.skip != 'true'
     runs-on: ubuntu-latest
@@ -183,7 +183,7 @@ jobs:
   # 5. Unified PR Decision Contract
   # ---------------------------------------------------------------------------
   contract:
-    name: "🚦 Unified PR Gate Decision"
+    name: "🚦 Unified PR Gate (Security, Scope & Policy Orchestrator)"
     needs: [context, system-gates, tests]
     if: always() && needs.context.outputs.skip != 'true'
     runs-on: ubuntu-latest
