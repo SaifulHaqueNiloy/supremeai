@@ -2,10 +2,10 @@
   "functional_module_count": 190,
   "functional_module_inventory": "MODULES_LIST.md",
   "functional_status_counts": {
-    "broken": 3,
+    "broken": 5,
     "env_dependent": 3,
-    "operational": 124,
-    "partially_wired": 60,
+    "operational": 123,
+    "partially_wired": 59,
     "planned": 0
   },
   "inventory_type": "source_file_capability",
@@ -3087,6 +3087,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/api/routes/stream_hitl_sse.py"
+    },
+    {
+      "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/api/routes/swarm_stream.py"
     },
     {
       "capability_signals": [],
@@ -26576,5 +26585,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3034
+  "source_file_count": 3035
 }

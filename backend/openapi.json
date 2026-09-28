@@ -18229,6 +18229,26 @@
         ]
       }
     },
+    "/api/v1/swarm/stream": {
+      "get": {
+        "tags": [
+          "swarm"
+        ],
+        "summary": "Swarm Stream",
+        "description": "Stream live swarm events as SSE.\n\nEvents are the raw SwarmPubSub channel contents (multi-worker safe).\nPeriodic ``: ping`` SSE comments keep proxies from idling the connection\nout; clients that parse only ``data:`` lines (the established frontend\ncontract) ignore them by construction.",
+        "operationId": "swarm_stream_api_v1_swarm_stream_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/meta-ai/breed": {
       "post": {
         "tags": [

@@ -14,20 +14,20 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 855,
+    "backend_routes": 856,
     "frontend_unique_refs": 145,
     "routes_with_frontend_consumer": 294,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
-    "api_only_routes": 298,
-    "api_only_families": 156,
+    "api_only_routes": 299,
+    "api_only_families": 157,
     "by_classification": {
       "user-facing": 169,
       "admin-only": 343,
       "internal": 41,
       "deprecated": 4,
-      "api-only": 298,
+      "api-only": 299,
       "orphaned": 0
     }
   },
@@ -152,6 +152,7 @@
     "/api/v1/sandbox": 4,
     "/api/v1/scrape": 1,
     "/api/v1/stream": 1,
+    "/api/v1/swarm": 1,
     "/api/v1/syncguard": 1,
     "/api/v1/tools-registry": 4,
     "/api/v1/zero-cost": 1,
@@ -10826,6 +10827,20 @@
       "mounted": true,
       "is_admin": false,
       "operation": "stream_hitl_sse",
+      "frontend_consumers": [],
+      "classification": "api-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/swarm/stream",
+      "declared": "/api/v1/swarm/stream",
+      "deprecated": false,
+      "router_file": "backend/api/routes/swarm_stream.py",
+      "module": "api.routes.swarm_stream",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": false,
+      "operation": "swarm_stream",
       "frontend_consumers": [],
       "classification": "api-only"
     },

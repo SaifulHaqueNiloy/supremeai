@@ -1,7 +1,7 @@
 # SupremeAI - Comprehensive List of Modules
 
 Total Modules: **190**
-**Truthful Operational Wiring Audit Summary (2026-09-28T00:47:43Z):**
+**Truthful Operational Wiring Audit Summary (2026-09-28T01:05:25Z):**
 - 🟢 **Operational:** 123 modules (Importable + active inbound production callers)
 - 🟡 **Environment-Dependent:** 3 modules (Requires external host service/token)
 - 🟠 **Partially Wired (Dormant):** 59 modules (Importable; no active inbound production callers)
@@ -20,7 +20,7 @@ Total Modules: **190**
 | 6 | Monorepo Package | packages/ui-components | 🟢 Operational | frontend/src/main.tsx | frontend/src/App.tsx, frontend/src/main.tsx | unassigned | retain |
 | 7 | Backend Core Service | backend/services/billing | 🟢 Operational | 20 callers (backend/api/routes/admin_dashboard/__init__.py, ...) | 13 tests (backend/tests/conftest.py, ...) | unassigned | retain |
 | 8 | Backend Core Service | backend/services/browser | 🟢 Operational | 62 callers (backend/api/routers.py, ...) | 41 tests (frontend/src/components/admin/AdminBrowserPanel.tsx, ...) | unassigned | retain |
-| 9 | Backend Core Service | backend/services/data | 🟢 Operational | 155 callers (backend/api/routes/admin.py, ...) | 203 tests (backend/tests/conftest.py, ...) | unassigned | retain |
+| 9 | Backend Core Service | backend/services/data | 🟢 Operational | 156 callers (backend/api/routes/admin.py, ...) | 203 tests (backend/tests/conftest.py, ...) | unassigned | retain |
 | 10 | Backend Core Service | backend/services/dynamic_ai | 🟢 Operational | backend/api/routes/admin_dashboard/endpoints_metrics.py, backend/services/dynamic_ai/learning_engine.py | None | unassigned | retain |
 | 11 | Backend Core Service | backend/services/email | 🟢 Operational | 36 callers (backend/api/dependencies.py, ...) | 18 tests (backend/tests/conftest.py, ...) | unassigned | retain |
 | 12 | Backend Core Service | backend/services/hitl | 🟢 Operational | 19 callers (backend/api/routers.py, ...) | 3 tests (backend/tests/conftest.py, ...) | unassigned | retain |
@@ -170,7 +170,7 @@ Total Modules: **190**
 | 156 | Frontend Service Module | frontend/src/services/adminTokenStore.ts | 🟢 Operational | 17 callers (frontend/src/commandcenter/data/hooks.ts, ...) | 18 tests (frontend/src/commandcenter/data/hooks.ts, ...) | unassigned | retain |
 | 157 | Frontend Service Module | frontend/src/services/agentService.ts | 🟠 Partially Wired | 0 active callers (dormant) | None | unassigned | owner-review |
 | 158 | Frontend Service Module | frontend/src/services/aiActions.ts | 🟢 Operational | frontend/src/components/editor/AiAssistantBar.tsx | frontend/src/components/editor/AiAssistantBar.tsx | unassigned | retain |
-| 159 | Frontend Service Module | frontend/src/services/api | 🟢 Operational | 497 callers (backend/api/__init__.py, ...) | 152 tests (backend/tests/api/routes/commandcenter/__init__.py, ...) | unassigned | retain |
+| 159 | Frontend Service Module | frontend/src/services/api | 🟢 Operational | 498 callers (backend/api/__init__.py, ...) | 152 tests (backend/tests/api/routes/commandcenter/__init__.py, ...) | unassigned | retain |
 | 160 | Frontend Service Module | frontend/src/services/apiClient.ts | 🟢 Operational | 97 callers (backend/core/app_builder.py, ...) | 97 tests (frontend/src/commandcenter/data/hooks.ts, ...) | unassigned | retain |
 | 161 | Frontend Service Module | frontend/src/services/audio | 🟢 Operational | 10 callers (backend/api/routes/voice.py, ...) | 6 tests (frontend/src/components/admin/CommandCenter.tsx, ...) | unassigned | retain |
 | 162 | Frontend Service Module | frontend/src/services/authService.ts | 🟢 Operational | frontend/src/store/adminStore.ts | frontend/src/store/adminStore.ts | unassigned | retain |

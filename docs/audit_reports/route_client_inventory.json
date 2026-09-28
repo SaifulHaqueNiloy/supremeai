@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 600,
+    "backend_routes": 601,
     "frontend_unique_refs": 145,
     "matched": 270,
-    "orphan_routes": 330
+    "orphan_routes": 331
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -123,6 +123,7 @@
     "/api/simulator/installed": 1,
     "/api/simulator/devices": 1,
     "/api/v1/stream": 1,
+    "/api/v1/swarm": 1,
     "/api/v1/syncguard": 1,
     "/api/chat/completion": 1,
     "/api/chat/prompt-action": 1,
@@ -131,7 +132,7 @@
     "/api/webhooks/github": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 254,
+    "unclassified-orphan": 255,
     "internal": 44,
     "admin-only": 32
   },
@@ -2192,6 +2193,13 @@
       "method": "GET",
       "declared": "/api/v1/stream/hitl",
       "resolved": "/api/v1/stream/hitl",
+      "classification": "unclassified-orphan"
+    },
+    {
+      "file": "backend/api/routes/swarm_stream.py",
+      "method": "GET",
+      "declared": "/api/v1/swarm/stream",
+      "resolved": "/api/v1/swarm/stream",
       "classification": "unclassified-orphan"
     },
     {

@@ -131,6 +131,7 @@ flowchart LR
   n_capability_e15e08636f0c5197d922["plugins"]
   n_capability_e1b18f25e71b58912541["Knowledge Base"]
   n_capability_e21bbba2a5e3e77f203e["ai-pair-programmer"]
+  n_capability_e2ed693dcdda5bacae56["swarm"]
   n_capability_e2f46d15b0454312ca00["Workspace Files"]
   n_capability_e3a07f0a706e35493fc0["sandbox"]
   n_capability_e4a2f134d57ec923afda["runs"]
@@ -939,6 +940,7 @@ flowchart LR
   n_route_ece76528086205c0b9c3["GET /api/admin/metrics/dashboard"]
   n_route_ecf57a170c226659868e["POST /github/push"]
   n_route_ecf6b144f2706ed2b237["POST /api/v1/connections/detect"]
+  n_route_ed053dd565dfd511140e["GET /api/v1/swarm/stream"]
   n_route_ed0d785da6e05dd223b8["PATCH /api/v1/mcp/clients/{client_id}"]
   n_route_ed608df775f88b367e68["GET /admin-api/commandcenter/secure/ratelimits"]
   n_route_ed722deb35c566a18d28["POST /api/v1/mesh/tasks"]
@@ -1800,6 +1802,7 @@ flowchart LR
   n_contract_9337269577d524de529e -->|defines| n_route_ece76528086205c0b9c3
   n_contract_9337269577d524de529e -->|defines| n_route_ecf57a170c226659868e
   n_contract_9337269577d524de529e -->|defines| n_route_ecf6b144f2706ed2b237
+  n_contract_9337269577d524de529e -->|defines| n_route_ed053dd565dfd511140e
   n_contract_9337269577d524de529e -->|defines| n_route_ed0d785da6e05dd223b8
   n_contract_9337269577d524de529e -->|defines| n_route_ed608df775f88b367e68
   n_contract_9337269577d524de529e -->|defines| n_route_ed722deb35c566a18d28
@@ -2736,6 +2739,7 @@ flowchart LR
   n_route_ece76528086205c0b9c3 -->|exposes| n_capability_c41c471cb92c95cab797
   n_route_ecf57a170c226659868e -->|exposes| n_capability_7ed715ecd9142aa7d5f0
   n_route_ecf6b144f2706ed2b237 -->|exposes| n_capability_f3327ea3a80e44c6af20
+  n_route_ed053dd565dfd511140e -->|exposes| n_capability_e2ed693dcdda5bacae56
   n_route_ed0d785da6e05dd223b8 -->|exposes| n_capability_783e372d94b050e61338
   n_route_ed608df775f88b367e68 -->|exposes| n_capability_be0643d29a4e69b5771e
   n_route_ed722deb35c566a18d28 -->|exposes| n_capability_4a8c6d9ba6f94504d1bb

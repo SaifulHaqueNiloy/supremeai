@@ -4,14 +4,14 @@
 
 | metric | value |
 |---|---|
-| backend routes | 855 |
+| backend routes | 856 |
 | routes with frontend consumer | 294 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
-| api-only routes (allowlisted) | 298 |
-| api-only families | 156 |
+| api-only routes (allowlisted) | 299 |
+| api-only families | 157 |
 
 ## Classification legend
 
@@ -21,7 +21,7 @@
 | `admin-only` | 343 | /admin path, admin router file or ALL_ROUTERS is_admin |
 | `internal` | 41 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
-| `api-only` | 298 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
+| `api-only` | 299 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
 
 ## Orphan families
@@ -151,6 +151,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | `/api/v1/sandbox` | 4 |
 | `/api/v1/scrape` | 1 |
 | `/api/v1/stream` | 1 |
+| `/api/v1/swarm` | 1 |
 | `/api/v1/syncguard` | 1 |
 | `/api/v1/tools-registry` | 4 |
 | `/api/v1/zero-cost` | 1 |
@@ -908,6 +909,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/stream/chat` | `backend/api/routes/stream_chat_sse.py` | user-facing | `frontend/src/pages/PublicPages.tsx` |
 | POST | `/api/v1/stream/chat` | `backend/api/routes/stream_chat_sse.py` | user-facing | `frontend/src/pages/PublicPages.tsx` |
 | GET | `/api/v1/stream/hitl` | `backend/api/routes/stream_hitl_sse.py` | api-only | NONE |
+| GET | `/api/v1/swarm/stream` | `backend/api/routes/swarm_stream.py` | api-only | NONE |
 | POST | `/api/v1/syncguard/audit` | `backend/api/routes/syncguard.py` | api-only | NONE |
 | POST | `/api/v1/tasks` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |
 | GET | `/api/v1/tasks/:param` | `backend/api/routes/task_gateway.py` | user-facing | `frontend/src/services/controlPlane.ts` |

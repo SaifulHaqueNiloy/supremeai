@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "83ff68dae3a8ab83ebf01a8e3e0aa88a5204a88d38d66a1ad28ecdd4e530b0a3",
-  "route_count": 861,
+  "source_sha256": "043152205a5221f1ff7962c1bef5bb244221435e3afa2f29cc618c686d1eb557",
+  "route_count": 862,
   "routes": [
     {
       "method": "GET",
@@ -13834,6 +13834,24 @@
         "SSE HITL Stream"
       ],
       "summary": "Stream Hitl Sse",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/swarm/stream",
+      "operation_id": "swarm_stream_api_v1_swarm_stream_get",
+      "tags": [
+        "swarm"
+      ],
+      "summary": "Swarm Stream",
       "auth": {
         "required": false,
         "schemes": []

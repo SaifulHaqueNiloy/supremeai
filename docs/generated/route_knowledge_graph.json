@@ -1,5 +1,5 @@
 {
-  "edge_count": 1812,
+  "edge_count": 1814,
   "edges": [
     {
       "relation": "defines",
@@ -3955,6 +3955,11 @@
       "relation": "defines",
       "source": "contract:9337269577d524de529e",
       "target": "route:ecf6b144f2706ed2b237"
+    },
+    {
+      "relation": "defines",
+      "source": "contract:9337269577d524de529e",
+      "target": "route:ed053dd565dfd511140e"
     },
     {
       "relation": "defines",
@@ -8638,6 +8643,11 @@
     },
     {
       "relation": "exposes",
+      "source": "route:ed053dd565dfd511140e",
+      "target": "capability:e2ed693dcdda5bacae56"
+    },
+    {
+      "relation": "exposes",
       "source": "route:ed0d785da6e05dd223b8",
       "target": "capability:783e372d94b050e61338"
     },
@@ -9062,7 +9072,7 @@
       "target": "control:8beb2443d48d78613952"
     }
   ],
-  "node_count": 1009,
+  "node_count": 1011,
   "nodes": [
     {
       "id": "capability:0304e05cfc30a6eece57",
@@ -9718,6 +9728,11 @@
       "id": "capability:e21bbba2a5e3e77f203e",
       "kind": "capability",
       "label": "ai-pair-programmer"
+    },
+    {
+      "id": "capability:e2ed693dcdda5bacae56",
+      "kind": "capability",
+      "label": "swarm"
     },
     {
       "id": "capability:e2f46d15b0454312ca00",
@@ -17715,6 +17730,16 @@
       }
     },
     {
+      "id": "route:ed053dd565dfd511140e",
+      "kind": "route",
+      "label": "GET /api/v1/swarm/stream",
+      "metadata": {
+        "auth_required": false,
+        "operation_id": "swarm_stream_api_v1_swarm_stream_get",
+        "owner": "unassigned"
+      }
+    },
+    {
       "id": "route:ed0d785da6e05dd223b8",
       "kind": "route",
       "label": "PATCH /api/v1/mcp/clients/{client_id}",
@@ -18417,5 +18442,5 @@
   ],
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "83ff68dae3a8ab83ebf01a8e3e0aa88a5204a88d38d66a1ad28ecdd4e530b0a3"
+  "source_sha256": "043152205a5221f1ff7962c1bef5bb244221435e3afa2f29cc618c686d1eb557"
 }
