@@ -710,18 +710,3 @@ backend/uploads/
 # (vault/env), never committed. See docs/deployment/SUPABASE_CA_CERT.md
 supabase-ca.crt
 vault.env
-
-# ── Database as Operational Truth (issue #2377, Category D) ──
-# Heavy generated JSON artifacts — regenerate on demand:
-#   python scripts/ci/generate_route_graph.py (route_knowledge_graph)
-#   python scripts/ci/generate_module_capability_matrix.py
-#   python scripts/ci/generate_import_graph.py (backend_import_graph)
-# NOTE: the currently-tracked docs/generated/*.json files are NOT affected by
-# ignore rules until the drift gates (ci-advanced-checks.yml L123/L136) move to
-# regen-on-demand; untracking them before that breaks the gates. This block is
-# the forward policy so new generated JSONs never enter git (Category D).
-docs/generated/*.json
-
-# Operational-truth local mirrors + RAG ingest manifest (runtime state, not code)
-data/operational_truth.db
-data/rag_ingest_manifest.json
