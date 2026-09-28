@@ -160,7 +160,9 @@ def upgrade() -> None:
             sa.Column("rotated_at", sa.DateTime(timezone=True), nullable=True),
             sa.Column("verified_at", sa.DateTime(timezone=True), nullable=True),
             # status: runbook-active | rotated | verified | pending-owner
-            sa.Column("status", sa.String(length=32), nullable=False, server_default="runbook-active"),
+            sa.Column(
+                "status", sa.String(length=32), nullable=False, server_default="runbook-active"
+            ),
             sa.Column("evidence", sa.Text(), nullable=True),
             sa.Column("notes", sa.Text(), nullable=True),
             sa.Column("source_doc", sa.String(length=255), nullable=True),

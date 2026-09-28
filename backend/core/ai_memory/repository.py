@@ -61,7 +61,9 @@ class MemoryRepository:
         try:
             from core.config import settings
 
-            if not getattr(settings, "supabase_url", None) or not getattr(settings, "supabase_service_role_key", None):
+            if not getattr(settings, "supabase_url", None) or not getattr(
+                settings, "supabase_service_role_key", None
+            ):
                 return None
             from database.supabase_client import db
 
@@ -110,13 +112,16 @@ class MemoryRepository:
         client = self._get_client()
         if client:
             try:
+
                 def _do_upsert() -> None:
                     client.table(self.TABLE_NAME).upsert(record, on_conflict="id").execute()
 
                 await asyncio.to_thread(_do_upsert)
                 return record
             except Exception as exc:
-                logger.warning(f"[MemoryRepository] Remote upsert failed, saving in local fallback: {exc}")
+                logger.warning(
+                    f"[MemoryRepository] Remote upsert failed, saving in local fallback: {exc}"
+                )
 
         # Local fallback store
         self._in_memory_store[record_id] = record
@@ -157,11 +162,13 @@ class MemoryRepository:
                     resp = await asyncio.to_thread(_run_rpc)
                     if resp and hasattr(resp, "data") and isinstance(resp.data, list):
                         return resp.data
-                except Exception:
+                except Exception as exc:
+                    logger.debug("RPC %s query failed: %s", rpc_name, exc)
                     continue
 
             # 2. Direct table fetch fallback
             try:
+
                 def _fetch_rows():
                     q = client.table(self.TABLE_NAME).select("*")
                     if user_id:
@@ -206,8 +213,15 @@ class MemoryRepository:
         client = self._get_client()
         if client:
             try:
+
                 def _fetch():
-                    return client.table(self.TABLE_NAME).select("*").eq("id", rec_id).limit(1).execute()
+                    return (
+                        client.table(self.TABLE_NAME)
+                        .select("*")
+                        .eq("id", rec_id)
+                        .limit(1)
+                        .execute()
+                    )
 
                 res = await asyncio.to_thread(_fetch)
                 if res and res.data and len(res.data) > 0:
@@ -222,6 +236,7 @@ class MemoryRepository:
         client = self._get_client()
         if client:
             try:
+
                 def _do_delete():
                     q = client.table(self.TABLE_NAME).delete().eq("id", rec_id)
                     if user_id:
@@ -243,6 +258,7 @@ class MemoryRepository:
         client = self._get_client()
         if client:
             try:
+
                 def _fetch_session():
                     return (
                         client.table(self.TABLE_NAME)
