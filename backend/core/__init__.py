@@ -183,6 +183,7 @@ def _resolve_or_none(attr: str) -> Any:
     try:
         return _load_evolution_symbol(attr)
     except Exception:
+        logger.debug("Exception swallowed in __init__ (deliberate fallback)", exc_info=True)
         return None
 
 

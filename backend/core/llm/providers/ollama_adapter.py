@@ -146,4 +146,7 @@ class OllamaLocalAdapter(ModelProvider):
                 # Ollama typically returns "Ollama is running" on the root path
                 return response.status_code == 200 and "Ollama is running" in response.text
         except Exception:
+            logger.debug(
+                "Exception swallowed in ollama_adapter (deliberate fallback)", exc_info=True
+            )
             return False

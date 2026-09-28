@@ -25,9 +25,12 @@ Dependencies:
 - `builtins`: Accessed to identify and filter out Python's built-in names during variable definition checks."""
 
 import ast
+import logging
 import os
 import re
 import urllib.parse
+
+logger = logging.getLogger(__name__)
 
 
 class AICodeValidator:
@@ -76,6 +79,9 @@ class AICodeValidator:
                     return False
             return True
         except Exception:
+            logger.debug(
+                "Exception swallowed in code_validator (deliberate fallback)", exc_info=True
+            )
             return False
 
     def _module_exists(self, module_name: str) -> bool:
@@ -91,6 +97,9 @@ class AICodeValidator:
             spec = importlib.util.find_spec(base_module)
             return spec is not None
         except Exception:
+            logger.debug(
+                "Exception swallowed in code_validator (deliberate fallback)", exc_info=True
+            )
             return False
 
     def _check_variables_defined(self, code: str) -> bool:
@@ -126,6 +135,9 @@ class AICodeValidator:
 
             return len(undefined) == 0
         except Exception:
+            logger.debug(
+                "Exception swallowed in code_validator (deliberate fallback)", exc_info=True
+            )
             return False
 
     def _check_loop_safety(self, code: str) -> bool:
@@ -144,6 +156,9 @@ class AICodeValidator:
                         return False
             return True
         except Exception:
+            logger.debug(
+                "Exception swallowed in code_validator (deliberate fallback)", exc_info=True
+            )
             return False
 
     def _auto_fix(self, code: str) -> str:

@@ -46,6 +46,7 @@ def _client() -> Any | None:
         client = getattr(db, "client", None)
         return client
     except Exception:  # pragma: no cover - degraded environments
+        logger.debug("Exception swallowed in persistence (deliberate fallback)", exc_info=True)
         return None
 
 

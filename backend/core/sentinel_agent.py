@@ -244,6 +244,9 @@ class SentinelAgent:
 
             return bool(getattr(get_orchestrator(), "_initialized", False))
         except Exception:
+            logger.debug(
+                "Exception swallowed in sentinel_agent (deliberate fallback)", exc_info=True
+            )
             return False
 
     async def _resilient_probe(self) -> None:

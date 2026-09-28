@@ -378,6 +378,9 @@ class GovernanceAgent:
             # For demonstration, return 'user' as default
             return "user"
         except Exception:
+            logger.debug(
+                "Exception swallowed in governance_agent (deliberate fallback)", exc_info=True
+            )
             return "user"
 
     @with_error_bus("_get_user_permissions")
