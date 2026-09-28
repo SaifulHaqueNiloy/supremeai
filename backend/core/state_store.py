@@ -52,9 +52,9 @@ def set_main_loop(loop: asyncio.AbstractEventLoop) -> None:
 
 async def _redis_client() -> Any | None:
     try:
-        from core.cache.redis_manager import secure_redis_manager
+        from core.cache.redis_manager import redis_manager  # #2207: actual name
 
-        return await secure_redis_manager.get_client_async()
+        return await redis_manager.get_client_async()
     except Exception as exc:  # pragma: no cover - defensive
         logger.debug("state_store: redis client unavailable: %s", exc)
         return None
