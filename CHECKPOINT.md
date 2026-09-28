@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-27 20:17 UTC
+- **Date:** 2026-09-27 23:52 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,22 +10,16 @@
   - (see git log for details)
 
 ## Files Changed
-  - `docs/audit_reports/route_client_inventory.md`
-  - `docs/generated/route_consumer_inventory.md`
-  - `docs/architecture/MULTI_PLATFORM_AGENT_WORKSPACE_PLAN.md`
-  - `backend/tests/api/routes/test_external_agents_admin.py`
-  - `backend/api/routes/external_agents_admin.py`
-  - `docs/generated/backend_import_graph.json`
-  - `.agents/rules/GROUND_TRUTH_AUDITING_DISCIPLINE.md`
-  - `.devcontainer/devcontainer.json`
-  - `.devcontainer/setup.sh`
-  - `docs/audit_reports/route_client_inventory.json`
-  - `docs/architecture/MULTI_PLATFORM_WORKSPACE_IMPLEMENTATION_ROADMAP.md`
-  - `docs/generated/route_consumer_inventory.json`
-  - `backend/api/routers.py`
-  - `.devcontainer/Dockerfile`
-  - `docs/generated/module_capability_matrix.json`
-  - `CHECKPOINT.md`
+  - `AGENTS.md`
+  - `scripts/ci/atomic_claim.sh`
+  - `docs/archive/lessons_2026-09.md`
+  - `.github/constitution/rules.yml`
+  - `LESSONS_LEARNED.md`
+  - `scripts/ci/issue_queue_manager.py`
+  - `docs/architecture/LIVING_PROMPT_SIMPLIFICATION_PLAN.md`
+  - `scripts/git/acquire_lane_slot.sh`
+  - `tests/test_acquire_lane_slot.py`
+  - `scripts/ci/generate_agents_md.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
@@ -36,9 +30,9 @@
 - Production certification gate runtime evidence (#1096); live-smoke target-resolution unification (#1132)
 
 ## Recent Lessons Learned
-  - 2026-09-12 — ⚡ MANDATORY RULE #1: Zero Local-Machine Dependency & Start-of-Conversation Recall Mandate
-  - 2026-09-12 — 🏛️ Core Philosophy Reinforcement: Zero-Hardcoding Mandate & System-Wide Universal Rule Scoping
-  - 2026-09-12 — 🛡️ Security Audit Execution: 30-Category Matrix + Gap-Closing Hardening Tests
+  - 2026-09-28 — 🔁 Duplicate PRs: 12টি Branch-এ Issue-Number না থাকায় ও `has-pr` Label-বিহীন PR খোলায় ১টি Issue-এ ৪টি পর্যন্ত PR (GAP-DUPLICATE-01) (#2296)
+  - 2026-09-27 — 🧭 Lane Boundary: Planner Opens PRs (L1 Violation — Rule Gap, Closed) (#1864)
+  - 2026-09-27 — 🧩 Monkeypatch-Proof Dependency Resolution: function-level `from`-import শ্যাডো-attribute বাইপাস (#2098)
 
 ## Key Architecture Reminders
 - Extension = 100% Thin Client. No third-party API keys from user.

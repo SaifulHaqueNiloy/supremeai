@@ -282,7 +282,6 @@ ALL_ROUTERS = [
     {"path": "api.routes.preferences", "prefix": "/api", "is_admin": False, "is_critical": False},
     {"path": "api.routes.simulator_admin", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.site_actions", "prefix": "", "is_admin": True, "is_critical": False},
-    {"path": "api.routes.browser_routes", "prefix": "", "is_admin": True, "is_critical": False},
     {
         "path": "api.routes.hitl_admin",
         "prefix": "/api/v1/hitl",

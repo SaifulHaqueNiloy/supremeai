@@ -13,10 +13,10 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from typing import Any
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.errors.error_bus import with_error_bus
-from services.llm.llm_router import LLMRouter
 
 ETHICS_CACHE_TTL = 3600
 
@@ -59,8 +59,8 @@ class EthicsMonitorAgent:
     Ensures AI decisions align with ethical guidelines.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm = llm_router or ModelRouter()
         self.cache = get_cache()
         self._assessments: list[DecisionAssessment] = []
 
@@ -82,14 +82,14 @@ class EthicsMonitorAgent:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=config_cache.get("ethics_monitor_agent_max_tokens", 500),
             )
             import json
 
-            content = result.get("content", "{}")
+            content = result.get("text", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             violations = data.get("violations", [])
             score = float(data.get("overall_score", 0.5))
@@ -153,14 +153,14 @@ class EthicsMonitorAgent:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=config_cache.get("ethics_monitor_agent_max_tokens", 300),
             )
             import json
 
-            content = result.get("content", "{}")
+            content = result.get("text", "{}")
             data = json.loads(content) if isinstance(content, str) else content
             return EthicsVerdict(
                 verdict=data.get("verdict", "flagged"),

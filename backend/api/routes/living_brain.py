@@ -7,10 +7,9 @@ Real-time observability endpoints for SupremeAI's "brain" health.
 
 Provides visibility into:
 - ai_memory/pgvector status and contents
-- SupremeLearningEngine learning progress
-- Self-sufficiency rate over time
+- Learning engine component status (unified_learning retired #2259; canonical
+  LearningStore metrics return via #2259 D2)
 - Cost per hour / provider breakdown
-- Pattern confidence evolution
 
 This is the "pulse check" for whether AI is truly alive and learning.
 
@@ -49,14 +48,9 @@ from core.logging_config import logger
 # UNIFY FIX: removed 'backend.' prefix from imports — they were silently
 # failing (wrapped in try/except) because CWD is backend/, not project root.
 # Correct paths use top-level packages (brain/, memory/) directly.
-try:
-    from brain.supreme_learning_engine import get_learning_engine
-
-    LEARNING_ENGINE_AVAILABLE = True
-except ImportError:
-    LEARNING_ENGINE_AVAILABLE = False
-    logger.warning("⚠️ SupremeLearningEngine not available")
-
+# বাংলা (#2259 D1): SupremeLearningEngine/unified_learning retired — learning
+# telemetry now lives in core.learning (LearningStore); real living-brain
+# learning metrics return via #2259 D2 (collective experience layer).
 try:
     from memory.supabase_store import SupabaseStore
 
@@ -95,16 +89,6 @@ class BrainStatus(BaseModel):
     uptime_hours: float
     last_learning_activity: str | None
     components: dict[str, Any]
-
-
-class LearningMetrics(BaseModel):
-    """Learning engine metrics."""
-
-    total_patterns_learned: int
-    self_sufficiency_rate: float
-    patterns_by_domain: dict[str, int]
-    avg_confidence: float
-    recent_learning_velocity: float  # patterns/hour
 
 
 class MemoryMetrics(BaseModel):
@@ -149,26 +133,16 @@ async def get_brain_status():
         "economic_optimizer": {"status": "unknown", "details": {}},
     }
 
-    # Check Learning Engine
-    if LEARNING_ENGINE_AVAILABLE:
-        try:
-            engine = get_learning_engine()
-            stats = engine.get_stats()
-
-            components["learning_engine"] = {
-                "status": "healthy",
-                "details": {
-                    "patterns_learned": stats.get("total_patterns_in_db", 0),
-                    "self_sufficiency_rate": f"{stats.get('self_sufficiency_rate', 0):.1f}%",
-                    "total_interactions": stats.get("total_interactions", 0),
-                    "knowledge_graph_nodes": stats.get("knowledge_graph_nodes", 0),
-                },
-            }
-        except Exception as e:
-            logger.warning(f"[LivingBrain] Learning engine status check failed: {e}", exc_info=True)
-            components["learning_engine"] = {"status": "error", "error": str(e)}
-    else:
-        components["learning_engine"]["status"] = "unavailable"
+    # Check Learning Engine (#2259 D1: unified_learning retired — component
+    # is honestly "unavailable" instead of the previous guaranteed-error path:
+    # sync call on an async get_stats() coroutine raised AttributeError here
+    # on every request)
+    components["learning_engine"] = {
+        "status": "unavailable",
+        "details": {
+            "note": "unified_learning retired (#2259 D1); canonical LearningStore telemetry wired via D2"
+        },
+    }
 
     # Check Memory Store
     if MEMORY_STORE_AVAILABLE:
@@ -252,21 +226,13 @@ async def get_detailed_metrics(
         "costs": {},
     }
 
-    # Learning metrics
-    if LEARNING_ENGINE_AVAILABLE:
-        try:
-            engine = get_learning_engine()
-            stats = engine.get_stats()
-
-            metrics["learning"] = LearningMetrics(
-                total_patterns_learned=stats.get("total_patterns_in_db", 0),
-                self_sufficiency_rate=stats.get("self_sufficiency_rate", 0.0),
-                patterns_by_domain=_get_patterns_by_domain(engine),
-                avg_confidence=_get_avg_confidence(engine),
-                recent_learning_velocity=_calculate_learning_velocity(stats, hours),
-            ).model_dump()
-        except Exception as e:
-            metrics["learning"] = {"error": str(e)}
+    # Learning metrics (#2259 D1: unified_learning retired — this block used
+    # to error out on every call: sync get_stats() coroutine + engine.db_path
+    # attribute that no longer existed on the engine singleton)
+    metrics["learning"] = {
+        "status": "unavailable",
+        "note": "unified_learning retired (#2259 D1); canonical LearningStore metrics wired via D2",
+    }
 
     # Memory metrics
     if MEMORY_STORE_AVAILABLE:
@@ -296,47 +262,12 @@ async def get_learning_timeline(
     Get recent learning events timeline.
 
     Shows what the AI has been learning recently.
+    (#2259 D1: legacy SQLite `patterns` source retired with unified_learning;
+    the block had been erroring on every call — engine.db_path no longer
+    existed — so events were always empty in practice. D2 re-wires this to
+    the canonical experience store after query verification.)
     """
     events = []
-
-    if LEARNING_ENGINE_AVAILABLE:
-        try:
-            engine = get_learning_engine()
-            # Get recent patterns from database
-            conn = engine.db_path  # Access the SQLite DB
-            import sqlite3
-
-            db_conn = sqlite3.connect(conn)
-            cursor = db_conn.cursor()
-
-            cursor.execute(
-                """
-                SELECT pattern_id, domain, complexity, confidence, 
-                       success_count, created_at, last_used
-                FROM patterns 
-                ORDER BY created_at DESC 
-                LIMIT ?
-            """,
-                (limit,),
-            )
-
-            for row in cursor.fetchall():
-                events.append(
-                    {
-                        "pattern_id": row[0],
-                        "domain": row[1],
-                        "complexity": row[2],
-                        "confidence": row[3],
-                        "success_count": row[4],
-                        "learned_at": row[5],
-                        "last_used": row[6],
-                        "event_type": "pattern_learned",
-                    }
-                )
-
-            db_conn.close()
-        except Exception as e:
-            logger.error(f"Failed to get timeline: {e}")
 
     return {
         "total_events": len(events),
@@ -392,62 +323,13 @@ def _get_startup_time() -> float:
 
 
 def _get_last_learning_time() -> str | None:
-    """Get timestamp of most recent learning activity."""
-    if LEARNING_ENGINE_AVAILABLE:
-        try:
-            engine = get_learning_engine()
-            conn = engine.db_path
-            import sqlite3
+    """Get timestamp of most recent learning activity.
 
-            db_conn = sqlite3.connect(conn)
-            cursor = db_conn.cursor()
-            cursor.execute("SELECT MAX(created_at) FROM patterns")
-            result = cursor.fetchone()[0]
-            db_conn.close()
-
-            return result
-        except Exception:
-            from core.logging_config import logger
-
-            logger.warning("Ignored exception")
+    (#2259 D1: legacy SQLite patterns source retired — this always returned
+    None in practice since the engine lost its db_path attribute. D2 re-wires
+    to the canonical LearningStore.)
+    """
     return None
-
-
-def _get_patterns_by_domain(engine) -> dict[str, int]:
-    """Get pattern count grouped by domain."""
-    try:
-        import sqlite3
-
-        conn = sqlite3.connect(engine.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT domain, COUNT(*) FROM patterns GROUP BY domain")
-        result = dict(cursor.fetchall())
-        conn.close()
-        return result
-    except Exception:
-        return {}
-
-
-def _get_avg_confidence(engine) -> float:
-    """Get average pattern confidence."""
-    try:
-        import sqlite3
-
-        conn = sqlite3.connect(engine.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT AVG(confidence) FROM patterns")
-        result = cursor.fetchone()[0] or 0.0
-        conn.close()
-        return round(result, 3)
-    except Exception:
-        logger.debug("Exception swallowed in living_brain (deliberate fallback)", exc_info=True)
-        return 0.0
-
-
-def _calculate_learning_velocity(stats: dict, hours: int) -> float:
-    """Calculate patterns learned per hour."""
-    total = stats.get("patterns_learned", 0)
-    return round(total / max(1, hours), 2)
 
 
 def _estimate_search_accuracy(mem_stats: dict) -> float:

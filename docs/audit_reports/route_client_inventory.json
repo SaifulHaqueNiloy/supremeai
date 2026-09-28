@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 610,
+    "backend_routes": 603,
     "frontend_unique_refs": 145,
-    "matched": 277,
-    "orphan_routes": 333
+    "matched": 272,
+    "orphan_routes": 331
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -71,8 +71,6 @@
     "/api/billing/history": 1,
     "/api/billing/add-funds": 1,
     "/api/conversations/tree": 1,
-    "/api/browser/browse-sessions": 1,
-    "/api/browser/health": 1,
     "/api/byoc/credentials": 1,
     "/api/byoc/deploy": 1,
     "/api/byoc/status": 1,
@@ -134,8 +132,8 @@
     "/api/webhooks/github": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 256,
-    "internal": 45,
+    "unclassified-orphan": 255,
+    "internal": 44,
     "admin-only": 32
   },
   "orphans": [
@@ -383,20 +381,6 @@
       "declared": "/api/conversations/{conversation_id}/merge",
       "resolved": "/api/conversations/:param/merge",
       "classification": "unclassified-orphan"
-    },
-    {
-      "file": "backend/api/routes/browser_routes.py",
-      "method": "GET",
-      "declared": "/api/browser/browse-sessions",
-      "resolved": "/api/browser/browse-sessions",
-      "classification": "unclassified-orphan"
-    },
-    {
-      "file": "backend/api/routes/browser_routes.py",
-      "method": "GET",
-      "declared": "/api/browser/health",
-      "resolved": "/api/browser/health",
-      "classification": "internal"
     },
     {
       "file": "backend/api/routes/byoc_api.py",
@@ -3847,56 +3831,6 @@
       "classification": "admin-only",
       "frontend": [
         "frontend/src/components/dashboard/SiteActionsPage.tsx"
-      ]
-    },
-    {
-      "file": "backend/api/routes/browser_routes.py",
-      "method": "POST",
-      "declared": "/api/browser/ai-action",
-      "resolved": "/api/browser/ai-action",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
-      ]
-    },
-    {
-      "file": "backend/api/routes/browser_routes.py",
-      "method": "POST",
-      "declared": "/api/browser/security-scan",
-      "resolved": "/api/browser/security-scan",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
-      ]
-    },
-    {
-      "file": "backend/api/routes/browser_routes.py",
-      "method": "POST",
-      "declared": "/api/browser/screenshot",
-      "resolved": "/api/browser/screenshot",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
-      ]
-    },
-    {
-      "file": "backend/api/routes/browser_routes.py",
-      "method": "POST",
-      "declared": "/api/browser/browse-session",
-      "resolved": "/api/browser/browse-session",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/components/admin/admin-browser/CrownJewelBrowser.tsx"
-      ]
-    },
-    {
-      "file": "backend/api/routes/browser_routes.py",
-      "method": "POST",
-      "declared": "/api/browser/screenshots",
-      "resolved": "/api/browser/screenshots",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
       ]
     },
     {

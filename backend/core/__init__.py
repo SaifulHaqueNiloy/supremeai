@@ -135,10 +135,6 @@ _EVOLUTION_LAZY_EXPORTS: dict[str, tuple[str, str]] = {
     ),
     "ImpactSimulator": ("core.self_evolution.digital_twin.simulator", "ImpactSimulator"),
     "SystemTopologyMapper": ("core.self_evolution.digital_twin.topology", "SystemTopologyMapper"),
-    "FederatedLearningCoordinator": (
-        "core.self_evolution.federated_learning.fed_learning",
-        "FederatedLearningCoordinator",
-    ),
     "NeuralSymbolicConfig": (
         "core.self_evolution.neural_symbolic.integration",
         "NeuralSymbolicConfig",
@@ -153,7 +149,6 @@ _EVOLUTION_LAZY_FLAGS: dict[str, tuple[str, ...]] = {
     "ADVERSARIAL_DEFENSE_AVAILABLE": ("AdversarialDefenseSystem",),
     "EWC_AVAILABLE": ("EWC",),
     "DIGITAL_TWIN_AVAILABLE": ("RemediationEngine",),
-    "FEDERATED_LEARNING_AVAILABLE": ("FederatedLearningCoordinator",),
     "NEURAL_SYMBOLIC_AVAILABLE": ("NeuralSymbolicIntegrator",),
 }
 
@@ -227,8 +222,6 @@ __all__ = [
     "EWCConfig",
     "EWCTrainer",
     "FLConfig",
-    # Federated Learning
-    "FederatedLearningCoordinator",
     "HTMLAccessibilityChecker",
     "HealthChecker",
     "ImageBuilder",
