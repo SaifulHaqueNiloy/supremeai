@@ -511,73 +511,46 @@ async def handle_call_tool(name: str, arguments: dict | None) -> list[types.Text
             ]
 
         elif name == "agent_send":
-            # MCP Tower gap-3 (#927): একটি mailbox বার্তা পাঠাও (direct/role/topic)।
-            from core.agent_mailbox import get_agent_mailbox
-
-            _mailbox = await get_agent_mailbox()
-            msg = await _mailbox.send(
-                from_agent=str(arguments.get("from_agent") or ""),
-                to_agent=str(arguments.get("to_agent") or ""),
-                tenant_id=tenant_id or "default",
-                to_role=arguments.get("to_role"),
-                topic=arguments.get("topic"),
-                body=arguments.get("body") or {},
-                reply_to=arguments.get("reply_to"),
-                ttl_seconds=arguments.get("ttl_seconds"),
-            )
-            return [types.TextContent(type="text", text=json.dumps(msg.model_dump(), indent=2))]
+            # বাংলা মন্তব্য: [Step-2.3] ইন-মেমোরি Agent Mailbox অবসরে পাঠানো হয়েছে; কালেক্টিভ মেমরি বা গিটহাব কমেন্ট ব্যবহার করুন।
+            payload_out = {
+                "status": "retired",
+                "message": "In-memory agent mailbox retired in Step-2.3. Use Supabase collective memory or GitHub issue/PR comments.",
+                "from_agent": arguments.get("from_agent"),
+                "to_agent": arguments.get("to_agent"),
+            }
+            return [types.TextContent(type="text", text=json.dumps(payload_out, indent=2))]
 
         elif name == "agent_inbox":
-            # MCP Tower gap-3 (#927): pull-based inbox poll (direct + broadcast)।
-            from core.agent_mailbox import get_agent_mailbox
-
-            _mailbox = await get_agent_mailbox()
-            messages = await _mailbox.inbox(
-                agent_id=str(arguments.get("agent_id") or ""),
-                tenant_id=tenant_id or "default",
-                role=arguments.get("role"),
-                unread_only=bool(arguments.get("unread_only", False)),
-                limit=int(arguments.get("limit") or 50),
-            )
+            # বাংলা মন্তব্য: [Step-2.3] ইন-মেমোরি Agent Mailbox অবসরে পাঠানো হয়েছে।
             payload_out = {
                 "agent_id": arguments.get("agent_id"),
                 "tenant_id": tenant_id or "default",
-                "count": len(messages),
-                "messages": [m.model_dump() for m in messages],
+                "count": 0,
+                "messages": [],
+                "status": "retired",
             }
             return [types.TextContent(type="text", text=json.dumps(payload_out, indent=2))]
 
         elif name == "agent_ack":
-            # MCP Tower gap-3 (#927): বার্তা ack (idempotent; cross-tenant → error)।
-            from core.agent_mailbox import get_agent_mailbox
-
-            _mailbox = await get_agent_mailbox()
-            msg = await _mailbox.ack(
-                message_id=str(arguments.get("message_id") or ""),
-                agent_id=str(arguments.get("agent_id") or ""),
-                tenant_id=tenant_id or "default",
-            )
-            return [types.TextContent(type="text", text=json.dumps(msg.model_dump(), indent=2))]
+            # বাংলা মন্তব্য: [Step-2.3] ইন-মেমোরি Agent Mailbox অবসরে পাঠানো হয়েছে।
+            payload_out = {
+                "status": "acknowledged",
+                "message_id": str(arguments.get("message_id") or ""),
+                "note": "Mailbox retired in Step-2.3",
+            }
+            return [types.TextContent(type="text", text=json.dumps(payload_out, indent=2))]
 
         elif name == "topic_subscribe":
-            # MCP Tower gap-3 (#927): topic pub/sub subscription (idempotent union)।
-            from core.agent_mailbox import get_agent_mailbox
-
-            _mailbox = await get_agent_mailbox()
-            topics = await _mailbox.subscribe(
-                agent_id=str(arguments.get("agent_id") or ""),
-                topics=list(arguments.get("topics") or []),
-                tenant_id=tenant_id or "default",
-            )
+            # বাংলা মন্তব্য: [Step-2.3] ইন-মেমোরি Agent Mailbox অবসরে পাঠানো হয়েছে।
             return [
                 types.TextContent(
                     type="text",
                     text=json.dumps(
                         {
-                            "status": "ok",
+                            "status": "retired",
                             "agent_id": arguments.get("agent_id"),
                             "tenant_id": tenant_id or "default",
-                            "topics": topics,
+                            "topics": list(arguments.get("topics") or []),
                         },
                         indent=2,
                     ),
