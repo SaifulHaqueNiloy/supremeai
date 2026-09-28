@@ -218,6 +218,7 @@ class SelfPlanner:
         try:
             return bool(nx.is_directed_acyclic_graph(graph))
         except Exception:
+            logger.debug("Exception swallowed in self_planner (deliberate fallback)", exc_info=True)
             return False
 
     async def execute_plan(self, graph: Any) -> list[dict[str, Any]]:

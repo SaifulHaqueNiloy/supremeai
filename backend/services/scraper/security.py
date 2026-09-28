@@ -22,9 +22,13 @@ transport layer (custom httpcore backend) — intentionally out of scope here;
 per-hop re-validation shrinks the window to a single connect.
 """
 
+import logging
 from ipaddress import IPv6Address, ip_address, ip_network
 from socket import gaierror, getaddrinfo
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
+
 
 _BLOCKED_SCHEMES = {"file", "ftp", "gopher", "dict", "ldap", "javascript", "data"}
 _BLOCKED_HOSTS = {
@@ -147,6 +151,7 @@ def is_safe_url(url: str) -> bool:
 
         return True
     except Exception:  # noqa: BLE001
+        logger.debug("Exception swallowed in security (deliberate fallback)", exc_info=True)
         return False
 
 
@@ -162,6 +167,7 @@ def is_safe_url_resolved(url: str) -> bool:
     try:
         hostname = urlparse(url).hostname or ""
     except Exception:  # noqa: BLE001
+        logger.debug("Exception swallowed in security (deliberate fallback)", exc_info=True)
         return False
     if not hostname:
         return False

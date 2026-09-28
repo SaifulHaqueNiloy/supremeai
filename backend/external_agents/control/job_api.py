@@ -13,6 +13,7 @@ callers never block on long-running agent work.
 from __future__ import annotations
 
 import asyncio
+import logging
 import uuid
 from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
@@ -22,6 +23,9 @@ from pydantic import BaseModel, Field
 
 from external_agents.contracts.task_contract import TaskContract, TaskState
 from external_agents.control.state_manager import AgentStateManager, TaskRecord
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = ["AgentJob", "ExternalAgentJobAPI", "WorkerFn"]
 
@@ -103,7 +107,7 @@ class ExternalAgentJobAPI:
             except asyncio.CancelledError:
                 pass
             except Exception:
-                pass
+                logger.debug("Exception swallowed in job_api (deliberate fallback)", exc_info=True)
         record = self.state_manager.get(job.task_id)
         if record is None:
             return False
@@ -112,6 +116,7 @@ class ExternalAgentJobAPI:
         try:
             self.state_manager.cancel(job.task_id, reason="cancelled via job api")
         except Exception:
+            logger.debug("Exception swallowed in job_api (deliberate fallback)", exc_info=True)
             return False
         job.state = TaskState.CANCELLED
         job.finished_at = _utcnow()
@@ -143,7 +148,7 @@ class ExternalAgentJobAPI:
             try:
                 sm.fail(task.task_id, error=str(exc))
             except Exception:
-                pass
+                logger.debug("Exception swallowed in job_api (deliberate fallback)", exc_info=True)
         finally:
             self._tasks.pop(job.job_id, None)
 

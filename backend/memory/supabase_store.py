@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import os
 import time
 from datetime import UTC, datetime
@@ -10,6 +11,8 @@ from urllib.parse import urlparse
 
 from core.config import settings
 from memory.sqlite_store import SQLiteMemoryStore
+
+logger = logging.getLogger(__name__)
 
 
 class SupabaseStore(SQLiteMemoryStore):
@@ -75,6 +78,9 @@ class SupabaseStore(SQLiteMemoryStore):
             hostname = parsed.hostname or ""
             return hostname.endswith("supabase.co") or "supabase" in hostname.lower()
         except Exception:
+            logger.debug(
+                "Exception swallowed in supabase_store (deliberate fallback)", exc_info=True
+            )
             return False
 
     def _verify_pgvector_schema(self, client) -> bool:

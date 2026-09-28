@@ -480,6 +480,9 @@ class CascadeMemoryService:
                 stored_vector = json.loads(row.get("embedding") or "[]")
                 score = self._cosine_similarity(embedding, stored_vector)
             except Exception:
+                logger.debug(
+                    "Exception swallowed in memory_service (deliberate fallback)", exc_info=True
+                )
                 continue  # বিকৃত embedding-সারি প্রার্থী নয় — অন্যান্য সারি দেখা চলছে
             if score > best_score:
                 best_id, best_score, best_row = row.get("id"), score, row

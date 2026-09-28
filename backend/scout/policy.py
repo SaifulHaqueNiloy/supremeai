@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import logging
 import re
 from urllib.parse import urlparse
 
 from core.security import is_safe_url
 from scout.models import CrawlPolicy, DomainRule, TrustLevel
+
+logger = logging.getLogger(__name__)
 
 
 class PolicyEngine:
@@ -27,6 +30,7 @@ class PolicyEngine:
             parsed = urlparse(url)
             return (parsed.hostname or "").lower()
         except Exception:
+            logger.debug("Exception swallowed in policy (deliberate fallback)", exc_info=True)
             return ""
 
     @staticmethod

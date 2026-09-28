@@ -14,6 +14,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import os
 import random
 import time
@@ -27,6 +28,8 @@ from core.config import settings
 from core.errors.error_bus import with_error_bus
 from core.llm.llm_gateway import LLMGateway, get_llm_gateway
 from core.observability.telemetry import get_tracer, trace_span
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, slots=True)
@@ -259,6 +262,9 @@ class AgentEvolutionEngine(BaseSkill):
             efficiency = 1.0 - (used / genome.max_tokens)
             return min(1.0, max(0.0, score * 0.7 + efficiency * 0.3))
         except Exception:
+            logger.debug(
+                "Exception swallowed in agent_evolution_engine (deliberate fallback)", exc_info=True
+            )
             return 0.0
 
     @trace_span("evolution.breed")

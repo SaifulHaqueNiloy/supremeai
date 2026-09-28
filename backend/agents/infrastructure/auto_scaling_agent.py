@@ -439,6 +439,9 @@ class AutoScalingAgent:
 
             return recommended_cost - current_cost
         except Exception:
+            logger.debug(
+                "Exception swallowed in auto_scaling_agent (deliberate fallback)", exc_info=True
+            )
             return 0.0
 
     @with_error_bus("_calculate_scaling_confidence")
@@ -472,6 +475,9 @@ class AutoScalingAgent:
             )
             return max(0.5, min(1.0, avg_confidence))
         except Exception:
+            logger.debug(
+                "Exception swallowed in auto_scaling_agent (deliberate fallback)", exc_info=True
+            )
             return 0.7  # Default confidence
 
     @with_error_bus("_get_last_scaling_time")
@@ -483,6 +489,9 @@ class AutoScalingAgent:
                 return datetime.fromisoformat(last_time_str)
             return None
         except Exception:
+            logger.debug(
+                "Exception swallowed in auto_scaling_agent (deliberate fallback)", exc_info=True
+            )
             return None
 
     async def _record_scaling_action(self, recommendation: ScalingRecommendation):
