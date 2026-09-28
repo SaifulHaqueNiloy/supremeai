@@ -112,7 +112,9 @@ class SupremeKernel:
             if result.status.value not in _FEDERATION_FALLBACK_STATUSES:
                 elapsed_ms = (time.perf_counter() - start_time) * 1000.0
                 self._journal_dispatch(
-                    request, result.status.value, elapsed_ms,
+                    request,
+                    result.status.value,
+                    elapsed_ms,
                     result.error.code if result.error else None,
                 )
                 return KernelResponse(
