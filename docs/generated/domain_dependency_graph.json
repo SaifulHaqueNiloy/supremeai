@@ -2592,6 +2592,16 @@
     {
       "evidence": [
         {
+          "line": 66,
+          "path": "backend/core/ai_memory/repository.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "data"
+    },
+    {
+      "evidence": [
+        {
           "line": 163,
           "path": "backend/core/ai_memory/retention.py"
         }
@@ -2654,6 +2664,16 @@
         {
           "line": 40,
           "path": "backend/api/routes/memory_mcp_http.py"
+        }
+      ],
+      "source": "knowledge",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 17,
+          "path": "backend/core/ai_memory/repository.py"
         }
       ],
       "source": "knowledge",

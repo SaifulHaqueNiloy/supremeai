@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3421,
+  "edge_count": 3425,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -4156,6 +4156,14 @@
       "to": "core.ai_memory.vector_store"
     },
     {
+      "from": "core.ai_memory.repository",
+      "to": "core.embeddings"
+    },
+    {
+      "from": "core.ai_memory.repository",
+      "to": "core.logging_config"
+    },
+    {
       "from": "core.ai_memory.retention",
       "to": "core.logging_config"
     },
@@ -7774,6 +7782,10 @@
     {
       "from": "memory.rag_pipeline",
       "to": "memory.chromadb_store"
+    },
+    {
+      "from": "memory.repository",
+      "to": "core.ai_memory.repository"
     },
     {
       "from": "memory.sliding_window",
@@ -13069,6 +13081,10 @@
     },
     {
       "from": "tools.ensemble_router",
+      "to": "core.llm.llm_gateway"
+    },
+    {
+      "from": "tools.ensemble_router",
       "to": "core.logging_config"
     },
     {
@@ -13688,7 +13704,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1997,
+  "module_count": 1999,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14134,6 +14150,7 @@
     "core.agents.live.computer_agent",
     "core.agents.live.vision_agent",
     "core.ai_memory",
+    "core.ai_memory.repository",
     "core.ai_memory.retention",
     "core.ai_memory.vector_store",
     "core.app",
@@ -14647,6 +14664,7 @@
     "memory.long_term_memory",
     "memory.mcp_server",
     "memory.rag_pipeline",
+    "memory.repository",
     "memory.sliding_window",
     "memory.sqlite_store",
     "memory.supabase_store",

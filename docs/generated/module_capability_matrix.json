@@ -3942,6 +3942,16 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/core/ai_memory/repository.py"
+    },
+    {
+      "capability_signals": [
+        "execute",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/core/ai_memory/retention.py"
     },
     {
@@ -8568,6 +8578,15 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/memory/rag_pipeline.py"
+    },
+    {
+      "capability_signals": [
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/memory/repository.py"
     },
     {
       "capability_signals": [
@@ -26565,5 +26584,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3033
+  "source_file_count": 3035
 }
