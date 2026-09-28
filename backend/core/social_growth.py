@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
 from enum import StrEnum
@@ -7,6 +8,8 @@ from typing import Any
 from uuid import uuid4
 
 from core.state_store import durable_state
+
+logger = logging.getLogger(__name__)
 
 
 class SocialPlatform(StrEnum):
@@ -86,6 +89,9 @@ class SocialGrowthCircle:
                 try:
                     draft = self._deserialize(data)
                 except Exception:
+                    logger.debug(
+                        "Exception swallowed in social_growth (deliberate fallback)", exc_info=True
+                    )
                     continue  # malformed record — skip, never boot-block
                 self._drafts[draft.id] = draft
 

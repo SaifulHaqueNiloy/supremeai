@@ -124,6 +124,10 @@ def get_admin_audit_logs(limit: int = 100):
                         }
                     )
                 except Exception:
+                    logger.debug(
+                        "Exception swallowed in endpoints_command (deliberate fallback)",
+                        exc_info=True,
+                    )
                     continue
     except Exception as e:
         logger.debug(f"Redis audit query failed: {e}")

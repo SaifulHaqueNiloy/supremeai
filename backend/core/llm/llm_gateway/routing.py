@@ -125,6 +125,7 @@ class RoutingMixin:
         try:
             from core.llm.llm_gateway.registry import _RETIRED_MODELS
         except Exception:  # pragma: no cover — registry import must never break boot
+            logger.debug("Exception swallowed in routing (deliberate fallback)", exc_info=True)
             return
         retired: list[str] = []
 

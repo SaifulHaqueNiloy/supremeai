@@ -14,9 +14,13 @@ never fabricated success).
 
 from __future__ import annotations
 
+import logging
 import time
 from datetime import UTC, datetime
 from typing import Any
+
+logger = logging.getLogger(__name__)
+
 
 # Required tables per issue #478 evidence (docs/audits/MANUAL_STEPS.md 7.9):
 # these are written at boot / runtime by persistence + memory subsystems.
@@ -46,6 +50,7 @@ def _rest_base_and_key() -> tuple[str, str] | None:
         base = (getattr(settings, "supabase_url", "") or "").rstrip("/")
         key = getattr(settings, "supabase_service_key", "") or getattr(settings, "supabase_key", "")
     except Exception:  # noqa: BLE001 — very-early-boot safety; settings is heavy
+        logger.debug("Exception swallowed in db_schema_gate (deliberate fallback)", exc_info=True)
         return None
     if not base or not key:
         return None
@@ -70,6 +75,7 @@ def _probe_table(base: str, key: str, table: str) -> str:
             return "missing"
         return "unknown"
     except Exception:  # noqa: BLE001 — network hiccup → unknown, never crash
+        logger.debug("Exception swallowed in db_schema_gate (deliberate fallback)", exc_info=True)
         return "unknown"
 
 

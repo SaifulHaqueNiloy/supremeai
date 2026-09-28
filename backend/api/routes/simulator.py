@@ -162,6 +162,7 @@ def _use_redis() -> bool:
             return False
         return True
     except Exception:
+        logger.debug("Exception swallowed in simulator (deliberate fallback)", exc_info=True)
         return False
 
 

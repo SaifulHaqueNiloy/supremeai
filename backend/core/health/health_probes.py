@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 
@@ -5,6 +6,9 @@ import httpx
 
 from core.cache.redis_manager import redis_manager
 from core.resilience.chaos_engine import chaos_engine
+
+logger = logging.getLogger(__name__)
+
 
 # Note: Using a safe fallback if supabase_client is not directly importable or missing ping
 try:
@@ -70,6 +74,7 @@ def _resolve_probe_secret(key: str) -> str:
 
         return (settings._get_cached_secret(key) or "").strip()
     except Exception:  # noqa: BLE001 — a probe must never crash its caller
+        logger.debug("Exception swallowed in health_probes (deliberate fallback)", exc_info=True)
         return ""
 
 

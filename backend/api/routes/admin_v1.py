@@ -13,6 +13,7 @@ Reuse Before Creation)। প্রতিটি এন্ডপয়েন্�
 
 from __future__ import annotations
 
+import logging
 from datetime import UTC, datetime
 from typing import Any
 
@@ -21,6 +22,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from api.dependencies import get_current_admin
 from api.routes.admin_auth import admin_rate_limit, require_admin_token
 from core.agent_registry import get_agent_registry
+
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(
     prefix="/api/v1",
@@ -113,6 +117,7 @@ async def admin_stats_v1(admin: dict = Depends(get_current_admin)) -> dict[str, 
                 if rec.created_at.timestamp() >= day_ago:
                     recent += 1
             except Exception:
+                logger.debug("Exception swallowed in admin_v1 (deliberate fallback)", exc_info=True)
                 continue
         stats["crawler_crawls_24h"] = recent
     except Exception as exc:

@@ -264,6 +264,9 @@ class HeuristicScorer:
             await self.cache.set(cache_key, score, ttl=RECOMMENDATION_CACHE_TTL)
             return score
         except Exception:
+            logger.debug(
+                "Exception swallowed in skill_recommender (deliberate fallback)", exc_info=True
+            )
             return 0.0
 
     def _get_skill_name(self, skill_id: str) -> str:
