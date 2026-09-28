@@ -43,6 +43,9 @@ PR খোলার সাথে সাথেই gh issue edit <id> --add-label '
 ### 10. Standard Group Issue Creation Protocol (পরবর্তী ইস্যু তৈরির নিয়ম)
 ভবিষ্যতে যখনই নতুন গ্রুপ বা সিকোয়েন্স ইস্যু তৈরি করা হবে, তা অবশ্যই স্ট্যান্ডার্ড টেমপ্লেট (`scripts/ci/create_group_issue.py` বা GitHub issue form) অনুযায়ী তৈরি করতে হবে। প্রতিটি ইস্যুতে স্পষ্টভাবে থাকতে হবে: (১) Group ও Sequence ট্যাগ (`group:step-X`, `seq:Y`), (২) Predecessor নির্ভরতা, (৩) 'Touching files' ও পরমাণু ব্লাস্ট রেডিয়াস ঘোষণা, (৪) ৩-স্তর ভেরিফিকেশন নির্দেশাবলী, (৫) বাধ্যতামূলক বাংলা/বাংলিশ কোড কমেন্টস (`# বাংলা মন্তব্য:`), এবং (৬) স্পষ্ট স্ট্রেজিং নোটিশ: 'গ্রুপ সম্পূর্ণ শেষ হওয়ার পর Merge Train চালু হবে — কোনো বিচ্ছিন্ন মার্জ নয়'।
 
+### 11. Flexible Group Branching — Connected vs Independent Work (#2378)
+কাজের প্রকৃতি অনুযায়ী দুই পথ। **Connected Work** = ইস্যুতে `group:<name>` লেবেল থাকলে একাধিক agent একটি শেয়ার্ড গ্রুপ ব্রাঞ্চ `group/<name>`-এ কাজ করবে (acquire_role_slot.py বিদ্যমান গ্রুপ ব্রাঞ্চ শেয়ার বা origin/main থেকে তৈরি করবে — মাঝপথে reset-to-main কখনো নয়) → গ্রুপ শেষে ১টি PR + গ্রুপ-লেভেল ৩-স্তর ভেরিফিকেশন + Merge Train গ্রুপ-কমপ্লিটে। প্রতিটি agent atomic_claim.sh --files দিয়ে ফাইল-বাউন্ডারি ঘোষণা করবে — একই গ্রুপ ব্রাঞ্চে দুই agent-এর ঘোষণায় overlap থাকলে claim বাতিল। গ্রুপ ব্রাঞ্চে origin/main auto-sync নয় — sync হবে Merge Train-এ। **Independent Work** = standalone ইস্যুতে পূর্বের মতোই `১ Issue = ১ Branch = ১ PR`। Lease Gate গ্রুপ ব্রাঞ্চে group-সদস্যতা যাচাই করে (gates.py _group_lease_check)।
+
 ---
 
 ## Bootstrap Checklist (সেশন শুরু হলে ঠিক এই ক্রমে কাজ করো)

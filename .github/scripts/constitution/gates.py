@@ -27,6 +27,7 @@ import os
 import re
 import subprocess
 import sys
+import urllib.parse
 import urllib.request
 from pathlib import Path
 from typing import Optional
@@ -51,6 +52,7 @@ DEFAULT_LEASE_POLICY = {
     "bot_branch_regex": r"^([a-z0-9]+)-([0-9]+)([-_.].+)?$",
     "exempt_authors": ["dependabot[bot]", "github-actions[bot]", "renovate[bot]"],
     "docs_branch_prefix": "docs/",
+    "group_branch_prefix": "group/",
     "mesh_advisory_env": "SUPREME_MESH_URL",
 }
 
@@ -360,6 +362,12 @@ def check_lease(author: str, branch: str, policy: dict) -> tuple[bool, str]:
     docs_prefix = policy.get("docs_branch_prefix", "docs/")
     if branch.startswith(docs_prefix):
         return True, f"docs branch '{branch}' allowed for slot {lane}-{slot}"
+    # Flexible Group Branching (#2378): group/* branches lease by group
+    # membership, not slot pattern — the PR author must hold an active claim
+    # on an issue carrying the matching `group:<name>` label.
+    group_prefix = policy.get("group_branch_prefix", DEFAULT_LEASE_POLICY["group_branch_prefix"])
+    if branch.startswith(group_prefix):
+        return _group_lease_check(author, lane, slot, branch[len(group_prefix):].strip("/"))
     bm = re.match(policy.get("bot_branch_regex", DEFAULT_LEASE_POLICY["bot_branch_regex"]), branch)
     if not bm:
         return False, (
@@ -375,6 +383,52 @@ def check_lease(author: str, branch: str, policy: dict) -> tuple[bool, str]:
     if not ok:
         return False, reason
     return True, f"branch '{branch}' matches leased slot {lane}-{slot}"
+
+
+def _group_lease_check(author: str, lane: str, slot: str, group_name: str) -> tuple[bool, str]:
+    """Group-branch lease (#2378 Flexible Group Branching Protocol).
+
+    # বাংলা মন্তব্য: Connected Work মডেলে একাধিক bot একই group/<name> ব্রাঞ্চে
+    # কাজ করে — তাই slot-pattern নয়, গ্রুপ-সদস্যতা যাচাই হয়: PR author-এর
+    # slot-identity সংশ্লিষ্ট group:<name> লেবেলযুক্ত কোনো status:in-progress
+    # ইস্যুর claim comment-এ থাকতে হবে। API না চললে advisory pass
+    # (mesh-advisory pattern — CI কখনো mesh/API uptime-এর ওপর hard-depend করে না)।
+    """
+    identities = {author, author.removesuffix("-bot"), f"{lane}-{slot}"}
+    label = f"group:{group_name}"
+    try:
+        query = f"repos/{_repo()}/issues?labels={urllib.parse.quote(label)}&state=open&per_page=50"
+        issues = gh_api(query) or []
+        active = []
+        for iss in issues:
+            lbls = {l.get("name", "") for l in (iss.get("labels") or [])}
+            if "status:in-progress" in lbls:
+                active.append(iss)
+        for iss in active[:10]:
+            num = iss.get("number")
+            try:
+                comments = gh_api(f"repos/{_repo()}/issues/{num}/comments?per_page=50") or []
+            except Exception:  # noqa: BLE001 — per-issue comment fetch is best-effort
+                continue
+            for c in comments:
+                text = c.get("body") or ""
+                if any(ident and ident in text for ident in identities):
+                    return True, (
+                        f"group branch 'group/{group_name}' allowed: active claim found on "
+                        f"#{num} for '{author}' (slot {lane}-{slot})"
+                    )
+        if not active:
+            return False, (
+                f"group branch 'group/{group_name}' has no active claim — an agent must hold "
+                f"status:in-progress on a '{label}' issue before pushing to the group branch (#2378)"
+            )
+        return False, (
+            f"author '{author}' (slot {lane}-{slot}) has no active claim on any '{label}' issue "
+            f"— claim a group issue before pushing to 'group/{group_name}' (#2378)"
+        )
+    except Exception as err:  # noqa: BLE001 — CI cannot hard-depend on API uptime
+        print(f"::warning::group lease check unavailable ({err}) — advisory pass for 'group/{group_name}'")
+        return True, f"group branch 'group/{group_name}' allowed (advisory: API unavailable)"
 
 
 def _mesh_lease_advisory(policy: dict) -> tuple[bool, str]:

@@ -154,7 +154,7 @@ jobs:
           PR_NUM: ${{ needs.meta.outputs.pr_number }}
           OUTCOME: ${{ steps.gate.outcome }}
           GATE_NAME: "Lease Gate"
-          REMEDIATION: "Bot PR-এর head branch অবশ্যই লেখকের leased slot-এর ভেতরে হবে (যেমন supremeai-coder-1-bot → coder-1... / docs/...)। নিজের slot branch-এ কাজ সরান।"
+          REMEDIATION: "Bot PR-এর head branch অবশ্যই লেখকের leased slot-এর ভেতরে হবে (যেমন supremeai-coder-1-bot → coder-1... / docs/...)। গ্রুপ কাজের ক্ষেত্রে group/<name> ব্রাঞ্চ ব্যবহার করো — তবে সংশ্লিষ্ট group:<name> লেবেলযুক্ত ইস্যুতে status:in-progress ক্লেইম থাকতে হবে (#2378 Flexible Group Branching)। নিজের slot branch-এ কাজ সরান।"
         run: |
           set -euo pipefail
           GITHUB_REPOSITORY="$GH_REPO" python .github/scripts/constitution/report_gate_outcome.py \
