@@ -169,7 +169,7 @@ jobs:
       - name: Install Test Dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml pytest ruff pytest-asyncio anyio httpx
+          pip install pyyaml pytest ruff pytest-asyncio anyio httpx pytest-cov
 
       - name: Constitution & Gates Self-Test
         run: |
@@ -177,7 +177,7 @@ jobs:
 
       - name: Silent Exception Swallows Invariant Test
         run: |
-          pytest --confcutdir=backend/tests/core backend/tests/core/test_no_silent_exception_swallow.py -q
+          pytest -o addopts="" --confcutdir=backend/tests/core backend/tests/core/test_no_silent_exception_swallow.py -q
 
   # ---------------------------------------------------------------------------
   # 5. Unified PR Decision Contract
