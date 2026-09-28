@@ -1,13 +1,13 @@
 {
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "57f27f7accaa979eaed20b214001053abce1cfa90c07ab14a0b7cb0a799b6075",
-  "route_count": 761,
+  "source_sha256": "83ff68dae3a8ab83ebf01a8e3e0aa88a5204a88d38d66a1ad28ecdd4e530b0a3",
+  "route_count": 861,
   "routes": [
     {
       "method": "GET",
       "path": "/",
-      "operation_id": "root__head",
+      "operation_id": "root__get",
       "tags": [],
       "summary": "Root",
       "auth": {
@@ -23,7 +23,7 @@
     {
       "method": "HEAD",
       "path": "/",
-      "operation_id": "root__head",
+      "operation_id": "root__get",
       "tags": [],
       "summary": "Root",
       "auth": {
@@ -104,6 +104,46 @@
         "admin-dashboard"
       ],
       "summary": "Decide Commandcenter Approval",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/approvals/mcp",
+      "operation_id": "get_commandcenter_approvals_mcp_admin_api_approvals_mcp_get",
+      "tags": [
+        "admin-dashboard"
+      ],
+      "summary": "Get Commandcenter Approvals Mcp",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/admin-api/approvals/mcp",
+      "operation_id": "resolve_commandcenter_approval_mcp_admin_api_approvals_mcp_post",
+      "tags": [
+        "admin-dashboard"
+      ],
+      "summary": "Resolve Commandcenter Approval Mcp",
       "auth": {
         "required": true,
         "schemes": [
@@ -1272,6 +1312,24 @@
       "tests": "unclassified"
     },
     {
+      "method": "GET",
+      "path": "/admin-api/dependencies",
+      "operation_id": "check_dependencies_admin_api_dependencies_get",
+      "tags": [
+        "health"
+      ],
+      "summary": "Check Dependencies",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "POST",
       "path": "/admin-api/deploy",
       "operation_id": "trigger_deploy_admin_api_deploy_post",
@@ -1444,6 +1502,24 @@
         "schemes": [
           "HTTPBearer"
         ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/health-aggregation",
+      "operation_id": "get_health_aggregation_admin_api_health_aggregation_get",
+      "tags": [
+        "health"
+      ],
+      "summary": "Get Health Aggregation",
+      "auth": {
+        "required": false,
+        "schemes": []
       },
       "tenant_scope": "unclassified",
       "persistence": "unclassified",
@@ -1779,6 +1855,24 @@
     },
     {
       "method": "GET",
+      "path": "/admin-api/provider-readiness",
+      "operation_id": "get_provider_readiness_admin_api_provider_readiness_get",
+      "tags": [
+        "health"
+      ],
+      "summary": "Get Provider Readiness",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/admin-api/providers",
       "operation_id": "get_providers_admin_api_providers_get",
       "tags": [
@@ -1899,6 +1993,26 @@
     },
     {
       "method": "GET",
+      "path": "/admin-api/secrets-health",
+      "operation_id": "get_secrets_health_admin_api_secrets_health_get",
+      "tags": [
+        "admin-dashboard"
+      ],
+      "summary": "Get Secrets Health",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/admin-api/security-scan",
       "operation_id": "run_security_scan_admin_api_security_scan_get",
       "tags": [
@@ -1959,6 +2073,46 @@
     },
     {
       "method": "GET",
+      "path": "/admin-api/security/memory",
+      "operation_id": "get_security_memory_admin_api_security_memory_get",
+      "tags": [
+        "admin-dashboard"
+      ],
+      "summary": "Get Security Memory",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/security/tasks",
+      "operation_id": "get_security_tasks_admin_api_security_tasks_get",
+      "tags": [
+        "admin-dashboard"
+      ],
+      "summary": "Get Security Tasks",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/admin-api/service-categories",
       "operation_id": "get_service_categories_admin_api_service_categories_get",
       "tags": [
@@ -1977,12 +2131,48 @@
     },
     {
       "method": "GET",
+      "path": "/admin-api/service-health-map",
+      "operation_id": "get_health_map_admin_api_service_health_map_get",
+      "tags": [
+        "health"
+      ],
+      "summary": "Get Health Map",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/admin-api/service-topology",
       "operation_id": "get_service_topology_admin_api_service_topology_get",
       "tags": [
         "service-topology"
       ],
       "summary": "Get Service Topology",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/admin-api/service-uptime",
+      "operation_id": "get_service_uptime_admin_api_service_uptime_get",
+      "tags": [
+        "health"
+      ],
+      "summary": "Get Service Uptime",
       "auth": {
         "required": false,
         "schemes": []
@@ -2287,6 +2477,24 @@
         "schemes": [
           "HTTPBearer"
         ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/admin-api/test-service",
+      "operation_id": "test_specific_service_admin_api_test_service_post",
+      "tags": [
+        "health"
+      ],
+      "summary": "Test Specific Service",
+      "auth": {
+        "required": false,
+        "schemes": []
       },
       "tenant_scope": "unclassified",
       "persistence": "unclassified",
@@ -2685,114 +2893,6 @@
       "tests": "unclassified"
     },
     {
-      "method": "GET",
-      "path": "/api/admin-api/dependencies",
-      "operation_id": "check_dependencies_api_admin_api_dependencies_get",
-      "tags": [
-        "health"
-      ],
-      "summary": "Check Dependencies",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/health-aggregation",
-      "operation_id": "get_health_aggregation_api_admin_api_health_aggregation_get",
-      "tags": [
-        "health"
-      ],
-      "summary": "Get Health Aggregation",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/health-map",
-      "operation_id": "get_health_map_api_admin_api_health_map_get",
-      "tags": [
-        "health"
-      ],
-      "summary": "Get Health Map",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/provider-readiness",
-      "operation_id": "get_provider_readiness_api_admin_api_provider_readiness_get",
-      "tags": [
-        "health"
-      ],
-      "summary": "Get Provider Readiness",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/admin-api/service-uptime",
-      "operation_id": "get_service_uptime_api_admin_api_service_uptime_get",
-      "tags": [
-        "health"
-      ],
-      "summary": "Get Service Uptime",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "POST",
-      "path": "/api/admin-api/test-service",
-      "operation_id": "test_specific_service_api_admin_api_test_service_post",
-      "tags": [
-        "health"
-      ],
-      "summary": "Test Specific Service",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
       "method": "POST",
       "path": "/api/admin/actions/{action_type}",
       "operation_id": "trigger_quick_action_api_admin_actions__action_type__post",
@@ -2800,6 +2900,114 @@
         "Core Admin"
       ],
       "summary": "Trigger Quick Action",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/ai/assign",
+      "operation_id": "assign_ai_api_admin_ai_assign_post",
+      "tags": [
+        "AI Surface Assignment"
+      ],
+      "summary": "Assign Ai",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ai/assignment",
+      "operation_id": "get_assignment_api_admin_ai_assignment_get",
+      "tags": [
+        "AI Surface Assignment"
+      ],
+      "summary": "Get Assignment",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ai/overview",
+      "operation_id": "get_overview_api_admin_ai_overview_get",
+      "tags": [
+        "AI Surface Assignment"
+      ],
+      "summary": "Get Overview",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ai/providers",
+      "operation_id": "list_providers_api_admin_ai_providers_get",
+      "tags": [
+        "AI Surface Assignment"
+      ],
+      "summary": "List Providers",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/ai/surfaces",
+      "operation_id": "list_surfaces_api_admin_ai_surfaces_get",
+      "tags": [
+        "AI Surface Assignment"
+      ],
+      "summary": "List Surfaces",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/ai/test/{provider_id}",
+      "operation_id": "test_provider_api_admin_ai_test__provider_id__post",
+      "tags": [
+        "AI Surface Assignment"
+      ],
+      "summary": "Test Provider",
       "auth": {
         "required": false,
         "schemes": []
@@ -2980,6 +3188,22 @@
         "cloud-mesh"
       ],
       "summary": "Rotate Keys",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/cloud-mesh/smell-check",
+      "operation_id": "cloud_mesh_smell_check_contract_alias_api_admin_cloud_mesh_smell_check_post",
+      "tags": [],
+      "summary": "Cloud Mesh Smell Check Contract Alias",
       "auth": {
         "required": false,
         "schemes": []
@@ -3379,6 +3603,132 @@
       "tests": "unclassified"
     },
     {
+      "method": "POST",
+      "path": "/api/admin/librarian/process",
+      "operation_id": "process_skill_action_api_admin_librarian_process_post",
+      "tags": [
+        "Admin Librarian"
+      ],
+      "summary": "Process Skill Action",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/librarian/queue",
+      "operation_id": "get_quarantine_queue_api_admin_librarian_queue_get",
+      "tags": [
+        "Admin Librarian"
+      ],
+      "summary": "Get Quarantine Queue",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/llm/providers",
+      "operation_id": "get_llm_providers_api_admin_llm_providers_get",
+      "tags": [
+        "Admin LLM Gateway"
+      ],
+      "summary": "Get Llm Providers",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/llm/router",
+      "operation_id": "get_llm_router_api_admin_llm_router_get",
+      "tags": [
+        "Admin LLM Gateway"
+      ],
+      "summary": "Get Llm Router",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/llm/router/override",
+      "operation_id": "set_llm_router_override_api_admin_llm_router_override_post",
+      "tags": [
+        "Admin LLM Gateway"
+      ],
+      "summary": "Set Llm Router Override",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/llm/rules",
+      "operation_id": "get_llm_rules_api_admin_llm_rules_get",
+      "tags": [
+        "Admin LLM Gateway"
+      ],
+      "summary": "Get Llm Rules",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/llm/rules",
+      "operation_id": "update_llm_rules_api_admin_llm_rules_post",
+      "tags": [
+        "Admin LLM Gateway"
+      ],
+      "summary": "Update Llm Rules",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "GET",
       "path": "/api/admin/metrics",
       "operation_id": "get_prometheus_metrics_api_admin_metrics_get",
@@ -3694,6 +4044,54 @@
         "Site Actions Registry"
       ],
       "summary": "Update Site Action",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/admin/tenant-limits",
+      "operation_id": "list_tenant_limits_contract_alias_api_admin_tenant_limits_get",
+      "tags": [],
+      "summary": "List Tenant Limits Contract Alias",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "PUT",
+      "path": "/api/admin/tenant-limits/{tenant_id}",
+      "operation_id": "update_tenant_limits_contract_alias_api_admin_tenant_limits__tenant_id__put",
+      "tags": [],
+      "summary": "Update Tenant Limits Contract Alias",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/admin/traffic/kill-switch",
+      "operation_id": "traffic_kill_switch_contract_alias_api_admin_traffic_kill_switch_post",
+      "tags": [],
+      "summary": "Traffic Kill Switch Contract Alias",
       "auth": {
         "required": false,
         "schemes": []
@@ -4050,42 +4448,6 @@
     },
     {
       "method": "POST",
-      "path": "/api/api/admin/librarian/process",
-      "operation_id": "process_skill_action_api_api_admin_librarian_process_post",
-      "tags": [
-        "Admin Librarian"
-      ],
-      "summary": "Process Skill Action",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/api/admin/librarian/queue",
-      "operation_id": "get_quarantine_queue_api_api_admin_librarian_queue_get",
-      "tags": [
-        "Admin Librarian"
-      ],
-      "summary": "Get Quarantine Queue",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "POST",
       "path": "/api/artifacts/",
       "operation_id": "create_artifact_api_artifacts__post",
       "tags": [
@@ -4395,11 +4757,11 @@
     {
       "method": "POST",
       "path": "/api/browser/ai-action",
-      "operation_id": "browser_ai_action_api_browser_ai_action_post",
+      "operation_id": "ai_action_api_browser_ai_action_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
-      "summary": "Browser Ai Action",
+      "summary": "Ai Action",
       "auth": {
         "required": false,
         "schemes": []
@@ -4613,29 +4975,11 @@
     {
       "method": "POST",
       "path": "/api/browser/browse-session",
-      "operation_id": "save_browse_session_api_browser_browse_session_post",
+      "operation_id": "browse_session_api_browser_browse_session_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
-      "summary": "Save Browse Session",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/browser/browse-sessions",
-      "operation_id": "get_browse_sessions_api_browser_browse_sessions_get",
-      "tags": [
-        "browser-integration"
-      ],
-      "summary": "Get Browse Sessions",
+      "summary": "Browse Session",
       "auth": {
         "required": false,
         "schemes": []
@@ -4878,6 +5222,24 @@
     },
     {
       "method": "POST",
+      "path": "/api/browser/render-ticket",
+      "operation_id": "issue_render_ticket_api_browser_render_ticket_post",
+      "tags": [
+        "browser"
+      ],
+      "summary": "Issue Render Ticket",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
       "path": "/api/browser/scrape",
       "operation_id": "scrape_api_browser_scrape_post",
       "tags": [
@@ -4899,11 +5261,11 @@
     {
       "method": "POST",
       "path": "/api/browser/screenshot",
-      "operation_id": "browser_screenshot_api_browser_screenshot_post",
+      "operation_id": "capture_screenshot_api_browser_screenshot_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
-      "summary": "Browser Screenshot",
+      "summary": "Capture Screenshot",
       "auth": {
         "required": false,
         "schemes": []
@@ -4919,7 +5281,7 @@
       "path": "/api/browser/screenshots",
       "operation_id": "save_screenshot_to_gallery_api_browser_screenshots_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
       "summary": "Save Screenshot To Gallery",
       "auth": {
@@ -4935,11 +5297,11 @@
     {
       "method": "POST",
       "path": "/api/browser/security-scan",
-      "operation_id": "browser_security_scan_api_browser_security_scan_post",
+      "operation_id": "security_scan_api_browser_security_scan_post",
       "tags": [
-        "browser-integration"
+        "browser"
       ],
-      "summary": "Browser Security Scan",
+      "summary": "Security Scan",
       "auth": {
         "required": false,
         "schemes": []
@@ -5342,24 +5704,6 @@
         "browser"
       ],
       "summary": "Type Key",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "POST",
-      "path": "/api/browser/swarm/explore",
-      "operation_id": "explore_swarm_api_browser_swarm_explore_post",
-      "tags": [
-        "browser"
-      ],
-      "summary": "Explore Swarm",
       "auth": {
         "required": false,
         "schemes": []
@@ -5991,6 +6335,24 @@
       "tests": "unclassified"
     },
     {
+      "method": "GET",
+      "path": "/api/chat/upload",
+      "operation_id": "list_uploads_api_chat_upload_get",
+      "tags": [
+        "Chat Upload"
+      ],
+      "summary": "List Uploads",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "POST",
       "path": "/api/chat/upload/",
       "operation_id": "upload_chat_image_api_chat_upload__post",
@@ -6495,6 +6857,22 @@
       "tests": "unclassified"
     },
     {
+      "method": "GET",
+      "path": "/api/health-aggregation",
+      "operation_id": "health_aggregation_contract_api_health_aggregation_get",
+      "tags": [],
+      "summary": "Health Aggregation Contract",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "POST",
       "path": "/api/knowledge/ask",
       "operation_id": "ask_company_knowledge_api_knowledge_ask_post",
@@ -6532,6 +6910,60 @@
     },
     {
       "method": "POST",
+      "path": "/api/knowledge/failure",
+      "operation_id": "report_failure_api_knowledge_failure_post",
+      "tags": [
+        "Knowledge Base"
+      ],
+      "summary": "Report Failure",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/feedback",
+      "operation_id": "record_feedback_api_knowledge_feedback_post",
+      "tags": [
+        "Knowledge Base"
+      ],
+      "summary": "Record Feedback",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/knowledge/learn",
+      "operation_id": "learn_knowledge_api_knowledge_learn_post",
+      "tags": [
+        "Knowledge Base"
+      ],
+      "summary": "Learn Knowledge",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
       "path": "/api/knowledge/search",
       "operation_id": "search_knowledge_api_knowledge_search_post",
       "tags": [
@@ -6556,6 +6988,24 @@
         "Knowledge Base"
       ],
       "summary": "Seed Knowledge",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/knowledge/stats",
+      "operation_id": "learning_stats_api_knowledge_stats_get",
+      "tags": [
+        "Knowledge Base"
+      ],
+      "summary": "Learning Stats",
       "auth": {
         "required": false,
         "schemes": []
@@ -6747,42 +7197,6 @@
       "tests": "unclassified"
     },
     {
-      "method": "GET",
-      "path": "/api/memory/conversations",
-      "operation_id": "list_conversations_api_memory_conversations_get",
-      "tags": [
-        "memory"
-      ],
-      "summary": "List Conversations",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "POST",
-      "path": "/api/memory/conversations/messages",
-      "operation_id": "save_message_api_memory_conversations_messages_post",
-      "tags": [
-        "memory"
-      ],
-      "summary": "Save Message",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
       "method": "DELETE",
       "path": "/api/memory/recall",
       "operation_id": "clear_memory_api_memory_recall_delete",
@@ -6862,6 +7276,42 @@
         "memory"
       ],
       "summary": "Save Session",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/merge-learning/reports",
+      "operation_id": "get_merge_learning_reports_api_merge_learning_reports_get",
+      "tags": [
+        "merge-learning"
+      ],
+      "summary": "Get Merge Learning Reports",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/merge-learning/webhook",
+      "operation_id": "merge_learning_webhook_api_merge_learning_webhook_post",
+      "tags": [
+        "merge-learning"
+      ],
+      "summary": "Merge Learning Webhook",
       "auth": {
         "required": false,
         "schemes": []
@@ -7006,6 +7456,24 @@
         "Global Memory"
       ],
       "summary": "Sync recent chat messages to long-term memory",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/preferences/memory/user-data",
+      "operation_id": "delete_all_user_memories_api_preferences_memory_user_data_delete",
+      "tags": [
+        "Global Memory"
+      ],
+      "summary": "Erase ALL memories owned by the current user (GDPR right-to-erasure)",
       "auth": {
         "required": false,
         "schemes": []
@@ -7754,6 +8222,25 @@
     },
     {
       "method": "POST",
+      "path": "/api/skills/deploy-blueprint",
+      "operation_id": "deploy_blueprint_api_skills_deploy_blueprint_post",
+      "tags": [
+        "Skill Catalog Infrastructure",
+        "Skill Catalog Infrastructure"
+      ],
+      "summary": "Deploy Blueprint",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
       "path": "/api/skills/install",
       "operation_id": "install_skill_api_skills_install_post",
       "tags": [
@@ -7799,6 +8286,25 @@
         "Skill Catalog Infrastructure"
       ],
       "summary": "Search Skills",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/skills/uninstall",
+      "operation_id": "uninstall_skill_api_skills_uninstall_delete",
+      "tags": [
+        "Skill Catalog Infrastructure",
+        "Skill Catalog Infrastructure"
+      ],
+      "summary": "Uninstall Skill",
       "auth": {
         "required": false,
         "schemes": []
@@ -8221,6 +8727,26 @@
       "tests": "unclassified"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/admin/agents",
+      "operation_id": "admin_agents_v1_api_v1_admin_agents_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Agents V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/admin/alerts",
       "operation_id": "report_system_alert_api_v1_admin_alerts_post",
@@ -8238,12 +8764,112 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/admin/analytics",
+      "operation_id": "admin_analytics_v1_api_v1_admin_analytics_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Analytics V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/api-keys",
+      "operation_id": "admin_api_keys_v1_api_v1_admin_api_keys_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Api Keys V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/audit",
+      "operation_id": "admin_audit_v1_api_v1_admin_audit_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Audit V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/admin/audit-logs",
       "operation_id": "audit_logs_v1_api_v1_admin_audit_logs_get",
       "tags": [
         "admin-v1-aliases"
       ],
       "summary": "Audit Logs V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/billing",
+      "operation_id": "admin_billing_v1_api_v1_admin_billing_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Billing V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/config",
+      "operation_id": "admin_config_v1_api_v1_admin_config_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Config V1",
       "auth": {
         "required": true,
         "schemes": [
@@ -8401,6 +9027,126 @@
       "tests": "unclassified"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/admin/dashboard",
+      "operation_id": "admin_dashboard_v1_api_v1_admin_dashboard_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Dashboard V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/deployments",
+      "operation_id": "admin_deployments_v1_api_v1_admin_deployments_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Deployments V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/health",
+      "operation_id": "admin_health_v1_api_v1_admin_health_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Health V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/metrics",
+      "operation_id": "admin_metrics_v1_api_v1_admin_metrics_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Metrics V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/notifications",
+      "operation_id": "admin_notifications_v1_api_v1_admin_notifications_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Notifications V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/render/accounts/health",
+      "operation_id": "get_multi_account_health_api_v1_admin_render_accounts_health_get",
+      "tags": [
+        "admin-render-preflight"
+      ],
+      "summary": "Get Multi Account Health",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/admin/render/accounts/{role}/override",
       "operation_id": "override_render_account_api_v1_admin_render_accounts__role__override_post",
@@ -8482,12 +9228,92 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/admin/security",
+      "operation_id": "admin_security_v1_api_v1_admin_security_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Security V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/skills",
+      "operation_id": "admin_skills_v1_api_v1_admin_skills_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Skills V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/admin/stats",
       "operation_id": "admin_stats_v1_api_v1_admin_stats_get",
       "tags": [
         "admin-v1-aliases"
       ],
       "summary": "Admin Stats V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/system-status",
+      "operation_id": "admin_system_status_v1_api_v1_admin_system_status_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin System Status V1",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/admin/tiers",
+      "operation_id": "admin_tiers_v1_api_v1_admin_tiers_get",
+      "tags": [
+        "admin-v1-aliases"
+      ],
+      "summary": "Admin Tiers V1",
       "auth": {
         "required": true,
         "schemes": [
@@ -8521,16 +9347,18 @@
       "tests": "unclassified"
     },
     {
-      "method": "POST",
-      "path": "/api/v1/agent/action",
-      "operation_id": "run_agent_action_api_v1_agent_action_post",
+      "method": "GET",
+      "path": "/api/v1/admin/webhooks",
+      "operation_id": "admin_webhooks_v1_api_v1_admin_webhooks_get",
       "tags": [
-        "Agent Action"
+        "admin-v1-aliases"
       ],
-      "summary": "Run Agent Action",
+      "summary": "Admin Webhooks V1",
       "auth": {
-        "required": false,
-        "schemes": []
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
       },
       "tenant_scope": "unclassified",
       "persistence": "unclassified",
@@ -8625,16 +9453,32 @@
     {
       "method": "GET",
       "path": "/api/v1/agents",
-      "operation_id": "list_agents_v1_api_v1_agents_get",
+      "operation_id": "list_agents_api_v1_agents_get",
       "tags": [
-        "admin-v1-aliases"
+        "agent-registry"
       ],
-      "summary": "List Agents V1",
+      "summary": "List registered agents",
       "auth": {
-        "required": true,
-        "schemes": [
-          "HTTPBearer"
-        ]
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/agents",
+      "operation_id": "upsert_agent_api_v1_agents_post",
+      "tags": [
+        "agent-registry"
+      ],
+      "summary": "Admin: define/upsert an agent (role + AI provider)",
+      "auth": {
+        "required": false,
+        "schemes": []
       },
       "tenant_scope": "unclassified",
       "persistence": "unclassified",
@@ -8645,14 +9489,16 @@
     {
       "method": "POST",
       "path": "/api/v1/agents/execute",
-      "operation_id": "execute_agent_api_v1_agents_execute_post",
+      "operation_id": "execute_agent_task_api_v1_agents_execute_post",
       "tags": [
-        "agents"
+        "Autonomous Agents"
       ],
-      "summary": "Execute Agent",
+      "summary": "Execute Agent Task",
       "auth": {
-        "required": false,
-        "schemes": []
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
       },
       "tenant_scope": "unclassified",
       "persistence": "unclassified",
@@ -8697,13 +9543,49 @@
       "tests": "unclassified"
     },
     {
-      "method": "POST",
-      "path": "/api/v1/agents/swarm/execute",
-      "operation_id": "execute_swarm_api_v1_agents_swarm_execute_post",
+      "method": "DELETE",
+      "path": "/api/v1/agents/{agent_id}",
+      "operation_id": "remove_agent_api_v1_agents__agent_id__delete",
       "tags": [
-        "agents"
+        "agent-registry"
       ],
-      "summary": "Execute Swarm",
+      "summary": "Admin: remove an agent",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/agents/{agent_id}",
+      "operation_id": "get_agent_api_v1_agents__agent_id__get",
+      "tags": [
+        "agent-registry"
+      ],
+      "summary": "Single agent record",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/agents/{agent_id}/ownership",
+      "operation_id": "assign_ownership_api_v1_agents__agent_id__ownership_post",
+      "tags": [
+        "agent-registry"
+      ],
+      "summary": "Assign task ownership to an agent (task_id + scope + branch)",
       "auth": {
         "required": false,
         "schemes": []
@@ -8863,6 +9745,60 @@
       "tests": "unclassified"
     },
     {
+      "method": "POST",
+      "path": "/api/v1/auth/totp/verify",
+      "operation_id": "totp_verify_compat_api_v1_auth_totp_verify_post",
+      "tags": [
+        "auth"
+      ],
+      "summary": "Totp Verify Compat",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/auth/users",
+      "operation_id": "list_users_admin_api_v1_auth_users_get",
+      "tags": [
+        "auth"
+      ],
+      "summary": "List Users Admin",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/auth/users/{user_id}/role",
+      "operation_id": "set_user_role_api_v1_auth_users__user_id__role_patch",
+      "tags": [
+        "auth"
+      ],
+      "summary": "Set User Role",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "GET",
       "path": "/api/v1/auth/verify",
       "operation_id": "verify_token_api_v1_auth_verify_get",
@@ -8942,6 +9878,24 @@
         "capabilities"
       ],
       "summary": "Execute",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/capabilities/runtime",
+      "operation_id": "runtime_capabilities_api_v1_capabilities_runtime_get",
+      "tags": [
+        "capabilities"
+      ],
+      "summary": "Runtime Capabilities",
       "auth": {
         "required": false,
         "schemes": []
@@ -9188,6 +10142,24 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/conversations/{session_id}/messages",
+      "operation_id": "list_session_messages_api_v1_conversations__session_id__messages_get",
+      "tags": [
+        "User Conversations"
+      ],
+      "summary": "List Session Messages",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/deep",
       "operation_id": "deep_health_check_api_v1_deep_get",
       "tags": [],
@@ -9210,6 +10182,24 @@
         "ecosystem-admin"
       ],
       "summary": "Admin Create Capability",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/ecosystem/admin/capabilities/{capability_id}",
+      "operation_id": "admin_delete_capability_api_v1_ecosystem_admin_capabilities__capability_id__delete",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Delete Capability",
       "auth": {
         "required": false,
         "schemes": []
@@ -9294,6 +10284,96 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/ecosystem/admin/governance/budgets",
+      "operation_id": "admin_governance_budgets_api_v1_ecosystem_admin_governance_budgets_get",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Governance Budgets",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ecosystem/admin/governance/decisions",
+      "operation_id": "admin_governance_decisions_api_v1_ecosystem_admin_governance_decisions_get",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Governance Decisions",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ecosystem/admin/learned",
+      "operation_id": "admin_list_learned_api_v1_ecosystem_admin_learned_get",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin List Learned",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ecosystem/admin/learned/prune",
+      "operation_id": "admin_prune_learned_api_v1_ecosystem_admin_learned_prune_post",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Prune Learned",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/ecosystem/admin/learned/{item_id}",
+      "operation_id": "admin_delete_learned_api_v1_ecosystem_admin_learned__item_id__delete",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Delete Learned",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/ecosystem/admin/opportunities",
       "operation_id": "admin_list_opportunities_api_v1_ecosystem_admin_opportunities_get",
       "tags": [
@@ -9366,6 +10446,78 @@
     },
     {
       "method": "GET",
+      "path": "/api/v1/ecosystem/admin/policies",
+      "operation_id": "admin_list_policies_api_v1_ecosystem_admin_policies_get",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin List Policies",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ecosystem/admin/policies",
+      "operation_id": "admin_create_policy_api_v1_ecosystem_admin_policies_post",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Create Policy",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ecosystem/admin/policies/match",
+      "operation_id": "admin_match_policy_api_v1_ecosystem_admin_policies_match_get",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Match Policy",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/ecosystem/admin/policies/{policy_id}",
+      "operation_id": "admin_delete_policy_api_v1_ecosystem_admin_policies__policy_id__delete",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Delete Policy",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
       "path": "/api/v1/ecosystem/admin/proposals",
       "operation_id": "admin_list_proposals_api_v1_ecosystem_admin_proposals_get",
       "tags": [
@@ -9408,6 +10560,96 @@
         "ecosystem-admin"
       ],
       "summary": "Admin Decide Proposal",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ecosystem/admin/proposals/{proposal_id}/decisions",
+      "operation_id": "admin_list_proposal_decisions_api_v1_ecosystem_admin_proposals__proposal_id__decisions_get",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin List Proposal Decisions",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ecosystem/admin/sources",
+      "operation_id": "admin_list_sources_api_v1_ecosystem_admin_sources_get",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin List Sources",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ecosystem/admin/sources/discover",
+      "operation_id": "admin_discover_source_api_v1_ecosystem_admin_sources_discover_post",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Discover Source",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/ecosystem/admin/sources/{source_id}",
+      "operation_id": "admin_get_source_api_v1_ecosystem_admin_sources__source_id__get",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Get Source",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/ecosystem/admin/sources/{source_id}/transition",
+      "operation_id": "admin_transition_source_api_v1_ecosystem_admin_sources__source_id__transition_post",
+      "tags": [
+        "ecosystem-admin"
+      ],
+      "summary": "Admin Transition Source",
       "auth": {
         "required": false,
         "schemes": []
@@ -9747,6 +10989,24 @@
       "tests": "unclassified"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/evolution/canary/{proposal_id}/route",
+      "operation_id": "evaluate_canary_route_api_v1_evolution_canary__proposal_id__route_get",
+      "tags": [
+        "self-evolution-engine"
+      ],
+      "summary": "Evaluate Canary Route",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/evolution/evaluate-performance",
       "operation_id": "evaluate_performance_api_v1_evolution_evaluate_performance_post",
@@ -9911,8 +11171,10 @@
       ],
       "summary": "Save Swarm Blueprint",
       "auth": {
-        "required": false,
-        "schemes": []
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
       },
       "tenant_scope": "unclassified",
       "persistence": "unclassified",
@@ -9928,6 +11190,62 @@
         "self-evolution-engine"
       ],
       "summary": "Execute Swarm Blueprint",
+      "auth": {
+        "required": true,
+        "schemes": [
+          "HTTPBearer"
+        ]
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/external-agents/jobs",
+      "operation_id": "delegate_job_api_v1_external_agents_jobs_post",
+      "tags": [
+        "external-agents"
+      ],
+      "summary": "Delegate Job",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/external-agents/jobs/{job_id}",
+      "operation_id": "cancel_job_api_v1_external_agents_jobs__job_id__delete",
+      "tags": [
+        "external-agents"
+      ],
+      "summary": "Cancel Job",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/external-agents/jobs/{job_id}",
+      "operation_id": "get_job_api_v1_external_agents_jobs__job_id__get",
+      "tags": [
+        "external-agents"
+      ],
+      "summary": "Get Job",
       "auth": {
         "required": false,
         "schemes": []
@@ -10293,6 +11611,38 @@
       "tests": "unclassified"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/hitl/resume/{record_id}",
+      "operation_id": "resume_decision_via_token_api_v1_hitl_resume__record_id__get",
+      "tags": [],
+      "summary": "Resume Decision Via Token",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/integrations",
+      "operation_id": "list_integrations_api_v1_integrations_get",
+      "tags": [],
+      "summary": "List Integrations",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/integrations/discover",
       "operation_id": "discover_integration_api_v1_integrations_discover_post",
@@ -10330,6 +11680,24 @@
       "operation_id": "link_github_api_v1_integrations_github_link_get",
       "tags": [],
       "summary": "Link Github",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/integrations/github/webhook",
+      "operation_id": "github_webhook_api_v1_integrations_github_webhook_post",
+      "tags": [
+        "github-webhook"
+      ],
+      "summary": "GitHub webhook ingest (HMAC-verified, PR \u2192 MESH-6 hooks)",
       "auth": {
         "required": false,
         "schemes": []
@@ -10952,6 +12320,312 @@
     },
     {
       "method": "POST",
+      "path": "/api/v1/mesh/messages",
+      "operation_id": "mesh_send_message_api_v1_mesh_messages_post",
+      "tags": [
+        "mesh-mailbox"
+      ],
+      "summary": "Send a direct or broadcast message to another agent",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mesh/messages/inbox",
+      "operation_id": "mesh_message_inbox_api_v1_mesh_messages_inbox_get",
+      "tags": [
+        "mesh-mailbox"
+      ],
+      "summary": "Poll an agent inbox (pull-based pub/sub)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/messages/purge",
+      "operation_id": "mesh_purge_messages_api_v1_mesh_messages_purge_post",
+      "tags": [
+        "mesh-mailbox"
+      ],
+      "summary": "Purge TTL-expired messages",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mesh/messages/stats",
+      "operation_id": "mesh_message_stats_api_v1_mesh_messages_stats_get",
+      "tags": [
+        "mesh-mailbox"
+      ],
+      "summary": "Mailbox visibility stats (per-tenant counts)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/messages/{message_id}/ack",
+      "operation_id": "mesh_ack_message_api_v1_mesh_messages__message_id__ack_post",
+      "tags": [
+        "mesh-mailbox"
+      ],
+      "summary": "Acknowledge receipt of a message (idempotent)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mesh/subscriptions",
+      "operation_id": "mesh_list_subscriptions_api_v1_mesh_subscriptions_get",
+      "tags": [
+        "mesh-mailbox"
+      ],
+      "summary": "List an agent's current topic subscriptions",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/subscriptions",
+      "operation_id": "mesh_subscribe_topics_api_v1_mesh_subscriptions_post",
+      "tags": [
+        "mesh-mailbox"
+      ],
+      "summary": "Subscribe an agent to one or more topics (pub/sub)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mesh/tasks",
+      "operation_id": "list_tasks_api_v1_mesh_tasks_get",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Queue snapshot with optional status filter",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/tasks",
+      "operation_id": "submit_task_api_v1_mesh_tasks_post",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Submit a new mesh task (MESH-6)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mesh/tasks/queue/stats",
+      "operation_id": "queue_stats_api_v1_mesh_tasks_queue_stats_get",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Per-status task counts (queue visibility)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/tasks/reap",
+      "operation_id": "reap_expired_api_v1_mesh_tasks_reap_post",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Reap expired leases \u2192 requeue/fail (failover trigger)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/mesh/tasks/{task_id}",
+      "operation_id": "get_task_api_v1_mesh_tasks__task_id__get",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Single task detail",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/tasks/{task_id}/cancel",
+      "operation_id": "cancel_task_api_v1_mesh_tasks__task_id__cancel_post",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Cancel a pending/leased task (operator action)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/tasks/{task_id}/claim",
+      "operation_id": "claim_task_api_v1_mesh_tasks__task_id__claim_post",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "CAS atomic claim (task_id='any' \u2192 best matching pending task)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/tasks/{task_id}/complete",
+      "operation_id": "complete_task_api_v1_mesh_tasks__task_id__complete_post",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Mark task done with result (leased-by node only)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/tasks/{task_id}/fail",
+      "operation_id": "fail_task_api_v1_mesh_tasks__task_id__fail_post",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Report task failure \u2192 retry or permanent-fail (Zero Zombie)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/mesh/tasks/{task_id}/lease",
+      "operation_id": "renew_lease_api_v1_mesh_tasks__task_id__lease_post",
+      "tags": [
+        "mesh-tasks"
+      ],
+      "summary": "Renew lease TTL (leased-by node only)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
       "path": "/api/v1/meta-ai/breed",
       "operation_id": "run_breeding_cycle_api_v1_meta_ai_breed_post",
       "tags": [
@@ -11309,6 +12983,78 @@
       "tests": "unclassified"
     },
     {
+      "method": "GET",
+      "path": "/api/v1/nodes",
+      "operation_id": "list_active_nodes_api_v1_nodes_get",
+      "tags": [
+        "mesh-presence"
+      ],
+      "summary": "List all active mesh nodes",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/nodes/heartbeat",
+      "operation_id": "post_node_heartbeat_api_v1_nodes_heartbeat_post",
+      "tags": [
+        "mesh-presence"
+      ],
+      "summary": "Register a mesh node heartbeat",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/nodes/{node_id}",
+      "operation_id": "get_node_detail_api_v1_nodes__node_id__get",
+      "tags": [
+        "mesh-presence"
+      ],
+      "summary": "Get a single mesh node detail",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/nodes/{node_id}",
+      "operation_id": "patch_node_role_api_v1_nodes__node_id__patch",
+      "tags": [
+        "mesh-presence"
+      ],
+      "summary": "Update a mesh node's role (MESH-2 dashboard dropdown)",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
       "method": "POST",
       "path": "/api/v1/onboarding/complete",
       "operation_id": "complete_onboarding_api_v1_onboarding_complete_post",
@@ -11514,6 +13260,78 @@
         "pr-review"
       ],
       "summary": "Get Review Status",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/projects",
+      "operation_id": "list_projects_api_v1_projects_get",
+      "tags": [
+        "Project Spaces"
+      ],
+      "summary": "List Projects",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/projects",
+      "operation_id": "create_project_api_v1_projects_post",
+      "tags": [
+        "Project Spaces"
+      ],
+      "summary": "Create Project",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/projects/{project_id}",
+      "operation_id": "delete_project_api_v1_projects__project_id__delete",
+      "tags": [
+        "Project Spaces"
+      ],
+      "summary": "Delete Project",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "PATCH",
+      "path": "/api/v1/projects/{project_id}",
+      "operation_id": "update_project_api_v1_projects__project_id__patch",
+      "tags": [
+        "Project Spaces"
+      ],
+      "summary": "Update Project",
       "auth": {
         "required": false,
         "schemes": []
@@ -12498,6 +14316,24 @@
       "operation_id": "list_voices_api_voice_voices_get",
       "tags": [],
       "summary": "List Voices",
+      "auth": {
+        "required": false,
+        "schemes": []
+      },
+      "tenant_scope": "unclassified",
+      "persistence": "unclassified",
+      "events": "unclassified",
+      "owner": "unassigned",
+      "tests": "unclassified"
+    },
+    {
+      "method": "POST",
+      "path": "/api/webhooks/github",
+      "operation_id": "github_webhook_api_webhooks_github_post",
+      "tags": [
+        "webhooks-orchestration"
+      ],
+      "summary": "Github Webhook",
       "auth": {
         "required": false,
         "schemes": []

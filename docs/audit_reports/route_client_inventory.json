@@ -6,10 +6,10 @@
     "frontend refs are literal /api/... strings in frontend/src/**.{ts,tsx}"
   ],
   "totals": {
-    "backend_routes": 603,
+    "backend_routes": 600,
     "frontend_unique_refs": 145,
-    "matched": 272,
-    "orphan_routes": 331
+    "matched": 270,
+    "orphan_routes": 330
   },
   "orphan_by_family": {
     "/api/v1/ecosystem": 42,
@@ -123,7 +123,6 @@
     "/api/simulator/installed": 1,
     "/api/simulator/devices": 1,
     "/api/v1/stream": 1,
-    "/api/v1/swarm": 1,
     "/api/v1/syncguard": 1,
     "/api/chat/completion": 1,
     "/api/chat/prompt-action": 1,
@@ -132,7 +131,7 @@
     "/api/webhooks/github": 1
   },
   "orphan_by_classification": {
-    "unclassified-orphan": 255,
+    "unclassified-orphan": 254,
     "internal": 44,
     "admin-only": 32
   },
@@ -2196,13 +2195,6 @@
       "classification": "unclassified-orphan"
     },
     {
-      "file": "backend/api/routes/swarm_stream.py",
-      "method": "GET",
-      "declared": "/api/v1/swarm/stream",
-      "resolved": "/api/v1/swarm/stream",
-      "classification": "unclassified-orphan"
-    },
-    {
       "file": "backend/api/routes/syncguard.py",
       "method": "POST",
       "declared": "/syncguard/audit",
@@ -3260,16 +3252,6 @@
       ]
     },
     {
-      "file": "backend/api/routes/agent_action.py",
-      "method": "POST",
-      "declared": "/agent/action",
-      "resolved": "/api/v1/agent/action",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/hooks/useDynamicDock.ts"
-      ]
-    },
-    {
       "file": "backend/api/routes/agent_registry.py",
       "method": "GET",
       "declared": "/api/v1/agents/{agent_id}",
@@ -3324,18 +3306,6 @@
       "method": "GET",
       "declared": "/api/v1/agents/monitor/latency",
       "resolved": "/api/v1/agents/monitor/latency",
-      "classification": "unclassified-orphan",
-      "frontend": [
-        "frontend/src/services/agentService.test.ts",
-        "frontend/src/services/agentService.ts",
-        "frontend/src/services/apiClient.test.ts"
-      ]
-    },
-    {
-      "file": "backend/api/routes/agent_tasks.py",
-      "method": "POST",
-      "declared": "/api/v1/agents/swarm/execute",
-      "resolved": "/api/v1/agents/swarm/execute",
       "classification": "unclassified-orphan",
       "frontend": [
         "frontend/src/services/agentService.test.ts",

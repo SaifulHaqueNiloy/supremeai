@@ -14,20 +14,20 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 859,
+    "backend_routes": 855,
     "frontend_unique_refs": 145,
-    "routes_with_frontend_consumer": 296,
+    "routes_with_frontend_consumer": 294,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
-    "api_only_routes": 300,
-    "api_only_families": 158,
+    "api_only_routes": 298,
+    "api_only_families": 156,
     "by_classification": {
-      "user-facing": 171,
+      "user-facing": 169,
       "admin-only": 343,
       "internal": 41,
       "deprecated": 4,
-      "api-only": 300,
+      "api-only": 298,
       "orphaned": 0
     }
   },
@@ -52,7 +52,6 @@
     "/api/browser/simulate-activity": 1,
     "/api/browser/smart-click": 1,
     "/api/browser/surf": 12,
-    "/api/browser/swarm": 1,
     "/api/browser/system-learning": 2,
     "/api/browser/urls": 8,
     "/api/byoc/credentials": 1,
@@ -153,7 +152,6 @@
     "/api/v1/sandbox": 4,
     "/api/v1/scrape": 1,
     "/api/v1/stream": 1,
-    "/api/v1/swarm": 1,
     "/api/v1/syncguard": 1,
     "/api/v1/tools-registry": 4,
     "/api/v1/zero-cost": 1,
@@ -4178,20 +4176,6 @@
       "classification": "api-only"
     },
     {
-      "method": "POST",
-      "path": "/api/browser/swarm/explore",
-      "declared": "/api/browser/swarm/explore",
-      "deprecated": false,
-      "router_file": "backend/api/routes/browser/_cognitive.py",
-      "module": "api.routes.browser._cognitive",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "explore_swarm",
-      "frontend_consumers": [],
-      "classification": "api-only"
-    },
-    {
       "method": "GET",
       "path": "/api/browser/system-learning",
       "declared": "/api/browser/system-learning",
@@ -7231,22 +7215,6 @@
     },
     {
       "method": "POST",
-      "path": "/api/v1/agent/action",
-      "declared": "/api/v1/agent/action",
-      "deprecated": false,
-      "router_file": "backend/api/routes/agent_action.py",
-      "module": "api.routes.agent_action",
-      "registry_prefix": "/api/v1",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "run_agent_action",
-      "frontend_consumers": [
-        "frontend/src/hooks/useDynamicDock.ts"
-      ],
-      "classification": "user-facing"
-    },
-    {
-      "method": "POST",
       "path": "/api/v1/agent/execute",
       "declared": "/api/v1/agent/execute",
       "deprecated": false,
@@ -7446,22 +7414,6 @@
       "mounted": true,
       "is_admin": false,
       "operation": "list_agent_roles",
-      "frontend_consumers": [
-        "frontend/src/services/agentService.ts"
-      ],
-      "classification": "user-facing"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/agents/swarm/execute",
-      "declared": "/api/v1/agents/swarm/execute",
-      "deprecated": false,
-      "router_file": "backend/api/routes/agent_tasks.py",
-      "module": "api.routes.agent_tasks",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "execute_swarm",
       "frontend_consumers": [
         "frontend/src/services/agentService.ts"
       ],
@@ -10874,20 +10826,6 @@
       "mounted": true,
       "is_admin": false,
       "operation": "stream_hitl_sse",
-      "frontend_consumers": [],
-      "classification": "api-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/swarm/stream",
-      "declared": "/api/v1/swarm/stream",
-      "deprecated": false,
-      "router_file": "backend/api/routes/swarm_stream.py",
-      "module": "api.routes.swarm_stream",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": false,
-      "operation": "swarm_stream",
       "frontend_consumers": [],
       "classification": "api-only"
     },

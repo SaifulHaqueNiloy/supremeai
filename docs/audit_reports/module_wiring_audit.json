@@ -1,6 +1,6 @@
 {
   "schema_version": "2.0",
-  "generated_at": "2026-09-27T04:28:42Z",
+  "generated_at": "2026-09-28T00:47:43Z",
   "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
   "catalog_source": "MODULES_LIST.md",
   "modules": [
@@ -16,7 +16,7 @@
         "frontend/src/utils/api.ts"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -31,7 +31,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -62,7 +62,7 @@
         "frontend/src/components/customer/MobileSimulator.tsx"
       ],
       "notes": "Active inbound callers (9 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -93,7 +93,7 @@
         "frontend/src/utils/apiInterceptor.ts"
       ],
       "notes": "Active inbound callers (8 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -113,7 +113,7 @@
         "frontend/src/types/chat.ts"
       ],
       "notes": "Active inbound callers (4 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -131,7 +131,7 @@
         "frontend/src/main.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -179,7 +179,7 @@
         "frontend/src/pages/user/CostDashboard.tsx"
       ],
       "notes": "Active inbound callers (20 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -196,6 +196,7 @@
         "backend/api/routes/browser/_cognitive.py",
         "backend/api/routes/browser/_credentials.py",
         "backend/api/routes/browser/_crown_jewel.py",
+        "backend/api/routes/browser/_health.py",
         "backend/api/routes/browser/_learning.py",
         "backend/api/routes/browser/_legacy_status.py",
         "backend/api/routes/browser/_policy.py",
@@ -207,9 +208,7 @@
         "backend/api/routes/browser/_surf_controls.py",
         "backend/api/routes/browser/_tasks.py",
         "backend/api/routes/browser/_url_permissions.py",
-        "backend/api/routes/browser_routes.py",
         "backend/api/routes/scraper.py",
-        "backend/api/routes/session_takeover.py",
         "backend/core/agents/framework/autonomous_task_orchestrator.py",
         "backend/core/agents/live/browser_agent.py",
         "backend/core/app_builder.py",
@@ -222,7 +221,6 @@
         "backend/core/human_behavior.py",
         "backend/core/integrations/registry.py",
         "backend/core/orchestration/conversation_orchestrator.py",
-        "backend/core/orchestration/handoff_schema.py",
         "backend/core/rate_limit.py",
         "backend/core/service_registry.py",
         "backend/core/shutdown.py",
@@ -298,8 +296,8 @@
         "frontend/src/store/authStore.ts",
         "frontend/src/utils/secureWebSocket.ts"
       ],
-      "notes": "Active inbound callers (64 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (62 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -321,7 +319,6 @@
         "backend/api/routes/admin_v1.py",
         "backend/api/routes/billing_api.py",
         "backend/api/routes/browser_action_registry.py",
-        "backend/api/routes/browser_routes.py",
         "backend/api/routes/chat.py",
         "backend/api/routes/chat_upload.py",
         "backend/api/routes/ci_dashboard_api.py",
@@ -346,12 +343,10 @@
         "backend/api/routes/slash_commands.py",
         "backend/api/routes/stream.py",
         "backend/api/routes/stream_chat_sse.py",
-        "backend/api/routes/swarm_stream.py",
         "backend/api/routes/task.py",
         "backend/core/agents/framework/agent_departments.py",
         "backend/core/agents/live/browser_agent.py",
         "backend/core/agents/live/vision_agent.py",
-        "backend/core/behavioral_intelligence/__init__.py",
         "backend/core/cache/multi_layer_cache.py",
         "backend/core/circles/envelopes.py",
         "backend/core/config_proxy.py",
@@ -386,7 +381,6 @@
         "backend/services/dynamic_ai/orchestrator.py",
         "backend/services/hitl/hitl_ledger.py",
         "backend/services/knowledge_qa.py",
-        "backend/services/llm/providers.py",
         "backend/services/memory_service.py",
         "backend/services/scraper/browser_agent.py",
         "backend/services/scraper/security.py",
@@ -417,7 +411,6 @@
         "backend/tools/media/threed_model_generator.py",
         "backend/tools/media/video_generator.py",
         "backend/tools/media/voice.py",
-        "backend/tools/parallel_agent_executor.py",
         "backend/tools/preference_memory.py",
         "backend/tools/security_tools/multi_account_rotator.py",
         "backend/tools/social/telegram_bot/updates.py",
@@ -518,7 +511,6 @@
         "frontend/src/commandcenter/shell/moduleIndex.ts",
         "frontend/src/commandcenter/state/useCommandCenterStore.ts",
         "frontend/src/components/Onboarding/OnboardingWizard.tsx",
-        "frontend/src/components/Onboarding/StepApiKey.tsx",
         "frontend/src/components/Onboarding/StepFirstChat.tsx",
         "frontend/src/components/Onboarding/StepModelSelect.tsx",
         "frontend/src/components/admin/AISurfaceAssignment.tsx",
@@ -677,8 +669,8 @@
         "frontend/src/types/schema.ts",
         "frontend/src/workers/logParser.worker.ts"
       ],
-      "notes": "Active inbound callers (160 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (155 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -690,13 +682,11 @@
       "status": "\ud83d\udfe2 Operational",
       "callers": [
         "backend/api/routes/admin_dashboard/endpoints_metrics.py",
-        "backend/core/unified_learning.py",
-        "backend/services/dynamic_ai/learning_engine.py",
-        "backend/services/llm/llm_router.py"
+        "backend/services/dynamic_ai/learning_engine.py"
       ],
       "tests": [],
-      "notes": "Active inbound callers (4 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (2 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -765,7 +755,7 @@
         "frontend/src/types/customer.ts"
       ],
       "notes": "Active inbound callers (36 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -783,8 +773,8 @@
         "backend/api/routes/stream_hitl_sse.py",
         "backend/api/routes/websocket_hitl.py",
         "backend/core/automation/registry.py",
+        "backend/core/kernel/audit_chain.py",
         "backend/core/mcp_audit.py",
-        "backend/core/mcp_audit_chain.py",
         "backend/core/self_evolution/auto_skill_creator.py",
         "backend/services/hitl/dispatch.py",
         "backend/services/hitl/engine.py",
@@ -802,7 +792,7 @@
         "frontend/src/lib/componentEventBus.ts"
       ],
       "notes": "Active inbound callers (19 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -815,7 +805,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -830,7 +820,7 @@
         "frontend/src/components/dashboard/VaultPage.tsx"
       ],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -839,13 +829,13 @@
       "id": 15,
       "category": "Backend Core Service",
       "path": "backend/services/llm",
-      "status": "\ud83d\udfe2 Operational",
+      "status": "\ud83d\udd34 Broken",
       "callers": [
         "backend/api/routes/admin_llm.py",
         "backend/api/routes/admin_routes.py",
         "backend/api/routes/advanced_router.py",
         "backend/api/routes/billing_api.py",
-        "backend/api/routes/browser_routes.py",
+        "backend/api/routes/browser/_health.py",
         "backend/api/routes/chat.py",
         "backend/api/routes/deep_research.py",
         "backend/api/routes/llm_gateway_routes.py",
@@ -880,7 +870,6 @@
         "backend/core/llm/providers/cloud_adapter.py",
         "backend/core/orchestration/agent_orchestrator.py",
         "backend/core/orchestration/conversation_orchestrator.py",
-        "backend/core/orchestration/swarm_agent_roles.py",
         "backend/core/resilience/auto_remediation.py",
         "backend/core/resilience/circuit_breaker.py",
         "backend/core/security/intelligence/guardian_ai.py",
@@ -888,13 +877,11 @@
         "backend/core/security/scanning/secret_scanner.py",
         "backend/core/self_evolution/agent_breeder.py",
         "backend/core/self_evolution/auto_skill_creator.py",
-        "backend/core/self_evolution/daily_learner.py",
         "backend/core/skill_manager.py",
         "backend/core/skills/core_skills.py",
         "backend/core/tier8/agent_evolution_engine.py",
         "backend/core/tier8/codebase_refactor_proposer.py",
         "backend/core/tier8/skill_marketplace_curator.py",
-        "backend/core/tier8/swarm_coordination_agent.py",
         "backend/core/unified_memory.py",
         "backend/services/diagram_parser_service.py",
         "backend/services/dynamic_planner.py",
@@ -902,13 +889,10 @@
         "backend/services/intent_deciphering.py",
         "backend/services/knowledge_qa.py",
         "backend/services/living_engine.py",
-        "backend/services/llm/llm_router.py",
-        "backend/services/llm/providers.py",
         "backend/services/memory_service.py",
         "backend/services/video_to_code_pipeline.py",
         "backend/tools/api_gateway.py",
         "backend/tools/code/lsp_bridge.py",
-        "backend/tools/learning/skill_recommender.py",
         "backend/tools/security_tools/multi_account_rotator.py",
         "frontend/src/App.tsx",
         "frontend/src/components/admin/shared/AdminSubTabContent.tsx",
@@ -929,11 +913,11 @@
         "frontend/src/lib/cache.manager.ts",
         "frontend/src/types.ts"
       ],
-      "notes": "Active inbound callers (77 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "File or directory does not exist on disk",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
-      "decision": "retain"
+      "decision": "review"
     },
     {
       "id": 16,
@@ -967,7 +951,7 @@
         "frontend/src/components/auth/ServiceHealthBar.tsx"
       ],
       "notes": "Active inbound callers (19 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1026,7 +1010,7 @@
         "frontend/src/utils/secureWebSocket.ts"
       ],
       "notes": "Active inbound callers (28 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1059,7 +1043,7 @@
         "frontend/src/workers/logParser.worker.ts"
       ],
       "notes": "Active inbound callers (10 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1098,7 +1082,7 @@
         "frontend/src/components/admin/infra/CloudProviderHealth.tsx"
       ],
       "notes": "Active inbound callers (21 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1117,7 +1101,7 @@
         "frontend/src/components/admin/SciFiFlowNode.tsx"
       ],
       "notes": "File or directory does not exist on disk",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "review"
@@ -1143,7 +1127,7 @@
         "frontend/src/components/admin/infra/ServiceHealthMonitor.tsx"
       ],
       "notes": "Active inbound callers (10 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1173,8 +1157,6 @@
         "backend/core/startup/api_key_tables.py",
         "backend/core/startup/usage_metrics_aggregator.py",
         "backend/core/task_router.py",
-        "backend/services/llm/llm_router.py",
-        "backend/services/llm/providers.py",
         "frontend/src/components/admin/infra/ServiceHealthMonitor.tsx"
       ],
       "tests": [
@@ -1184,8 +1166,8 @@
         "frontend/src/lib/cache.manager.ts",
         "frontend/src/utils/api.ts"
       ],
-      "notes": "Active inbound callers (22 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (20 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1201,7 +1183,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1221,7 +1203,7 @@
         "frontend/src/pages/PublicPages.tsx"
       ],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1234,7 +1216,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1247,7 +1229,7 @@
       "callers": [],
       "tests": [],
       "notes": "File or directory does not exist on disk",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "review"
@@ -1260,7 +1242,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1273,7 +1255,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1286,7 +1268,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1337,7 +1319,7 @@
         "frontend/src/pages/user/SkillCatalog.tsx"
       ],
       "notes": "Active inbound callers (24 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1350,7 +1332,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1363,7 +1345,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1376,7 +1358,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1391,7 +1373,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1406,7 +1388,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1419,7 +1401,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1434,7 +1416,7 @@
         "backend/tests/tools/mcp/conftest.py"
       ],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1447,7 +1429,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1464,7 +1446,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1484,7 +1466,7 @@
         "backend/tests/tools/mcp/conftest.py"
       ],
       "notes": "Active inbound callers (4 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1497,7 +1479,7 @@
       "callers": [],
       "tests": [],
       "notes": "Requires external host service or token",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1512,7 +1494,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1525,7 +1507,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1541,7 +1523,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1554,7 +1536,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1571,7 +1553,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1584,7 +1566,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1601,7 +1583,7 @@
         "backend/tests/conftest.py"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1619,7 +1601,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (4 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1634,7 +1616,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1647,7 +1629,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1660,7 +1642,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1673,7 +1655,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1686,7 +1668,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1699,7 +1681,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1715,7 +1697,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1728,7 +1710,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1744,7 +1726,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1757,7 +1739,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1772,7 +1754,7 @@
       ],
       "tests": [],
       "notes": "Requires external host service or token",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1785,7 +1767,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1798,7 +1780,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1807,16 +1789,16 @@
       "id": 63,
       "category": "Backend Tool / Utility",
       "path": "backend/tools/parallel_agent_executor.py",
-      "status": "\ud83d\udfe0 Partially Wired",
+      "status": "\ud83d\udd34 Broken",
       "callers": [],
       "tests": [
         "backend/tests/conftest.py"
       ],
-      "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "File or directory does not exist on disk",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
-      "decision": "owner-review"
+      "decision": "review"
     },
     {
       "id": 64,
@@ -1826,7 +1808,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1839,7 +1821,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1854,7 +1836,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1869,7 +1851,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1882,7 +1864,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1895,7 +1877,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -1910,7 +1892,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1927,7 +1909,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1941,7 +1923,6 @@
         "backend/api/routes/browser/__init__.py",
         "backend/api/routes/browser/_scraping.py",
         "backend/api/routes/scraper.py",
-        "backend/api/routes/session_takeover.py",
         "backend/core/agents/framework/agent_registry.py",
         "backend/services/scraper/browser_agent.py",
         "backend/services/scraper/main.py",
@@ -1950,8 +1931,8 @@
         "backend/tools/knowledge/local_search_rag.py"
       ],
       "tests": [],
-      "notes": "Active inbound callers (10 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (9 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1966,7 +1947,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -1983,7 +1964,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2000,7 +1981,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2016,7 +1997,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2029,7 +2010,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2044,7 +2025,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2060,7 +2041,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2075,7 +2056,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2086,13 +2067,12 @@
       "path": "backend/tools/browser/playwright_browser_agent.py",
       "status": "\ud83d\udfe2 Operational",
       "callers": [
-        "backend/api/routes/session_takeover.py",
         "backend/services/scraper/browser_agent.py",
         "backend/tools/browser/mcp_tools.py"
       ],
       "tests": [],
-      "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (2 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2105,7 +2085,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2118,7 +2098,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2140,7 +2120,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (8 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2153,7 +2133,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2169,7 +2149,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2184,7 +2164,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2200,7 +2180,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2215,7 +2195,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2228,7 +2208,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2241,7 +2221,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2258,7 +2238,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2273,7 +2253,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2289,7 +2269,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2302,7 +2282,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2320,7 +2300,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (4 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2333,7 +2313,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2348,7 +2328,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2361,7 +2341,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2376,7 +2356,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2391,7 +2371,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2404,7 +2384,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2419,7 +2399,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2434,7 +2414,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2449,7 +2429,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2464,7 +2444,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2482,7 +2462,7 @@
       ],
       "tests": [],
       "notes": "Requires external host service or token",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2497,7 +2477,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2516,7 +2496,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (5 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2531,7 +2511,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2547,7 +2527,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2560,7 +2540,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2576,7 +2556,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2591,7 +2571,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2604,7 +2584,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2619,7 +2599,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2632,7 +2612,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2647,7 +2627,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2664,7 +2644,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2677,7 +2657,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2693,7 +2673,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2711,7 +2691,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (4 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2724,7 +2704,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2737,7 +2717,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2752,7 +2732,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2765,7 +2745,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2780,7 +2760,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2795,7 +2775,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2812,7 +2792,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2825,7 +2805,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2838,7 +2818,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2851,7 +2831,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2864,7 +2844,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -2901,7 +2881,7 @@
         "frontend/src/services/chatService.ts"
       ],
       "notes": "Active inbound callers (16 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2916,7 +2896,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2932,7 +2912,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2947,7 +2927,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2962,7 +2942,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2977,7 +2957,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -2992,7 +2972,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3007,7 +2987,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3026,7 +3006,7 @@
       ],
       "tests": [],
       "notes": "File or directory does not exist on disk",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "review"
@@ -3042,7 +3022,7 @@
       ],
       "tests": [],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3055,7 +3035,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -3072,7 +3052,7 @@
         "frontend/src/App.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3090,7 +3070,7 @@
         "frontend/src/routes/workspaceFeatureRoutes.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3109,7 +3089,7 @@
         "frontend/src/store/index.ts"
       ],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3126,7 +3106,7 @@
         "frontend/src/routes/workspaceFeatureRoutes.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3143,7 +3123,7 @@
         "frontend/src/App.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3160,7 +3140,7 @@
         "frontend/src/routes/workspaceFeatureRoutes.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3176,7 +3156,7 @@
         "frontend/src/services/fileService.ts"
       ],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -3226,7 +3206,6 @@
         "backend/api/routes/browser/_credentials.py",
         "backend/api/routes/browser/_policy.py",
         "backend/api/routes/browser_action_registry.py",
-        "backend/api/routes/browser_routes.py",
         "backend/api/routes/circles.py",
         "backend/api/routes/cloud_mesh.py",
         "backend/api/routes/commandcenter/__init__.py",
@@ -3542,8 +3521,8 @@
         "frontend/src/utils/api.ts",
         "frontend/src/utils/portalHosts.ts"
       ],
-      "notes": "Active inbound callers (217 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (216 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3697,7 +3676,7 @@
         "frontend/src/utils/secureWebSocket.ts"
       ],
       "notes": "Active inbound callers (86 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3754,7 +3733,6 @@
         "backend/core/monitoring.py",
         "backend/core/observability/observability_middleware.py",
         "backend/core/orchestration/conversation_orchestrator.py",
-        "backend/core/orchestration/swarm_agent_roles.py",
         "backend/core/plugins/seed_manifests.py",
         "backend/core/prompt_handler.py",
         "backend/core/rate_limit.py",
@@ -3773,14 +3751,11 @@
         "backend/core/tier8/agent_evolution_engine.py",
         "backend/core/tier8/codebase_refactor_proposer.py",
         "backend/core/tier8/skill_marketplace_curator.py",
-        "backend/core/tier8/swarm_coordination_agent.py",
-        "backend/core/unified_learning.py",
         "backend/core/unified_memory.py",
         "backend/middleware/anti_hacking.py",
         "backend/middleware/cors_policy.py",
         "backend/middleware/tenant_rate_limiter.py",
         "backend/services/dynamic_ai/orchestrator.py",
-        "backend/services/llm/providers.py",
         "backend/services/memory_service.py",
         "backend/services/vision_service.py",
         "backend/tools/comment_thread_ai.py",
@@ -3925,8 +3900,8 @@
         "frontend/src/utils/api.ts",
         "frontend/src/utils/portalHosts.ts"
       ],
-      "notes": "Active inbound callers (122 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (118 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -3939,7 +3914,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -3989,7 +3964,7 @@
         "frontend/src/store/adminStore.ts"
       ],
       "notes": "Active inbound callers (17 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -4002,7 +3977,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -4019,7 +3994,7 @@
         "frontend/src/components/editor/AiAssistantBar.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -4065,7 +4040,6 @@
         "backend/api/routes/admin_v1.py",
         "backend/api/routes/advanced_router.py",
         "backend/api/routes/agent.py",
-        "backend/api/routes/agent_action.py",
         "backend/api/routes/agent_breeding.py",
         "backend/api/routes/agent_registry.py",
         "backend/api/routes/agent_tasks.py",
@@ -4085,6 +4059,7 @@
         "backend/api/routes/browser/_cognitive.py",
         "backend/api/routes/browser/_credentials.py",
         "backend/api/routes/browser/_crown_jewel.py",
+        "backend/api/routes/browser/_health.py",
         "backend/api/routes/browser/_learning.py",
         "backend/api/routes/browser/_legacy_status.py",
         "backend/api/routes/browser/_policy.py",
@@ -4096,7 +4071,6 @@
         "backend/api/routes/browser/_tasks.py",
         "backend/api/routes/browser/_url_permissions.py",
         "backend/api/routes/browser_action_registry.py",
-        "backend/api/routes/browser_routes.py",
         "backend/api/routes/byoc_api.py",
         "backend/api/routes/cache_predictions.py",
         "backend/api/routes/capabilities.py",
@@ -4134,6 +4108,7 @@
         "backend/api/routes/events.py",
         "backend/api/routes/evolution.py",
         "backend/api/routes/execution_policies.py",
+        "backend/api/routes/external_agents_admin.py",
         "backend/api/routes/feedback.py",
         "backend/api/routes/files.py",
         "backend/api/routes/github.py",
@@ -4205,7 +4180,6 @@
         "backend/api/routes/stream.py",
         "backend/api/routes/stream_chat_sse.py",
         "backend/api/routes/stream_hitl_sse.py",
-        "backend/api/routes/swarm_stream.py",
         "backend/api/routes/syncguard.py",
         "backend/api/routes/task.py",
         "backend/api/routes/task_gateway.py",
@@ -4278,7 +4252,6 @@
         "backend/core/observability/metrics_registry.py",
         "backend/core/orchestration/cloud_sandbox_orchestrator.py",
         "backend/core/orchestration/periodic_task_scheduler.py",
-        "backend/core/orchestration/swarm_orchestrator.py",
         "backend/core/otp_router.py",
         "backend/core/playwright_manager.py",
         "backend/core/provider_rate_limiter.py",
@@ -4308,7 +4281,6 @@
         "backend/core/testing/qa_suite.py",
         "backend/core/universal_rules.py",
         "backend/core/upload_validator.py",
-        "backend/core/zero_cost_architecture/swarm_orchestrator_integration.py",
         "backend/middleware/anti_hacking.py",
         "backend/middleware/idempotency_middleware.py",
         "backend/middleware/tenant_rate_limiter.py",
@@ -4321,8 +4293,6 @@
         "backend/services/hitl/resume_token.py",
         "backend/services/integration_discovery.py",
         "backend/services/knowledge_qa.py",
-        "backend/services/llm/llm_router.py",
-        "backend/services/llm/providers.py",
         "backend/services/render_account_service.py",
         "backend/services/render_preflight_service.py",
         "backend/services/scraper/__init__.py",
@@ -4687,8 +4657,8 @@
         "frontend/src/utils/api.ts",
         "frontend/src/utils/apiInterceptor.ts"
       ],
-      "notes": "Active inbound callers (502 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (497 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -4793,7 +4763,6 @@
         "frontend/src/services/supremeShared.ts",
         "frontend/src/store/adminStore.ts",
         "frontend/src/store/authStore.ts",
-        "frontend/src/store/localFirstDb.ts",
         "frontend/src/store/sessionCockpitStore.ts",
         "frontend/src/store/useStore.ts",
         "frontend/src/utils/secureWebSocket.ts"
@@ -4892,14 +4861,13 @@
         "frontend/src/services/supremeShared.ts",
         "frontend/src/store/adminStore.ts",
         "frontend/src/store/authStore.ts",
-        "frontend/src/store/localFirstDb.ts",
         "frontend/src/store/sessionCockpitStore.ts",
         "frontend/src/store/useStore.ts",
         "frontend/src/test/setup.ts",
         "frontend/src/utils/secureWebSocket.ts"
       ],
-      "notes": "Active inbound callers (98 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (97 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -4930,7 +4898,7 @@
         "frontend/src/services/audio/webSpeechCapability.ts"
       ],
       "notes": "Active inbound callers (10 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -4947,7 +4915,7 @@
         "frontend/src/store/adminStore.ts"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -4964,7 +4932,7 @@
         "frontend/src/components/customer/BrowserPreview.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -4985,7 +4953,7 @@
         "frontend/src/pages/user/AIStudio.tsx"
       ],
       "notes": "Active inbound callers (3 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -4998,7 +4966,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -5017,7 +4985,7 @@
         "frontend/src/components/chat/ChatInterface.tsx"
       ],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5030,7 +4998,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -5060,7 +5028,7 @@
         "frontend/src/services/chatService.ts"
       ],
       "notes": "Active inbound callers (11 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5077,7 +5045,7 @@
         "frontend/src/components/customer/TaskAutomationCard.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5095,7 +5063,7 @@
         "frontend/src/data/hooks.ts"
       ],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -5129,7 +5097,7 @@
         "frontend/src/services/realtime/WebSocketManager.ts"
       ],
       "notes": "Active inbound callers (11 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5144,6 +5112,11 @@
         "backend/core/health/self_healer.py",
         "backend/core/integrations/registry.py",
         "backend/core/microvm_sandbox.py",
+        "backend/core/sandbox/__init__.py",
+        "backend/core/sandbox/base.py",
+        "backend/core/sandbox/cloud_sandbox_provider.py",
+        "backend/core/sandbox/local_dev_provider.py",
+        "backend/core/sandbox/registry.py",
         "backend/core/security/codegen_gate.py",
         "backend/core/self_evolution/auto_skill_creator.py",
         "backend/core/skill_manager.py",
@@ -5174,8 +5147,8 @@
         "frontend/src/pages/user/AgentWorkspace.tsx",
         "frontend/src/types.ts"
       ],
-      "notes": "Active inbound callers (17 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "notes": "Active inbound callers (22 files)",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5194,7 +5167,7 @@
         "frontend/src/pages/user/SkillCatalog.tsx"
       ],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5207,7 +5180,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -5220,7 +5193,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -5239,7 +5212,7 @@
         "frontend/src/services/aiActions.ts"
       ],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5266,7 +5239,7 @@
         "frontend/src/store/stateOwnership.ts"
       ],
       "notes": "Active inbound callers (6 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5320,10 +5293,11 @@
         "frontend/src/pages/user/SkillCatalog.tsx",
         "frontend/src/services/apiClient.ts",
         "frontend/src/store/adminStore.ts",
+        "frontend/src/store/localFirstDb.ts",
         "frontend/src/store/stateOwnership.ts"
       ],
       "notes": "Active inbound callers (21 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5347,7 +5321,7 @@
         "frontend/src/store/stateOwnership.ts"
       ],
       "notes": "Active inbound callers (4 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5372,7 +5346,7 @@
         "frontend/src/store/unifiedStore.ts"
       ],
       "notes": "Active inbound callers (5 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5446,11 +5420,12 @@
         "frontend/src/pages/user/AgentWorkspace.tsx",
         "frontend/src/pages/user/EvolutionForge/ForgeSidebar.tsx",
         "frontend/src/store/unifiedStore.ts",
+        "frontend/src/types.ts",
         "frontend/src/types/contracts/index.ts",
         "frontend/src/workers/logParser.worker.ts"
       ],
       "notes": "Active inbound callers (32 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5467,7 +5442,7 @@
         "frontend/src/store/authStore.ts"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5498,7 +5473,7 @@
         "frontend/src/lib/agent-state-shaders.ts"
       ],
       "notes": "Active inbound callers (8 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5511,7 +5486,7 @@
       "callers": [],
       "tests": [],
       "notes": "Importable production capability with no active inbound callers",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "owner-review"
@@ -5540,7 +5515,7 @@
         "frontend/src/store/index.ts"
       ],
       "notes": "Active inbound callers (7 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5565,7 +5540,7 @@
         "frontend/src/services/aiActions.ts"
       ],
       "notes": "Active inbound callers (5 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5594,7 +5569,7 @@
         "frontend/src/hooks/useServerStream.ts"
       ],
       "notes": "Active inbound callers (7 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5611,7 +5586,7 @@
         "frontend/src/components/dashboard/ActionDock.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5628,7 +5603,7 @@
         "frontend/src/components/dock/DynamicActionDock.tsx"
       ],
       "notes": "Active inbound callers (1 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
@@ -5647,17 +5622,17 @@
         "frontend/src/routes/workspaceFeatureRoutes.tsx"
       ],
       "notes": "Active inbound callers (2 files)",
-      "verified_at": "2026-09-27T04:28:42Z",
+      "verified_at": "2026-09-28T00:47:43Z",
       "verification_command": "python scripts/audit_module_wiring.py && python scripts/sync_modules_list.py",
       "owner_circle": "unassigned",
       "decision": "retain"
     }
   ],
   "counts": {
-    "operational": 124,
+    "operational": 123,
     "env_dependent": 3,
-    "partially_wired": 60,
-    "broken": 3,
+    "partially_wired": 59,
+    "broken": 5,
     "planned": 0
   },
   "total": 190
