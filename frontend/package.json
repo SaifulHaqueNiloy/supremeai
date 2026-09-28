@@ -95,7 +95,7 @@
     "playwright": "^1.62.1",
     "storybook": "^10.5.10",
     "typescript-eslint": "^8.68.0",
-    "vitest": "^3.2.7",
+    "vitest": "^5.0.2",
     "wait-on": "^9.1.0"
   }
 }
