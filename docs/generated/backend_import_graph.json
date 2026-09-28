@@ -13700,7 +13700,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 1998,
+  "module_count": 1999,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -13853,6 +13853,7 @@
     "alembic_migrations.versions.2026_09_15_120000_create_canonical_run_tables",
     "alembic_migrations.versions.2026_09_15_130000_add_context_metadata_to_chat_attachments",
     "alembic_migrations.versions.2026_09_27_193000_merge_learning_reports",
+    "alembic_migrations.versions.2026_09_28_194500_database_operational_truth",
     "alembic_migrations.versions.2f7b3c5f620e_add_missing_indexes",
     "alembic_migrations.versions.358bcbe79a4a_add_idempotency",
     "alembic_migrations.versions.6250e2a31d38_m0_merge_alembic_heads_into_single_",
