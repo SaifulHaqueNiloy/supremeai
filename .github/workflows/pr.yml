@@ -177,7 +177,7 @@ jobs:
 
       - name: Silent Exception Swallows Invariant Test
         run: |
-          pytest backend/tests/core/test_no_silent_exception_swallow.py -q
+          pytest --confcutdir=backend/tests/core backend/tests/core/test_no_silent_exception_swallow.py -q
 
   # ---------------------------------------------------------------------------
   # 5. Unified PR Decision Contract
