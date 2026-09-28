@@ -32,40 +32,40 @@ class SkillIngestor:
         self.sandbox = DockerSandbox()
         self.morphic_adapter = MorphicAdapter()
 
+    # Step-2.5 (#2328) Capability Harvest: union of the SkillIngestor list and the
+    # retired ephemeral_synthesizer scanner (shutil/builtins/__import__/globals/locals).
+    _FORBIDDEN_MODULES = frozenset(
+        {
+            "os",
+            "subprocess",
+            "sys",
+            "requests",
+            "urllib",
+            "socket",
+            "shutil",
+            "builtins",
+        }
+    )
+    _FORBIDDEN_CALLS = frozenset({"eval", "exec", "__import__", "globals", "locals"})
+
     def static_ast_safety_check(self, code: str) -> tuple[bool, str]:
         try:
             tree = ast.parse(code)
-            for node in ast.walk(tree):
-                if isinstance(node, ast.Import):
-                    for alias in node.names:
-                        if alias.name in [
-                            "os",
-                            "subprocess",
-                            "sys",
-                            "requests",
-                            "urllib",
-                            "socket",
-                        ]:
-                            return False, f"Forbidden import found: {alias.name}"
-                elif isinstance(node, ast.ImportFrom):
-                    if node.module in [
-                        "os",
-                        "subprocess",
-                        "sys",
-                        "requests",
-                        "urllib",
-                        "socket",
-                    ]:
-                        return False, f"Forbidden from-import found: {node.module}"
-                if isinstance(node, ast.Call):
-                    if isinstance(node.func, ast.Name) and node.func.id in [
-                        "eval",
-                        "exec",
-                    ]:
-                        return False, "Dangerous code pattern found: exec/eval usage."
-            return True, "AST verified."
         except SyntaxError:
             return False, "Invalid Python syntax."
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                for alias in node.names:
+                    if alias.name.split(".")[0] in self._FORBIDDEN_MODULES:
+                        return False, f"Forbidden import found: {alias.name}"
+            elif isinstance(node, ast.ImportFrom):
+                mod = (node.module or "").split(".")[0]
+                if mod in self._FORBIDDEN_MODULES:
+                    return False, f"Forbidden from-import found: {node.module}"
+            elif isinstance(node, ast.Call):
+                if isinstance(node.func, ast.Name) and node.func.id in self._FORBIDDEN_CALLS:
+                    return False, f"Dangerous code pattern found: {node.func.id} usage."
+        return True, "AST verified."
 
     def ingest_mcp_skill(
         self, manifest: SkillManifest, zip_url: str, entry_file: str, test_payload: str
