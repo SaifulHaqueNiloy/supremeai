@@ -1,8 +1,8 @@
 {
   "schema_version": "1.0",
   "source": "backend/openapi.json",
-  "source_sha256": "043152205a5221f1ff7962c1bef5bb244221435e3afa2f29cc618c686d1eb557",
-  "route_count": 862,
+  "source_sha256": "2ac05270a32d3d507bae00cbda7becf8a5b9386f5524ce55c4c79c4762da145f",
+  "route_count": 855,
   "routes": [
     {
       "method": "GET",
@@ -12308,132 +12308,6 @@
         "media"
       ],
       "summary": "Get Upload Url",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/mesh/messages",
-      "operation_id": "mesh_send_message_api_v1_mesh_messages_post",
-      "tags": [
-        "mesh-mailbox"
-      ],
-      "summary": "Send a direct or broadcast message to another agent",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/mesh/messages/inbox",
-      "operation_id": "mesh_message_inbox_api_v1_mesh_messages_inbox_get",
-      "tags": [
-        "mesh-mailbox"
-      ],
-      "summary": "Poll an agent inbox (pull-based pub/sub)",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/mesh/messages/purge",
-      "operation_id": "mesh_purge_messages_api_v1_mesh_messages_purge_post",
-      "tags": [
-        "mesh-mailbox"
-      ],
-      "summary": "Purge TTL-expired messages",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/mesh/messages/stats",
-      "operation_id": "mesh_message_stats_api_v1_mesh_messages_stats_get",
-      "tags": [
-        "mesh-mailbox"
-      ],
-      "summary": "Mailbox visibility stats (per-tenant counts)",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/mesh/messages/{message_id}/ack",
-      "operation_id": "mesh_ack_message_api_v1_mesh_messages__message_id__ack_post",
-      "tags": [
-        "mesh-mailbox"
-      ],
-      "summary": "Acknowledge receipt of a message (idempotent)",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "GET",
-      "path": "/api/v1/mesh/subscriptions",
-      "operation_id": "mesh_list_subscriptions_api_v1_mesh_subscriptions_get",
-      "tags": [
-        "mesh-mailbox"
-      ],
-      "summary": "List an agent's current topic subscriptions",
-      "auth": {
-        "required": false,
-        "schemes": []
-      },
-      "tenant_scope": "unclassified",
-      "persistence": "unclassified",
-      "events": "unclassified",
-      "owner": "unassigned",
-      "tests": "unclassified"
-    },
-    {
-      "method": "POST",
-      "path": "/api/v1/mesh/subscriptions",
-      "operation_id": "mesh_subscribe_topics_api_v1_mesh_subscriptions_post",
-      "tags": [
-        "mesh-mailbox"
-      ],
-      "summary": "Subscribe an agent to one or more topics (pub/sub)",
       "auth": {
         "required": false,
         "schemes": []
