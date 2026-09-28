@@ -19,7 +19,6 @@ from core.tier8 import (
     get_agent_evolution_engine,
     get_self_improvement_agent,
     get_skill_marketplace_curator,
-    get_swarm_coordination_agent,
 )
 
 
@@ -38,7 +37,6 @@ async def init_tier8(registry: ServiceRegistry | None = None) -> dict[str, Any]:
     # Initialize agents
     self_improve = get_self_improvement_agent()
     evolution = get_agent_evolution_engine()
-    swarm = get_swarm_coordination_agent()
     marketplace = get_skill_marketplace_curator()
 
     # Wire into service registry
@@ -49,22 +47,17 @@ async def init_tier8(registry: ServiceRegistry | None = None) -> dict[str, Any]:
     async def get_evolution() -> Any:
         return evolution
 
-    async def get_swarm() -> Any:
-        return swarm
-
     async def get_marketplace() -> Any:
         return marketplace
 
     registry.register("self_improvement_agent", get_self_improve)
     registry.register("agent_evolution_engine", get_evolution)
-    registry.register("swarm_coordination_agent", get_swarm)
     registry.register("skill_marketplace_curator", get_marketplace)
 
     # Wire into health monitor
     health = get_health_monitor()
     health.register_probe("tier8_self_improve", lambda: self_improve.execute(action="status"))
     health.register_probe("tier8_evolution", lambda: evolution.execute(action="status"))
-    health.register_probe("tier8_swarm", lambda: swarm.execute(action="status"))
     health.register_probe("tier8_marketplace", lambda: marketplace.execute(action="status"))
 
     # Subscribe to event bus for cross-agent communication
@@ -75,7 +68,6 @@ async def init_tier8(registry: ServiceRegistry | None = None) -> dict[str, Any]:
     if os.getenv("TIER8_AUTO_START", "true").lower() == "true":
         await self_improve.execute(action="start")
         await evolution.execute(action="start")
-        await swarm.execute(action="start")
         await marketplace.execute(action="start")
 
     return {
@@ -83,7 +75,6 @@ async def init_tier8(registry: ServiceRegistry | None = None) -> dict[str, Any]:
         "agents": {
             "self_improvement": await self_improve.execute(action="status"),
             "evolution": await evolution.execute(action="status"),
-            "swarm": await swarm.execute(action="status"),
             "marketplace": await marketplace.execute(action="status"),
         },
     }
@@ -93,7 +84,6 @@ async def shutdown_tier8() -> dict[str, str]:
     """Gracefully shutdown all Tier-8 agents."""
     await get_self_improvement_agent().execute(action="stop")
     await get_agent_evolution_engine().execute(action="stop")
-    await get_swarm_coordination_agent().execute(action="stop")
     await get_skill_marketplace_curator().execute(action="stop")
     return {"status": "shutdown_complete"}
 

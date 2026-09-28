@@ -4,7 +4,6 @@ This package contains the four Tier-8 meta-cognitive agents:
 
 - SelfImprovementAgent: Auto-detects and proposes codebase refactors
 - AgentEvolutionEngine: Genetic-algorithm agent capability evolution
-- SwarmCoordinationAgent: Multi-agent consensus & fault-tolerant orchestration
 - SkillMarketplaceCurator: Decentralized skill discovery, rating, and subscription
 
 All modules are:
@@ -17,7 +16,6 @@ Usage:
     from core.tier8 import (
         get_self_improvement_agent,
         get_agent_evolution_engine,
-        get_swarm_coordination_agent,
         get_skill_marketplace_curator,
     )
 """
@@ -42,18 +40,12 @@ from core.tier8.skill_marketplace_curator import (
     SkillMarketplaceCurator,
     get_skill_marketplace_curator,
 )
-from core.tier8.swarm_coordination_agent import (
-    SwarmCoordinationAgent,
-    get_swarm_coordination_agent,
-)
 
 __all__ = [
     "AgentEvolutionEngine",
     "SelfImprovementAgent",
     "SkillMarketplaceCurator",
-    "SwarmCoordinationAgent",
     "get_agent_evolution_engine",
     "get_self_improvement_agent",
     "get_skill_marketplace_curator",
-    "get_swarm_coordination_agent",
 ]
