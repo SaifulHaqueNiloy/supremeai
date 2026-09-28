@@ -71,7 +71,7 @@ acceptance_criteria:
 | লেগেসি-ডক/আসন | স্ট্যাটাস | সিদ্ধান্ত |
 |---|---|---|
 | scripts/governance/lint_plans.py | সক্রিয়-টুল | doc-স্তর দখল করে আছে; সত্য-আয়না কোড-স্তরের সমতুল্য — এক-পরিবার, এক-শৈলী (CLI+YAML+শ্রেণি-কাঠামো), একই CI-স্লট-প্যাটার্ন |
-| scripts/detect_silent_errors.py + scan_duplicate_plans.py | সক্রিয়-টুল | সংকেত-পারিবার পৃথক (silent-except, plan-duplicate) — সংঘর্ষ নেই; ভবিষ্যৎ-একীকরণ-নোট |
+| scripts/detect_silent_errors.py + scan_duplicate_plans.py | সক্রিয়-টুল | সংকেত-পারিবার পৃথক (silent-except, plan-duplicate) — সংঘর্ষ নেই; ভবিষ্যৎ-একীকরণ-নোট। **seq:2 আপডেট (#2403):** `scan_duplicate_plans.py` ছিল `f:\supremeai`-হার্ডকোডে অচল — ক্যাপাবিলিটি পোর্টেবলভাবে `scripts/supremeai_toolkit/plan_guard.py`-এ পুনঃসৃষ্ট (`supremeai_toolkit plan-guard`), মূল খোসা ছাঁটাই হয়েছে |
 | Module 10 (knip warn-only) / Module 11 (founder-gated CI) | published | মতবাদ-উত্তরাধিকার — P-E-এর ধারাবাহিকতা-শর্ত |
 | Modules 13-20 (সিরিজ) | published | **বীজ-কর্পাস মালিকানা**: প্রতিটি false-assurance আবিষ্কার নিয়ম-বীজ; সংশোধন-দায় সেই মডিউলের P-প্রস্তাবেই — আয়না পুনরাবৃত্তি নয় |
 | V6/V7 recheck-চক্র (founder) | সক্রিয়-অভ্যাস | warn-রিপোর্ট = সেই-চক্রের ইনপুট — শ্রম-পুনঃব্যবহার |
