@@ -147,6 +147,9 @@ class OllamaFallback:
                 response = await client.get(f"{self.base_url}/api/tags")
                 return response.status_code == 200
         except Exception:
+            logger.debug(
+                "Exception swallowed in local_fallback (deliberate fallback)", exc_info=True
+            )
             return False
 
     async def _start_ollama(self) -> bool:

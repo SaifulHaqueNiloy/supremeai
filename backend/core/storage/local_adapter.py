@@ -1,3 +1,4 @@
+import logging
 import os
 from datetime import datetime
 from pathlib import Path
@@ -5,6 +6,8 @@ from typing import BinaryIO
 
 from .interfaces import StorageProvider
 from .models import StorageFile, StorageResult
+
+logger = logging.getLogger(__name__)
 
 
 class LocalStorageAdapter:
@@ -67,6 +70,9 @@ class LocalStorageAdapter:
                 last_modified=datetime.fromtimestamp(stat.st_mtime),
             )
         except Exception:
+            logger.debug(
+                "Exception swallowed in local_adapter (deliberate fallback)", exc_info=True
+            )
             return None
 
     async def delete(self, bucket: str, key: str) -> bool:
@@ -76,6 +82,9 @@ class LocalStorageAdapter:
                 path.unlink()
                 return True
             except Exception:
+                logger.debug(
+                    "Exception swallowed in local_adapter (deliberate fallback)", exc_info=True
+                )
                 return False
         return False
 

@@ -908,6 +908,7 @@ def check_totp(user_otp: str, base32_secret: str) -> bool:
                 return True
         return False
     except Exception:
+        logger.debug("Exception swallowed in admin_routes (deliberate fallback)", exc_info=True)
         return False
 
 

@@ -8,12 +8,15 @@ to autonomously evolve and optimize solution strategies over multiple generation
 from __future__ import annotations
 
 import asyncio
+import logging
 import random
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import StrEnum
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 class EvolutionStrategy(StrEnum):
@@ -345,6 +348,9 @@ class EvolutionModule:
                 return float(await fitness_func(solution))
             return float(fitness_func(solution))
         except Exception:
+            logger.debug(
+                "Exception swallowed in evolution_module (deliberate fallback)", exc_info=True
+            )
             return 0.85
 
     def _chromosome_to_solution(self, chromosome: Chromosome) -> Any:

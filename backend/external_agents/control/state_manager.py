@@ -20,6 +20,7 @@ issue map 1:1 onto the store's three collections.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import uuid
 from datetime import UTC, datetime
@@ -29,6 +30,9 @@ from typing import Any, Protocol
 from pydantic import BaseModel, Field
 
 from external_agents.contracts.task_contract import TaskContract, TaskState
+
+logger = logging.getLogger(__name__)
+
 
 __all__ = [
     "AgentStateManager",
@@ -175,6 +179,9 @@ class JsonFileStore(StateStore):
         try:
             return model_cls.model_validate(json.loads(path.read_text()))
         except Exception:
+            logger.debug(
+                "Exception swallowed in state_manager (deliberate fallback)", exc_info=True
+            )
             return None
 
     def _task_path(self, task_id: str) -> Path:

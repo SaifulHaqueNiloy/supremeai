@@ -167,6 +167,9 @@ class SecureRedisManager:
 
             return (settings._get_cached_secret(key) or "").strip()
         except Exception:  # noqa: BLE001 — resolver must never break init
+            logger.debug(
+                "Exception swallowed in redis_manager (deliberate fallback)", exc_info=True
+            )
             return ""
 
     def _collect_federation_urls(self) -> list[str]:
