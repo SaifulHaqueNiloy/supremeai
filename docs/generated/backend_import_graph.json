@@ -1,7 +1,7 @@
 {
   "boundary_violations": [],
   "cycles": [],
-  "edge_count": 3489,
+  "edge_count": 3480,
   "edges": [
     {
       "from": "_archive.batch-1.backend.core.brand_compliance",
@@ -474,14 +474,6 @@
     {
       "from": "agents.evolution_agents.adversarial_defense_agent",
       "to": "core.cache"
-    },
-    {
-      "from": "agents.evolution_agents.federated_learning_agent",
-      "to": "core.unified_learning"
-    },
-    {
-      "from": "agents.evolution_agents.meta_learning_agent",
-      "to": "core.unified_learning"
     },
     {
       "from": "agents.evolution_agents.multi_agent_collaboration_agent",
@@ -1741,6 +1733,10 @@
     },
     {
       "from": "api.routes.browser",
+      "to": "core.kernel.audit_logger"
+    },
+    {
+      "from": "api.routes.browser",
       "to": "core.logging_config"
     },
     {
@@ -1766,10 +1762,6 @@
     {
       "from": "api.routes.browser",
       "to": "core.neon_repository"
-    },
-    {
-      "from": "api.routes.browser",
-      "to": "core.observability.audit_logger"
     },
     {
       "from": "api.routes.browser",
@@ -1825,7 +1817,7 @@
     },
     {
       "from": "api.routes.browser._credentials",
-      "to": "core.observability.audit_logger"
+      "to": "core.kernel.audit_logger"
     },
     {
       "from": "api.routes.browser._credentials",
@@ -2050,10 +2042,6 @@
     {
       "from": "api.routes.chat",
       "to": "api.deps"
-    },
-    {
-      "from": "api.routes.chat",
-      "to": "brain.supreme_learning_engine"
     },
     {
       "from": "api.routes.chat",
@@ -3512,10 +3500,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "api.routes.webhooks_github",
-      "to": "core.orchestration.handoff_schema"
-    },
-    {
       "from": "api.routes.websocket_hitl",
       "to": "core.config"
     },
@@ -3870,10 +3854,6 @@
     {
       "from": "brain.reasoning_orchestrator",
       "to": "tools.code.cot_reasoner"
-    },
-    {
-      "from": "brain.supreme_learning_engine",
-      "to": "core.unified_learning"
     },
     {
       "from": "brain.task_execution_engine",
@@ -5209,11 +5189,47 @@
     },
     {
       "from": "core.kernel",
+      "to": "core.kernel.audit_chain"
+    },
+    {
+      "from": "core.kernel",
+      "to": "core.kernel.audit_logger"
+    },
+    {
+      "from": "core.kernel",
       "to": "core.kernel.dispatcher"
     },
     {
       "from": "core.kernel",
       "to": "core.kernel.interface"
+    },
+    {
+      "from": "core.kernel.audit_chain",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.kernel.audit_chain",
+      "to": "models.mcp_audit_event"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.config"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.degraded_mode"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.logging_config"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.persistence"
+    },
+    {
+      "from": "core.kernel.audit_logger",
+      "to": "core.persistence.write_behind"
     },
     {
       "from": "core.kernel.dispatcher",
@@ -5230,6 +5246,10 @@
     {
       "from": "core.kernel.dispatcher",
       "to": "core.circles.registry"
+    },
+    {
+      "from": "core.kernel.dispatcher",
+      "to": "core.kernel.audit_logger"
     },
     {
       "from": "core.kernel.dispatcher",
@@ -5584,14 +5604,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "core.mcp_audit_chain",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.mcp_audit_chain",
-      "to": "models.mcp_audit_event"
-    },
-    {
       "from": "core.mcp_client",
       "to": "core.config"
     },
@@ -5756,26 +5768,6 @@
       "to": "core.config"
     },
     {
-      "from": "core.observability.audit_logger",
-      "to": "core.config"
-    },
-    {
-      "from": "core.observability.audit_logger",
-      "to": "core.degraded_mode"
-    },
-    {
-      "from": "core.observability.audit_logger",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "core.observability.audit_logger",
-      "to": "core.persistence"
-    },
-    {
-      "from": "core.observability.audit_logger",
-      "to": "core.persistence.write_behind"
-    },
-    {
       "from": "core.observability.log_batcher",
       "to": "core.logging_config"
     },
@@ -5906,10 +5898,6 @@
     {
       "from": "core.orchestration.crew_departments",
       "to": "core.orchestration.swarm_agent_roles"
-    },
-    {
-      "from": "core.orchestration.handoff_schema",
-      "to": "core.logging_config"
     },
     {
       "from": "core.orchestration.master_cognitive_orchestrator",
@@ -6730,10 +6718,6 @@
     {
       "from": "core.self_evolution.evolution_react_agent",
       "to": "core.logging_config"
-    },
-    {
-      "from": "core.self_evolution.federated_learning.fed_learning",
-      "to": "core.unified_learning"
     },
     {
       "from": "core.self_evolution.fitness_engine",
@@ -8124,10 +8108,6 @@
       "to": "models.base"
     },
     {
-      "from": "models.handoff_event",
-      "to": "models.base"
-    },
-    {
       "from": "models.integration",
       "to": "models.base"
     },
@@ -9037,7 +9017,11 @@
     },
     {
       "from": "services.dynamic_ai.learning_engine",
-      "to": "core.unified_learning"
+      "to": "core.learning"
+    },
+    {
+      "from": "services.dynamic_ai.learning_engine",
+      "to": "core.logging_config"
     },
     {
       "from": "services.dynamic_ai.local_fallback",
@@ -9165,15 +9149,15 @@
     },
     {
       "from": "services.knowledge_qa",
+      "to": "core.kernel.audit_logger"
+    },
+    {
+      "from": "services.knowledge_qa",
       "to": "core.llm.llm_gateway"
     },
     {
       "from": "services.knowledge_qa",
       "to": "core.logging_config"
-    },
-    {
-      "from": "services.knowledge_qa",
-      "to": "core.observability.audit_logger"
     },
     {
       "from": "services.knowledge_qa",
@@ -11005,7 +10989,7 @@
     },
     {
       "from": "tests.core.test_mcp_audit_chain",
-      "to": "core.mcp_audit_chain"
+      "to": "core.kernel.audit_chain"
     },
     {
       "from": "tests.core.test_mcp_audit_chain",
@@ -11984,10 +11968,6 @@
       "to": "tools.code.safe_executor"
     },
     {
-      "from": "tests.security.test_codegen_gate_fail_closed",
-      "to": "tools.ephemeral_synthesizer"
-    },
-    {
       "from": "tests.security.test_cross_tenant_isolation",
       "to": "models.pending_tasks"
     },
@@ -12221,7 +12201,7 @@
     },
     {
       "from": "tests.services.test_monitoring",
-      "to": "core.observability.audit_logger"
+      "to": "core.kernel.audit_logger"
     },
     {
       "from": "tests.services.test_monitoring",
@@ -12558,14 +12538,6 @@
     {
       "from": "tests.test_swarm_and_ephemeral",
       "to": "core.intelligence.swarm_consensus"
-    },
-    {
-      "from": "tests.test_swarm_and_ephemeral",
-      "to": "core.security.codegen_gate"
-    },
-    {
-      "from": "tests.test_swarm_and_ephemeral",
-      "to": "tools.ephemeral_synthesizer"
     },
     {
       "from": "tests.test_synaptic_dream_loop",
@@ -13336,14 +13308,6 @@
       "to": "core.logging_config"
     },
     {
-      "from": "tools.ephemeral_synthesizer",
-      "to": "core.logging_config"
-    },
-    {
-      "from": "tools.ephemeral_synthesizer",
-      "to": "core.security.codegen_gate"
-    },
-    {
       "from": "tools.freebuff_client",
       "to": "tools.cli_process_delegator"
     },
@@ -13545,15 +13509,15 @@
     },
     {
       "from": "tools.mcp.mcp_server",
+      "to": "core.kernel.audit_chain"
+    },
+    {
+      "from": "tools.mcp.mcp_server",
       "to": "core.logging_config"
     },
     {
       "from": "tools.mcp.mcp_server",
       "to": "core.mcp_audit"
-    },
-    {
-      "from": "tools.mcp.mcp_server",
-      "to": "core.mcp_audit_chain"
     },
     {
       "from": "tools.mcp.mcp_server",
@@ -13960,7 +13924,7 @@
       "to": "core.logging_config"
     }
   ],
-  "module_count": 2021,
+  "module_count": 2013,
   "modules": [
     "_archive.batch-1.backend.core.brand_compliance",
     "_archive.batch-1.backend.core.permission_cache",
@@ -14060,8 +14024,6 @@
     "agents.domain.bangla_nlp_agent",
     "agents.evolution_agents",
     "agents.evolution_agents.adversarial_defense_agent",
-    "agents.evolution_agents.federated_learning_agent",
-    "agents.evolution_agents.meta_learning_agent",
     "agents.evolution_agents.multi_agent_collaboration_agent",
     "agents.governance",
     "agents.governance.bias_detection_agent",
@@ -14356,7 +14318,6 @@
     "brain.parallel_cloud_router",
     "brain.performance_aware_router",
     "brain.reasoning_orchestrator",
-    "brain.supreme_learning_engine",
     "brain.task_execution_engine",
     "brain.user_digital_twin",
     "browser.action_cascade",
@@ -14557,6 +14518,8 @@
     "core.ip_blocklist_manager",
     "core.kaggle_orchestrator",
     "core.kernel",
+    "core.kernel.audit_chain",
+    "core.kernel.audit_logger",
     "core.kernel.dispatcher",
     "core.kernel.interface",
     "core.knowledge_base",
@@ -14604,7 +14567,6 @@
     "core.markdown_indexer",
     "core.mcp_allowlist",
     "core.mcp_audit",
-    "core.mcp_audit_chain",
     "core.mcp_client",
     "core.mcp_policy",
     "core.memory",
@@ -14631,7 +14593,6 @@
     "core.monitoring",
     "core.neon_repository",
     "core.observability",
-    "core.observability.audit_logger",
     "core.observability.interfaces",
     "core.observability.log_batcher",
     "core.observability.metrics_registry",
@@ -14652,7 +14613,6 @@
     "core.orchestration.cognitive_pipeline_dispatcher",
     "core.orchestration.conversation_orchestrator",
     "core.orchestration.crew_departments",
-    "core.orchestration.handoff_schema",
     "core.orchestration.master_cognitive_orchestrator",
     "core.orchestration.periodic_task_scheduler",
     "core.orchestration.swarm_agent_roles",
@@ -14774,7 +14734,6 @@
     "core.self_evolution.digital_twin.topology",
     "core.self_evolution.evolution_engine",
     "core.self_evolution.evolution_react_agent",
-    "core.self_evolution.federated_learning.fed_learning",
     "core.self_evolution.fitness_engine",
     "core.self_evolution.neural_symbolic.integration",
     "core.self_evolution.performance_oracle",
@@ -14819,7 +14778,6 @@
     "core.tier8.tier8_integration",
     "core.tool_loop",
     "core.type_sync_bus",
-    "core.unified_learning",
     "core.unified_memory",
     "core.universal_rules",
     "core.upload_validator",
@@ -14966,7 +14924,6 @@
     "models.evolution",
     "models.execution_log",
     "models.execution_policy",
-    "models.handoff_event",
     "models.integration",
     "models.local_model_handler",
     "models.localization",
@@ -15884,7 +15841,6 @@
     "tools.devops.github_agent",
     "tools.devops.on_premise_deployer",
     "tools.ensemble_router",
-    "tools.ephemeral_synthesizer",
     "tools.freebuff_client",
     "tools.graph_service",
     "tools.headless_agent_registry",

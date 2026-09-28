@@ -1,17 +1,19 @@
 """Issue #704 + #682 regression: in-process codegen exec must fail-closed by default.
 
-``tools.ephemeral_synthesizer``, ``services.tool_forge`` (issue #704),
-``tools.code.safe_executor.run_restricted`` and ``core.skill_manager``
-DB-skill loading (issue #682) execute model-generated or DB-stored Python via
-in-process ``exec()``. Restricted builtins are not a security boundary, so
-with no ``SUPREMEAI_ALLOW_INPROCESS_CODEGEN`` env var (the production/staging
-default) nothing may execute:
+``services.tool_forge`` (issue #704), ``tools.code.safe_executor.run_restricted``
+and ``core.skill_manager`` DB-skill loading (issue #682) execute model-generated
+or DB-stored Python via in-process ``exec()``. Restricted builtins are not a
+security boundary, so with no ``SUPREMEAI_ALLOW_INPROCESS_CODEGEN`` env var
+(the production/staging default) nothing may execute:
 
-- the ephemeral synthesizer returns a structured ``status="rejected"`` result,
 - the tool forge raises its existing ``ToolForgeError``,
 - the safe executor returns its existing ``(False, error_message)`` tuple,
 - the skill manager raises its existing ``ValueError`` without exec'ing the
   DB-stored code.
+
+(``tools.ephemeral_synthesizer`` was retired by issue #2277 — Step-2.4 —
+along with its two gate tests; the gate itself lives in
+``core.security.codegen_gate`` and stays enforced for the remaining surfaces.)
 """
 
 import json
@@ -23,46 +25,6 @@ from core.security.codegen_gate import ALLOW_INPROCESS_CODEGEN_ENV
 from core.skill_manager import SkillManager
 from services.tool_forge import ToolForgeError, ToolForgeService, ToolSpec
 from tools.code.safe_executor import run_restricted
-from tools.ephemeral_synthesizer import EphemeralToolSynthesizer
-
-_SAFE_CODE = """
-def run(x: int, y: int) -> int:
-    return x * y + 10
-"""
-
-
-@pytest.mark.asyncio
-async def test_ephemeral_synthesizer_fail_closed_by_default(monkeypatch):
-    """No env var -> script is NOT executed, structured rejection returned."""
-    monkeypatch.delenv(ALLOW_INPROCESS_CODEGEN_ENV, raising=False)
-    synthesizer = EphemeralToolSynthesizer()
-
-    res = await synthesizer.execute_ephemeral_script(
-        tool_name="must_not_run",
-        script_code=_SAFE_CODE,
-        input_args={"x": 5, "y": 6},
-    )
-
-    assert res.status == "rejected"
-    assert res.result is None
-    assert res.ast_safe is False
-    assert ALLOW_INPROCESS_CODEGEN_ENV in (res.error or "")
-
-
-@pytest.mark.asyncio
-async def test_ephemeral_synthesizer_opt_in_executes(monkeypatch):
-    """Explicit local-dev opt-in keeps the restricted exec path working."""
-    monkeypatch.setenv(ALLOW_INPROCESS_CODEGEN_ENV, "true")
-    synthesizer = EphemeralToolSynthesizer()
-
-    res = await synthesizer.execute_ephemeral_script(
-        tool_name="multiply_add",
-        script_code=_SAFE_CODE,
-        input_args={"x": 5, "y": 6},
-    )
-
-    assert res.status == "succeeded"
-    assert res.result == 40
 
 
 def test_tool_forge_fail_closed_by_default(monkeypatch):

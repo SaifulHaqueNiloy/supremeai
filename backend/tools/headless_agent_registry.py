@@ -232,7 +232,6 @@ def get_headless_agent_configs() -> dict[str, dict[str, Any]]:
 def get_headless_agent_registry() -> dict[str, Any]:
     """
     বাংলা মন্তব্য: MCP রেজিস্ট্রির জন্য সব হেডলেস এজেন্টের কনফিগারেশন রিটার্ন করে।
-    এই ফাংশনটি parallel_agent_executor.py-এর সাথে ইন্টিগ্রেট করতে ব্যবহৃত হবে।
     """
     configs = get_headless_agent_configs()
     registry = {}

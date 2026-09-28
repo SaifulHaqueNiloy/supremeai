@@ -1,11 +1,11 @@
 """Spawned-process MCP client for external MCP servers (headless agent fleet).
 
 #686: ``MCPClient.call_tool`` is the single execution choke point for tools
-dispatched to spawned external MCP servers (``tools/parallel_agent_executor.py``
-and ``core/circles/centers/mcp_center.py`` both go through it). Tool requests
-against servers listed in ``core/mcp_allowlist.py`` are now checked against that
-server's ``allowed_tools`` at EXECUTION time — the allowlist previously had no
-runtime consumer at all (neither registration- nor execution-time enforcement).
+dispatched to spawned external MCP servers (``core/circles/centers/mcp_center.py``
+goes through it). Tool requests against servers listed in ``core/mcp_allowlist.py``
+are now checked against that server's ``allowed_tools`` at EXECUTION time — the
+allowlist previously had no runtime consumer at all (neither registration- nor
+execution-time enforcement).
 """
 
 import json

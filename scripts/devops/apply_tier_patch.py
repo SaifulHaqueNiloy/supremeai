@@ -211,7 +211,6 @@ _CRITICAL_TEST_PARTS = (
     ("services", "usage"),
     ("services", "memory"),
     ("tools", "checkpoint_manager"),
-    ("tools", "parallel_agent_executor"),
 )
 
 _IMPORTANT_TEST_PARTS = (
