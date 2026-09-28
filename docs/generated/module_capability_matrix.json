@@ -1083,6 +1083,7 @@
     },
     {
       "capability_signals": [
+        "capability",
         "mcp"
       ],
       "classification": "dormant_or_dynamic",
@@ -24384,6 +24385,18 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/create_group_issue.py"
+    },
+    {
+      "capability_signals": [
         "mcp"
       ],
       "classification": "human_review",
@@ -24536,6 +24549,15 @@
       ],
       "kind": "py",
       "path": "scripts/ci/generate_topology_mermaid.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/group_closeout_janitor.py"
     },
     {
       "capability_signals": [],
@@ -26585,5 +26607,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3035
+  "source_file_count": 3037
 }
