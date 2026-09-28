@@ -266,18 +266,30 @@ gates:
   self_merge_gate:
     title: "Self-Merge Gate"
     blocks_when: "নিজের PR নিজে approve/merge করলে BLOCK"
-    wired: false
-    enforced_by: "branch protection + pr-helper review (follow-up issue)"
+    wired: true
+    workflow: "system-gates.yml"
+    enforced_by: "gates.py run_self_merge_gate (#2397) — self-approval + merged_by==author অডিট"
   test_guard_gate:
     title: "Test Guard"
     blocks_when: "test delete/skip/threshold-নামানো হলে BLOCK"
-    wired: false
-    enforced_by: "constitution audit engine extension (follow-up issue)"
+    wired: true
+    workflow: "system-gates.yml"
+    enforced_by: "gates.py run_test_guard_gate (#2397) — টেস্ট-ফাইল ডিলিট + skip/xfail যোগ ডিটেকশন; threshold-নামানো follow-up"
   post_merge_watch:
     title: "Post-Merge Watch"
     blocks_when: "merge-এর ১৫ মিনিটের মধ্যে main লাল হলে auto-revert"
-    wired: false
-    enforced_by: "merge-train land job (follow-up issue)"
+    wired: true
+    workflow: "integration-gate.yml"
+    enforced_by: "integration-gate.yml post-merge-watch job (#2397) — ১৫-মিনিট watchdog, লাল হলে admin-alert; auto-revert অ্যাডমিনের নাটাইয়ে"
+
+self_merge_policy:
+  block_self_approval: true
+  block_self_merge: true
+
+test_guard_policy:
+  deleted_test_files: block
+  added_skip_markers: block
+  allow_deleted_paths: []
 
 review_protocol:
   title: "Group Closeout Audit Protocol (The 4-Pillar Rubric)"

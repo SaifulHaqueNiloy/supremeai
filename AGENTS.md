@@ -70,9 +70,9 @@ _কাজ শুরুর আগে সর্বদা `git fetch origin --prun
 | Verification Gate | PR description-এ Test Evidence সেকশন নেই (টেস্ট লগ/কমান্ড আউটপুট ছাড়া PR BLOCK) | CI (system-gates.yml) |
 | Scope Gate | claim-এ declare করা 'Touching files:'-এর বাইরের ফাইল PR-এ বদলালে BLOCK | CI (system-gates.yml) |
 | Collision Gate | অন্য open PR-এর ফাইলের সাথে direct overlap হলে BLOCK | CI (pr-gate.yml (check-collisions, strict mode #2002)) |
-| Self-Merge Gate | নিজের PR নিজে approve/merge করলে BLOCK | branch protection + pr-helper review |
-| Test Guard | test delete/skip/threshold-নামানো হলে BLOCK | constitution audit engine extension |
-| Post-Merge Watch | merge-এর ১৫ মিনিটের মধ্যে main লাল হলে auto-revert | merge-train land job |
+| Self-Merge Gate | নিজের PR নিজে approve/merge করলে BLOCK | CI (system-gates.yml) |
+| Test Guard | test delete/skip/threshold-নামানো হলে BLOCK | CI (system-gates.yml) |
+| Post-Merge Watch | merge-এর ১৫ মিনিটের মধ্যে main লাল হলে auto-revert | CI (integration-gate.yml) |
 
 ---
 

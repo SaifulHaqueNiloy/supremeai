@@ -55,6 +55,15 @@ DEFAULT_LEASE_POLICY = {
     "group_branch_prefix": "group/",
     "mesh_advisory_env": "SUPREME_MESH_URL",
 }
+DEFAULT_SELF_MERGE_POLICY = {
+    "block_self_approval": True,
+    "block_self_merge": True,
+}
+DEFAULT_TEST_GUARD_POLICY = {
+    "deleted_test_files": "block",
+    "added_skip_markers": "block",
+    "allow_deleted_paths": [],
+}
 
 
 # ─────────────────────────── policy loading ───────────────────────────
@@ -70,6 +79,8 @@ def load_policies(rules_path: Optional[Path] = None) -> dict:
             "scope_policy": dict(DEFAULT_SCOPE_POLICY),
             "verification_policy": dict(DEFAULT_VERIFICATION_POLICY),
             "lease_policy": dict(DEFAULT_LEASE_POLICY),
+            "self_merge_policy": dict(DEFAULT_SELF_MERGE_POLICY),
+            "test_guard_policy": dict(DEFAULT_TEST_GUARD_POLICY),
         }
     if not path.exists():
         print(f"::warning::{path} not found — falling back to built-in gate defaults")
@@ -77,6 +88,8 @@ def load_policies(rules_path: Optional[Path] = None) -> dict:
             "scope_policy": dict(DEFAULT_SCOPE_POLICY),
             "verification_policy": dict(DEFAULT_VERIFICATION_POLICY),
             "lease_policy": dict(DEFAULT_LEASE_POLICY),
+            "self_merge_policy": dict(DEFAULT_SELF_MERGE_POLICY),
+            "test_guard_policy": dict(DEFAULT_TEST_GUARD_POLICY),
         }
     with open(path, "r", encoding="utf-8") as fh:
         data = yaml.safe_load(fh) or {}
@@ -84,6 +97,8 @@ def load_policies(rules_path: Optional[Path] = None) -> dict:
         "scope_policy": {**DEFAULT_SCOPE_POLICY, **(data.get("scope_policy") or {})},
         "verification_policy": {**DEFAULT_VERIFICATION_POLICY, **(data.get("verification_policy") or {})},
         "lease_policy": {**DEFAULT_LEASE_POLICY, **(data.get("lease_policy") or {})},
+        "self_merge_policy": {**DEFAULT_SELF_MERGE_POLICY, **(data.get("self_merge_policy") or {})},
+        "test_guard_policy": {**DEFAULT_TEST_GUARD_POLICY, **(data.get("test_guard_policy") or {})},
     }
 
 
@@ -147,6 +162,33 @@ def gate_result(name: str, ok: bool, message: str) -> int:
 
 # ─────────────────────── Verification Gate (test logs required) ───────────────────────
 
+def _cut_before_next_heading(text: str) -> str:
+    """Truncate before the next markdown heading — fence-aware (#2397).
+
+    # বাংলা মন্তব্য: কোড-ফেন্সের (``` বা ~~~) ভেতরের '#' লাইন কমেন্ট/লগ —
+    # heading নয়। পুরোনো fence-blind cutter Test Evidence-এর প্রথম কমেন্ট-লাইনেই
+    # কেটে সেকশন ৩ অক্ষরে নামিয়ে দিত — বাস্তব evidence থাকতেও BLOCK (PR #2401-এর
+    # CI-তে প্রমাণিত)। তাই ফেন্স-সচেতন স্ক্যান: ফেন্সের ভেতরে heading হবে না।
+    """
+    fence = None
+    offset = 0
+    for line in text.splitlines(keepends=True):
+        stripped = line.strip()
+        fence_m = re.match(r"^(`{3,}|~{3,})", stripped)
+        if fence_m:
+            tok = fence_m.group(1)
+            if fence is None:
+                fence = tok[0]
+            elif stripped.startswith(fence):
+                fence = None
+            offset += len(line)
+            continue
+        if fence is None and re.match(r"^#{1,6}\s+\S", line):
+            return text[:offset]
+        offset += len(line)
+    return text
+
+
 def extract_test_evidence(body: str, policy: dict) -> tuple[bool, str]:
     """Return (has_evidence, reason). Body must contain a Test Evidence section
     whose content is non-trivial and looks like test output / commands."""
@@ -164,11 +206,7 @@ def extract_test_evidence(body: str, policy: dict) -> tuple[bool, str]:
         )
         m = pattern.search(body)
         if m:
-            section = body[m.end():]
-            # cut at the next markdown heading (any level) that follows
-            nxt = re.search(r"\n#{1,6}\s+\S", section, re.MULTILINE)
-            if nxt:
-                section = section[: nxt.start()]
+            section = _cut_before_next_heading(body[m.end():])
             break
     if section is None:
         return False, (
@@ -452,11 +490,109 @@ def run_lease_gate(pr_author: str, pr_branch: str, policy: dict) -> int:
     return gate_result("Lease Gate", ok, reason)
 
 
+# ─────────────────────── Self-Merge Gate (#2397 wiring) ───────────────────────
+
+def run_self_merge_gate(pr_number: int, policy: dict) -> int:
+    """Self-Merge Gate — constitution registry wired by #2397 (was wired=false).
+
+    # বাংলা মন্তব্য: নিজের PR নিজে approve করা (self-approval) বা নিজের হাতে
+    # merge করা (merged_by == author, মার্জ-পরবর্তী অডিটে ধরা হয়) — দুটোই BLOCK।
+    # API অনুপলব্ধ হলে advisory pass — CI কখনো API uptime-এ hard-depend করে না।
+    """
+    try:
+        pr = gh_api(f"repos/{_repo()}/pulls/{pr_number}")
+        author = (pr.get("user") or {}).get("login", "")
+        merged_by = ((pr.get("merged_by") or {}).get("login", "")) if pr.get("merged") else ""
+        reviews = gh_api(f"repos/{_repo()}/pulls/{pr_number}/reviews?per_page=50") or []
+        self_approvals = [
+            r for r in reviews
+            if (r.get("user") or {}).get("login", "") == author and r.get("state") == "APPROVED"
+        ]
+        if self_approvals and policy.get("block_self_approval", True):
+            return gate_result(
+                "Self-Merge Gate", False,
+                f"self-approval detected: author '{author}' approved their own PR",
+            )
+        if merged_by and merged_by == author and policy.get("block_self_merge", True):
+            return gate_result(
+                "Self-Merge Gate", False,
+                f"self-merge detected: PR was merged by its own author '{author}'",
+            )
+        return gate_result(
+            "Self-Merge Gate", True,
+            f"no self-approval/self-merge for '{author}' ({len(reviews)} review(s) audited)",
+        )
+    except Exception as err:  # noqa: BLE001 — CI cannot hard-depend on API uptime
+        print(f"::warning::self-merge gate check unavailable ({err}) — advisory pass")
+        return gate_result("Self-Merge Gate", True, "advisory pass (API unavailable)")
+
+
+# ─────────────────────── Test Guard Gate (#2397 wiring) ───────────────────────
+
+TEST_PATH_RE = re.compile(
+    r"(?:^|/)(?:tests?/|[^/]*_test\.py$|test_[^/]*\.py$|[^/]*\.test\.[jt]sx?$|[^/]*\.spec\.[jt]sx?$)",
+    re.IGNORECASE,
+)
+SKIP_MARKER_RE = re.compile(
+    r"^\+.*(pytest\.skip\(|pytest\.mark\.skip|@pytest\.mark\.xfail|unittest\.skip|it\.skip\(|describe\.skip\()",
+    re.IGNORECASE,
+)
+
+
+def run_test_guard_gate(pr_number: int, policy: dict) -> int:
+    """Test Guard — constitution registry wired by #2397 (was wired=false).
+
+    # বাংলা মন্তব্য: টেস্ট-ম্যানিপুলেশন ধরা: (১) টেস্ট ফাইল ডিলিট (allowlist-বাহিরে),
+    # (২) diff-এ নতুন skip/xfail marker যোগ। টেস্ট থ্রেশহোল্ড কমানো পরবর্তী
+    # hardening-এ (follow-up)। allow_deleted_paths policy-তে স্বীকৃত ব্যতিক্রম।
+    """
+    try:
+        files = gh_api(f"repos/{_repo()}/pulls/{pr_number}/files?per_page=100") or []
+    except Exception as err:  # noqa: BLE001 — CI cannot hard-depend on API uptime
+        print(f"::warning::test guard check unavailable ({err}) — advisory pass")
+        return gate_result("Test Guard", True, "advisory pass (API unavailable)")
+
+    allow = set(policy.get("allow_deleted_paths") or [])
+    deleted_tests = [
+        f["filename"] for f in files
+        if f.get("status") == "removed" and TEST_PATH_RE.search(f.get("filename", ""))
+        and f["filename"] not in allow
+    ]
+    if deleted_tests and policy.get("deleted_test_files", "block") == "block":
+        return gate_result(
+            "Test Guard", False,
+            "test file(s) deleted: " + ", ".join(deleted_tests[:5]),
+        )
+
+    skip_added = []
+    for f in files:
+        fn = f.get("filename", "")
+        if f.get("status") == "removed" or not TEST_PATH_RE.search(fn):
+            continue
+        for line in (f.get("patch") or "").splitlines():
+            if SKIP_MARKER_RE.match(line):
+                skip_added.append(f"{fn}: {line[1:].strip()[:60]}")
+                if len(skip_added) >= 5:
+                    break
+        if len(skip_added) >= 5:
+            break
+    if skip_added and policy.get("added_skip_markers", "block") == "block":
+        return gate_result(
+            "Test Guard", False,
+            "skip/xfail marker(s) added to tests: " + "; ".join(skip_added[:3]),
+        )
+    touched = sum(1 for f in files if TEST_PATH_RE.search(f.get("filename", "")))
+    return gate_result("Test Guard", True, f"{touched} test file(s) touched, none manipulated")
+
+
 # ─────────────────────────────── CLI ───────────────────────────────
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="SupremeAI Automated System Gates")
-    parser.add_argument("gate", choices=["verification", "scope", "lease", "all"])
+    parser.add_argument(
+        "gate",
+        choices=["verification", "scope", "lease", "self_merge", "test_guard", "all"],
+    )
     parser.add_argument("--pr", type=int, default=0, help="PR number (for scope gate)")
     parser.add_argument("--title", default="", help="PR title (else fetched via API)")
     parser.add_argument("--body", default="", help="PR body (else fetched via API)")
@@ -468,7 +604,7 @@ def main() -> int:
 
     policies = load_policies(Path(args.rules))
     failures: list = []
-    needs_ctx = args.gate in ("verification", "all", "scope") or (
+    needs_ctx = args.gate in ("verification", "all", "scope", "self_merge", "test_guard") or (
         args.gate == "lease" and not (args.author and args.branch)
     )
     if needs_ctx and args.pr:
@@ -492,6 +628,16 @@ def main() -> int:
         rc = run_scope_gate(args.pr, assoc or "NONE", title, body, policies["scope_policy"])
         if rc:
             failures.append("scope")
+
+    if args.gate in ("self_merge", "all"):
+        rc = run_self_merge_gate(args.pr, policies.get("self_merge_policy") or {})
+        if rc:
+            failures.append("self_merge")
+
+    if args.gate in ("test_guard", "all"):
+        rc = run_test_guard_gate(args.pr, policies.get("test_guard_policy") or {})
+        if rc:
+            failures.append("test_guard")
 
     if failures:
         print(f"[FAILED] System gates failed: {', '.join(failures)}")

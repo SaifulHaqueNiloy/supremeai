@@ -3,7 +3,7 @@
 
 import pytest
 
-from core.orchestration.master_cognitive_orchestrator import (
+from core.orchestration.cognitive_pipeline_dispatcher import (
     CognitiveIntent,
     get_master_orchestrator,
 )
