@@ -142,7 +142,7 @@
     {
       "evidence": [
         {
-          "line": 61,
+          "line": 55,
           "path": "backend/api/routes/living_brain.py"
         }
       ],
@@ -212,17 +212,7 @@
     {
       "evidence": [
         {
-          "line": 46,
-          "path": "backend/api/routes/living_brain.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 410,
+          "line": 45,
           "path": "backend/api/routes/living_brain.py"
         }
       ],
@@ -734,6 +724,16 @@
         {
           "line": 12,
           "path": "backend/services/dynamic_ai/circuit_breaker.py"
+        }
+      ],
+      "source": "ai",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 22,
+          "path": "backend/services/dynamic_ai/learning_engine.py"
         }
       ],
       "source": "ai",
@@ -2462,8 +2462,28 @@
     {
       "evidence": [
         {
-          "line": 401,
+          "line": 408,
           "path": "backend/api/routes/session_takeover.py"
+        }
+      ],
+      "source": "identity",
+      "target": "research"
+    },
+    {
+      "evidence": [
+        {
+          "line": 50,
+          "path": "backend/tests/api/test_session_takeover.py"
+        }
+      ],
+      "source": "identity",
+      "target": "research"
+    },
+    {
+      "evidence": [
+        {
+          "line": 71,
+          "path": "backend/tests/api/test_session_takeover.py"
         }
       ],
       "source": "identity",
@@ -2952,7 +2972,7 @@
     {
       "evidence": [
         {
-          "line": 14,
+          "line": 15,
           "path": "backend/services/knowledge_qa.py"
         }
       ],
@@ -3122,7 +3142,7 @@
     {
       "evidence": [
         {
-          "line": 15,
+          "line": 13,
           "path": "backend/services/knowledge_qa.py"
         }
       ],
@@ -3342,7 +3362,7 @@
     {
       "evidence": [
         {
-          "line": 66,
+          "line": 67,
           "path": "backend/api/routes/browser/__init__.py"
         }
       ],
@@ -3352,7 +3372,7 @@
     {
       "evidence": [
         {
-          "line": 69,
+          "line": 70,
           "path": "backend/api/routes/browser/__init__.py"
         }
       ],
@@ -3362,7 +3382,7 @@
     {
       "evidence": [
         {
-          "line": 72,
+          "line": 73,
           "path": "backend/api/routes/browser/__init__.py"
         }
       ],
@@ -3372,7 +3392,7 @@
     {
       "evidence": [
         {
-          "line": 75,
+          "line": 76,
           "path": "backend/api/routes/browser/__init__.py"
         }
       ],
@@ -3382,7 +3402,7 @@
     {
       "evidence": [
         {
-          "line": 78,
+          "line": 79,
           "path": "backend/api/routes/browser/__init__.py"
         }
       ],
@@ -3392,7 +3412,7 @@
     {
       "evidence": [
         {
-          "line": 81,
+          "line": 82,
           "path": "backend/api/routes/browser/__init__.py"
         }
       ],
@@ -3622,7 +3642,7 @@
     {
       "evidence": [
         {
-          "line": 65,
+          "line": 66,
           "path": "backend/api/routes/browser/__init__.py"
         }
       ],
@@ -3942,7 +3962,7 @@
     {
       "evidence": [
         {
-          "line": 84,
+          "line": 65,
           "path": "backend/api/routes/browser/__init__.py"
         }
       ],
@@ -4443,7 +4463,7 @@
       "evidence": [
         {
           "line": 134,
-          "path": "backend/core/mcp_audit_chain.py"
+          "path": "backend/core/kernel/audit_chain.py"
         }
       ],
       "source": "security",
@@ -4582,6 +4602,26 @@
     {
       "evidence": [
         {
+          "line": 32,
+          "path": "backend/core/kernel/audit_chain.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
+          "line": 8,
+          "path": "backend/core/kernel/audit_logger.py"
+        }
+      ],
+      "source": "security",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 21,
           "path": "backend/core/mcp_audit.py"
         }
@@ -4592,28 +4632,8 @@
     {
       "evidence": [
         {
-          "line": 32,
-          "path": "backend/core/mcp_audit_chain.py"
-        }
-      ],
-      "source": "security",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
           "line": 20,
           "path": "backend/core/middleware/security.py"
-        }
-      ],
-      "source": "security",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 8,
-          "path": "backend/core/observability/audit_logger.py"
         }
       ],
       "source": "security",
