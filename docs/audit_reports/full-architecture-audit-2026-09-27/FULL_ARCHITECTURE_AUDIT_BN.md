@@ -282,6 +282,8 @@ Future target:             BIG capability + SMALL kernel
 | Collision-gate | অন্য PR-এর file-এর সাথে overlap হলে BLOCK |
 | Self-merge-gate | নিজের PR নিজে approve/merge করলে BLOCK |
 | Test-guard | test delete/skip/threshold-নামানো হলে BLOCK |
+| Verification-gate | টেস্ট পাস ও রানটাইম ভেরিফিকেশন প্রমাণ ছাড়া PR দিলে BLOCK (No Verification, No Merge) |
+| Dead-code-gate | ৩-স্তর যাচাই (dynamic import, boot smoke, integration test) ছাড়া ফাইল ডিলিট করলে BLOCK |
 | Policy-engine | যে capability/tool/secret তোমার role-এর নয় — access-ই পাবে না |
 | Post-merge watch | merge-এর ১৫ মিনিটে main লাল হলে auto-revert |
 
@@ -291,10 +293,11 @@ Future target:             BIG capability + SMALL kernel
 - আটকে গেলে blocker issue খোলো এবং পরের কাজে যাও — চুপচাপ বসে থেকো না
 - ভুল হলে LESSONS_LEARNED.md-তে এক লাইন যোগ করো — শাস্তি নেই, পুনরাবৃত্তি-প্রতিরোধই লক্ষ্য
 
-## একমাত্র কঠিন নিয়ম (মোট ৩টা, বাকি সব system-এর ভার)
+## একমাত্র কঠিন নিয়ম (মোট ৪টা, বাকি সব system-এর ভার)
 1. সৎ থাকো — কাজ "দেখতে ভালো" না, "সত্যিই ভালো" হতে হবে (test manipulation = সর্বোচ্চ অপরাধ)
-2. পরমাণু থাকো — এক PR এক উদ্দেশ্য
-3. চলমান থাকো — শেষ হলে পরের issue; আটকালে জানাও
+2. যাচাই ছাড়া কোনো কাজ নয় (Verify First) — টেস্ট রান ও রানটাইম ভেরিফিকেশনের প্রত্যক্ষ প্রমাণ ছাড়া কোনো কোড লেখা, মাইগ্রেশন বা ডিলিট করা সম্পূর্ণ নিষিদ্ধ
+3. পরমাণু থাকো — এক PR এক উদ্দেশ্য (Blast radius নিয়ন্ত্রণে প্রতি PR-এ সর্বোচ্চ ১-২ ফাইল স্পর্শ)
+4. চলমান থাকো — শেষ হলে পরের issue; আটকালে জানাও
 
 > সম্পূর্ণ machine-readable rule registry: `.github/constitution/rules.yml` (CI এটা থেকে gate চালায়)।
 > এই file-টি registry থেকে GENERATED — হাতে এডিট করবে না।
@@ -346,8 +349,11 @@ Existing huge system
 | `supreme-node` tower URL config ঠিক/নথিভুক্ত deprecate | Out-of-the-box 404 |
 | AGENTS.md Rule 16/23-এর মিথ্যা enforcement-দাবি সরানো | সংবিধানে মিথ্যা থাকবে না |
 
-## Phase 1 — Dead-code sweep (৩–৫ দিন, ঝুঁকি ~শূন্য, **~5,200 lines**)
-২৬টা verified 0-importer file delete — repo-র নিজের route/module wiring audit + import-graph CI এটা guard করবে।
+## Phase 1 — Dead-code sweep (৩–৫ দিন, কঠোর ভেরিফিকেশন সাপেক্ষে, **~5,200 lines**)
+২৬টা verified 0-importer file delete — **বাধ্যতামূলক ৩-স্তর যাচাই প্রটোকল (Zero False Positive Guard):**
+1. **Dynamic Reflection Check:** কোনো ফাইল শুধুমাত্র স্ট্যাটিক ইমপোর্ট না থাকায় সরাসরি ডিলিট করা যাবে না। স্ট্রিং কনফিগ, `importlib`, প্লাগইন বা ব্যাকগ্রাউন্ড টাস্কে নাম উল্লেখ আছে কি না যাচাই করতে হবে।
+2. **Runtime Boot & Smoke Test:** ফাইলটি সরানোর পর লোকাল ব্যাকএন্ড বুট এবং ন্যূনতম স্মোক টেস্ট গ্রিন হতে হবে।
+3. **Atomic Deletion (Blast Radius Control):** একসাথে সব ফাইল ডিলিট নিষিদ্ধ। সহকর্মী এজেন্টদের ব্রাঞ্চে কনফ্লিক্ট এড়াতে **প্রতি PR-এ সর্বোচ্চ ১–২টি ফাইল** রিটায়ার করা যাবে।
 
 ## Phase 2 — যা PATCH 01/05 শেষ করতে পারেনি (১–২ সপ্তাহ, **~4,000–6,000 lines**)
 - `services/llm` provider-stack বন্ধ → ১৫ caller-কে `brain/model_router`-এ migrate → `providers.py` (852) + legacy LLMGateway delete
@@ -359,7 +365,7 @@ Existing huge system
 - Learning/experience ৯→১ (experience_db + learning/store merge; unified_learning delete সহ) — সবচেয়ে বড় single win
 - Evolution ৫→১, healer-গুলো auto_healer (lifespan-wired) কেন্দ্রে
 - Registry ২৩→~৬, audit ৪→১ (hash-chain কেন্দ্রে), config validator ২→১
-- Memory-র M3 বাকি কাজ: **facade-first mandate** (নতুন caller facade ছাড়া import করলে kernel-allowlist gate BLOCK করবে), ৩ SQLite fallback → ১, RPC zoo-র বর্জিত RPC-গুলোর caller শূন্য করে খারিজ
+- Memory-র M3 বাকি কাজ: **facade-first mandate** (নতুন caller facade ছাড়া import করলে kernel-allowlist gate BLOCK করবে), **Polymorphic Reader নিশ্চিতকরণ** (পুরোনো ৩৮৪ ও ১৫৩৬ ডাইমেনশনের ডাটা পড়ার অ্যাডাপ্টার নিশ্চিত ছাড়া কোনো রাইটার ডিলিট নয়), ৩ SQLite fallback → ১, RPC zoo-র বর্জিত RPC-গুলোর caller শূন্য করে খারিজ
 - Browser: `browser_routes.py`-র ৩টা unique endpoint package-এ port → পুরো file retire; double-mount একটাতে নামানো (role-aware সিদ্ধান্ত); ২য় BrowserAgent/WebScraper/stealth merge; mcp_adapters+vault archive
 
 ## Phase 4 — Kernel-এ capability ফেরত আনা (চলমান, structural)
@@ -380,12 +386,21 @@ Existing huge system
 - Mesh-vs-Tower উপস্থিতি/কাজ: **mesh lease model জেতে** (product-প্রমাণিত); Tower heartbeat নিজে mesh lease পড়বে
 - GitHub/Supabase/Telegram-এর Python duplicate adapter → dormant তালিকায় (owner-review সিদ্ধান্ত বহাল)
 
-## Verification discipline (প্রতিটা phase-এ, বাধ্যতামূলক)
-1. Pre: route-inventory + import-graph baseline capture
-2. Post-migrate: full CI + merge train batch সবুজ
-3. Post-delete: **একই baseline আবার তুলনা** — যে path delete হয়েছে তার caller শূন্য প্রমাণ
-4. LESSONS_LEARNED.md-তে এক লাইন
-5. সব পরিবর্তন atomic PR-এ (১ issue = ১ PR) — নিজেদেরই সংবিধান মেনে
+---
+
+## 🛡️ Verification Discipline: "No Verification, No Code, No Delete" (বাধ্যতামূলক ৬ দফা প্রটোকল)
+
+> **যেকোনো এজেন্টের জন্য অলঙ্ঘনীয় নীতি:**  
+> কোনো অনুমান বা অনুভূতির ওপর ভিত্তি করে কোড লেখা, মাইগ্রেশন বা ডিলিট করা সম্পূর্ণ নিষিদ্ধ। প্রতিটি পদক্ষেপ অবশ্যই পরীক্ষিত ও প্রমাণিত হতে হবে।
+
+1. **Pre-Action Baseline Capture:** কাজ শুরুর আগেই সংশ্লিষ্ট সাবসিস্টেমের রুট ইনভেন্টরি, ইমপোর্ট গ্রাফ এবং টেস্ট স্ট্যাটাস ক্যাপচার করে লক করা।
+2. **Zero Blind Deletion (ডায়নামিক ভেরিফিকেশন):** কোনো ফাইল স্ট্যাটিক অ্যানালাইসিসে 0-importer দেখালেও ডিলিট করা যাবে না যতক্ষণ না:
+   - স্ট্রিং/কনফিগ রেফারেন্স সার্চ ক্লিন প্রমাণ হয়
+   - লোকাল অ্যাপ বুট টেস্ট এবং সংশ্লিষ্ট টেস্ট স্যুট গ্রিন হয়।
+3. **Polymorphic Backward Compatibility:** ডাটাবেস বা মেমোরি রাইটার পরিবর্তনের আগে অবশ্যই বিদ্যমান ডাটা রিড করার অ্যাডাপ্টার নিশ্চিত করতে হবে, যাতে পুরোনো মেমোরি ডেটা লস না হয়।
+4. **Atomic Blast Radius (Peer Safety):** সহকর্মী এজেন্টদের ব্রাঞ্চ কনফ্লিক্ট মুক্ত রাখতে প্রতিটি PR-এ **সর্বোচ্চ ১–২টি ফাইল** রিফ্যাক্টর/ডিলিট করা যাবে। কোনো মেগা ডিলিট PR এলাউড নয়।
+5. **Post-Action Double Verification:** কোড পরিবর্তনের পর সম্পূর্ণ CI গ্রিন হতে হবে এবং ডিলিট করা পাথের কলার শূন্য কি না তা স্ক্রিপ্ট দিয়ে পুনঃযাচাই করতে হবে।
+6. **No Verification, No Merge (স্বয়ংক্রিয় গেট):** PR ডেসক্রিপশনে টেস্ট রান ও ভেরিফিকেশনের প্রত্যক্ষ লগ ও প্রমাণ না থাকলে কোনো PR মার্জ হবে না।
 
 ---
 
