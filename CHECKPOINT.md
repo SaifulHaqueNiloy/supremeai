@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-28 00:27 UTC
+- **Date:** 2026-09-28 00:55 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,22 +10,17 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/tools/mcp/mcp_server.py`
-  - `backend/core/orchestration/handoff_schema.py`
-  - `backend/api/routes/webhooks_github.py`
-  - `.github/constitution/rules.yml`
-  - `scripts/agents/acquire_role_slot.py`
-  - `scripts/ci/cleanup_stale_branches.py`
+  - `mcp.json`
   - `AGENTS.md`
+  - `.github/constitution/rules.yml`
   - `CHECKPOINT.md`
-  - `backend/services/knowledge_qa.py`
-  - `.github/workflows/auto-delete-closed-pr-branch.yml`
-  - `backend/models/handoff_event.py`
-  - `scripts/ci/atomic_claim.sh`
+  - `scripts/agents/mcp_tower_client.py`
+  - `scripts/agents/acquire_role_slot.py`
+  - `.agents/mcp_config.json`
   - `tests/test_acquire_role_slot.py`
-  - `backend/tests/api/routes/test_webhooks_github.py`
-  - `backend/api/routes/browser/__init__.py`
-  - `scripts/ci/generate_agents_md.py`
+- `backend/tests/api/routes/test_webhooks_github.py`
+- `backend/api/routes/browser/__init__.py`
+- `scripts/ci/generate_agents_md.py`
 - `backend/core/kernel/dispatcher.py`
 - `backend/tests/api/routes/commandcenter/test_secure.py`
 - `backend/tests/api/routes/commandcenter/test_system.py`
