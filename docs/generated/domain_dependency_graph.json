@@ -322,16 +322,6 @@
     {
       "evidence": [
         {
-          "line": 47,
-          "path": "backend/core/agent_mailbox.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
           "line": 5,
           "path": "backend/core/agents/framework/crewai_agents.py"
         }
@@ -1602,16 +1592,6 @@
     {
       "evidence": [
         {
-          "line": 82,
-          "path": "scripts/agents/dispatch_task_all_agents.py"
-        }
-      ],
-      "source": "execution",
-      "target": "ai"
-    },
-    {
-      "evidence": [
-        {
           "line": 24,
           "path": "backend/api/routes/scheduled_tasks.py"
         }
@@ -2822,7 +2802,7 @@
     {
       "evidence": [
         {
-          "line": 56,
+          "line": 59,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2832,7 +2812,7 @@
     {
       "evidence": [
         {
-          "line": 61,
+          "line": 64,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2842,7 +2822,7 @@
     {
       "evidence": [
         {
-          "line": 67,
+          "line": 70,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2852,7 +2832,7 @@
     {
       "evidence": [
         {
-          "line": 99,
+          "line": 105,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2862,7 +2842,7 @@
     {
       "evidence": [
         {
-          "line": 148,
+          "line": 154,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2872,7 +2852,7 @@
     {
       "evidence": [
         {
-          "line": 153,
+          "line": 159,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2882,7 +2862,7 @@
     {
       "evidence": [
         {
-          "line": 161,
+          "line": 167,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2892,7 +2872,7 @@
     {
       "evidence": [
         {
-          "line": 221,
+          "line": 227,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2902,7 +2882,7 @@
     {
       "evidence": [
         {
-          "line": 310,
+          "line": 316,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2912,7 +2892,7 @@
     {
       "evidence": [
         {
-          "line": 361,
+          "line": 367,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2922,7 +2902,7 @@
     {
       "evidence": [
         {
-          "line": 389,
+          "line": 395,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -2932,7 +2912,7 @@
     {
       "evidence": [
         {
-          "line": 442,
+          "line": 448,
           "path": "backend/memory/supabase_store.py"
         }
       ],
@@ -4302,7 +4282,7 @@
     {
       "evidence": [
         {
-          "line": 9,
+          "line": 10,
           "path": "backend/scout/policy.py"
         }
       ],
@@ -4942,7 +4922,7 @@
     {
       "evidence": [
         {
-          "line": 28,
+          "line": 27,
           "path": "backend/core/security/codegen_gate.py"
         }
       ],

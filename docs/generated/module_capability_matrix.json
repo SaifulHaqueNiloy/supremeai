@@ -437,6 +437,34 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
+      "path": "backend/_archive/batch-7/resource_manager.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-7/secure_tunnel.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-7/test_resource_manager.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/_archive/batch-7/test_secure_tunnel.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
       "path": "backend/adapters/__init__.py"
     },
     {
@@ -1083,6 +1111,7 @@
     },
     {
       "capability_signals": [
+        "capability",
         "mcp"
       ],
       "classification": "dormant_or_dynamic",
@@ -2762,15 +2791,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/api/routes/mesh_mailbox.py"
-    },
-    {
-      "capability_signals": [
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/api/routes/mesh_tasks.py"
     },
     {
@@ -3588,13 +3608,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/byoc/resource_manager.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/conftest.py"
     },
     {
@@ -3741,16 +3754,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/core/agent_heartbeat.py"
-    },
-    {
-      "capability_signals": [
-        "mcp",
-        "memory"
-      ],
-      "classification": "dormant_or_dynamic",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/core/agent_mailbox.py"
     },
     {
       "capability_signals": [
@@ -9122,13 +9125,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/p2p/secure_tunnel.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/pipelines/__init__.py"
     },
     {
@@ -11011,15 +11007,6 @@
     },
     {
       "capability_signals": [
-        "memory"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/api/routes/test_mesh_mailbox.py"
-    },
-    {
-      "capability_signals": [
         "dispatch",
         "memory"
       ],
@@ -11608,13 +11595,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/byoc/test_container_orchestrator.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/byoc/test_resource_manager.py"
     },
     {
       "capability_signals": [],
@@ -13322,6 +13302,13 @@
       "path": "backend/tests/core/test_nats_messaging.py"
     },
     {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/core/test_no_silent_exception_swallow.py"
+    },
+    {
       "capability_signals": [
         "health"
       ],
@@ -14369,13 +14356,6 @@
       "classification": "test",
       "entrypoints": [],
       "kind": "py",
-      "path": "backend/tests/p2p_tests/test_secure_tunnel.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
       "path": "backend/tests/rag/test_hybrid_retriever.py"
     },
     {
@@ -14673,6 +14653,13 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/scripts/test_resolve_production_targets.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "test",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "backend/tests/scripts/test_validate_pr_metadata.py"
     },
     {
       "capability_signals": [],
@@ -15484,15 +15471,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "backend/tests/test_supreme_kernel.py"
-    },
-    {
-      "capability_signals": [
-        "execute"
-      ],
-      "classification": "test",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tests/test_swarm_and_ephemeral.py"
     },
     {
       "capability_signals": [
@@ -16685,16 +16663,6 @@
       "path": "backend/tools/ensemble_router.py"
     },
     {
-      "capability_signals": [
-        "capability",
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tools/ephemeral_synthesizer.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -16959,7 +16927,8 @@
       "capability_signals": [
         "capability",
         "dispatch",
-        "mcp"
+        "mcp",
+        "memory"
       ],
       "classification": "adapter",
       "entrypoints": [
@@ -23442,7 +23411,8 @@
       "capability_signals": [
         "dispatch",
         "execute",
-        "health"
+        "health",
+        "memory"
       ],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
@@ -23483,6 +23453,15 @@
       ],
       "kind": "py",
       "path": "scripts/agents/priority_queue_ledger.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "dormant_or_dynamic",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/agents/validate_pr_metadata.py"
     },
     {
       "capability_signals": [
@@ -24384,6 +24363,18 @@
     },
     {
       "capability_signals": [
+        "capability",
+        "memory"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/create_group_issue.py"
+    },
+    {
+      "capability_signals": [
         "mcp"
       ],
       "classification": "human_review",
@@ -24536,6 +24527,15 @@
       ],
       "kind": "py",
       "path": "scripts/ci/generate_topology_mermaid.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/ci/group_closeout_janitor.py"
     },
     {
       "capability_signals": [],
@@ -25119,7 +25119,8 @@
     },
     {
       "capability_signals": [
-        "dispatch"
+        "dispatch",
+        "memory"
       ],
       "classification": "dormant_or_dynamic",
       "entrypoints": [],
