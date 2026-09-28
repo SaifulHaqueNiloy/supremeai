@@ -169,3 +169,161 @@ customer_ux:
     severity: INFO
     fixable: false
     category: ux
+
+# ============================================================================
+# AGENTS.md v2 — Machine-Readable Governance Registry (Issue #2251, Phase 5)
+# ============================================================================
+# This section is the single source of truth for:
+#   1. AGENTS.md generation  -> scripts/ci/generate_agents_md.py (CI drift-checked)
+#   2. Automated System Gates -> .github/scripts/constitution/gates.py
+#
+# Edit rules HERE. Never edit generated AGENTS.md by hand.
+# Rule IDs below the tree are immutable; severities change only with
+# explicit governance approval (see header note above).
+
+constitution:
+  name: "SupremeAI — AGENTS.md v2 (Universal Operating Constitution & Agent Bootstrap)"
+  rules_version: "2.1"
+  model: "kite-and-spool"
+  philosophy_quote: "যতই ঘুড়ি উড়াও রাতে, নাটাই তো আমার হাতে।"
+  philosophy_line: "Agent-কে ঘুড়ির মতো স্বাধীনভাবে উড়তে দাও; কিন্তু নাটাই সবসময় SupremeAI Admin / Control Plane-এর হাতে থাকবে।"
+  benefit_principle: "The 101% Benefit Principle: সমস্যা পেলে শুধু কোড ফিক্স করা ১% লাভ; কিন্তু সেই সমস্যা ভবিষ্যতে আর কখনোই যেন না ঘটতে পারে তা রুট লেভেলে বন্ধ করা ১০১% লাভ।"
+  separation_note: "কন্সটিটিউশনাল রুলস (Rules) হলো এজেন্টের কাজের অলঙ্ঘনীয় বাউন্ডারি যা ভুলের রুট-কজ ধ্বংস করে (১০১% লাভ)। সিস্টেম আর্কিটেকচার (Cascade Hold, Rollup Train, Dynamic Queue Shift, DB Schemas) থাকে docs/architecture/ এবং সিআই স্ক্রিপ্টে।"
+
+living_protocols:
+  slot_isolation:
+    title: "1. Slot Isolation"
+    rule: "১ এজেন্ট = ১ স্লট (acquire_role_slot.py)। ব্রাঞ্চ নেমে অবশ্যই ইস্যু নম্বর থাকবে: <lane>-<N>-<issue#>-<slug>। অন্যের স্লট বা ব্রাঞ্চে হাত দেওয়া বা push করা নিষিদ্ধ।"
+  atomic_claim:
+    title: "2. Atomic Claim Lock & File Declaration"
+    rule: "কাজ শুরুর আগে atomic_claim.sh দিয়ে ইস্যু ক্লেইম করো এবং কমেন্টে 'Touching files: file1, file2' ঘোষণা করো। নো ক্লেইম, নো কোড।"
+  verify_first:
+    title: "3. Verify First (3-Tier Verification)"
+    rule: "অনুমানে ফাইল ডিলিট বা এডিট নিষিদ্ধ। পরিবর্তনের আগে ও পরে ৩ স্তর যাচাই আবশ্যক: (১) Reflection check (grep), (২) Boot smoke test (python -c 'import main'), (৩) Pytest। টেস্ট ম্যানিপুলেশন (delete/skip/mock) কঠোরভাবে নিষিদ্ধ (Rule 21)।"
+  atomic_blast:
+    title: "4. Atomic Blast Radius"
+    rule: "১ Issue = ১ Branch = ১ PR (সর্বোচ্চ ১–২ ফাইল)। ক্লেইম করা স্কোপের বাইরে ড্রাইভ-বাই রিফ্যাক্টরিং নিষিদ্ধ।"
+  has_pr_mandate:
+    title: "5. Mandatory 'has-pr' Label"
+    rule: "PR খোলার সাথে সাথেই gh issue edit <id> --add-label 'has-pr' চালাতে হবে। এটি ডুপ্লিকেট PR তৈরি হওয়া রুট থেকে বন্ধ করে (Rule 24)।"
+  dual_state_loop:
+    title: "6. The Dual-State Game (Solver ➔ Peer Reviewer)"
+    rule: "কখনো অলস বসে থাকা যাবে না। লেনে বা অ্যাক্টিভ গ্রুপে আনক্লেইমড কাজ থাকলে সলভার (State A); সব কাজ ক্লেইমড থাকলে সহকর্মীদের ওপেন PR অডিটকারী পিয়ার রিভিউয়ার (State B) (Rule 28)।"
+
+bootstrap:
+  - slot: "python scripts/agents/acquire_role_slot.py --role <lane>"
+    note: "নিজের ডেডিকেটেড স্লট নাও"
+  - memory: "python scripts/agents/agent_solution_memory.py search --query '<problem>'"
+    note: "কালেক্টিভ মেমোরিতে অতীত সমাধান খোঁজো"
+  - claim: "export BRANCH_NAME='<lane>-<N>-<issue#>-<slug>' && ./scripts/ci/atomic_claim.sh <issue#> <agent>"
+    note: "ইস্যু ক্লেইম ও ফাইল ঘোষণা করো"
+  - verify: "3-Tier Verification (Reflection -> Boot Smoke -> Pytest)"
+    note: "কোনো টেস্ট ভাঙা বা ডিলিট করা নিষিদ্ধ"
+  - pr: "gh pr create ... && gh issue edit <issue#> --add-label 'has-pr'"
+    note: "PR খুলে অবিলম্বে has-pr লেবেল দাও"
+
+# Automated System Gates — system enforcement (Rule 22, #2251).
+# wired=true  → an active CI job BLOCKS on violation today.
+# wired=false → registered contract; enforcement lands in a follow-up issue.
+gates:
+  lease_gate:
+    title: "Lease Gate"
+    blocks_when: "PR head branch লেখকের leased slot-এর বাইরে (bot slot-mismatch), বা mesh lease মেয়াদ শেষ"
+    wired: true
+    workflow: "system-gates.yml"
+  verification_gate:
+    title: "Verification Gate"
+    blocks_when: "PR description-এ Test Evidence সেকশন নেই (টেস্ট লগ/কমান্ড আউটপুট ছাড়া PR BLOCK)"
+    wired: true
+    workflow: "system-gates.yml"
+  scope_gate:
+    title: "Scope Gate"
+    blocks_when: "claim-এ declare করা 'Touching files:'-এর বাইরের ফাইল PR-এ বদলালে BLOCK"
+    wired: true
+    workflow: "system-gates.yml"
+  collision_gate:
+    title: "Collision Gate"
+    blocks_when: "অন্য open PR-এর ফাইলের সাথে direct overlap হলে BLOCK"
+    wired: true
+    workflow: "pr-gate.yml (check-collisions, strict mode #2002)"
+  self_merge_gate:
+    title: "Self-Merge Gate"
+    blocks_when: "নিজের PR নিজে approve/merge করলে BLOCK"
+    wired: false
+    enforced_by: "branch protection + pr-helper review (follow-up issue)"
+  test_guard_gate:
+    title: "Test Guard"
+    blocks_when: "test delete/skip/threshold-নামানো হলে BLOCK"
+    wired: false
+    enforced_by: "constitution audit engine extension (follow-up issue)"
+  post_merge_watch:
+    title: "Post-Merge Watch"
+    blocks_when: "merge-এর ১৫ মিনিটের মধ্যে main লাল হলে auto-revert"
+    wired: false
+    enforced_by: "merge-train land job (follow-up issue)"
+
+review_protocol:
+  rubric:
+    - pillar: "1. Philosophy"
+      check: "ঘুড়ি ও নাটাই নীতি মেনেছে কি না? (Zero harm to project/peers)"
+    - pillar: "2. Real Benefit"
+      check: "সিস্টেমে বাস্তব উন্নতি হয়েছে কি না? (LOC হ্রাস / বাগ ফিক্স / নির্ভরযোগ্যতা বৃদ্ধি)"
+    - pillar: "3. Zero Regression"
+      check: "কোনো টেস্ট ডিলিট, স্কিপ বা ফেইক মক করা হয়নি তো? (Rule 21)"
+    - pillar: "4. Scope Narrowness"
+      check: "ক্লেইম করা স্কোপের বাইরে ড্রাইভ-বাই রিফ্যাক্টরিং বা বাড়তি কোড ঢুকেছে কি না?"
+
+# The 3 hard rules that remain agent-facing (everything else is system's burden).
+hard_rules:
+  honesty: "সৎ থাকো — কাজ 'দেখতে ভালো' না, 'সত্যিই ভালো' হতে হবে (test manipulation = সর্বোচ্চ অপরাধ, ১০১% বেনিফিট)"
+  atomicity: "পরমাণু থাকো — এক PR এক উদ্দেশ্য (১ Issue = ১ Branch = ১ PR)"
+  continuity: "চলমান থাকো — সলভার বা পিয়ার রিভিউয়ার মোডে কাজ করো, কখনো অলস বসে থেকো না"
+
+freedoms:
+  - "সমাধানের approach নিজে বেছে নাও — architecture, pattern, library (stack অগ্রাধিকার মানলে ভালো, বাধ্য না)"
+  - "যেকোনো unclaimed issue চেয়ে নাও (lane-অগ্রাধিকার advisory, আটকানো নয়)"
+  - "আটকে গেলে blocker issue খোলো এবং পরের কাজে যাও — চুপচাপ বসে থেকো না"
+  - "ভুল হলে LESSONS_LEARNED.md-তে এক লাইন যোগ করো — শাস্তি নেই, পুনরাবৃত্তি-প্রতিরোধই লক্ষ্য (১০১% লাভ)"
+
+# Scope Gate policy (parsed by gates.py — do not rename keys).
+scope_policy:
+  declaration_marker: "Touching files:"
+  undeclared_files: block        # block | warn
+  missing_declaration: block     # claim ছাড়া code = Rule 2 লঙ্ঘন
+  advisory_authors: [OWNER, MEMBER, COLLABORATOR]   # human maintainers get warn-only
+  # Mechanical regen artifacts every PR may carry without declaration:
+  allowlist:
+    - "docs/generated/**"
+    - "backend/openapi.json"
+    - "**/package-lock.json"
+    - "**/bun.lock"
+    - "**/bun.lockb"
+    - "**/uv.lock"
+    - "**/*.sarif"
+    - "ci-reports/**"
+
+# Verification Gate policy.
+verification_policy:
+  min_evidence_chars: 40
+  section_names: ["Test Evidence", "Tests", "পরীক্ষা", "টেস্ট এভিডেন্স"]
+  output_markers:
+    ["passed", "PASSED", "ok.", "OK (", " All tests passed", "✓", "✔", "pytest", "vitest", "unittest", "bun test"]
+
+# Lease Gate policy.
+lease_policy:
+  bot_author_regex: '^supremeai-([a-z0-9]+)-([0-9]+)-bot(\[bot\])?$'
+  bot_branch_regex: '^([a-z0-9]+)-([0-9]+)([-_.].+)?$'
+  exempt_authors: ["dependabot[bot]", "github-actions[bot]", "renovate[bot]"]
+  docs_branch_prefix: "docs/"
+  mesh_advisory_env: "SUPREME_MESH_URL"
+
+# Governance archive (Phase 5 — prose rule systems absorbed into this registry).
+archive:
+  batch: "docs/archive/agent-rule-systems-2026-09"
+  absorbed:
+    - path: ".clinerules"
+      reason: "Legacy IDE prompt system — speckit workflow copies duplicate .specify/; master_prompt prose superseded by this registry"
+    - path: ".lingma"
+      reason: "Legacy IDE rule dir — single agents.md duplicate of AGENTS.md"
+    - path: ".agents/rules"
+      reason: "Legacy agent rule prose — superseded by gates above + AGENTS.md v2"

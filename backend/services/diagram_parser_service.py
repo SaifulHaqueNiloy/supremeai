@@ -24,10 +24,10 @@ from typing import Any
 
 from fastapi import APIRouter
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.logging_config import logger
 from services.config_service import ConfigService
-from services.llm.llm_router import LLMRouter
 
 # ── Constants ────────────────────────────────────────────────────────────────
 DIAGRAM_CACHE_TTL = 3600  # 1 hour
@@ -274,8 +274,8 @@ class VisionAnalyzer:
     Extracted components and relationships from screenshots.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm_router = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm_router = llm_router or ModelRouter()
         self.cache = get_cache()
 
     def _cache_key(self, image_path: str) -> str:
@@ -308,8 +308,12 @@ class VisionAnalyzer:
         # Encode image
         import base64
 
+        # NOTE (issue #2249): the base64 payload previously fed the legacy
+        # `images=[...]` kwarg, which NO provider in the retired services/llm
+        # stack ever consumed (payloads were text-only). The read is kept for
+        # exact file-validation parity; the kwarg is no longer forwarded.
         with open(image_path, "rb") as f:
-            base64_image = base64.b64encode(f.read()).decode("utf-8")
+            base64_image = base64.b64encode(f.read()).decode("utf-8")  # noqa: F841 — see note above
 
         # Build prompt based on diagram type
         prompts = {
@@ -337,14 +341,17 @@ class VisionAnalyzer:
 
         try:
             max_tokens = await ConfigService.get_config(None, "llm_max_tokens_diagram", 1500)
-            result = await self.llm_router.route(
+            result = await self.llm_router.async_route_and_generate(
                 prompt=prompt,
                 task_type="vision",
                 max_tokens=max_tokens,
-                images=[{"base64": base64_image, "mime": "image/png"}],
+                # NOTE (issue #2249): the legacy `images=[...]` kwarg was dropped
+                # here — git archaeology on the retired providers.py confirms NO
+                # provider ever consumed it (payload built text-only parts), so
+                # removing it is a zero-capability-change cleanup.
             )
 
-            text = result.get("content", "") if isinstance(result, dict) else ""
+            text = result.get("text", "") if isinstance(result, dict) else ""
             # Clean JSON
             text = re.sub(r"^```(?:json)?\s*", "", text.strip())
             text = re.sub(r"\s*```$", "", text)
@@ -463,8 +470,8 @@ class DiagramParserService:
         # Build approximate diagram representation
         diagram_description = self._build_description(nodes, edges)
 
-        # Generate via LLM
-        llm = LLMRouter()
+        # Generate via LLM (Phase-2.1 #2249: canonical facade)
+        llm = ModelRouter()
         prompt = (
             f"Generate {iac_tool} code for {provider} based on this architecture: "
             f"{diagram_description}. Return only valid {iac_tool} code, no markdown."
@@ -472,7 +479,7 @@ class DiagramParserService:
 
         try:
             max_tokens = await ConfigService.get_config(None, "llm_max_tokens_diagram", 2000)
-            result = await llm.route(
+            result = await llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="generation",
                 max_tokens=max_tokens,
@@ -481,7 +488,7 @@ class DiagramParserService:
                 "status": "success",
                 "iac_tool": iac_tool,
                 "provider": provider,
-                "code": result.get("content", ""),
+                "code": result.get("text", ""),
             }
         except Exception as e:
             return {"status": "error", "error": str(e)}

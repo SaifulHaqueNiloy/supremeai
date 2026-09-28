@@ -14,18 +14,18 @@
     "classification priority: deprecated > admin-only > internal > user-facing > api-only > orphaned"
   ],
   "totals": {
-    "backend_routes": 861,
+    "backend_routes": 859,
     "frontend_unique_refs": 145,
-    "routes_with_frontend_consumer": 300,
+    "routes_with_frontend_consumer": 296,
     "unmounted_routes": 0,
     "orphan_routes": 0,
     "orphan_families": 0,
     "api_only_routes": 300,
     "api_only_families": 158,
     "by_classification": {
-      "user-facing": 170,
-      "admin-only": 347,
-      "internal": 40,
+      "user-facing": 171,
+      "admin-only": 343,
+      "internal": 41,
       "deprecated": 4,
       "api-only": 300,
       "orphaned": 0
@@ -3422,22 +3422,6 @@
     },
     {
       "method": "POST",
-      "path": "/api/browser/ai-action",
-      "declared": "/api/browser/ai-action",
-      "deprecated": false,
-      "router_file": "backend/api/routes/browser_routes.py",
-      "module": "api.routes.browser_routes",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "browser_ai_action",
-      "frontend_consumers": [
-        "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
-      ],
-      "classification": "admin-only"
-    },
-    {
-      "method": "POST",
       "path": "/api/browser/automation/actions",
       "declared": "/api/browser/automation/actions",
       "deprecated": false,
@@ -3624,36 +3608,6 @@
       "classification": "user-facing"
     },
     {
-      "method": "POST",
-      "path": "/api/browser/browse-session",
-      "declared": "/api/browser/browse-session",
-      "deprecated": false,
-      "router_file": "backend/api/routes/browser_routes.py",
-      "module": "api.routes.browser_routes",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "save_browse_session",
-      "frontend_consumers": [
-        "frontend/src/components/admin/admin-browser/CrownJewelBrowser.tsx"
-      ],
-      "classification": "admin-only"
-    },
-    {
-      "method": "GET",
-      "path": "/api/browser/browse-sessions",
-      "declared": "/api/browser/browse-sessions",
-      "deprecated": false,
-      "router_file": "backend/api/routes/browser_routes.py",
-      "module": "api.routes.browser_routes",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "get_browse_sessions",
-      "frontend_consumers": [],
-      "classification": "admin-only"
-    },
-    {
       "method": "GET",
       "path": "/api/browser/credentials",
       "declared": "/api/browser/credentials",
@@ -3782,14 +3736,14 @@
       "path": "/api/browser/health",
       "declared": "/api/browser/health",
       "deprecated": false,
-      "router_file": "backend/api/routes/browser_routes.py",
-      "module": "api.routes.browser_routes",
+      "router_file": "backend/api/routes/browser/_health.py",
+      "module": "api.routes.browser._health",
       "registry_prefix": "",
       "mounted": true,
-      "is_admin": true,
+      "is_admin": false,
       "operation": "browser_service_health",
       "frontend_consumers": [],
-      "classification": "admin-only"
+      "classification": "internal"
     },
     {
       "method": "GET",
@@ -3869,35 +3823,19 @@
     },
     {
       "method": "POST",
-      "path": "/api/browser/screenshot",
-      "declared": "/api/browser/screenshot",
-      "deprecated": false,
-      "router_file": "backend/api/routes/browser_routes.py",
-      "module": "api.routes.browser_routes",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "browser_screenshot",
-      "frontend_consumers": [
-        "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
-      ],
-      "classification": "admin-only"
-    },
-    {
-      "method": "POST",
       "path": "/api/browser/screenshots",
       "declared": "/api/browser/screenshots",
       "deprecated": false,
-      "router_file": "backend/api/routes/browser_routes.py",
-      "module": "api.routes.browser_routes",
+      "router_file": "backend/api/routes/browser/_crown_jewel.py",
+      "module": "api.routes.browser._crown_jewel",
       "registry_prefix": "",
       "mounted": true,
-      "is_admin": true,
+      "is_admin": false,
       "operation": "save_screenshot_to_gallery",
       "frontend_consumers": [
         "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
       ],
-      "classification": "admin-only"
+      "classification": "user-facing"
     },
     {
       "method": "POST",
@@ -3914,22 +3852,6 @@
         "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
       ],
       "classification": "user-facing"
-    },
-    {
-      "method": "POST",
-      "path": "/api/browser/security-scan",
-      "declared": "/api/browser/security-scan",
-      "deprecated": false,
-      "router_file": "backend/api/routes/browser_routes.py",
-      "module": "api.routes.browser_routes",
-      "registry_prefix": "",
-      "mounted": true,
-      "is_admin": true,
-      "operation": "browser_security_scan",
-      "frontend_consumers": [
-        "frontend/src/components/admin/admin-browser/useBrowserActions.ts"
-      ],
-      "classification": "admin-only"
     },
     {
       "method": "POST",
@@ -8835,6 +8757,48 @@
       "frontend_consumers": [
         "frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx"
       ],
+      "classification": "admin-only"
+    },
+    {
+      "method": "POST",
+      "path": "/api/v1/external-agents/jobs",
+      "declared": "/api/v1/external-agents/jobs",
+      "deprecated": false,
+      "router_file": "backend/api/routes/external_agents_admin.py",
+      "module": "api.routes.external_agents_admin",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "delegate_job",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "DELETE",
+      "path": "/api/v1/external-agents/jobs/:param",
+      "declared": "/api/v1/external-agents/jobs/{job_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/external_agents_admin.py",
+      "module": "api.routes.external_agents_admin",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "cancel_job",
+      "frontend_consumers": [],
+      "classification": "admin-only"
+    },
+    {
+      "method": "GET",
+      "path": "/api/v1/external-agents/jobs/:param",
+      "declared": "/api/v1/external-agents/jobs/{job_id}",
+      "deprecated": false,
+      "router_file": "backend/api/routes/external_agents_admin.py",
+      "module": "api.routes.external_agents_admin",
+      "registry_prefix": "",
+      "mounted": true,
+      "is_admin": true,
+      "operation": "get_job",
+      "frontend_consumers": [],
       "classification": "admin-only"
     },
     {

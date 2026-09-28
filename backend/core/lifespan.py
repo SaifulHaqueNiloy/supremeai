@@ -80,14 +80,8 @@ async def app_lifespan(app):
             style_learner_singleton.hydrate()
         except Exception as sl_err:
             logger.debug("style_learner hydrate skipped: %s", sl_err)
-        try:
-            # Issue #451: previously-persisted KnowledgeNodes are reloaded so
-            # "learned knowledge" survives restarts (was `_persist() == pass`).
-            from core.unified_learning import get_learning_engine
-
-            await get_learning_engine().load_persisted()
-        except Exception as ul_err:
-            logger.debug("unified_learning load_persisted skipped: %s", ul_err)
+        # বাংলা (#2259 D1): unified_learning KnowledgeNode hydration হুক বাদ —
+        # ইঞ্জিন retired; learned_knowledge durable-state-এর কোনো reader ছিল না।
         _state_store.log_banner()
     except Exception as ss_err:
         logger.warning("Durable state store hydration failed (mirror-only mode): %s", ss_err)

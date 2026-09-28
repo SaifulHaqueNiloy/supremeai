@@ -631,6 +631,28 @@ class CascadeMemoryService:
         return [{"file": file_path, "summary": summary, "vector": embedding}]
 
     def _cosine_similarity(self, a: list[float], b: list[float]) -> float:
+        # Dimension-safe cosine (#2257): the fallback Python ranking path
+        # deserializes stored embeddings that may predate the vector(384)
+        # typmod contract (e.g. legacy rows in side stores). The previous
+        # implementation used zip(a, b, strict=False), which silently
+        # truncated the DOT PRODUCT to the shorter length while the NORMS
+        # ran over full lengths — mathematically wrong scores with no
+        # error and no log (a silent ranking corruption). Policy now:
+        # score over the deterministic min-length prefix (legacy-tolerant,
+        # best-effort) and make every mismatch OBSERVABLE via a warning.
+        # Re-encoding to the canonical 384-dim contract is the real fix:
+        # scripts/migrate_embeddings.py.
+        if len(a) != len(b):
+            logger.warning(
+                f"cosine similarity dimension mismatch: {len(a)} vs {len(b)} dims — "
+                f"scoring over the {min(len(a), len(b))}-dim prefix (legacy-tolerant mode; "
+                "re-encode via scripts/migrate_embeddings.py)"
+            )
+        dim = min(len(a), len(b))
+        if dim == 0:
+            return 0.0
+        a = a[:dim]
+        b = b[:dim]
         dot = sum(x * y for x, y in zip(a, b, strict=False))
         norm_a = math.sqrt(sum(x * x for x in a))
         norm_b = math.sqrt(sum(y * y for y in b))

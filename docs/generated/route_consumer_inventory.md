@@ -4,8 +4,8 @@
 
 | metric | value |
 |---|---|
-| backend routes | 861 |
-| routes with frontend consumer | 300 |
+| backend routes | 859 |
+| routes with frontend consumer | 296 |
 | unique frontend `/api/...` refs | 145 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
@@ -17,9 +17,9 @@
 
 | classification | count | meaning |
 |---|---|---|
-| `user-facing` | 170 | frontend consumer matched |
-| `admin-only` | 347 | /admin path, admin router file or ALL_ROUTERS is_admin |
-| `internal` | 40 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
+| `user-facing` | 171 | frontend consumer matched |
+| `admin-only` | 343 | /admin path, admin router file or ALL_ROUTERS is_admin |
+| `internal` | 41 | internal namespace (internal/ops/health/metrics/webhook/cdc/kernel/system) |
 | `deprecated` | 4 | marked deprecated (docstring/decorator/name/path) |
 | `api-only` | 300 | family allowlisted in `scripts/audit/api_only_routes.txt` — owner to prune as wiring lands (#480 steps 3-4) |
 | `orphaned` | 0 | no consumer and no classification — CI fails on NEW orphans |
@@ -411,7 +411,6 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/browser/activity/recent` | `backend/api/routes/browser/_legacy_status.py` | api-only | NONE |
 | PUT | `/api/browser/admin/policy` | `backend/api/routes/browser/_policy.py` | admin-only | NONE |
 | POST | `/api/browser/ai-action` | `backend/api/routes/browser/_crown_jewel.py` | user-facing | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
-| POST | `/api/browser/ai-action` | `backend/api/routes/browser_routes.py` | admin-only | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
 | POST | `/api/browser/automation/actions` | `backend/api/routes/browser/_automation.py` | user-facing | `frontend/src/services/browserService.test.ts`, `frontend/src/services/browserService.ts` |
 | POST | `/api/browser/automation/pause` | `backend/api/routes/browser/_automation.py` | api-only | NONE |
 | POST | `/api/browser/automation/resume` | `backend/api/routes/browser/_automation.py` | api-only | NONE |
@@ -424,8 +423,6 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/browser/autonomous/run` | `backend/api/routes/browser/_cognitive.py` | api-only | NONE |
 | POST | `/api/browser/browse` | `backend/api/routes/browser/_scraping.py` | api-only | NONE |
 | POST | `/api/browser/browse-session` | `backend/api/routes/browser/_crown_jewel.py` | user-facing | `frontend/src/components/admin/admin-browser/CrownJewelBrowser.tsx` |
-| POST | `/api/browser/browse-session` | `backend/api/routes/browser_routes.py` | admin-only | `frontend/src/components/admin/admin-browser/CrownJewelBrowser.tsx` |
-| GET | `/api/browser/browse-sessions` | `backend/api/routes/browser_routes.py` | admin-only | NONE |
 | GET | `/api/browser/credentials` | `backend/api/routes/browser/_credentials.py` | user-facing | `frontend/src/components/dashboard/VaultPage.tsx` |
 | POST | `/api/browser/credentials` | `backend/api/routes/browser/_credentials.py` | user-facing | `frontend/src/components/dashboard/VaultPage.tsx` |
 | DELETE | `/api/browser/credentials/:param` | `backend/api/routes/browser/_credentials.py` | user-facing | `frontend/src/components/dashboard/VaultPage.tsx` |
@@ -434,16 +431,14 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/browser/credentials/:param/use` | `backend/api/routes/browser/_credentials.py` | user-facing | `frontend/src/components/dashboard/VaultPage.tsx` |
 | POST | `/api/browser/extract` | `backend/api/routes/browser/_scraping.py` | api-only | NONE |
 | POST | `/api/browser/findings` | `backend/api/routes/browser/_tasks.py` | api-only | NONE |
-| GET | `/api/browser/health` | `backend/api/routes/browser_routes.py` | admin-only | NONE |
+| GET | `/api/browser/health` | `backend/api/routes/browser/_health.py` | internal | NONE |
 | GET | `/api/browser/policy` | `backend/api/routes/browser/_policy.py` | user-facing | `frontend/src/services/policyService.ts` |
 | PUT | `/api/browser/policy` | `backend/api/routes/browser/_policy.py` | user-facing | `frontend/src/services/policyService.ts` |
 | GET | `/api/browser/render` | `backend/api/routes/browser/_render_proxy.py` | api-only | NONE |
 | POST | `/api/browser/scrape` | `backend/api/routes/browser/_scraping.py` | api-only | NONE |
 | POST | `/api/browser/screenshot` | `backend/api/routes/browser/_crown_jewel.py` | user-facing | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
-| POST | `/api/browser/screenshot` | `backend/api/routes/browser_routes.py` | admin-only | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
-| POST | `/api/browser/screenshots` | `backend/api/routes/browser_routes.py` | admin-only | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
+| POST | `/api/browser/screenshots` | `backend/api/routes/browser/_crown_jewel.py` | user-facing | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
 | POST | `/api/browser/security-scan` | `backend/api/routes/browser/_crown_jewel.py` | user-facing | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
-| POST | `/api/browser/security-scan` | `backend/api/routes/browser_routes.py` | admin-only | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
 | POST | `/api/browser/semantic-click` | `backend/api/routes/browser/_cognitive.py` | api-only | NONE |
 | GET | `/api/browser/sessions` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx`, `frontend/src/components/dashboard/sessionStore.ts` |
 | POST | `/api/browser/sessions` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx`, `frontend/src/components/dashboard/sessionStore.ts` |
@@ -772,6 +767,9 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | GET | `/api/v1/evolution/swarm-graph` | `backend/api/routes/evolution.py` | admin-only | NONE |
 | POST | `/api/v1/evolution/swarm/forge` | `backend/api/routes/evolution.py` | admin-only | `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx` |
 | POST | `/api/v1/evolution/swarm/forge/:param/execute` | `backend/api/routes/evolution.py` | admin-only | `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx` |
+| POST | `/api/v1/external-agents/jobs` | `backend/api/routes/external_agents_admin.py` | admin-only | NONE |
+| DELETE | `/api/v1/external-agents/jobs/:param` | `backend/api/routes/external_agents_admin.py` | admin-only | NONE |
+| GET | `/api/v1/external-agents/jobs/:param` | `backend/api/routes/external_agents_admin.py` | admin-only | NONE |
 | POST | `/api/v1/gateway/automation` | `backend/tools/api_gateway.py` | admin-only | NONE |
 | POST | `/api/v1/gateway/dispatch/:param` | `backend/tools/api_gateway.py` | admin-only | NONE |
 | POST | `/api/v1/gateway/forward` | `backend/tools/api_gateway.py` | admin-only | NONE |

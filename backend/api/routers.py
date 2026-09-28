@@ -231,6 +231,16 @@ ALL_ROUTERS = [
     # router-level get_current_user_token to every endpoint (its /forward
     # already has endpoint-level auth — duplicate deps are harmless).
     {"path": "tools.api_gateway", "prefix": "", "is_admin": True, "is_critical": False},
+    # WIRE-NEXT (2026-09-27, issue #2148): EAOL Part-3 seed (external_agents,
+    # registry §11 NEAR-READY-UNWIRED → wired) exposed as a managed admin
+    # surface — double-gated: ALL_ROUTERS admin auth (this entry) + in-module
+    # SUPREMEAI_EXTERNAL_AGENTS_ENABLED env flag (default off, fails closed).
+    {
+        "path": "api.routes.external_agents_admin",
+        "prefix": "",
+        "is_admin": True,
+        "is_critical": False,
+    },
     {
         "path": "api.routes.maintenance",
         "prefix": "/api/v1",
@@ -272,7 +282,6 @@ ALL_ROUTERS = [
     {"path": "api.routes.preferences", "prefix": "/api", "is_admin": False, "is_critical": False},
     {"path": "api.routes.simulator_admin", "prefix": "", "is_admin": True, "is_critical": False},
     {"path": "api.routes.site_actions", "prefix": "", "is_admin": True, "is_critical": False},
-    {"path": "api.routes.browser_routes", "prefix": "", "is_admin": True, "is_critical": False},
     {
         "path": "api.routes.hitl_admin",
         "prefix": "/api/v1/hitl",

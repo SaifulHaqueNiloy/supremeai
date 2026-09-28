@@ -30,11 +30,11 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from typing import Any, TypeVar
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.logging_config import logger
 from database.tenant_db import TenantAwareFirestore
-from services.llm.llm_router import LLMRouter
 
 T = TypeVar("T", bound="DataTrendAnomalyAgent")
 
@@ -245,8 +245,8 @@ class ReportFormatter:
     Natural language report formatter using zero-cost LLM routing.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm_router = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm_router = llm_router or ModelRouter()
         self._prompt_template = self._load_prompt_template()
 
     def _load_prompt_template(self) -> str:
@@ -320,14 +320,14 @@ Keep it concise, business-friendly, and data-driven.
         )
 
         # Zero-cost routing: Kimi Primary → DeepSeek Fallback → Local
-        response = await self.llm_router.route(
+        response = await self.llm_router.async_route_and_generate(
             prompt=prompt,
             task_type="analytics_report",
             max_tokens=config_cache.get("insight_mage_max_tokens", 2000),
             temperature=config_cache.get("insight_mage_temperature", 0.3),
         )
 
-        return response.get("content", "Report generation failed. Please retry.")
+        return response.get("text", "Report generation failed. Please retry.")
 
 
 class DataTrendAnomalyAgent:

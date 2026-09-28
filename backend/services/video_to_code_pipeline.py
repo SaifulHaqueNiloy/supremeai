@@ -27,11 +27,11 @@ from typing import Any
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.logging_config import logger
 from core.upload_validator import validate_upload
 from services.config_service import ConfigService
-from services.llm.llm_router import LLMRouter
 
 router = APIRouter(prefix="/video-to-code", tags=["video-to-code"])
 
@@ -195,8 +195,8 @@ class FrameAnalyzer:
     Analyzes video frames using vision model to extract UI components.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm_router = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm_router = llm_router or ModelRouter()
         self.cache = get_cache()
 
     def _cache_key(self, frame_path: str, offset: int) -> str:
@@ -228,8 +228,12 @@ class FrameAnalyzer:
 
         import base64
 
+        # NOTE (issue #2249): the base64 payload previously fed the legacy
+        # `images=[...]` kwarg, which NO provider in the retired services/llm
+        # stack ever consumed (payloads were text-only). The read is kept for
+        # exact file-validation parity; the kwarg is no longer forwarded.
         with open(frame_path, "rb") as f:
-            base64_image = base64.b64encode(f.read()).decode("utf-8")
+            base64_image = base64.b64encode(f.read()).decode("utf-8")  # noqa: F841 — see note above
 
         prompt = (
             f"Analyze this UI design screenshot and extract all components. "
@@ -241,14 +245,17 @@ class FrameAnalyzer:
 
         try:
             max_tokens = await ConfigService.get_config(None, "llm_max_tokens_video", 1500)
-            result = await self.llm_router.route(
+            result = await self.llm_router.async_route_and_generate(
                 prompt=prompt,
                 task_type="vision",
                 max_tokens=max_tokens,
-                images=[{"base64": base64_image, "mime": "image/png"}],
+                # NOTE (issue #2249): the legacy `images=[...]` kwarg was dropped
+                # here — git archaeology on the retired providers.py confirms NO
+                # provider ever consumed it (payload built text-only parts), so
+                # removing it is a zero-capability-change cleanup.
             )
 
-            text = result.get("content", "") if isinstance(result, dict) else ""
+            text = result.get("text", "") if isinstance(result, dict) else ""
             text = re.sub(r"^```(?:json)?\s*", "", text.strip())
             text = re.sub(r"\s*```$", "", text)
 
@@ -278,8 +285,8 @@ class CodeGenerator:
     Generates code from UI component tree.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm_router = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm_router = llm_router or ModelRouter()
         self.cache = get_cache()
 
     async def generate(
@@ -321,13 +328,13 @@ class CodeGenerator:
 
         try:
             max_tokens = await ConfigService.get_config(None, "llm_max_tokens_video", 2000)
-            result = await self.llm_router.route(
+            result = await self.llm_router.async_route_and_generate(
                 prompt=prompt,
                 task_type="generation",
                 max_tokens=max_tokens,
             )
 
-            code = result.get("content", "") if isinstance(result, dict) else ""
+            code = result.get("text", "") if isinstance(result, dict) else ""
 
             # Clean up code formatting
             code = re.sub(r"^```(?:jsx?|tsx?|css)?\s*", "", code.strip())
