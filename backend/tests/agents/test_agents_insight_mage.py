@@ -128,7 +128,11 @@ class TestReportFormatter:
         from backend.agents.insight_mage import ReportFormatter
 
         mock_router = MagicMock()
-        mock_router.route = AsyncMock(return_value={"content": "Summary report"})
+        # Phase-2.1 (#2249): the agent now consumes the canonical facade
+        # (brain.model_router.ModelRouter) — dict contract key is "text".
+        mock_router.async_route_and_generate = AsyncMock(
+            return_value={"success": True, "text": "Summary report"}
+        )
         formatter = ReportFormatter(llm_router=mock_router)
 
         data = {"metrics": [{"name": "users", "value": 100}, {"name": "queries", "value": 500}]}

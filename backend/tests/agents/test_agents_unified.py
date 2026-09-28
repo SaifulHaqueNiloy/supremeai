@@ -12,7 +12,6 @@ sys.modules.setdefault("google", MagicMock())
 sys.modules.setdefault("google.genai", MagicMock())
 
 import agents  # noqa: E402
-from agents.ephemeral_executor import SecurityScanner  # noqa: E402
 from agents.performance_guardian import AnomalyDetector  # noqa: E402
 from agents.vulnerability_prophet import (  # noqa: E402
     VulnerabilityPatternMatcher,
@@ -20,7 +19,6 @@ from agents.vulnerability_prophet import (  # noqa: E402
 
 UNIFIED_AGENT_CLASSES = [
     "ChurnProphet",
-    "EphemeralExecutor",
     "HeadlessTerminalAgent",
     "InsightMage",
     "InternetMonitorAgent",
@@ -47,32 +45,6 @@ def test_unified_agents_construct_without_required_args():
         cls = getattr(agents, name)
         instance = cls()
         assert isinstance(instance, cls)
-
-
-# ── EphemeralExecutor: skill-id validation + security scanning ───────────────
-def test_ephemeral_executor_validate_skill_id():
-    from agents import EphemeralExecutor
-
-    executor = EphemeralExecutor(enable_security_scan=False)
-    assert executor.validate_skill_id("valid_name_1")[0] is True
-    assert executor.validate_skill_id("1_invalid_start")[0] is False
-    assert executor.validate_skill_id("invalid/path/traversal")[0] is False
-    assert executor.validate_skill_id("invalid..traversal")[0] is False
-
-
-def test_security_scanner_safe_and_unsafe_code():
-    scanner = SecurityScanner()
-    safe, violations = scanner.scan("def main(p):\n    return p.get('value', 0) * 2", "skill")
-    assert safe is True
-    assert violations == []
-
-    unsafe, violations = scanner.scan("import os\ndef main(p):\n    os.system('echo x')", "skill")
-    assert unsafe is False
-    assert any("Forbidden import" in v for v in violations)
-
-    dangerous, violations = scanner.scan("def main(p):\n    eval('1 + 1')", "skill")
-    assert dangerous is False
-    assert any("Dangerous" in v for v in violations)
 
 
 # ── VulnerabilityProphet: deterministic pattern matching ────────────────────

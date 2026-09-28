@@ -1,6 +1,40 @@
 from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_admin
+
+# #1656: typed payloads replacing bare dict — schema corruption prevention.
+# Rejects unknown fields (Pydantic default) + validates value constraints.
+
+
+class ConfigUpdatePayload(BaseModel):
+    """Payload for POST /system/config."""
+
+    model_config = {"extra": "forbid"}  # #1656: reject unknown fields
+
+    key: str = Field(..., min_length=1, max_length=255, description="Config key to update")
+    value: str | int | float | bool | list | dict = Field(..., description="Config value")
+
+
+class FlagsUpdatePayload(BaseModel):
+    """Payload for POST /system/flags."""
+
+    model_config = {"extra": "forbid"}
+
+    flag: str = Field(..., min_length=1, max_length=100, description="Feature flag name")
+    enabled: bool = Field(
+        ..., strict=True, description="Flag state — strict bool (no string coercion)"
+    )
+
+
+class DeployGateTogglePayload(BaseModel):
+    """Payload for POST /system/deploy-gate."""
+
+    model_config = {"extra": "forbid"}
+
+    locked: bool = Field(..., description="Whether the deploy gate is locked")
+    reason: str | None = Field(default=None, max_length=500, description="Optional lock reason")
+
 
 router = APIRouter(
     prefix="",
@@ -20,7 +54,7 @@ def get_config():
 
 
 @router.post("/system/config")
-def update_config(payload: dict):
+def update_config(payload: ConfigUpdatePayload):
     return {"message": "updated"}
 
 
@@ -30,7 +64,7 @@ def get_flags():
 
 
 @router.post("/system/flags")
-def update_flags(payload: dict):
+def update_flags(payload: FlagsUpdatePayload):
     return {"message": "updated"}
 
 
@@ -60,5 +94,5 @@ def get_deploy_gate():
 
 
 @router.post("/system/deploy-gate")
-def toggle_deploy_gate(payload: dict):
+def toggle_deploy_gate(payload: DeployGateTogglePayload):
     return {"message": "updated"}

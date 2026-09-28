@@ -182,7 +182,7 @@
     {
       "evidence": [
         {
-          "line": 17,
+          "line": 18,
           "path": "backend/agents/domain/bangla_nlp_agent.py"
         }
       ],
@@ -552,7 +552,7 @@
     {
       "evidence": [
         {
-          "line": 25,
+          "line": 26,
           "path": "backend/core/self_evolution/daily_learner.py"
         }
       ],
@@ -774,46 +774,6 @@
         {
           "line": 28,
           "path": "backend/services/email/email_service.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 37,
-          "path": "backend/services/llm/llm_router.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 38,
-          "path": "backend/services/llm/llm_router.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 20,
-          "path": "backend/services/llm/providers.py"
-        }
-      ],
-      "source": "ai",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 21,
-          "path": "backend/services/llm/providers.py"
         }
       ],
       "source": "ai",
@@ -2242,7 +2202,7 @@
     {
       "evidence": [
         {
-          "line": 29,
+          "line": 25,
           "path": "backend/agents/user_retention_risk_agent.py"
         }
       ],
@@ -2262,7 +2222,7 @@
     {
       "evidence": [
         {
-          "line": 28,
+          "line": 29,
           "path": "backend/agents/user_retention_risk_agent.py"
         }
       ],
@@ -2352,7 +2312,7 @@
     {
       "evidence": [
         {
-          "line": 27,
+          "line": 28,
           "path": "backend/agents/user_retention_risk_agent.py"
         }
       ],
@@ -3302,16 +3262,6 @@
     {
       "evidence": [
         {
-          "line": 27,
-          "path": "backend/api/routes/browser_routes.py"
-        }
-      ],
-      "source": "research",
-      "target": "ai"
-    },
-    {
-      "evidence": [
-        {
           "line": 170,
           "path": "backend/api/routes/deep_research.py"
         }
@@ -3622,28 +3572,8 @@
     {
       "evidence": [
         {
-          "line": 659,
-          "path": "backend/api/routes/browser_routes.py"
-        }
-      ],
-      "source": "research",
-      "target": "knowledge"
-    },
-    {
-      "evidence": [
-        {
-          "line": 714,
-          "path": "backend/api/routes/browser_routes.py"
-        }
-      ],
-      "source": "research",
-      "target": "knowledge"
-    },
-    {
-      "evidence": [
-        {
-          "line": 859,
-          "path": "backend/api/routes/browser_routes.py"
+          "line": 73,
+          "path": "backend/api/routes/browser/_health.py"
         }
       ],
       "source": "research",
@@ -3702,6 +3632,16 @@
     {
       "evidence": [
         {
+          "line": 23,
+          "path": "backend/api/routes/browser/_health.py"
+        }
+      ],
+      "source": "research",
+      "target": "observability"
+    },
+    {
+      "evidence": [
+        {
           "line": 22,
           "path": "backend/api/routes/browser/_render_proxy.py"
         }
@@ -3724,16 +3664,6 @@
         {
           "line": 46,
           "path": "backend/api/routes/browser/_session_store.py"
-        }
-      ],
-      "source": "research",
-      "target": "observability"
-    },
-    {
-      "evidence": [
-        {
-          "line": 28,
-          "path": "backend/api/routes/browser_routes.py"
         }
       ],
       "source": "research",
@@ -4062,6 +3992,26 @@
     {
       "evidence": [
         {
+          "line": 50,
+          "path": "backend/api/routes/browser/_health.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
+          "line": 51,
+          "path": "backend/api/routes/browser/_health.py"
+        }
+      ],
+      "source": "research",
+      "target": "security"
+    },
+    {
+      "evidence": [
+        {
           "line": 121,
           "path": "backend/api/routes/browser/_scraping.py"
         }
@@ -4074,46 +4024,6 @@
         {
           "line": 29,
           "path": "backend/api/routes/browser/_tasks.py"
-        }
-      ],
-      "source": "research",
-      "target": "security"
-    },
-    {
-      "evidence": [
-        {
-          "line": 60,
-          "path": "backend/api/routes/browser_routes.py"
-        }
-      ],
-      "source": "research",
-      "target": "security"
-    },
-    {
-      "evidence": [
-        {
-          "line": 360,
-          "path": "backend/api/routes/browser_routes.py"
-        }
-      ],
-      "source": "research",
-      "target": "security"
-    },
-    {
-      "evidence": [
-        {
-          "line": 836,
-          "path": "backend/api/routes/browser_routes.py"
-        }
-      ],
-      "source": "research",
-      "target": "security"
-    },
-    {
-      "evidence": [
-        {
-          "line": 837,
-          "path": "backend/api/routes/browser_routes.py"
         }
       ],
       "source": "research",
@@ -4192,16 +4102,6 @@
     {
       "evidence": [
         {
-          "line": 25,
-          "path": "backend/tests/api/routes/test_browser_routes_full.py"
-        }
-      ],
-      "source": "research",
-      "target": "security"
-    },
-    {
-      "evidence": [
-        {
           "line": 15,
           "path": "backend/tests/core/test_browser_credentials.py"
         }
@@ -4252,7 +4152,7 @@
     {
       "evidence": [
         {
-          "line": 19,
+          "line": 16,
           "path": "backend/agents/governance/ethics_monitor_agent.py"
         }
       ],

@@ -11,11 +11,11 @@ import hashlib
 import re
 from dataclasses import dataclass
 
+from brain.model_router import ModelRouter
 from core.cache import get_cache
 from core.config_cache import config_cache
 from core.errors.error_bus import with_error_bus
 from core.logging_config import logger
-from services.llm.llm_router import LLMRouter
 
 BANGLA_CACHE_TTL = 3600
 
@@ -125,8 +125,8 @@ class BanglaNLPAgent:
     Specialized for Bengali language processing and cultural adaptation.
     """
 
-    def __init__(self, llm_router: LLMRouter | None = None) -> None:
-        self.llm = llm_router or LLMRouter()
+    def __init__(self, llm_router: ModelRouter | None = None) -> None:
+        self.llm = llm_router or ModelRouter()
         self.cache = get_cache()
         self.processor = BanglaTextProcessor()
 
@@ -150,12 +150,12 @@ class BanglaNLPAgent:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=config_cache.get("bangla_nlp_agent_max_tokens", 200),
             )
-            content = result.get("content", "{}")
+            content = result.get("text", "{}")
             import json
 
             data = json.loads(content) if isinstance(content, str) else content
@@ -202,12 +202,12 @@ class BanglaNLPAgent:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="reasoning",
                 max_tokens=config_cache.get("bangla_nlp_agent_max_tokens", 200),
             )
-            bangla_text = result.get("content", romanized_text)
+            bangla_text = result.get("text", romanized_text)
             confidence = self.processor.get_bangla_ratio(bangla_text)
             transliteration = TransliterationResult(
                 bangla_text=bangla_text,
@@ -245,12 +245,12 @@ class BanglaNLPAgent:
         )
 
         try:
-            result = await self.llm.route(
+            result = await self.llm.async_route_and_generate(
                 prompt=prompt,
                 task_type="text_generation",
                 max_tokens=config_cache.get("bangla_nlp_agent_max_tokens", 500),
             )
-            return result.get("content", "")
+            return result.get("text", "")
         except Exception as e:
             logger.error("Failed to generate Bangla response: %s", e)
             return ""

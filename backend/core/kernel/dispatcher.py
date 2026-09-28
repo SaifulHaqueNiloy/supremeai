@@ -13,7 +13,6 @@ Governed Single-Door Entry Facade:
 from __future__ import annotations
 
 import time
-from typing import Any
 
 from core.circles.contracts import (
     CircleName,
@@ -23,6 +22,7 @@ from core.circles.contracts import (
 from core.circles.envelopes import ExecutionEnvelope
 from core.circles.governance_core import get_governance_core
 from core.circles.registry import circle_registry
+from core.kernel.audit_logger import AuditLogger
 from core.kernel.interface import CircleScope, KernelRequest, KernelResponse
 from core.logging_config import logger
 
@@ -39,10 +39,51 @@ _FEDERATION_FALLBACK_STATUSES = {
 
 
 class SupremeKernel:
-    """The central single-door facade for SupremeAI capabilities."""
+    """The central single-door facade for SupremeAI capabilities.
 
-    def __init__(self) -> None:
+    Phase-4 (issue #2260): canonical primitives are wired INTO the kernel —
+    wave 1 = Audit (``core/kernel/audit_logger.py`` — the blueprint ৪.৩
+    canonical audit trail — plus the MCP hash-chain at
+    ``core/kernel/audit_chain.py`` for tamper evidence). Every completed
+    dispatch (success or failure) is journalled through the kernel-owned
+    primitive; audit failures are observable but never break dispatch.
+    """
+
+    def __init__(self, audit_logger: AuditLogger | None = None) -> None:
         self.registry = circle_registry
+        # Kernel-owned canonical audit primitive (injectable for hermetic tests).
+        self.audit = audit_logger if audit_logger is not None else AuditLogger()
+
+    def _journal_dispatch(
+        self,
+        request: KernelRequest,
+        status: str,
+        elapsed_ms: float,
+        error_code: str | None,
+    ) -> None:
+        """Journal a completed dispatch through the kernel audit primitive.
+
+        rel001 (No Silent Failure): failures here are logged, never swallowed
+        quietly — but they must not corrupt the dispatch result either.
+        """
+        try:
+            self.audit.log_decision(
+                action_type="kernel_dispatch",
+                decision_details=f"{request.capability} -> {status}",
+                reasoning=(
+                    f"circle={request.target_circle.value} actor={request.actor_id} "
+                    f"tenant={request.tenant_id} request_id={request.request_id} "
+                    f"elapsed_ms={elapsed_ms:.1f} error={error_code or 'none'}"
+                ),
+            )
+        except Exception as exc:  # noqa: BLE001 — audit must never break dispatch
+            logger.warning(
+                f"[SupremeKernel] audit journaling failed for {request.request_id}: {exc}"
+            )
+
+    def audit_trail(self) -> list:
+        """Expose the kernel-owned tamper-evident audit trail (read path)."""
+        return self.audit.get_audit_trail()
 
     async def dispatch(self, request: KernelRequest) -> KernelResponse:
         start_time = time.perf_counter()
@@ -70,6 +111,10 @@ class SupremeKernel:
             result = await governance.route(envelope)
             if result.status.value not in _FEDERATION_FALLBACK_STATUSES:
                 elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+                self._journal_dispatch(
+                    request, result.status.value, elapsed_ms,
+                    result.error.code if result.error else None,
+                )
                 return KernelResponse(
                     request_id=request.request_id,
                     correlation_id=request.correlation_id,
@@ -97,6 +142,9 @@ class SupremeKernel:
         try:
             exec_result = await self._legacy_dispatch(request, target_circle_name)
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
+            self._journal_dispatch(
+                request, exec_result.status.value, elapsed_ms, exec_result.error_code
+            )
 
             return KernelResponse(
                 request_id=request.request_id,
@@ -114,6 +162,7 @@ class SupremeKernel:
         except Exception as exc:
             elapsed_ms = (time.perf_counter() - start_time) * 1000.0
             logger.error(f"[SupremeKernel] Dispatch execution failure: {exc}", exc_info=True)
+            self._journal_dispatch(request, "failed", elapsed_ms, "kernel_dispatch_error")
             return KernelResponse(
                 request_id=request.request_id,
                 correlation_id=request.correlation_id,

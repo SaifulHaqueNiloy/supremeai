@@ -159,10 +159,14 @@ async def test_to_infrastructure_success():
         MagicMock(label="Backend"),
     ]
     edges = []
-    with patch("services.diagram_parser_service.LLMRouter") as mock_router_cls:
+    with patch("services.diagram_parser_service.ModelRouter") as mock_router_cls:
         mock_router = AsyncMock()
         mock_router_cls.return_value = mock_router
-        mock_router.route.return_value = {"content": 'resource "aws_instance" "web" {}'}
+        # Phase-2.1 (#2249): facade dict contract key is "text"
+        mock_router.async_route_and_generate.return_value = {
+            "success": True,
+            "text": 'resource "aws_instance" "web" {}',
+        }
 
         result = await svc.to_infrastructure(nodes, edges, provider="aws", iac_tool="terraform")
         assert result["status"] == "success"
@@ -173,10 +177,10 @@ async def test_to_infrastructure_success():
 @pytest.mark.anyio
 async def test_to_infrastructure_failure_returns_error():
     svc = DiagramParserService()
-    with patch("services.diagram_parser_service.LLMRouter") as mock_router_cls:
+    with patch("services.diagram_parser_service.ModelRouter") as mock_router_cls:
         mock_router = AsyncMock()
         mock_router_cls.return_value = mock_router
-        mock_router.route.side_effect = RuntimeError("LLM down")
+        mock_router.async_route_and_generate.side_effect = RuntimeError("LLM down")
 
         result = await svc.to_infrastructure([], [])
         assert result["status"] == "error"
