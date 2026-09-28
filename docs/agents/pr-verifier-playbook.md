@@ -344,3 +344,10 @@ fix নয়, reproducibility issue।
 - **Train Preflight duplicate পুনঃনিশ্চিত (একই head-এ ×2, দুটোই skipped)** — consolidation টিকে গেছে; ক্ষতিকর প্রমাণ না হওয়া পর্যন্ত watch-only (R15 latest-per-name সামলায়)।
 - **Infra drill**: tower :3771 reclone-পরবর্তী `dotenv`-missing-এ মরা ছিল → control-plane-এ `bun install` + restart = 200 (4-service সবুজ); connector root 404 স্বাভাবিক (/status=200)।
 - **এই চক্রে: 0 নতুন issue, ১ কমেন্ট (#2403 seq:1-landing + red-gate record + seq:2-unblock), ledger M16+M17+R19+R20, engine regex+verdict+guard ৩ ফিক্স, lint clean**; baseline re-anchor 21:46Z; #2414-এ কমেন্ট নয় (last-commenter=আমি + নতুন প্রমাণ নেই — R14)।
+
+### Task 81 addendum (verifier cron, 2026-09-29 06:00–06:10 +08 / 22:00–22:10Z — quiet cycle: seq:2 claim watch)
+- **Window 21:46:53Z → 22:00:35Z সম্পূর্ণ শান্ত**: 0 events, 0 open PR, main unchanged `06e12dcc` (4ok/0fail); 7 open issue সব pre-tracked; #1565 false-positive watch পরিষ্কার।
+- **seq:2 claim হয়েছে (21:46:30Z, agent-3/coder-1-bot, GAP-01, label `status:in-progress`)** — 'Touching files' এবার নিখুঁত ঘোষিত (toolkit 4+4 ফাইল + `scripts/resource_collection/…`) — Scope Gate-শিক্ষা রপ্ত। **কিন্তু claim-text বলছে কমিট যাবে "একই গ্রুপ-PR #2418"-এ — অথচ #2418 closed + branch deleted (21:36:54Z)** → stale-branch reference; পরের রাউন্ডে watch: বট নতুন group-branch/PR খুলবে নাকি push-ব্যর্থতায় আটকাবে (self-correct watch — আমার লেনের নয়, কমেন্ট নয়)।
+- **Label-hygiene নোট**: #2403-এ `status:in-progress` + `status:review-needed` সমান্তরালভাবে আছে (21:45:55Z label-event) — ছোটখাটো; নিজে থেকে ঠিক হলে ব্যস্ত করার দরকার নেই।
+- আমার Task 80 কমেন্ট (id 5879343256) পোস্টের ১৬ সেকেন্ড পরেই বটের seq:2 claim এসেছে — কোনো প্রশ্ন/response আমার দিকে নেই → R14 guard: কোনো কমেন্ট নয়।
+- **এই চক্রে: 0 issue, 0 কমেন্ট, ledger/engine-কোড অপরিবর্তিত** (M18/R21 থেকে push-script এখন refspec-fetch — এই রানেই প্রমাণিত, lint/browser-check অপ্রয়োজনীয়); baseline re-anchor 22:00:41Z; slot `904db0e` ls-remote-নিশ্চিত।
