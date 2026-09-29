@@ -90,6 +90,14 @@ describe('useStore', () => {
     const res = await useStore.getState().executeGateOverride('UNLOCKED', 'reason', 'secret');
     expect(res.success).toBe(true);
     expect(useStore.getState().deployGate?.status).toBe('UNLOCKED');
+    // বাংলা মন্তব্য: URL চুক্তি লক (#2475) — ব্যাকএন্ডে শুধু /admin-api/gate/override আছে;
+    // /api/admin/gate/override পাথ 404 দেয়, তাই ভুল পাথ ফিরে এলে টেস্ট লাল হবে।
+    expect(postMock).toHaveBeenCalledWith(
+      '/admin-api/gate/override',
+      expect.objectContaining({ target_status: 'UNLOCKED', admin_secret: 'secret' }),
+    );
+    const calledPath = postMock.mock.calls[0][0] as string;
+    expect(calledPath).not.toBe('/api/admin/gate/override');
   });
 
   it('reports a rejected gate override', async () => {

@@ -39,36 +39,13 @@ depends_on: str | tuple[str, ...] = None
 
 
 def upgrade() -> None:
-    """Drop the dead performance_metrics table if it exists."""
-    bind = op.get_bind()
-    # Issue #478: offline mode cannot reflect a MockConnection — treat the
-    # table as absent in the generated plan; the live run still reflects.
-    if _alembic_context.is_offline_mode():
-        existing_tables: list[str] = []
-    else:
-        existing_tables = sa.inspect(bind).get_table_names()
-
-    if "performance_metrics" in existing_tables:
-        op.drop_table("performance_metrics")
+    # বাংলা মন্তব্য: Issue #2505 ও #1177 — এই মাইগ্রেশনটি SUPERSEDED।
+    # core/self_evolution/performance_oracle.py ও api/routes/agent_breeding.py
+    # সক্রিয়ভাবে এই টেবিলে INSERT ও SELECT করে। প্রোডাকশন ডেটা ড্রপ ও ডেটালস ঠেকাতে
+    # এই upgrade-টিকে নিরাপদ নো-অপ (no-op) করা হলো। হিস্ট্রি চেইনের বৈধতা সম্পূর্ণ অক্ষত থাকবে।
+    pass
 
 
 def downgrade() -> None:
-    """Recreate performance_metrics (for rollback only — not used in prod)."""
-    op.create_table(
-        "performance_metrics",
-        sa.Column("id", sa.UUID(), nullable=False),
-        sa.Column("agent_name", sa.String(length=255), nullable=False),
-        sa.Column("metric_type", sa.String(length=50), nullable=False),
-        sa.Column("value", sa.Float(), nullable=False),
-        sa.Column("unit", sa.String(length=50), nullable=False),
-        sa.Column(
-            "context",
-            sa.JSON().with_variant(
-                sa.dialects.postgresql.JSONB(astext_type=sa.Text()), "postgresql"
-            ),
-            nullable=False,
-        ),
-        sa.Column("version", sa.Integer(), nullable=False),
-        sa.Column("recorded_at", sa.DateTime(timezone=True), nullable=False),
-        sa.PrimaryKeyConstraint("id"),
-    )
+    # বাংলা মন্তব্য: SUPERSEDED (issue #2505) — নো-অপ (no-op) রাখা হলো।
+    pass

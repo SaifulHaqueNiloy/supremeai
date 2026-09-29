@@ -17,6 +17,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 import pytest
+
 from backend.tools.security_tools.multi_account_rotator import (
     ALLOWED_PROVIDERS,
     Account,

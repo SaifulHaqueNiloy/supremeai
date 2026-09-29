@@ -4,7 +4,6 @@ import logging
 import sys
 
 from backend.sandbox.file_isolation_gate import FileIsolationGate
-
 from core.logging_config import logger
 
 logging.basicConfig(

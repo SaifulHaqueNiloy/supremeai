@@ -2,6 +2,7 @@ import tempfile
 from pathlib import Path
 
 import pytest
+
 from backend.core.contracts.canonical import (
     EventEnvelope,
     ExecutionContext,

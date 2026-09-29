@@ -27,7 +27,14 @@ export function SessionsPage({ onOpenSession }: SessionsPageProps) {
 
   useEffect(() => {
     // বাংলা মন্তব্য: loadSessions() এখন async — ব্যাকএন্ড API কল করে
-    loadSessions().then(setSessions);
+    loadSessions()
+      .then(setSessions)
+      .catch((err: unknown) => {
+        // বাংলা মন্তব্য (#2478): unhandled rejection না হয় — খালি তালিকায় নিরাপদ
+        // ডিগ্রেডেশন, ব্যর্থতা কনসোলে দৃশ্যমান।
+        console.error('[SessionsPage] failed to load sessions:', err);
+        setSessions([]);
+      });
   }, []);
 
   // বাংলা মন্তব্য: নতুন সেশন শুরু — প্রম্পট থেকে সেশন তৈরি করে ব্যাকএন্ডে টাস্ক পাঠানো হয়

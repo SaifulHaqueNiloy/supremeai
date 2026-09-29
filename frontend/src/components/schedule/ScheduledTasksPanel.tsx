@@ -157,7 +157,7 @@ export default function ScheduledTasksPanel() {
   const fetchTasks = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get<ScheduledTask[]>('/api/schedule');
+      const response = await apiClient.get<ScheduledTask[]>('/api/schedule/');
       setTasks(Array.isArray(response) ? response : []);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load scheduled tasks';
@@ -209,7 +209,7 @@ export default function ScheduledTasksPanel() {
         await apiClient.put(`/api/schedule/${editingTaskId}`, formData);
         globalShowToastRef.current('success', 'Task updated successfully!');
       } else {
-        await apiClient.post('/api/schedule', formData);
+        await apiClient.post('/api/schedule/', formData);
         globalShowToastRef.current('success', 'Task created successfully!');
       }
       setFormData(emptyForm);

@@ -28,9 +28,8 @@ import sys
 import types
 from datetime import datetime, timedelta
 
-import pytest
-
 import core.competitive_kit as ck
+import pytest
 from core.competitive_kit import (
     PERSONALITIES,
     SAFETY_CONFIGS,

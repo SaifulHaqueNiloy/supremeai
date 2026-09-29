@@ -33,8 +33,9 @@ from datetime import datetime
 from types import MappingProxyType, SimpleNamespace
 from unittest.mock import AsyncMock
 
-import backend.tools.security_tools.multi_account_rotator as rotator_mod
 import pytest
+
+import backend.tools.security_tools.multi_account_rotator as rotator_mod
 from backend.tools.security_tools.multi_account_rotator import (
     Account,
     MultiAccountRotator,

@@ -21,8 +21,18 @@ async def test_agent_factory_creates_and_saves_agent():
         "text": '{"agent_name": "AmazonTracker", "description": "Track prices", "execution_steps": [{"action": "click"}]}'
     }
 
-    with patch(
-        "core.llm.llm_gateway.LLMGateway.acompletion",
+    # ISOLATION FIX (#2551, run 36589450316-era full-tier): ক্লাস-স্তরের
+    # patch("core.llm.llm_gateway.LLMGateway.acompletion") আর কার্যকর হয় না —
+    # ফুল স্যুটে dual module-identity (repo-root sys.path insert-এ
+    # core.* / backend.core.* দ্বৈততা) থাকায় আসল acompletion
+    # (completion.py:412) চলে যেত এবং leaked litellm MagicMock await-এ
+    # TypeError দিত। এখন সরাসরি singleton instance-attr প্যাচ — instance
+    # dict সবার আগে দেখা হয়, তাই module-duality নিরপেক্ষ।
+    from core.llm.llm_gateway import llm_gateway
+
+    with patch.object(
+        llm_gateway,
+        "acompletion",
         new_callable=AsyncMock,
         return_value=mock_res,
     ):
