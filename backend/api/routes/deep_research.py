@@ -662,14 +662,21 @@ async def deep_research_stream(
 
             async def run_and_yield():
                 nonlocal done_event
-                report, steps, sources = await _run_research_pipeline(
-                    query=payload.query,
-                    user_id=user_id,
-                    max_steps=payload.max_steps,
-                    on_step=on_step,
-                    session_id=session_id,
-                )
-                done_event = True
+                # FIX (#2506): ``done_event`` must flip True on BOTH outcomes.
+                # Previously it was set only after a successful pipeline call,
+                # so any pipeline exception left it False forever and the loop
+                # below spun on ``asyncio.sleep(0.1)`` — an indefinitely hanging
+                # SSE connection with the error-emission block unreachable.
+                try:
+                    report, steps, sources = await _run_research_pipeline(
+                        query=payload.query,
+                        user_id=user_id,
+                        max_steps=payload.max_steps,
+                        on_step=on_step,
+                        session_id=session_id,
+                    )
+                finally:
+                    done_event = True
                 return report, steps, sources
 
             # Start pipeline as a task
@@ -700,6 +707,10 @@ async def deep_research_stream(
                 report, steps, sources = await pipeline_task
             except Exception as exc:
                 logger.error(f"Pipeline task failed: {exc}")
+                # FIX (#2506): persist terminal failure (mirror of the sync
+                # endpoint) so the session row never stays stuck in
+                # "running" after the stream closes — no-silent-failure.
+                _save_session(session_id, user_id, payload.query, None, 0, 0, "failed")
                 error_event = {"type": "error", "content": str(exc)}
                 yield f"data: {json.dumps(error_event)}\n\n"
                 yield "data: [DONE]\n\n"

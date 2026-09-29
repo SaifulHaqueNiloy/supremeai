@@ -71,107 +71,116 @@ def test_api_email_endpoints(mock_imap_ssl):
 
 @patch("api.routes.github._get_agent", new_callable=AsyncMock)
 def test_api_github_endpoints(mock_get_agent):
-    mock_agent = MagicMock()
-    mock_agent.verify_connection = AsyncMock(return_value=True)
-    mock_agent.connect_repo = AsyncMock()
-    mock_agent.analyze_repo = AsyncMock(return_value={"status": "analyzed", "score": 85})
-    mock_agent.improve_code = AsyncMock(return_value={"status": "improved"})
-    mock_agent.commit_changes = AsyncMock(
-        return_value={
-            "status": "committed",
-            "branch": "supremeai-improvements-1718952000",
-        }
-    )
-    mock_agent.create_pr = AsyncMock(
-        return_value={"status": "pr_created", "pr_url": "https://github.com/pulls/1"}
-    )
-    mock_get_agent.return_value = mock_agent
+    from database.session import get_db_session
 
-    # test /github/connect
-    resp = client.post(
-        "/github/connect",
-        json={
-            "installation_id": "from_github_app",
-            "repo_owner": "owner",
-            "repo_name": "repo",
-        },
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert "Connected to owner/repo" in resp.json()["message"]
+    # বাংলা মন্তব্য: get_db_session মক করা হলো যাতে greenlet বা রিয়েল ডিবি ছাড়া সিআই পরিবেশে 200 রেসপন্স নিশ্চিত হয়
+    mock_sql_session = AsyncMock()
+    app.dependency_overrides[get_db_session] = lambda: mock_sql_session
 
-    # test /github/improve
-    resp = client.post(
-        "/github/improve",
-        json={"repo": "owner/repo", "branch": "main", "improvement_type": "refactor"},
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["analysis"]["score"] == 85
+    try:
+        mock_agent = MagicMock()
+        mock_agent.verify_connection = AsyncMock(return_value=True)
+        mock_agent.connect_repo = AsyncMock()
+        mock_agent.analyze_repo = AsyncMock(return_value={"status": "analyzed", "score": 85})
+        mock_agent.improve_code = AsyncMock(return_value={"status": "improved"})
+        mock_agent.commit_changes = AsyncMock(
+            return_value={
+                "status": "committed",
+                "branch": "supremeai-improvements-1718952000",
+            }
+        )
+        mock_agent.create_pr = AsyncMock(
+            return_value={"status": "pr_created", "pr_url": "https://github.com/pulls/1"}
+        )
+        mock_get_agent.return_value = mock_agent
 
-    # test /github/push — গ্যাপ ফিক্স: আর placeholder কনটেন্ট auto-generate হয় না, caller-কে
-    # real file_contents সরবরাহ করতে হয়
-    resp = client.post(
-        "/github/push",
-        json={
-            "repo": "owner/repo",
-            "branch": "supremeai-improvements-1718952000",
-            "commit_message": "AI: Optimized database queries",
-            "file_contents": {
-                "src/db.py": "# real optimized content here\n",
-                "src/cache.py": "# real optimized content here\n",
+        # test /github/connect
+        resp = client.post(
+            "/github/connect",
+            json={
+                "installation_id": "from_github_app",
+                "repo_owner": "owner",
+                "repo_name": "repo",
             },
-        },
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "success"
-    mock_agent.commit_changes.assert_called_once()
-    committed_content = mock_agent.commit_changes.call_args.args[1]
-    assert committed_content == {
-        "src/db.py": "# real optimized content here\n",
-        "src/cache.py": "# real optimized content here\n",
-    }
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        assert "Connected to owner/repo" in resp.json()["message"]
 
-    # গ্যাপ ফিক্স রিগ্রেশন টেস্ট: file_contents ছাড়া push করলে ৪০০ — কখনো fabricated content
-    # কমিট হবে না
-    resp_empty = client.post(
-        "/github/push",
-        json={
-            "repo": "owner/repo",
-            "branch": "supremeai-improvements-1718952000",
-            "commit_message": "AI: Optimized database queries",
-            "file_contents": {},
-        },
-        headers=auth_headers,
-    )
-    assert resp_empty.status_code == 400
+        # test /github/improve
+        resp = client.post(
+            "/github/improve",
+            json={"repo": "owner/repo", "branch": "main", "improvement_type": "refactor"},
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["analysis"]["score"] == 85
 
-    # test /github/discover
-    resp = client.post(
-        "/github/discover",
-        json={
-            "requirement": "React component library for data tables",
-            "tech_stack": ["React", "TypeScript"],
-            "criteria": {"min_stars": 500},
-        },
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "success"
+        # test /github/push — গ্যাপ ফিক্স: আর placeholder কনটেন্ট auto-generate হয় না, caller-কে
+        # real file_contents সরবরাহ করতে হয়
+        resp = client.post(
+            "/github/push",
+            json={
+                "repo": "owner/repo",
+                "branch": "supremeai-improvements-1718952000",
+                "commit_message": "AI: Optimized database queries",
+                "file_contents": {
+                    "src/db.py": "# real optimized content here\n",
+                    "src/cache.py": "# real optimized content here\n",
+                },
+            },
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "success"
+        mock_agent.commit_changes.assert_called_once()
+        committed_content = mock_agent.commit_changes.call_args.args[1]
+        assert committed_content == {
+            "src/db.py": "# real optimized content here\n",
+            "src/cache.py": "# real optimized content here\n",
+        }
 
-    # test /github/implement
-    resp = client.post(
-        "/github/implement",
-        json={
-            "repo_url": "https://github.com/TanStack/table",
-            "integration_method": "npm",
-            "target_project": "customer-ecommerce-app",
-        },
-        headers=auth_headers,
-    )
-    assert resp.status_code == 200
-    assert resp.json()["status"] == "success"
+        # গ্যাপ ফিক্স রিগ্রেশন টেস্ট: file_contents ছাড়া push করলে ৪০০ — কখনো fabricated content
+        # কমিট হবে না
+        resp_empty = client.post(
+            "/github/push",
+            json={
+                "repo": "owner/repo",
+                "branch": "supremeai-improvements-1718952000",
+                "commit_message": "AI: Optimized database queries",
+                "file_contents": {},
+            },
+            headers=auth_headers,
+        )
+        assert resp_empty.status_code == 400
+
+        # test /github/discover
+        resp = client.post(
+            "/github/discover",
+            json={
+                "requirement": "React component library for data tables",
+                "tech_stack": ["React", "TypeScript"],
+                "criteria": {"min_stars": 500},
+            },
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "success"
+
+        # test /github/implement
+        resp = client.post(
+            "/github/implement",
+            json={
+                "repo_url": "https://github.com/TanStack/table",
+                "integration_method": "npm",
+                "target_project": "customer-ecommerce-app",
+            },
+            headers=auth_headers,
+        )
+        assert resp.status_code == 200
+        assert resp.json()["status"] == "success"
+    finally:
+        app.dependency_overrides.pop(get_db_session, None)
 
 
 def test_api_marketplace_endpoints():

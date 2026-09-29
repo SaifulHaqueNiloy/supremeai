@@ -336,13 +336,42 @@ class TestDeepResearchStream:
         assert upserts[-1][1][0]["status"] == "completed"
 
     async def test_stream_pipeline_error_event(self, research_env, monkeypatch):
-        """KNOWN BUG (documented, not exercised): if _run_research_pipeline
-        raises, ``done_event`` never flips True and the SSE generator loop
-        (``while not done_event or step_queue``) spins forever — the
-        ``Pipeline task failed`` error branch is unreachable dead code and
-        the client hangs. Any test that raises inside the pipeline times
-        out, so this branch is intentionally NOT exercised here."""
-        assert True
+        """REGRESSION GUARD (#2506): when the pipeline raises mid-stream the
+        generator must (a) exit its loop — ``done_event`` flips True via the
+        ``finally`` — and (b) deliver exactly one ``error`` event followed by
+        ``[DONE]`` instead of hanging the connection forever. The old version
+        of this test ended in ``assert True`` (constitution rule 1 violation)
+        because the bug made any raising pipeline hang the test."""
+        http, fake_db, *_ = research_env
+
+        async def boom(**kwargs):
+            raise RuntimeError("pipeline exploded mid-stream")
+
+        monkeypatch.setattr(dr, "_run_research_pipeline", boom)
+
+        events: list[dict[str, Any]] = []
+        async with http.stream(
+            "POST", "/api/research/deep/stream", json={"query": "failing stream"}
+        ) as resp:
+            assert resp.status_code == 200
+            assert resp.headers["content-type"].startswith("text/event-stream")
+            # If the hang ever regresses, this loop never terminates and the
+            # test times out — that timeout IS the failure signal.
+            async for line in resp.aiter_lines():
+                if line.startswith("data: "):
+                    payload = line[len("data: ") :]
+                    if payload == "[DONE]":
+                        break
+                    events.append(json.loads(payload))
+
+        error_events = [e for e in events if e["type"] == "error"]
+        assert len(error_events) == 1
+        assert "pipeline exploded mid-stream" in error_events[0]["content"]
+        # no partial success artifacts may be emitted
+        assert not any(e["type"] in ("step", "report") for e in events)
+        # terminal failure persisted (no row stuck in "running")
+        upserts = [op for op in fake_db.ops if op[0] == "upsert"]
+        assert upserts[-1][1][0]["status"] == "failed"
 
 
 @pytest.mark.unit
