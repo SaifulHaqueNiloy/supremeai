@@ -29,9 +29,10 @@ export const ProfilePage: React.FC = () => {
 
   const handleSave = async () => {
     try {
-      // ERR-H01 FIX: real backend route is POST /api/preferences (no PUT
+      // ERR-H01 FIX: real backend route is POST /api/preferences/ (no PUT
       // route exists); preferred_model maps to the contract's default_model.
-      await apiClient.post('/api/preferences', {
+      // Issue #2475: exact canonical path (trailing slash) — no 307 redirect hop.
+      await apiClient.post('/api/preferences/', {
         theme: (theme === 'dark') ? 'dark' : 'light',
         default_model: preferredModel,
         profile: { name, email },

@@ -1,4 +1,10 @@
-import { apiClient } from '../apiClient';
+// Issue #2475: আগের বাস্তবায়নটি /admin/microservices/java-worker/health endpoint-কে
+// কল করত, যা backend-এ (openapi.json + FastAPI routers) কখনোই ছিল না — প্রতিটি
+// কল নীরব 404 দিত এবং catch-ব্লক সেটিকে OFFLINE-এ রূপান্তর করত। Java worker
+// microservice-এর কোনো proxy route এখনো বাস্তবায়িত হয়নি, তাই সৎ (honest)
+// আচরণ হলো নেটওয়ার্ক কল না করে সরাসরি OFFLINE রিটার্ন করা — একই UI ফলাফল,
+// কিন্তু অপচয়ায়িত round-trip ও console noise নেই। যখন আসল endpoint যোগ হবে,
+// তখন এখানে আবার apiClient কল ফিরিয়ে আনতে হবে।
 
 export interface JavaWorkerHealth {
   status: string;
@@ -10,31 +16,19 @@ export interface JavaWorkerHealth {
   totalTasksProcessed: number;
 }
 
+const OFFLINE: JavaWorkerHealth = {
+  status: 'OFFLINE',
+  uptimeSeconds: 0,
+  activeTasks: 0,
+  queuedTasks: 0,
+  memoryUsageMb: 0,
+  cpuLoadPercentage: 0,
+  totalTasksProcessed: 0,
+};
+
 export const fetchJavaWorkerHealth = async (): Promise<JavaWorkerHealth> => {
-  // Mock implementation, eventually connects to FastAPI which proxies from Java
-  // For now, returning mocked data to simulate the Java worker metrics
-  try {
-    const response = await apiClient.get<JavaWorkerHealth | null>('/admin/microservices/java-worker/health');
-    return response || {
-      status: 'OFFLINE',
-      uptimeSeconds: 0,
-      activeTasks: 0,
-      queuedTasks: 0,
-      memoryUsageMb: 0,
-      cpuLoadPercentage: 0,
-      totalTasksProcessed: 0
-    };
-  } catch (error) {
-    // বাংলা মন্তব্য: মাইক্রোসার্ভিস সংযোগ ব্যর্থ হলে ফেক ডাটার পরিবর্তে অফলাইন স্ট্যাটাস দেওয়া হচ্ছে
-    console.warn("Java worker health check failed:", error);
-    return {
-      status: 'OFFLINE',
-      uptimeSeconds: 0,
-      activeTasks: 0,
-      queuedTasks: 0,
-      memoryUsageMb: 0,
-      cpuLoadPercentage: 0,
-      totalTasksProcessed: 0
-    };
-  }
+  // Java worker health endpoint এখনো backend-এ নেই (issue #2475) —
+  // সরাসরি OFFLINE রিপোর্ট; কোনো নীরব 404 রিকোয়েস্ট আর যাবে না।
+  // Fresh copy ফেরানো হচ্ছে যাতে কোনো caller-এর mutation পরের কলে লিক না করে।
+  return { ...OFFLINE };
 };

@@ -24,9 +24,10 @@ export const TranslationProvider = ({ locale: initialLocale, children }: { local
   const setLocale = (next: Locale) => {
     if (!locales.includes(next)) return;
     setLocaleState(next);
-    // ERR-H01 FIX: real backend route is POST /api/preferences (no PUT, no
+    // ERR-H01 FIX: real backend route is POST /api/preferences/ (no PUT, no
     // /api/user/preferences path); locale persists as preferred_language.
-    void apiClient.post('/api/preferences', {
+    // Issue #2475: exact canonical path (trailing slash) — no 307 redirect hop.
+    void apiClient.post('/api/preferences/', {
       preferred_language: next,
     }).catch(() => {
       // Local state remains usable when the account is offline or unauthenticated.
