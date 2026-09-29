@@ -94,7 +94,16 @@ def _install_pair_staging(monkeypatch) -> tuple[Callable[[], None], Callable[[],
         if state["count"] >= 2:
             gate.set()
         else:
-            await gate.wait()
+            # বাংলা মন্তব্য (#2504 CI round-10): bounded rendezvous — CI-load-এ
+            # জোড়ার এক সদস্য যদি get_run-এ পৌঁছানোর আগেই ব্যতিক্রমে মারা যায়,
+            # অপরজন চিরকাল gate.wait()-এ আটকে থাকত (৩০s job-timeout-এ পুরো স্যুট
+            # ভেঙে যেত)। বাউন্ডেড অপেক্ষা: জোড়া না বাঁধলে সৎভাবে এগিয়ে যায় —
+            # হ্যাপি-পাথে (দুজনেই পৌঁছায়) রেন্ডেজভাস হুবহু আগের মতোই কাজ করে;
+            # ভাঙা জোড়ায় টেস্ট নীরব timeout নয়, স্পষ্ট assertion-failure দেয়।
+            try:
+                await asyncio.wait_for(gate.wait(), timeout=10.0)
+            except TimeoutError:
+                state["pair_missed"] = True
         return run
 
     async def locked_emit(self, session, run, event, **kwargs):
@@ -107,6 +116,7 @@ def _install_pair_staging(monkeypatch) -> tuple[Callable[[], None], Callable[[],
     def arm() -> None:
         state["count"] = 0
         state["gate"] = asyncio.Event()
+        state["pair_missed"] = False
 
     def disarm() -> None:
         state["gate"] = None
