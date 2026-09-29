@@ -3,104 +3,45 @@
 <!-- CI drift check: pr.yml → agents-md-sync. To change rules, edit rules.yml. -->
 
 
-# SupremeAI — AGENTS.md v2 (Universal Operating Constitution & Agent Bootstrap)
+# SupremeAI — AGENTS.md v3 (Universal Agent Contract)
 
-> rules_version: `3.1` · যতই ঘুড়ি উড়াও রাতে, নাটাই তো আমার হাতে।
->
-> Agent-কে ঘুড়ির মতো স্বাধীনভাবে উড়তে দাও; কিন্তু নাটাই সবসময় SupremeAI Admin / Control Plane-এর হাতে থাকবে।
+> rules_version: `4.0` · যতই ঘুড়ি উড়াও রাতে, নটাই তো আমার হাতে।
+> **Agent type নয় → Task type। Task chooses capability; model does not define the task.**
+> Rule layering: Admin → AGENTS.md → Security → Task → Group → Issue → Repo → History (৮-স্তর priority)
 
----
+## Universal Protocols
 
-## The Living Protocols (Root-Cause Invariants — ১০১% লাভ)
+১. **Universal Agent** — ১টিই agent টাইপ; router (scripts/agents/supremeai_orchestrator.py) DB-driven task policy পড়ে task type অনুযায়ী ১টি কাজ + dynamic instruction দেয়; সফল সমাধান LEARNING mode-এ agent_task_history-তে রেকর্ড হয়।
+২. **Group Flow** — একই group:<name>-এর কাজ শেয়ার্ড গ্রুপ ব্রাঞ্চে সিকোয়েনশিয়ালি হয়; সম্পূর্ণ গ্রুপ শেষে ১টি unified PR; predecessor গ্রুপ না মিটলে merge hold; queue-র সব PR সর্বোচ্চ-অগ্রাধিকার অনুযায়ী এক-একটি করে sequential merge।
+৩. **Atomic Claim** — claim ছাড়া কোড নয়: atomic_claim.sh + 'Touching files:' ঘোষণা; declared scope-এর বাইরে touch নিষিদ্ধ।
+৪. **Verify First (৩-স্তর)** — Reflection (grep) → Boot smoke (python -c 'import main') → Pytest; টেস্ট ম্যানিপুলেশন (delete/skip/fake assertion) সর্বোচ্চ অপরাধ।
+৫. **has-pr** — PR খুললেই সাথে সাথে gh issue edit <id> --add-label 'has-pr' — ডুপ্লিকেট PR রুট-ব্লক।
+৬. **CI Guard + Heartbeat** — PR নিরাপত্তা/স্কোপ/টেস্ট CI Gates সামলায় — এজেন্ট ১০০% ফোকাসে solve+verify+atomic PR; সেশন শুরুতে Control Tower heartbeat (mcp_tower_client.py heartbeat)।
+৭. **Group Closeout** — গ্রুপ শেষে Capability Harvest + 4-Pillar Rubric (Stability / Real Benefit / Zero Regression / Scope); Zero Capability Loss নিশ্চিত হলে তবেই merge।
+৮. **Operational Truth** — GitHub Issues = কাজের live state, DB = operational truth; নতুন .md নিষিদ্ধ (allowlist বাদে), দীর্ঘ ডকস TelDrive-এ; নতুন গ্রুপ-ইস্যু স্ট্যান্ডার্ড টেমপ্লেটে (create_group_issue.py)।
+৯. **Push-as-PR** — কাজ লোকালে জমা নয়: ব্রাঞ্চে push → (স্বাধীন কাজে সাথে সাথে / গ্রুপ কাজে গ্রুপ শেষে) PR → has-pr; সব অগ্রগতি GitHub-এ দৃশ্যমান ও অডিটেবল।
+১০. **3-Pipeline Law** — PR-এ ১ গেট (PR Gate), Merge Train-এ ১ গেট (Train Gate), Main-এ ১ পাইপলাইন (Main CI/CD); ডুপ্লিকেট রান/ওয়ার্কফ্লো স্প্রল নিষিদ্ধ।
 
-### 1. Shared Group Branch & Sequential Agent Collaboration (শেয়ার্ড গ্রুপ ব্রাঞ্চ ও সিকোয়েনশিয়াল এজেন্ট কোলাবোরেশন)
-একই গ্রুপের (`group:<name>`) একাধিক ইস্যুতে ক্রমানুসারে একাধিক এজেন্ট কাজ করতে পারবে। তবে কঠোর নিয়ম: ১ম ইস্যুর কাজ সম্পূর্ণ শেষ হওয়ার পর ২য় ইস্যুর কাজ শুরু হবে। ১ম এজেন্ট কাজ শেষ করে সরাসরি শেয়ার্ড গ্রুপ ব্রাঞ্চে (`group/<name>`) পুশ করবে (মাঝপথে কোনো পৃথক PR তৈরি করবে না)। ২য় এজেন্ট পূর্ববর্তী এজেন্টের কাজ শেষ হওয়া সেই একই গ্রুপ ব্রাঞ্চটি পুল করে পরবর্তী ইস্যুর কাজ চালিয়ে যাবে। সম্পূর্ণ গ্রুপের সব ইস্যুর কাজ শেষ হলেই কেবল ১টি সমন্বিত একক PR তৈরি হবে।
+## Bootstrap
 
-### 2. Atomic Claim Lock & File Declaration
-গ্রুপ সিকোয়েন্সের (GSPQ) প্রথম আনক্লেইমড ইস্যুটি ক্লেইম করো (`atomic_claim.sh`)। ক্লেইম কমেন্টে 'Touching files: file1, file2' ঘোষণা করো। নো ক্লেইম, নো কোড।
+1. `git fetch origin --prune && cat AGENTS.md` — main sync + universal contract পড়ো — rules বদলেছে কিনা দেখো
+2. `./scripts/agents/start agent-<N>` — Universal bootstrap: router audit + ১টি task assignment + dynamic instruction (#2504)
+3. `./scripts/ci/atomic_claim.sh <issue#> <agent>` — claim না থাকলে — 'Touching files:' ঘোষণা সহ (GH_TOKEN অটো-fallback)
+4. `3-Tier Verification (Reflection → Boot Smoke → Pytest)` — কোনো টেস্ট ভাঙা বা ডিলিট করা নিষিদ্ধ
+5. `gh pr create ... && gh issue edit <issue#> --add-label 'has-pr'` — স্বাধীন কাজে সাথে সাথে PR; গ্রুপ কাজে সম্পূর্ণ গ্রুপ শেষে ১টি unified PR
 
-### 3. Verify First (3-Tier Verification)
-অনুমানে ফাইল ডিলিট বা এডিট নিষিদ্ধ। পরিবর্তনের আগে ও পরে ৩ স্তর যাচাই আবশ্যক: (১) Reflection check (grep), (২) Boot smoke test (python -c 'import main'), (৩) Pytest। টেস্ট ম্যানিপুলেশন (delete/skip/fake assertion) কঠোরভাবে নিষিদ্ধ।
+## System Gates (CI-enforced — মনে রাখার দরকার নেই)
 
-### 4. Full Group Unified PR & Scope (সম্পূর্ণ গ্রুপের একক PR ও সমন্বিত স্কোপ)
-প্রতিটি ইস্যুতে সর্বোচ্চ ১–২ ফাইলের কৃত্রিম বাধ্যবাধকতা রহিত করা হলো। সম্পূর্ণ গ্রুপের সমস্ত সিকোয়েনশিয়াল ইস্যু মিলে কেবল ১টি সমন্বিত গ্রুপ PR (Full Group = 1 PR) তৈরি হবে। গ্রুপের প্রতিটি এজেন্ট ক্লেইমের সময় নিজের ইস্যুর ফাইল ঘোষণা করবে এবং গ্রুপ শেষে সম্পূর্ণ গ্রুপ স্কোপ একত্রিতভাবে অডিট ও ভেরিফাই হবে। অঘোষিত স্কোপের বাইরে ড্রাইভ-বাই রিফ্যাক্টরিং নিষিদ্ধ থাকবে, তবে গ্রুপের বৈধ কাজের প্রয়োজনে ফাইলের সংখ্যা সীমিত রাখা হবে না।
-
-### 5. Mandatory 'has-pr' Label
-PR খোলার সাথে সাথেই gh issue edit <id> --add-label 'has-pr' চালাতে হবে। এটি ডুপ্লিকেট PR তৈরি হওয়া রুট থেকে বন্ধ করে।
-
-### 6. Automated CI Guard & Pure Solver Lane
-কোডারদের ম্যানুয়াল PR রিভিউ লেখার কোনো প্রয়োজন নেই — PR নিরাপত্তা, টেস্ট ও রিগ্রেশন স্বয়ংক্রিয় CI Gates (Lease, Verification, Scope, Collision) এবং PR Helper পরিচালনা করে। কোডার এজেন্টের ১০০% ফোকাস থাকবে ইস্যু সমাধান, ৩-স্তর যাচাই ও পরমাণু PR তৈরিতে।
-
-### 7. Control Plane Heartbeat (MCP Fleet Presence)
-সেশনে কাজ শুরুর আগে এজেন্ট Control Tower-এ (mcp.json) হার্টবিট পাঠাবে (`python scripts/agents/mcp_tower_client.py heartbeat --slot agent-<N> --name <id>` বা MCP `agent_heartbeat` টুল)। এটি সেন্ট্রাল মেশে এজেন্টের উপস্থিতি ও লিজ সক্রিয় রাখে।
-
-### 8. Group Closeout Harvest & Benefit Gate (Zero Loss Invariant)
-সম্পূর্ণ গ্রুপের কাজ শেষ হলেই কেবল আসল চিত্র পরিষ্কার বোঝা যায়। তাই যেকোনো গ্রুপ সিকোয়েন্সের (GSPQ) সব কাজ শেষ হওয়ার পর শেষ ফেজটি হবে 'Capability Harvest & Benefit Audit'। দায়িত্বপ্রাপ্ত এক্সিকিউটর: Planner Agent / SuperAgent (Admin বা SupremeAI) অথবা PR Helper। পুরো গ্রুপের সমস্ত diff একসাথে অডিট করো: কাজের কোনো দরকারি লজিক বা ক্ষমতা কি হারিয়ে গেছে? যদি হ্যাঁ, তবে ক্যানোনিকাল মডিউলে তা রিকভার করো। জিরো ক্যাপাবিলিটি লস ও ১০১% বাস্তব লাভ নিশ্চিত হলে তবেই গ্রুপ PR মার্জ হবে এবং পরবর্তী গ্রুপ শুরু হবে।
-
-### 9. Standard Group Issue Creation Protocol (পরবর্তী ইস্যু তৈরির নিয়ম)
-ভবিষ্যতে যখনই নতুন গ্রুপ বা সিকোয়েন্স ইস্যু তৈরি করা হবে, তা অবশ্যই স্ট্যান্ডার্ড টেমপ্লেট (`scripts/ci/create_group_issue.py` বা GitHub issue form) অনুযায়ী তৈরি করতে হবে। প্রতিটি ইস্যুতে স্পষ্টভাবে থাকতে হবে: (১) Group ও Sequence ট্যাগ (`group:step-X`, `seq:Y`), (২) Predecessor নির্ভরতা, (৩) 'Touching files' ও পরমাণু ব্লাস্ট রেডিয়াস ঘোষণা, (৪) ৩-স্তর ভেরিফিকেশন নির্দেশাবলী, (৫) বাধ্যতামূলক বাংলা/বাংলিশ কোড কমেন্টস (`# বাংলা মন্তব্য:`), এবং (৬) স্পষ্ট স্ট্রেজিং নোটিশ: 'গ্রুপ সম্পূর্ণ শেষ হওয়ার পর ১টি একক PR হবে — মাঝপথে কোনো বিচ্ছিন্ন PR নয়'।
-
-### 10. Issues as Live Operational Truth & TelDrive Backup (ডকুমেন্টেশন Issues-এ সংরক্ষণ ও TelDrive ব্যাকআপ নীতি)
-রিপোজিটরির ভেতরে নতুন কোনো বিচ্ছিন্ন .md ফাইল তৈরি করে ফাইল স্প্রল বা সাইজ বাড়ানো নিষিদ্ধ। এজেন্টের সমস্ত নতুন আর্কিটেকচারাল সিদ্ধান্ত, গাইড, প্ল্যান ও অপারেশনাল ট্রুথ সরাসরি সংশ্লিষ্ট GitHub Issue-তে কমেন্ট বা বডিতে যুক্ত করতে হবে (GitHub Issues as Live Operational Truth)। আর বিদ্যমান কোনো দীর্ঘ ডক্স বা রেফারেন্স ফাইল কোডবেসে না জমিয়ে সরাসরি TelDrive (টেলিগ্রাম ব্যাকআপ ক্লাউড)-এ সংরক্ষণ ও ব্যাকআপ করতে হবে। এর ফলে রিপোর সাইজ হালকা থাকবে এবং সমস্ত সিদ্ধান্ত ট্র্যাকেবল থাকবে।
-
-### 11. Mandatory Agent Push-as-PR Protocol (বাধ্যতামূলক PR পুশ)
-এজেন্ট কোনো কাজ শুধু লোকাল ব্রাঞ্চে ফেলে রাখতে পারবে না। কাজ শেষ হওয়ার সাথে সাথে: (১) রিমোট গ্রুপ ব্রাঞ্চে পুশ করতে হবে (`git push origin <group-branch>`), (২) স্বাধীন কাজের ক্ষেত্রে অবিলম্বে PR খুলবে এবং গ্রুপ কাজের ক্ষেত্রে সম্পূর্ণ গ্রুপ শেষ হলে একক সমন্বিত PR খোলা হবে, (৩) সাথে সাথে সংশ্লিষ্ট ইস্যুতে `gh issue edit <id> --add-label 'has-pr'` দিতে হবে। প্রতিটি কাজের অগ্রগতি GitHub-এ দৃশ্যমান ও অডিটেবল হতে হবে।
-
-### 12. Architecture Preservation & DRY 3-Pipeline Law (একক ৩-পাইপলাইন ও রিইউজিবিলিটি নীতি)
-সিস্টেমের বিদ্যমান আর্কিটেকচার যেমন আছে হুবহু তেমন অক্ষত ও অপরিবর্তিত থাকবে যদি না পরিবর্তন একান্তই অপরিহার্য (Preserve architecture intact until it is must)। সিআই/সিডি ফ্র্যাগমেন্টেশন ও ফাইল স্প্রল বন্ধ করে DRY (Don't Repeat Yourself) ও Reusable কাঠামোর ৩টি একক পাইপলাইন বলবৎ থাকবে: (১) PR-এ থাকবে ১টি গেট (PR Gate — স্কোপ, লিজ, ভেরিফিকেশন ও পলিসি গার্ড), (২) Merge Train-এ থাকবে ১টি (Train Gate — ব্যাচ রোলআপ, সিকোয়েন্স ও ডিপেন্ডেন্সি হোল্ড), এবং (৩) Main-এ মার্জের পর থাকবে ১টি (Main CI/CD — টেস্ট, বিল্ড, পোস্ট-মার্জ রিলিজ ও জানিটর)। ডুপ্লিকেট রান বা বিক্ষিপ্ত ট্রিগার সম্পূর্ণ নিষিদ্ধ।
-
-### 13. Strict Sequential Priority Resolution (অগ্রাধিকার অনুযায়ী একক-PR ফিক্স ও মার্জ নীতি — সম্পূর্ণ বাস্তবভিত্তিক)
-গ্রুপ বা স্বাধীন যেকোনো কাজের ক্ষেত্রে সমান্তরাল একাধিক PR নিয়ে টানাটানি এবং মাঝপথে `queue:hold`-এ PR জমিয়ে রাখা সম্পূর্ণ নিষিদ্ধ। একই গ্রুপের সব ইস্যু একই গ্রুপ ব্রাঞ্চে ক্রমানুসারে একের পর এক এজেন্ট সম্পন্ন করে গ্রুপ শেষে মাত্র ১টি একক PR তৈরি করবে। আর কিউতে থাকা সমস্ত ওপেন PR সর্বদা সর্বোচ্চ প্রায়োরিটি (Rank 1 / P0) অনুযায়ী এক-একটি করে মূল্যায়ন করা হবে: লোকাল ও CI টেস্ট ১০০% গ্রিন নিশ্চিত করে সরাসরি `main`-এ মার্জ সম্পন্ন করতে হবে এবং তারপরই কেবল পরবর্তী অধস্তন PR-এ হাত দেওয়া যাবে (Strict Sequential Priority Resolution)। এটি সিআই জ্যাম, ব্রাঞ্চ ড্রিফট, ডেডলক ও ক্রস-PR কনফ্লিক্ট চিরতরে নির্মূল করে সর্বোচ্চ গতি ও কার্যকারিতা নিশ্চিত করে।
-
----
-
-## Bootstrap Checklist (সেশন শুরু হলে ঠিক এই ক্রমে কাজ করো)
-
-1. `git fetch origin --prune && cat AGENTS.md` — সেশন শুরুতে সর্বদা main sync ও AGENTS.md পড়ো — rules পরিবর্তন হয়েছে কিনা দেখো
-2. `cat docs/architecture/ARCH-LIVING-PIPELINE-01.md` — Living Pipeline canon পড়ো — পূর্ণ প্রেক্ষাপট ও গেট-ম্যাপ
-3. `python scripts/agents/acquire_role_slot.py --role <lane>` — অটো-ডিসকভারি: পরবর্তী প্রায়োরিটি ইস্যু নিজে খুঁজে স্লট ও ব্রাঞ্চ তৈরি করে। নির্দিষ্ট ইস্যুর জন্য: --issue <id>
-4. `./scripts/ci/atomic_claim.sh <issue#> <agent>` — ইস্যু ক্লেইম ও 'Touching files:' ঘোষণা করো (GH_TOKEN অটো-fallback: gh auth login)
-5. `python scripts/agents/mcp_tower_client.py heartbeat --slot agent-<N> --name <id>` — Control Tower Heartbeat: MCP মেশে নিজেকে 'state=online' রেজিস্টার করো
-6. `3-Tier Verification (Reflection → Boot Smoke → Pytest)` — কোনো টেস্ট ভাঙা বা ডিলিট করা নিষিদ্ধ
-7. `gh pr create ... && gh issue edit <issue#> --add-label 'has-pr'` — স্বাধীন কাজের ক্ষেত্রে বা সম্পূর্ণ গ্রুপের কাজ শেষ হলে একক PR খোলো এবং অবিলম্বে has-pr লেবেল দাও
-
-_কাজ শুরুর আগে সর্বদা `git fetch origin --prune && cat AGENTS.md` চালাও।_
-
----
-
-## System যা আটকাবে (মনে রাখার দরকার নেই — শুধু জেনে রাখো কেন আটকালো)
-
-| Gate | কখন আটকাবে | Enforcement |
-| :--- | :--- | :--- |
-| Lease Gate | PR head branch লেখকের leased slot-এর বাইরে (bot slot-mismatch), বা mesh lease মেয়াদ শেষ | CI (pr.yml) |
-| Verification Gate | PR description-এ Test Evidence সেকশন নেই (টেস্ট লগ/কমান্ড আউটপুট ছাড়া PR BLOCK) | CI (pr.yml) |
-| Scope Gate | claim-এ declare করা 'Touching files:'-এর বাইরের ফাইল PR-এ বদলালে BLOCK | CI (pr.yml) |
-| Collision Gate | অন্য open PR-এর ফাইলের সাথে direct overlap হলে BLOCK | CI (pr.yml) |
-| Self-Merge Gate | নিজের PR নিজে approve/merge করলে BLOCK | CI (pr.yml) |
-| Test Guard | test delete/skip/threshold-নামানো হলে BLOCK | CI (pr.yml) |
-| Post-Merge Watch | merge-এর ১৫ মিনিটের মধ্যে main লাল হলে (watchdog admin-alert — কোনো অন্ধ auto-revert নয়, revert সিদ্ধান্ত অ্যাডমিনের নাটাইয়ে) | CI (main.yml) |
-| Predecessor Group Merge Hold Gate | পূর্ববর্তী গ্রুপ (Predecessor Group) সম্পূর্ণ না হলে পরবর্তী গ্রুপের PR queue:hold ছাড়া মার্জ করা নিষিদ্ধ | CI (pr.yml) |
-
----
-
-## Group Closeout Audit Protocol (The 4-Pillar Rubric)
-
-| Pillar | প্রশ্ন ও মানদণ্ড |
+| Gate | কখন আটকাবে |
 | :--- | :--- |
-| **1. System Stability** | সিস্টেম বা আর্কিটেকচারে কোনো ব্রেকিং পরিবর্তন বা অঘোষিত সাইড-ইফেক্ট আছে কি না? |
-| **2. Real Benefit** | বাস্তব উন্নতি হয়েছে কি না? (LOC হ্রাস / ডেড-কোড ছাঁটাই / বাগ ফিক্স / নির্ভরযোগ্যতা বৃদ্ধি) |
-| **3. Zero Regression** | সব টেস্ট সফল কি না? কোনো টেস্ট ডিলিট, স্কিপ বা ফেইক অ্যাসারশন করা হয়নি তো? |
-| **4. Scope Narrowness** | ঘোষিত ফাইলের বাইরে ড্রাইভ-বাই রিফ্যাক্টরিং বা অনাকাঙ্ক্ষিত কোড ঢুকেছে কি না? |
-
----
-
-## তোমার স্বাধীনতা (কেউ আটকাবে না)
-
-- সমাধানের বাস্তবসম্মত অ্যাপ্রোচ ও ডিজাইন প্যাটার্ন নিজে বেছে নাও।
-- সক্রিয় গ্রুপ সিকোয়েন্সের পরবর্তী উন্মুক্ত ইস্যুটি গ্রহণ করো।
-- কোনো ব্লকার পেলে তাৎক্ষণিক ব্লকার ইস্যু তৈরি করে পরবর্তী আনক্লেইমড কাজে এগিয়ে যাও।
-
----
+| Lease Gate | PR head branch লেখকের leased slot-এর বাইরে (bot slot-mismatch), বা mesh lease মেয়াদ শেষ |
+| Verification Gate | PR description-এ Test Evidence সেকশন নেই (টেস্ট লগ/কমান্ড আউটপুট ছাড়া PR BLOCK) |
+| Scope Gate | claim-এ declare করা 'Touching files:'-এর বাইরের ফাইল PR-এ বদলালে BLOCK |
+| Collision Gate | অন্য open PR-এর ফাইলের সাথে direct overlap হলে BLOCK |
+| Self-Merge Gate | নিজের PR নিজে approve/merge করলে BLOCK |
+| Test Guard | test delete/skip/threshold-নামানো হলে BLOCK |
+| Post-Merge Watch | merge-এর ১৫ মিনিটের মধ্যে main লাল হলে (watchdog admin-alert — কোনো অন্ধ auto-revert নয়, revert সিদ্ধান্ত অ্যাডমিনের নাটাইয়ে) |
+| Predecessor Group Merge Hold Gate | পূর্ববর্তী গ্রুপ (Predecessor Group) সম্পূর্ণ না হলে পরবর্তী গ্রুপের PR queue:hold ছাড়া মার্জ করা নিষিদ্ধ |
 
 ## একমাত্র কঠিন নিয়ম (মোট ৭টা, বাকি সব system-এর ভার)
 
@@ -112,7 +53,6 @@ _কাজ শুরুর আগে সর্বদা `git fetch origin --prun
 ৬. অগ্রাধিকার অনুযায়ী এক-একটি করে ফিক্স ও মার্জ নীতি (Fast & Effective Sequential Law): সিআই এবং ডেভেলপার সময়ের অপচয় রোধে সর্বদা সর্বোচ্চ অগ্রাধিকার (Rank 1 / P0) PR-টি আগে শতভাগ গ্রিন ও মার্জ করতে হবে, তারপর ক্রমানুসারে পরবর্তী PR-এ যেতে হবে। সমান্তরালভাবে একাধিক ইন্টার-ডিপেন্ডেন্ট PR নিয়ে টানাটানি নিষিদ্ধ।
 ৭. ডকুমেন্টেশন Issues-এ সংরক্ষণ ও TelDrive ব্যাকআপ নীতি (Issues as Operational Truth & TelDrive Backup): রিপোতে অপ্রয়োজনীয় .md তৈরি সম্পূর্ণ নিষিদ্ধ। সমস্ত নতুন স্থাপত্য সিদ্ধান্ত, গাইড ও প্ল্যান সরাসরি GitHub Issue-তে নথিভুক্ত হবে এবং দীর্ঘস্থায়ী ডক্স TelDrive-এ ব্যাকআপ রাখা হবে।
 
----
-
-> সম্পূর্ণ machine-readable rule registry: `.github/constitution/rules.yml` (CI এটা থেকে gate চালায়)।
+> স্বাধীনতা: সমাধানের বাস্তবসম্মত অ্যাপ্রোচ ও ডিজাইন প্যাটার্ন নিজে বেছে নাও। সক্রিয় গ্রুপ সিকোয়েন্সের পরবর্তী উন্মুক্ত ইস্যুটি গ্রহণ করো। কোনো ব্লকার পেলে তাৎক্ষণিক ব্লকার ইস্যু তৈরি করে পরবর্তী আনক্লেইমড কাজে এগিয়ে যাও।
+> সম্পূর্ণ machine-readable rule registry: `.github/constitution/rules.yml` · task-type policy DB: `task_policies` (#2504)।
 > **এই file-টি registry থেকে GENERATED — হাতে এডিট করবে না।**

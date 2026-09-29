@@ -148,6 +148,75 @@ _TABLE_DDLS: list[tuple[str, list[str], str]] = [
         )
         """,
     ),
+    # ── Universal Agent policy layer (issue #2504, seq:1) — univ_agent_0001-এর মিরর ──
+    (
+        "task_policies",
+        ["task_type"],
+        """
+        CREATE TABLE IF NOT EXISTS task_policies (
+            task_type VARCHAR(50) PRIMARY KEY,
+            summary TEXT,
+            rules JSON NOT NULL,
+            required_actions JSON,
+            forbidden_actions JSON NOT NULL,
+            validation JSON,
+            expected_output TEXT,
+            updated_at TEXT NOT NULL
+        )
+        """,
+    ),
+    (
+        "task_permissions",
+        ["task_type"],
+        """
+        CREATE TABLE IF NOT EXISTS task_permissions (
+            task_type VARCHAR(50) PRIMARY KEY,
+            read_repo BOOLEAN NOT NULL DEFAULT 0,
+            modify_code BOOLEAN NOT NULL DEFAULT 0,
+            create_issue BOOLEAN NOT NULL DEFAULT 0,
+            create_pr BOOLEAN NOT NULL DEFAULT 0,
+            comment BOOLEAN NOT NULL DEFAULT 0,
+            merge_pr BOOLEAN NOT NULL DEFAULT 0,
+            write_db BOOLEAN NOT NULL DEFAULT 0,
+            updated_at TEXT NOT NULL
+        )
+        """,
+    ),
+    (
+        "agent_task_history",
+        ["id"],
+        """
+        CREATE TABLE IF NOT EXISTS agent_task_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            task_type VARCHAR(50) NOT NULL,
+            issue_number INTEGER,
+            slot_id VARCHAR(64),
+            problem TEXT NOT NULL,
+            root_cause TEXT,
+            solution TEXT,
+            files_changed JSON,
+            tests_used JSON,
+            failed_approaches JSON,
+            verification_result TEXT,
+            success BOOLEAN NOT NULL DEFAULT 1,
+            created_at TEXT NOT NULL
+        )
+        """,
+    ),
+    (
+        "router_patterns",
+        ["task_type"],
+        """
+        CREATE TABLE IF NOT EXISTS router_patterns (
+            task_type VARCHAR(50) PRIMARY KEY,
+            common_rules_needed JSON,
+            common_failures JSON,
+            successful_approaches JSON,
+            confidence FLOAT NOT NULL DEFAULT 0.0,
+            updated_at TEXT NOT NULL
+        )
+        """,
+    ),
 ]
 
 # Postgres variant: AUTOINCREMENT → (no), BOOLEAN DEFAULT 1 → DEFAULT TRUE,
@@ -162,6 +231,11 @@ _PG_FIXUPS = {
     "verified_at TEXT": "verified_at TIMESTAMPTZ",
     "resolved_at TEXT": "resolved_at TIMESTAMPTZ",
     "last_audit_at TEXT": "last_audit_at TIMESTAMPTZ",
+    "created_at TEXT NOT NULL": "created_at TIMESTAMPTZ NOT NULL",
+    # (#2504) boolean default Postgres-এ 0 নয় FALSE — স্পষ্ট BOOLEAN-qualified
+    # রাখা হয়েছে যাতে "confidence FLOAT DEFAULT 0.0"-এর মতো numeric default
+    # ভুলভাবে replace না হয়।
+    "BOOLEAN NOT NULL DEFAULT 0": "BOOLEAN NOT NULL DEFAULT FALSE",
 }
 
 _INDEXES = [
@@ -177,6 +251,10 @@ _INDEXES = [
     ("ix_operational_tasks_group", "CREATE INDEX IF NOT EXISTS ix_operational_tasks_group ON operational_tasks (group_name)"),
     ("ix_secret_rotations_name_scope", "CREATE INDEX IF NOT EXISTS ix_secret_rotations_name_scope ON secret_rotations (secret_name, scope)"),
     ("ix_audit_queue_status", "CREATE INDEX IF NOT EXISTS ix_audit_queue_status ON audit_queue (status)"),
+    # ── Universal Agent policy layer indexes (#2504) ──
+    ("ix_agent_task_history_type", "CREATE INDEX IF NOT EXISTS ix_agent_task_history_type ON agent_task_history (task_type)"),
+    ("ix_agent_task_history_issue", "CREATE INDEX IF NOT EXISTS ix_agent_task_history_issue ON agent_task_history (issue_number)"),
+    ("ix_agent_task_history_created", "CREATE INDEX IF NOT EXISTS ix_agent_task_history_created ON agent_task_history (created_at)"),
 ]
 
 TABLE_NAMES = [spec[0] for spec in _TABLE_DDLS]

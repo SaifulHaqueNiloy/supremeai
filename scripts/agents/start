@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Universal Agent Bootstrap (AGENTS.md v3, issue #2504)
+# ============================================================
+# বাংলা মন্তব্য:
+# এটি Universal Agent-এর একমাত্র entry point — lane/role নয়, task type।
+# Bootstrap ক্রম (AGENTS.md v3):
+#   ১. main sync + AGENTS.md পড়ো (rules বদলেছে কিনা)
+#   ২. Control Tower heartbeat (best-effort — tower না থাকলে advisory)
+#   ৩. Dynamic Task Router (supremeai_orchestrator.py) → audit + ১টি task
+#      assignment + dynamic instruction
+#
+# Usage:
+#   ./scripts/agents/start agent-1
+#   ./scripts/agents/start agent-1 --json
+#   ./scripts/agents/start agent-2 --issue 2504
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+SLOT="${1:-agent-1}"
+shift || true
+
+# ─── ১. main sync + AGENTS.md ───
+cd "$REPO_ROOT"
+git fetch origin --prune --quiet 2>/dev/null || echo "::warning::git fetch ব্যর্থ — অফলাইন মোডে চলছে"
+if [ -f AGENTS.md ]; then
+  echo "── AGENTS.md v3 (universal contract) ──"
+  head -20 AGENTS.md
+  echo "…"
+fi
+
+# ─── ২. Control Tower heartbeat (best-effort) ───
+# বাংলা মন্তব্য: tower unreachable হলে warning-ই যথেষ্ট — bootstrap থামবে না
+if [ -f scripts/agents/mcp_tower_client.py ]; then
+  python3 scripts/agents/mcp_tower_client.py heartbeat --slot "$SLOT" --name "$SLOT" \
+    2>/dev/null || echo "::warning::tower heartbeat skip (offline) — advisory"
+fi
+
+# ─── ৩. Dynamic Task Router ───
+echo ""
+python3 scripts/agents/supremeai_orchestrator.py --slot "$SLOT" "$@"

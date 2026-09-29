@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""AGENTS.md v2 generator — renders the agent constitution from rules.yml.
+"""AGENTS.md v3 generator — renders the Universal Agent contract from rules.yml.
 
 বাংলা: AGENTS.md এখন GENERATED document — হাতে এডিট করা যাবে না।
 Single source of truth: `.github/constitution/rules.yml` (`constitution`,
-`bootstrap`, `gates`, `hard_rules`, `freedoms` sections).
+`living_protocols`, `bootstrap`, `gates`, `hard_rules`, `freedoms` sections)।
+v3 (#2504): Universal Agent Contract — compact (<60 লাইন), task-type rules
+DB-তে (task_policies) থাকে, এই file শুধু universal contract।
 
 Usage:
     python scripts/ci/generate_agents_md.py             # write AGENTS.md
     python scripts/ci/generate_agents_md.py --check     # drift check (CI): exit 1 if drifted
-
-Part of Phase-5 governance flip (Issue #2251): prose → gate.
 """
 
 from __future__ import annotations
@@ -26,105 +26,69 @@ HEADER = "<!-- GENERATED FILE — DO NOT EDIT BY HAND -->\n<!-- Source of truth:
 
 
 def render(rules: dict) -> str:
-    """Render AGENTS.md v2 from the machine-readable registry."""
+    """Render AGENTS.md v3 (Universal Agent Contract) from the registry — compact।"""
     constitution = rules.get("constitution") or {}
     living_protocols = rules.get("living_protocols") or {}
     bootstrap = rules.get("bootstrap") or []
     gates = rules.get("gates") or {}
-    review_protocol = rules.get("review_protocol") or {}
     hard_rules = rules.get("hard_rules") or {}
     freedoms = rules.get("freedoms") or []
-    version = constitution.get("rules_version", "2.1")
+    version = constitution.get("rules_version", "4.0")
+
+    bn_digits = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
 
     lines: list[str] = []
     lines.append(HEADER)
     lines.append("")
-    lines.append(f"# {constitution.get('name', 'SupremeAI — AGENTS.md v2 (Universal Operating Constitution & Agent Bootstrap)')}")
+    lines.append(
+        f"# {constitution.get('name', 'SupremeAI — AGENTS.md v3 (Universal Agent Contract)')}"
+    )
     lines.append("")
     lines.append(f"> rules_version: `{version}` · {constitution.get('philosophy_quote', '')}")
-    lines.append(">")
-    lines.append(f"> {constitution.get('philosophy_line', '')}")
-
-    if constitution.get("benefit_principle"):
-        lines.append(">")
-        lines.append(f"> 💎 **{constitution.get('benefit_principle')}**")
-    if constitution.get("separation_note"):
-        lines.append(">")
-        lines.append(f"> 🏛️ {constitution.get('separation_note')}")
-
-    lines.append("")
-    lines.append("---")
+    lines.append(f"> **{constitution.get('core_principle', '')}**")
+    lines.append(f"> Rule layering: {constitution.get('rule_layering', '')}")
     lines.append("")
 
+    # Universal Protocols — v3 compact (১ লাইন/প্রোটোকল)
     if living_protocols:
-        lines.append("## The Living Protocols (Root-Cause Invariants — ১০১% লাভ)")
+        lines.append("## Universal Protocols")
         lines.append("")
-        for pid, proto in living_protocols.items():
-            lines.append(f"### {proto.get('title', pid)}")
-            lines.append(f"{proto.get('rule', '')}")
-            lines.append("")
-        lines.append("---")
+        for idx, (pid, proto) in enumerate(living_protocols.items(), start=1):
+            idx_bn = str(idx).translate(bn_digits)
+            lines.append(f"{idx_bn}. **{proto.get('title', pid)}** — {proto.get('rule', '')}")
         lines.append("")
 
-    lines.append("## Bootstrap Checklist (সেশন শুরু হলে ঠিক এই ক্রমে কাজ করো)")
+    lines.append("## Bootstrap")
     lines.append("")
-    step_no = 0
-    for entry in bootstrap:
-        step_no += 1
+    for idx, entry in enumerate(bootstrap, start=1):
         # Support both old-style {slot:..., claim:...} and new-style {step:...}
         if "step" in entry:
             command = entry["step"]
         else:
-            label, command = next(iter(entry.items()))
+            _, command = next(iter(entry.items()))
         note = entry.get("note", "")
-        line = f"{step_no}. `{command}`"
+        line = f"{idx}. `{command}`"
         if note:
             line += f" — {note}"
         lines.append(line)
     lines.append("")
-    lines.append("_কাজ শুরুর আগে সর্বদা `git fetch origin --prune && cat AGENTS.md` চালাও।_")
 
+    # System Gates — compact টেবিল
+    lines.append("## System Gates (CI-enforced — মনে রাখার দরকার নেই)")
     lines.append("")
-    lines.append("---")
-    lines.append("")
-    lines.append("## System যা আটকাবে (মনে রাখার দরকার নেই — শুধু জেনে রাখো কেন আটকালো)")
-    lines.append("")
-    lines.append("| Gate | কখন আটকাবে | Enforcement |")
-    lines.append("| :--- | :--- | :--- |")
+    lines.append("| Gate | কখন আটকাবে |")
+    lines.append("| :--- | :--- |")
     for gid, gate in gates.items():
         title = gate.get("title", gid)
         blocks = (gate.get("blocks_when", "") or "").replace("|", "\\|")
-        if gate.get("wired"):
-            enforcement = f"CI ({gate.get('workflow', 'workflow')})"
-        else:
-            enforcement = (gate.get("enforced_by", "follow-up") or "follow-up").split("(")[0].strip()
-        lines.append(f"| {title} | {blocks} | {enforcement} |")
+        lines.append(f"| {title} | {blocks} |")
     lines.append("")
 
-    if review_protocol and review_protocol.get("rubric"):
-        lines.append("---")
-        lines.append("")
-        title = review_protocol.get("title", "Group Closeout Audit Protocol (The 4-Pillar Rubric)")
-        lines.append(f"## {title}")
-        lines.append("")
-        lines.append("| Pillar | প্রশ্ন ও মানদণ্ড |")
-        lines.append("| :--- | :--- |")
-        for item in review_protocol.get("rubric", []):
-            pillar = item.get("pillar", "")
-            check = item.get("check", "")
-            lines.append(f"| **{pillar}** | {check} |")
-        lines.append("")
+    # Review protocol (4-Pillar Rubric) সচেতনভাবে আলাদা সেকশনে নেই —
+    # Universal Protocol 'Group Closeout' + rules.yml review_protocol-এ পূর্ণ টেবিল
+    # (v3 লাইন-বাজেট: <60 লাইন; ডুপ্লিকেশন নয়, একই তথ্যের এক রেফারেন্স)।
 
-    lines.append("---")
-    lines.append("")
-    lines.append("## তোমার স্বাধীনতা (কেউ আটকাবে না)")
-    lines.append("")
-    for freedom in freedoms:
-        lines.append(f"- {freedom}")
-    lines.append("")
-    lines.append("---")
-    lines.append("")
-    bn_digits = str.maketrans("0123456789", "০১২৩৪৫৬৭৮৯")
+    # Hard rules — মূল কঠিন নিয়ম
     count_bn = str(len(hard_rules)).translate(bn_digits)
     lines.append(f"## একমাত্র কঠিন নিয়ম (মোট {count_bn}টা, বাকি সব system-এর ভার)")
     lines.append("")
@@ -132,9 +96,14 @@ def render(rules: dict) -> str:
         idx_bn = str(idx).translate(bn_digits)
         lines.append(f"{idx_bn}. {text}")
     lines.append("")
-    lines.append("---")
-    lines.append("")
-    lines.append("> সম্পূর্ণ machine-readable rule registry: `.github/constitution/rules.yml` (CI এটা থেকে gate চালায়)।")
+
+    # Freedoms + footer
+    if freedoms:
+        lines.append("> স্বাধীনতা: " + " ".join(freedoms))
+    lines.append(
+        "> সম্পূর্ণ machine-readable rule registry: `.github/constitution/rules.yml` · "
+        "task-type policy DB: `task_policies` (#2504)।"
+    )
     lines.append("> **এই file-টি registry থেকে GENERATED — হাতে এডিট করবে না।**")
     lines.append("")
     return "\n".join(lines)
