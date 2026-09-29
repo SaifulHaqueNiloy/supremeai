@@ -27,6 +27,11 @@ from datetime import UTC, datetime
 
 import pytest
 import pytest_asyncio
+
+# বাংলা মন্তব্য: SQLAlchemy asyncio ইঞ্জিনের (sqlite+aiosqlite) জন্য greenlet আবশ্যক — CI runner-এ অনুপস্থিত থাকলে টেস্ট স্কিপ
+pytest.importorskip(
+    "greenlet", reason="greenlet not installed — required for SQLAlchemy asyncio engine"
+)
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import select
