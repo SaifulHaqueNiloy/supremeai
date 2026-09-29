@@ -15,44 +15,35 @@
  */
 
 // Issue #685 (Section 1, bundle): ``@upstash/redis`` is a server-side Redis
-// SDK. The static value import used to pull the whole SDK into every web chunk
-// that reached this module. It is now TYPE-ONLY at the top and the runtime
-// class is loaded via dynamic import() inside getRedis() on first use — the
-// SDK never enters any initial/route chunk unless Redis is actually
-// configured and used.
+// SDK — it must remain TYPE-ONLY here so it never enters any client chunk.
 import type { Redis } from '@upstash/redis';
 
 // ============================================================================
-// Audit F-05 fix (2026-09-17): the Redis client used to be instantiated at
-// MODULE SCOPE in browser code from non-VITE_-prefixed env vars (always
-// undefined) — a server-side Redis client shipped to the browser bundle that
-// could never connect. The client is now created LAZILY on first use and
-// only when actually configured; otherwise operations throw an honest error
-// (cachedFetch's catch falls back to a direct fetch — graceful, no fake
-// cache hits).
+// SECURITY FIX (#2510): Upstash REST tokens are FULL-ADMIN server-side
+// credentials (read/write/flush). Reading them from `import.meta.env` bakes
+// them into the browser bundle — anyone with devtools could flush production
+// Redis. The browser NEVER holds these credentials anymore:
+//
+//   - No env read remains in this module (source-scan guard test enforces it).
+//   - getRedis() always throws an honest error; cachedFetch's existing catch
+//     falls back to a direct fetch (graceful, no fake cache hits).
+//   - Cache features that genuinely need Redis must go through a BACKEND
+//     proxy route that holds the token server-side.
+//   - Rotation note: if VITE_UPSTASH_REDIS_REST_TOKEN was ever set in a
+//     deploy config, the token shipped — rotate it (vault key
+//     UPSTASH_REDIS_REST_TOKEN).
 // ============================================================================
-const UPSTASH_URL =
-  import.meta.env.VITE_UPSTASH_REDIS_REST_URL || import.meta.env.UPSTASH_REDIS_REST_URL;
-const UPSTASH_TOKEN =
-  import.meta.env.VITE_UPSTASH_REDIS_REST_TOKEN || import.meta.env.UPSTASH_REDIS_REST_TOKEN;
-
-let redisInstance: Redis | null = null;
-
 async function getRedis(): Promise<Redis> {
-  if (!redisInstance) {
-    if (!UPSTASH_URL || !UPSTASH_TOKEN) {
-      throw new Error(
-        '[cache.manager] Upstash Redis is not configured (VITE_UPSTASH_REDIS_REST_URL / ' +
-          'VITE_UPSTASH_REDIS_REST_TOKEN missing) — cache operations are unavailable. ' +
-          'Callers should fall back to a direct fetch.',
-      );
-    }
-    // Issue #685: lazy dynamic import — keeps the SDK out of the static
-    // module graph (verified: no static '@upstash/redis' value import remains).
-    const { Redis: UpstashRedis } = await import('@upstash/redis');
-    redisInstance = new UpstashRedis({ url: UPSTASH_URL, token: UPSTASH_TOKEN });
-  }
-  return redisInstance;
+  // SECURITY FIX (#2510): intentionally unreachable success path — the browser
+  // must never hold Redis admin credentials. Kept as an honest, explanatory
+  // throw so every Redis-backed helper below degrades predictably
+  // (cachedFetch → direct-fetch fallback; the rest → explicit error).
+  throw new Error(
+    '[cache.manager] Redis admin credentials are not available in the browser (#2510). ' +
+      'Upstash REST tokens are server-side secrets and are no longer read from client env. ' +
+      'Route cache operations through a backend proxy that holds the token, or use the ' +
+      'direct-fetch fallback (cachedFetch already does).',
+  );
 }
 
 // ✅ ENHANCED: Proper compression using Compression Streams API
@@ -299,5 +290,6 @@ export function trackRedisCommand(): boolean {
   dailyCommandCount++;
   return dailyCommandCount < MAX_DAILY_COMMANDS;
 }
-
-export { getRedis as getRedisClient };
+// SECURITY NOTE (#2510): getRedisClient is intentionally NOT exported — the
+// browser-side Redis client no longer exists and must not be reintroduced.
+// Cache features that need Redis belong behind a backend proxy route.

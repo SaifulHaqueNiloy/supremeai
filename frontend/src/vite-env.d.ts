@@ -52,9 +52,10 @@ interface ImportMetaEnv {
   readonly VITE_KROGGER_URL?: string;
   readonly VITE_INFISICAL_URL?: string;
 
-  // --- Upstash Redis (cache.manager) ---
-  readonly VITE_UPSTASH_REDIS_REST_URL?: string;
-  readonly VITE_UPSTASH_REDIS_REST_TOKEN?: string;
+  // SECURITY (#2510): Upstash Redis env declarations were REMOVED on purpose.
+  // Upstash REST tokens are server-side admin credentials — a VITE_ prefix
+  // bakes them into the browser bundle. Cache features that need Redis must
+  // go through a backend proxy route that holds the token.
 
   // --- Feature flags / runtime config ---
   readonly VITE_UNIFIED_STORE?: string;
