@@ -24,7 +24,11 @@ httpx = "^0.28.1"
 ddgs = "^9.16.0"
 uvicorn = {extras = ["standard"], version = ">=0.51,<0.55"}
 starlette-context = ">=0.3,<0.6"
-sqlalchemy = "^2.0.36"
+# (#2504 CI round-3) sqlalchemy 2.1 (dependabot 43-bump #2462) থেকে greenlet আর
+# auto-install হয় না — asyncio ব্যবহারের জন্য extras=["asyncio"] বাধ্যতামূলক,
+# নইলে "The SQLAlchemy asyncio module requires greenlet" ইররে conftest-সহ
+# পুরো backend tier ভাঙে।
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
 alembic = "^1.14.0"
 pydantic = "^2.10.0"
 pydantic-settings = "^2.14.2"  # CVE fix floor (AUDIT-014, GHSA-4xgf-cpjx-pc3j)
