@@ -26,7 +26,19 @@ import sys
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Set
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# System metadata and generated tracking files that are auto-updated and do not represent logic collisions
+EXEMPT_COLLISION_FILES = {
+    "CHECKPOINT.md",
+    "LESSONS_LEARNED.md",
+    "scripts/_INDEX.md",
+}
 
 
 @dataclass
@@ -76,6 +88,8 @@ def get_changed_files_for_branch(branch: str, base: str = "origin/main") -> list
             cwd=ROOT_DIR,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             check=False,
         )
         if res.returncode == 0:
@@ -101,6 +115,8 @@ def fetch_open_prs() -> list[dict]:
             cwd=ROOT_DIR,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             check=False,
             timeout=15,
         )
@@ -169,12 +185,19 @@ def detect_collisions(
             if pr_branch == target_branch:
                 continue
 
+            # বাংলা মন্তব্য: Seniority Precedence — আগে খোলা PR-কে পরে খোলা PR ব্লক করতে
+            # পারবে না (deadlock prevention)। শুধুমাত্র নতুন PR পুরনো PR-এর জন্য অপেক্ষা করবে।
+            if target_pr_num and pr_num and target_pr_num < pr_num:
+                continue
+
             pr_files = [f.get("path") for f in pr.get("files", []) if isinstance(f, dict) and "path" in f]
             if not pr_files:
                 # If files array was empty, fetch via git diff if branch exists locally
                 pr_files = get_changed_files_for_branch(f"origin/{pr_branch}")
 
-            overlapping_files = target_file_set.intersection(set(pr_files))
+            overlapping_files = (
+                target_file_set.intersection(set(pr_files)) - EXEMPT_COLLISION_FILES
+            )
             for file_path in sorted(overlapping_files):
                 report.direct_collisions.append(
                     CollisionItem(

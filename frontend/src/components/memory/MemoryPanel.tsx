@@ -96,7 +96,7 @@ export default function MemoryPanel() {
   const fetchMemories = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get<Memory[]>('/api/preferences/memory');
+      const response = await apiClient.get<Memory[]>('/api/preferences/memory/');
       setMemories(Array.isArray(response) ? response : []);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Failed to load memories';
@@ -148,7 +148,7 @@ export default function MemoryPanel() {
     if (!newContent.trim()) return;
     setIsAdding(true);
     try {
-      await apiClient.post('/api/preferences/memory', {
+      await apiClient.post('/api/preferences/memory/', {
         content: newContent.trim(),
         content_type: newType,
       });

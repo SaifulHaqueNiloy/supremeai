@@ -26,7 +26,10 @@ from core.logging_config import logger
 from .models import AutomationEvent, AutomationResult, AutomationStatus
 
 if TYPE_CHECKING:
-    from core.orchestration.conversation_orchestrator import ExecutionRecord
+    # Issue #2476: টাইপ এখন leaf contracts মডিউলে — conversation_orchestrator
+    # থেকে নিলে recorder↔orchestrator static cycle তৈরি হতো (orchestrator
+    # নিজে runtime-এ execution_recorder instance-কে module-level import করে)।
+    from core.orchestration.contracts import ExecutionRecord
 
 
 def _fit36(value: str | None) -> str | None:
