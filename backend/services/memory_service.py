@@ -967,7 +967,9 @@ async def save_memory(
                 user_id=user_id,
             )
             if mem_id:
-                logger.info(f"Memory saved (cascade consolidated writer) | id={mem_id} | task={task_type}")
+                logger.info(
+                    f"Memory saved (cascade consolidated writer) | id={mem_id} | task={task_type}"
+                )
                 return {"success": True, "id": str(mem_id), "backend": "cascade"}
             # pg-লেখা ব্যর্থ (None) → নিচের Supabase-REST fallback (আজকের পথ)
 
