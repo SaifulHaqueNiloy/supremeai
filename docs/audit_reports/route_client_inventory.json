@@ -7,7 +7,7 @@
   ],
   "totals": {
     "backend_routes": 594,
-    "frontend_unique_refs": 145,
+    "frontend_unique_refs": 140,
     "matched": 270,
     "orphan_routes": 324
   },
@@ -2497,7 +2497,7 @@
       "resolved": "/api/admin/verify-otp",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/dashboard/HumanInTheLoopProtocol.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
@@ -3399,7 +3399,7 @@
       "resolved": "/api/admin/ai/assign",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/admin/AISurfaceAssignment.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
@@ -3409,7 +3409,7 @@
       "resolved": "/api/admin/ai/test/:param",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/admin/AISurfaceAssignment.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
@@ -3419,7 +3419,7 @@
       "resolved": "/api/admin/ai/overview",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/components/admin/AISurfaceAssignment.tsx"
+        "frontend/src/utils/api.ts"
       ]
     },
     {
