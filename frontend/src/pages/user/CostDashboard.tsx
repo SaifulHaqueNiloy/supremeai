@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getSupremeProviderLabel } from '../../lib/modelBranding';
-import { apiClient } from '../../services/apiClient';
+import { apiClient, getRawToken } from '../../services/apiClient';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
 import { AlertTriangle, X, Wifi, WifiOff } from 'lucide-react';
@@ -80,8 +80,18 @@ export const CostDashboard: React.FC = () => {
         wsRef.current = new WebSocket(wsUrl);
 
         wsRef.current.onopen = () => {
-          const token = localStorage.getItem('supremeai_token') || '';
-          if (token) wsRef.current?.send(JSON.stringify({ type: 'auth', token }));
+          // বাংলা মন্তব্য (fix #2521): আগে `localStorage.getItem('supremeai_token')` পড়ত —
+          // এই key পুরো codebase-এ কোথাও লেখা হয় না (login লেখে sessionStorage
+          // 'supremeai_auth_token' + মেমোরি cache), তাই WS auth frame কখনোই যেত না →
+          // realtime metrics silently dead। এখন canonical accessor getRawToken()
+          // (admin → user → in-memory cache) পড়ে — ঠিক যা login লেখে।
+          const token = getRawToken() || '';
+          if (token) {
+            wsRef.current?.send(JSON.stringify({ type: 'auth', token }));
+          } else {
+            // নীরব ব্যর্থতা নয় (rel001) — unauthenticated অবস্থা দৃশ্যমান করা হলো।
+            console.warn('[CostDashboard] No session token — realtime metrics unauthenticated (auth frame skipped)');
+          }
           reconnectAttempt = 0; // Reset on successful connect
           setIsRealtime(true);
         };
