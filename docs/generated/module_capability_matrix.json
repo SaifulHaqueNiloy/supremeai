@@ -16677,13 +16677,6 @@
     },
     {
       "capability_signals": [],
-      "classification": "canonical",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "backend/tools/ensemble_router.py"
-    },
-    {
-      "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
@@ -18133,38 +18126,6 @@
       "path": "frontend/src/commandcenter/modules/system/Workspaces.tsx"
     },
     {
-      "capability_signals": [
-        "realtime"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/commandcenter/realtime/CommandCenterRealtimeProvider.tsx"
-    },
-    {
-      "capability_signals": [
-        "health"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/realtime/channelRegistry.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/realtime/sseBridges.ts"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "ts",
-      "path": "frontend/src/commandcenter/realtime/websocketManager.ts"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -18280,13 +18241,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/GlobalErrorBoundary.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/Header.tsx"
     },
     {
       "capability_signals": [],
@@ -18938,15 +18892,6 @@
     },
     {
       "capability_signals": [
-        "execute"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/admin/shared/ActionCard.tsx"
-    },
-    {
-      "capability_signals": [
         "browser",
         "dispatch",
         "health",
@@ -19120,13 +19065,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/core/Header.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/core/Sidebar.tsx"
     },
     {
       "capability_signals": [],
@@ -19322,13 +19260,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "tsx",
-      "path": "frontend/src/components/dashboard/DashboardLayout.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
       "path": "frontend/src/components/dashboard/ExecutionShell.tsx"
     },
     {
@@ -19353,13 +19284,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/dashboard/HITLModal.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/Header.tsx"
     },
     {
       "capability_signals": [],
@@ -19537,13 +19461,6 @@
       "entrypoints": [],
       "kind": "tsx",
       "path": "frontend/src/components/dashboard/SettingsPage.tsx"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "tsx",
-      "path": "frontend/src/components/dashboard/Sidebar.tsx"
     },
     {
       "capability_signals": [],
@@ -23672,16 +23589,6 @@
       "path": "scripts/ai/test_repository_metadata_index.py"
     },
     {
-      "capability_signals": [
-        "capability",
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/apply_plan_renames.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -24849,13 +24756,6 @@
       "path": "scripts/ci/test_render_deploy_preflight.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/ci/update_ci_comments.py"
-    },
-    {
       "capability_signals": [
         "capability"
       ],
@@ -25020,15 +24920,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/codegraph_integration.py"
-    },
-    {
-      "capability_signals": [
-        "mcp"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/consolidate_identical_plans.py"
     },
     {
       "capability_signals": [],
@@ -25241,6 +25132,17 @@
     },
     {
       "capability_signals": [
+        "execute"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/deploy/render_rollback.py"
+    },
+    {
+      "capability_signals": [
         "execute",
         "health"
       ],
@@ -25314,13 +25216,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/devops/_audit.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/devops/apply_patch.py"
     },
     {
       "capability_signals": [
@@ -25529,25 +25424,6 @@
       "path": "scripts/generate_doc_inventory.py"
     },
     {
-      "capability_signals": [
-        "browser",
-        "capability",
-        "mcp",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/generate_isolation_markdown.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/generate_module_docs.py"
-    },
-    {
       "capability_signals": [],
       "classification": "human_review",
       "entrypoints": [],
@@ -25708,13 +25584,6 @@
       ],
       "kind": "py",
       "path": "scripts/i18n/rtl_support_checker.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/inspect_rename_candidates.py"
     },
     {
       "capability_signals": [],
@@ -25914,13 +25783,6 @@
       "classification": "human_review",
       "entrypoints": [],
       "kind": "py",
-      "path": "scripts/move_nonascii_root_plans.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
       "path": "scripts/multi_model_validator.py"
     },
     {
@@ -25977,17 +25839,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/orchestrator/auto_budget_guardian.py"
-    },
-    {
-      "capability_signals": [
-        "capability",
-        "mcp",
-        "memory"
-      ],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/organize_external_plans.py"
     },
     {
       "capability_signals": [],
@@ -26157,13 +26008,6 @@
       "path": "scripts/resource_collection/run_all.py"
     },
     {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/resource_collection/run_all_collectors.py"
-    },
-    {
       "capability_signals": [
         "execute"
       ],
@@ -26239,13 +26083,6 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/safety_guard.py"
-    },
-    {
-      "capability_signals": [],
-      "classification": "human_review",
-      "entrypoints": [],
-      "kind": "py",
-      "path": "scripts/scan_duplicate_plans.py"
     },
     {
       "capability_signals": [],
@@ -26423,6 +26260,58 @@
       "entrypoints": [],
       "kind": "py",
       "path": "scripts/supremeai_toolkit/__init__.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/supremeai_toolkit/__main__.py"
+    },
+    {
+      "capability_signals": [
+        "dispatch"
+      ],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/supremeai_toolkit/cli.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/supremeai_toolkit/harvest.py"
+    },
+    {
+      "capability_signals": [],
+      "classification": "human_review",
+      "entrypoints": [
+        "main"
+      ],
+      "kind": "py",
+      "path": "scripts/supremeai_toolkit/plan_guard.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/supremeai_toolkit/reusability_audit.py"
+    },
+    {
+      "capability_signals": [
+        "capability"
+      ],
+      "classification": "human_review",
+      "entrypoints": [],
+      "kind": "py",
+      "path": "scripts/supremeai_toolkit/standalone_check.py"
     },
     {
       "capability_signals": [],
@@ -26636,5 +26525,5 @@
   ],
   "schema_version": "2.0",
   "source": "main",
-  "source_file_count": 3040
+  "source_file_count": 3025
 }

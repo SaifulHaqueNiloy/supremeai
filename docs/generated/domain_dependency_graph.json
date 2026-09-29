@@ -2592,7 +2592,7 @@
     {
       "evidence": [
         {
-          "line": 66,
+          "line": 68,
           "path": "backend/core/ai_memory/repository.py"
         }
       ],
