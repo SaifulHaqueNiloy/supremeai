@@ -7,7 +7,7 @@
   ],
   "totals": {
     "backend_routes": 594,
-    "frontend_unique_refs": 145,
+    "frontend_unique_refs": 144,
     "matched": 270,
     "orphan_routes": 324
   },
@@ -4762,7 +4762,6 @@
       "resolved": "/api/v1/sandbox/create",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/admin/shared/ActionCard.tsx",
         "frontend/src/components/chat/UnifiedChatBubble.tsx"
       ]
     },
@@ -4773,7 +4772,6 @@
       "resolved": "/api/v1/sandbox/:param",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/admin/shared/ActionCard.tsx",
         "frontend/src/components/chat/UnifiedChatBubble.tsx"
       ]
     },

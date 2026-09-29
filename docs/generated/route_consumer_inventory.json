@@ -15,7 +15,7 @@
   ],
   "totals": {
     "backend_routes": 849,
-    "frontend_unique_refs": 145,
+    "frontend_unique_refs": 144,
     "routes_with_frontend_consumer": 294,
     "unmounted_routes": 0,
     "orphan_routes": 0,
@@ -10573,7 +10573,6 @@
       "is_admin": false,
       "operation": "create_sandbox",
       "frontend_consumers": [
-        "frontend/src/components/admin/shared/ActionCard.tsx",
         "frontend/src/components/chat/UnifiedChatBubble.tsx"
       ],
       "classification": "user-facing"
