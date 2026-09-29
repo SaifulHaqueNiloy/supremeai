@@ -57,7 +57,12 @@ class TestCascadeMemoryService:
         )
 
         # Check if execute was called to insert
-        execute_calls = mock_pooled_pg.execute.call_args_list
+        # (#2504 CI round-9, #2550 চুক্তি): INSERT এখন query_dicts(RETURNING id)
+        # হয় — তাই দুই recorder-ই দেখা হয়; UPDATE এখনও execute পথে।
+        execute_calls = (
+            mock_pooled_pg.execute.call_args_list
+            + mock_pooled_pg.query_dicts.call_args_list
+        )
         insert_called = False
         for call in execute_calls:
             query = call[0][0]
