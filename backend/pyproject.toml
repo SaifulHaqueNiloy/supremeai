@@ -11,7 +11,7 @@ python = "^3.11"
 # কিন্তু এটি আগেই python-jose -> ecdsa এর transitive dependency ছিল,
 # যা আমরা PyJWT-এ মাইগ্রেট করেছি (pyjwt[crypto] -> cryptography)।
 # এখন আর ecdsa প্যাকেজ নেই — ঝুঁকি মুক্ত।
-fastapi = "^0.136.0"
+fastapi = ">=0.136,<0.142"
 # বাংলা মন্তব্য (DEP-AUDIT): `fastapi[all]` → `fastapi` (bare)। `[all]` extras-এর
 # শুধু httpx সত্যিই কোডে ব্যবহৃত হয় (httpx এখানে explicit রাখা হলো); itsdangerous,
 # jinja2, uvicorn[standard] duplicates আসলে অপ্রয়োজনীয়। python-multipart ও
@@ -22,16 +22,16 @@ httpx = "^0.28.1"
 # lock/image-তে ছিলই না), ফলে provider-1 পথ মৃত ছিল। এখন স্পষ্ট-ঘোষিত ও
 # শূন্য-খরচ (DuckDuckGo, কোনো API key নেই)।
 ddgs = "^9.16.0"
-uvicorn = {extras = ["standard"], version = "^0.51.0"}
-starlette-context = "^0.3"
+uvicorn = {extras = ["standard"], version = ">=0.51,<0.55"}
+starlette-context = ">=0.3,<0.6"
 sqlalchemy = "^2.0.36"
 alembic = "^1.14.0"
 pydantic = "^2.10.0"
 pydantic-settings = "^2.14.2"  # CVE fix floor (AUDIT-014, GHSA-4xgf-cpjx-pc3j)
 loguru = "^0.7.3"
-psutil = "^6.1.0"
+psutil = ">=6.1,<8.0"
 prometheus-client = "^0.26.0"
-redis = {extras = ["hiredis"], version = "^5.2.0"}
+redis = {extras = ["hiredis"], version = ">=5.2,<9.0"}
 python-multipart = "^0.0.32"
 pyjwt = {extras = ["crypto"], version = "^2.10.1"}
 python-dotenv = "^1.2.2"  # CVE fix floor (AUDIT-014)
@@ -64,10 +64,10 @@ cryptography = "^50.0.0"  # CVE fix floor (AUDIT-014, CVE-2026-69247, CVE-2026-6
 pybreaker = "^1.4.1"
 cachetools = ">=5.0.0"  # Required for per-user TTLCache in rate_limit.py, free_tier_tracker.py, token_budget.py
 email-validator = "^2.2.0"
-asyncpg = "^0.30.0"
-aiosqlite = "^0.20.0"
+asyncpg = ">=0.30,<0.32"
+aiosqlite = ">=0.20,<0.23"
 google-cloud-firestore = "^2.19.0"
-google-cloud-storage = "^2.18.2"
+google-cloud-storage = ">=2.18.2,<4.0.0"
 google-auth = "^2.36.0"
 # CI FIX (P1-1): Removed google-auth-httplib2 — it was declared but NEVER
 # imported anywhere in the codebase. It pulls in httplib2 which has known
@@ -76,7 +76,7 @@ google-auth = "^2.36.0"
 # google-auth-httplib2 = "^0.2.1"  # REMOVED — dead dependency
 pyasn1 = "^0.6.4"  # transitive via google-auth; explicit floor for CVE fix (AUDIT-014)
 openai = ">=1.54.0"
-anthropic = "^0.120.0"
+anthropic = ">=0.120,<1.9"
 # বাংলা মন্তব্য: litellm ১.৮৪+ ভার্সন থেকে প্রতিটা release-এ python upper-bound cap
 # যোগ হয়েছে (<3.14, <3.15 ইত্যাদি, ভার্সনভেদে ভিন্ন), যেখানে এই প্রজেক্টের
 # python = "^3.11" মানে ">=3.11,<4.0" — একটা খোলা upper bound যেটা litellm-এর
@@ -86,7 +86,7 @@ anthropic = "^0.120.0"
 # জন্য একটা bounded python marker যোগ করা হলো — poetry নিজেই এই সমাধান suggest
 # করেছিল ("set the python property")।
 litellm = {version = ">=1.84.0,<2.0.0", python = ">=3.11,<3.14"}  # CVE fix floor (AUDIT-014)
-sse-starlette = "^2.1.3"
+sse-starlette = ">=2.1.3,<4.0.0"
 
 opentelemetry-sdk = "^1.44.0"
 opentelemetry-api = "^1.44.0"
@@ -120,7 +120,7 @@ bcrypt = "^5.0.0"
 # সরিয়ে আলাদা optional `browser` group-এ রাখা হলো। Production Dockerfile
 # `poetry install --only main` চালায়, তাই Chromium + playwright এখন আর always-on
 # API image-এ নেই। Dev/CI-তে আগের মতোই playwright থাকবে (`--with dev --with browser`)।
-infisical-python = "2.3.5"
+infisical-python = "2.3.6"
 click = ">=8.3.3" # CVE-2026-7246 (PYSEC-2026-2132)
 h2 = ">=4.4.1" # CVE-2026-71554 (PYSEC-2026-3628)
 [tool.poetry.group.browser]
@@ -148,30 +148,30 @@ optional = true
 
 [tool.poetry.group.ml.dependencies]
 torch = "^2.5.0"
-sentence-transformers = "^3.3.0"
+sentence-transformers = ">=3.3,<7.0"
 # Heavy ML dependencies moved here to keep core image size small
 numpy = ">=1.26.4"
-opencv-python-headless = "^4.10.0"
-pandas = "^2.2.3"
-plotly = "^5.24.1"
+opencv-python-headless = ">=4.10,<6.0"
+pandas = ">=2.2.3,<4.0.0"
+plotly = ">=5.24.1,<8.0.0"
 scipy = "^1.14.1"
 
 [tool.poetry.group.dev.dependencies]
 # বাংলা মন্তব্য: pre-commit ও CI শুধুমাত্র ruff (linter + formatter) এবং mypy চালায় --
 # black/isort এখানে ছিল কিন্তু কোথাও invoke হতো না (dead dev dependency), সরানো হলো।
-ruff = "0.16.4"
-mypy = "^1.11"
-pytest = "^8.0"
+ruff = "0.16.9"
+mypy = ">=1.11,<3.0"
+pytest = ">=8,<10"
 pytest-asyncio = ">=0.23,<1.5"
 pytest-cov = ">=5,<8"
 pytest-mock = "^3.14.0"
 pytest-timeout = "^2.3.0"
 pytest-xdist = "^3.6.1"
-respx = "^0.21.1"
+respx = ">=0.21.1,<0.24.0"
 # বাংলা মন্তব্য (M0-A / AUDIT F2): tests/models/test_ai_memory_schema_contract.py
 # sqlglot ব্যবহার করে (SQL পার্স/ভ্যালিডেশন), কিন্তু dev-dependency হিসেবে ঘোষণা
 # ছিল না — ফলে tests/models collection error হতো।
-sqlglot = "^27.0.0"
+sqlglot = ">=27,<31"
 pytest-md = "^0.2.0"
 typeguard = "^4.2"
 pytest-html = "^4.1.1"
@@ -181,7 +181,7 @@ pytest-html = "^4.1.1"
 # python-docx generates a real .docx (PK zip container). Both were implicit
 # dev dependencies (used by api/routes/slash_commands.py and chat_export.py)
 # but not declared — CI failed with "PDF export requires reportlab".
-reportlab = "^4.4"
+reportlab = ">=4.4,<6.0"
 python-docx = "^1.1"
 [build-system]
 requires = ["poetry-core"]
