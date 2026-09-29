@@ -216,6 +216,35 @@ def _note_request_outcome(status: int) -> None:
             _lifetime_errors += 1
 
 
+def reset_window_metrics() -> None:
+    """Test-support hook: reset rolling-window traffic state for idle assertions.
+
+    বাংলা (#2558): ``get_metrics()``-এর "idle process" প্রিমিস-নির্ভর টেস্টের
+    জন্য তিনটি module-level stateful উৎস একসাথে রিসেট হয়:
+
+    1. ``_window_events`` rolling window + lifetime কাউন্টার (এই মডিউল) —
+       full-suite-এ আগের টেস্টগুলোর instrumented request-গুলো এখানে জমে।
+    2. ``metrics_engine.latency_history`` (এই মডিউল) — শেষ ১০০০ request-এর
+       latency buffer; না খালি করলে ``latency_p50_ms`` None না হয়ে বাস্তব
+       p50 রিপোর্ট করে।
+    3. ``MetricsCollector``-এর ``llm_total_cost_usd`` gauge (core/monitoring) —
+       আগের টেস্টে cost রেকর্ড হলে ``cost_per_hour`` None না হয়ে হিসাব দেয়।
+
+    Production কোড-পাথ এটি কল করে না — শুধু টেস্ট-আইসোলেশনের জন্য।
+    """
+    global _lifetime_requests, _lifetime_errors
+    with _window_lock:
+        _window_events.clear()
+        _lifetime_requests = 0
+        _lifetime_errors = 0
+    metrics_engine.latency_history.clear()
+    # Lazy import — core.monitoring এই মডিউলকে import করে না, তবে import-cycle
+    # ঝুঁকি এড়াতে ও মডিউল-লোড ক্রম নিরপেক্ষ রাখতে কল-টাইমে নেওয়া হচ্ছে।
+    from core.monitoring import get_metrics_collector
+
+    get_metrics_collector().reset_llm_cost_gauge_for_tests()
+
+
 def get_window_metrics() -> dict[str, Any]:
     """Real, measured traffic statistics for the admin metrics endpoint.
 
