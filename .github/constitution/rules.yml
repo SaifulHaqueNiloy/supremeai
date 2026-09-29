@@ -301,7 +301,13 @@ self_merge_policy:
 test_guard_policy:
   deleted_test_files: block
   added_skip_markers: block
-  allow_deleted_paths: []
+  # (#2504 CI round-2) Sanctioned exception — শুধু dead-module-এর orphan টেস্ট।
+  # core/competitive_kit.py #2541 (#2480 dead-file batch-1)-এ ডিলিট হয়েছিল কিন্তু
+  # তার টেস্ট ফাইল রয়ে গিয়েছিল — module-হীন টেস্ট কালেকশনেই ভাঙে (test-manipulation
+  # নয়; #2541-এর অসম্পূর্ণ cleanup সম্পূর্নকরণ)। ভবিষ্যৎ dead-file ডিলিটে টেস্টও
+  # একসাথে ডিলিট হলে এখানে যোগ করতে হবে (reviewable trail)।
+  allow_deleted_paths:
+    - "backend/tests/core/test_competitive_kit.py"
 
 # Zero-Garbage Docs Guard (#2450, 2026-09-28): 'GitHub Issues as Live Operational
 # Truth' দর্শন — docs/-এ নতুন .md শুধু অনুমোদিত ক্যানোনিকাল জায়গায়। allowlist-এর

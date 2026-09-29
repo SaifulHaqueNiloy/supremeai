@@ -92,45 +92,10 @@ class TestStructuredErrors:
 
 
 # ---------------------------------------------------------------------------
-# Gateway delegation (M03 P1: competitive_kit ভুয়া উত্তর অবসান)
+# বাংলা মন্তব্য (#2504 CI round-2): "Gateway delegation (M03 P1)" সেকশনের ২টি
+# competitive_kit টেস্ট সরানো হয়েছে — core/competitive_kit.py module-টি #2541
+# (#2480 dead-file batch-1) এ ডিলিট হয়ে গেছে, orphan টেস্গুলো কালেকশনেই ভাঙছিল।
 # ---------------------------------------------------------------------------
-
-
-@pytest.mark.asyncio
-async def test_competitive_kit_call_llm_delegates_to_gateway(monkeypatch):
-    """বাংলা: _call_llm এখন প্রকৃত গেটওয়ে থেকে উত্তর আনে — বানানো টেক্সট নয়।"""
-    from core.competitive_kit import MultiLLMRouter
-
-    kit = MultiLLMRouter()
-
-    async def fake_acompletion(**kwargs):
-        assert kwargs["task_type"] == "competitive_route"
-        return {"text": "real gateway answer"}
-
-    import core.llm.llm_gateway as gw_mod
-
-    monkeypatch.setattr(gw_mod.llm_gateway, "acompletion", fake_acompletion)
-    text = await kit._call_llm("Groq", "llama-3.1-70b", "hello")
-    assert text == "real gateway answer"
-    assert "[Response from" not in text
-
-
-@pytest.mark.asyncio
-async def test_competitive_kit_call_llm_raises_structured_error_on_gateway_failure(monkeypatch):
-    from core.competitive_kit import MultiLLMRouter
-
-    from core.llm.llm_gateway.errors import GatewayUnavailableError
-
-    kit = MultiLLMRouter()
-
-    async def broken(**kwargs):
-        raise RuntimeError("network down")
-
-    import core.llm.llm_gateway as gw_mod
-
-    monkeypatch.setattr(gw_mod.llm_gateway, "acompletion", broken)
-    with pytest.raises(GatewayUnavailableError):
-        await kit._call_llm("Groq", "llama-3.1-70b", "hello")
 
 
 # ---------------------------------------------------------------------------
