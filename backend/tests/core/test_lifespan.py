@@ -233,10 +233,17 @@ class TestAppLifespan:
             mock_redis_shutdown = stack.enter_context(patch("core.shutdown.redis_manager"))
             mock_redis_shutdown.close = AsyncMock(side_effect=Exception("Redis error"))
 
+            # ISOLATION/CONTRACT FIX (#2551, run 36595123376): মডুলারাইজড
+            # lifespan রি-ফ্যাক্টরের পর থেকে shutdown পথ আর subsystem_status
+            # লেখে না — status এখন startup-time snapshot (লেখক: core/startup/
+            # services.py:108 ও api/server.py:46)। init_db_pool সফল মক হওয়ায়
+            # db-র সঠিক মান "up"। এই টেস্টের বাস্তব চুক্তি: teardown-এর
+            # redis-exception লাইফস্প্যান ক্র্যাশ করায় না + startup-status
+            # অক্ষত থাকে। (আগের assertion shutdown-time db-"down" আশা করত —
+            # বর্তমান কোডে সেই লেখার জায়গাই নেই, তাই টেস্টটি সর্বদা লাল হত।)
             await _run_lifespan(mock_app)
 
-            # We check if it was set
-            assert mock_app.state.subsystem_status["db"] in ("down", "optional_offline")
+            assert mock_app.state.subsystem_status["db"] == "up"
 
 
 class TestLifespanSubsystemStatus:
