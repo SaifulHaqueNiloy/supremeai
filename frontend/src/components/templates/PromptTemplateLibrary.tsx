@@ -108,7 +108,7 @@ export default function PromptTemplateLibrary() {
   const fetchTemplates = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await apiClient.get<PromptTemplate[]>('/api/prompt-templates');
+      const response = await apiClient.get<PromptTemplate[]>('/api/prompt-templates/');
       const list = Array.isArray(response) ? response : [];
       setTemplates(list);
       setFilteredTemplates(list);
@@ -191,7 +191,7 @@ export default function PromptTemplateLibrary() {
       const detectedVars = extractVariablesFromPrompt(createForm.prompt);
       const manualVars = createForm.variables.filter((v) => v.trim());
       const allVars = [...new Set([...detectedVars, ...manualVars])];
-      await apiClient.post('/api/prompt-templates', {
+      await apiClient.post('/api/prompt-templates/', {
         ...createForm,
         variables: allVars,
       });

@@ -20,7 +20,7 @@ export function HealingLogPanel() {
   const { showToast } = useToast();
 
   useEffect(() => {
-    apiClient.get<{items: HealingEvent[]}>('/api/admin/selector-healing')
+    apiClient.get<{items: HealingEvent[]}>('/api/admin/selector-healing/')
       .then(data => setEvents(data.items || []))
       .catch(err => {
         console.error("Failed to load healing events", err);
