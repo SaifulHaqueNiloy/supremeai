@@ -4,6 +4,7 @@ The FCC construction rule: the Global Governance Core stays domain-free;
 ONLY this module knows both the core and the concrete centers.
 """
 
+import threading
 from collections.abc import Iterable
 
 from core.circles.centers import CircleCenter, build_default_centers
@@ -46,4 +47,37 @@ def build_federation(
     return core
 
 
-__all__ = ["build_circle_registry", "build_federation"]
+# ── process-wide federation singleton (moved from governance_core) ─────────
+# Issue #2476: singleton factory আগে governance_core.py-তে ছিল, যেখান থেকে
+# এই composition-root-কে lazily import করত — সেই উল্টো edge-টিই ছিল
+# bootstrap ↔ governance_core static cycle-এর দ্বিতীয় ধার। FCC নিয়ম অনুযায়ী
+# "core ও centers দুজনকেই চেনে" একমাত্র এই মডিউলই — তাই process-wide
+# get_governance_core() এখানেই থাকা স্থাপত্যগতভাবে সঠিক; এখন নির্ভরতা
+# সম্পূর্ণ একমুখী: callers → bootstrap → governance_core।
+_governance_core: GovernanceCore | None = None
+_governance_lock = threading.Lock()
+
+
+def get_governance_core() -> GovernanceCore:
+    """Process-wide GovernanceCore; wired with all default centers once."""
+    global _governance_core
+    if _governance_core is None:
+        with _governance_lock:
+            if _governance_core is None:
+                _governance_core = build_federation()
+    return _governance_core
+
+
+def reset_governance_core() -> None:
+    """Test helper: drop the singleton so the next access rebuilds."""
+    global _governance_core
+    with _governance_lock:
+        _governance_core = None
+
+
+__all__ = [
+    "build_circle_registry",
+    "build_federation",
+    "get_governance_core",
+    "reset_governance_core",
+]

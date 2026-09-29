@@ -37,6 +37,11 @@ def mock_streaming_gateway():
     import core.services as services_mod
     from core.llm.llm_gateway import llm_gateway
 
+    # #2558 (order-dependence): model_router-এর প্রাথমিক মান None হতে পারে
+    # (core.services import-এ সেট করা) — None একটি বৈধ পূর্ববর্তী state, তাই
+    # restore-ও শর্তহীনভাবে হতে হবে। আগের `if previous_router:` গার্ডের কারণে
+    # fake MagicMock চিরকালের জন্য leak হয়ে tests/core/test_agent_factory.py-কে
+    # ভাঙত ("object MagicMock can't be used in 'await' expression")।
     previous_router = getattr(services_mod, "model_router", None)
     fake_router = MagicMock()
 
@@ -57,14 +62,22 @@ def mock_streaming_gateway():
             return _gen()
         return {"text": "Hello fallback"}
 
+    # #2558: llm_gateway.acompletion-এ instance-level অ্যাসাইনমেন্ট class
+    # attribute-কে shadow করে রাখে — teardown-এ শুধু পুরনো bound-method বসালে
+    # shadow-টি থেকে যায়, ফলে পরবর্তী টেস্টের CLASS-level patch
+    # (LLMGateway.acompletion) অকার্যকর হয়ে যায়। Shadow-টি মুছে দিলে class
+    # attribute আবার দৃশ্যমান হয়।
+    had_instance_acompletion = "acompletion" in vars(llm_gateway)
     orig_acompletion = llm_gateway.acompletion
     llm_gateway.acompletion = AsyncMock(side_effect=fake_gateway_stream)
 
     yield
 
-    if previous_router:
-        services_mod.model_router = previous_router
-    llm_gateway.acompletion = orig_acompletion
+    services_mod.model_router = previous_router  # None-সহ সব state-এ শর্তহীন restore
+    if had_instance_acompletion:
+        llm_gateway.acompletion = orig_acompletion
+    else:
+        del llm_gateway.acompletion  # instance-shadow অপসারণ — class attr আবার দৃশ্যমান
 
 
 def test_post_chat_stream_legacy_payload(mock_streaming_gateway):

@@ -63,34 +63,13 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
     },
   });
 
-  // ডিপ্লয় স্ট্যাটাস পোলিং
-  useEffect(() => {
-    if (!isDeploymentModalOpen) return;
-    let failureCount = 0;
-    const interval = setInterval(async () => {
-      if (!deploymentStatus || deploymentStatus.status !== 'running') return;
-      try {
-        const statusRes = await apiClient.get<DeploymentStatus>(`/admin-api/deploy-status/${deploymentStatus.build_id}`);
-        setDeploymentStatus({
-          ...statusRes,
-          url: statusRes.url || deploymentStatus.url,
-        });
-        failureCount = 0; // reset on success
-      } catch (err) {
-        failureCount += 1;
-        console.warn(`[Deployment] Polling failed (${failureCount}/5):`, err);
-        if (failureCount >= 5) {
-          setDeploymentStatus({
-            status: 'failed',
-            message: 'Deployment status could not be retrieved. Connection lost.'
-          });
-          setLogs((prev) => [...prev, { status: 'ERROR', message: 'Deployment status checking failed. Polling stopped.' }]);
-          clearInterval(interval);
-        }
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [isDeploymentModalOpen, deploymentStatus]);
+  // Issue #2475: ডিপ্লয় স্ট্যাটাস পোলিং সরানো হয়েছে — এটি /admin-api/deploy-status/{build_id}
+  // কল করত, যে endpoint backend-এ কখনোই ছিল না (প্রতিবার নীরব 404)। Backend-এর
+  // POST /admin-api/deploy নিজেই fail-closed 501 stub (endpoints_deploy.py —
+  // "not configured for this environment"), ফলে deployMutation.onSuccess কখনো
+  // চলে না, status কখনো 'running' হয় না এবং polling interval-টিও কখনো fire করত না —
+  // অর্থাৎ এটি ছিল unreachable dead code। ভবিষ্যতে সত্যিকারের deployment provider
+  // যুক্ত হলে status endpoint-সহ polling নতুন করে যোগ করতে হবে।
 
   // CI লগগুলো প্রসেস করে ডিসপ্লেবল লগে রূপান্তরকারী
   useEffect(() => {
