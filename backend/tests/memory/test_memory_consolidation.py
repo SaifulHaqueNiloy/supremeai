@@ -40,19 +40,31 @@ def _row(
 
 
 class FakePg:
-    """Records execute() SQL; serves canned rows from query_dicts()."""
+    """Records execute()/query_dicts() SQL; serves canned rows from query_dicts().
+
+    বাংলা মন্তব্য (#2504 CI round-8): Single Writer Law (#2427 seq:2, PR #2550)
+    থেকে INSERT-ও query_dicts (RETURNING id) হয়েছে — তাই query_dicts-ও
+    রেকর্ড হয় (রেকর্ড আগে, serve/raise পরে — INSERT-attempt প্রমাণযোগ্য)।
+    """
 
     def __init__(self, rows: list[dict[str, Any]] | Exception):
         self.rows = rows
         self.executed: list[tuple[str, tuple]] = []
+        self.queried: list[tuple[str, tuple]] = []
 
     def query_dicts(self, sql, params=None):
+        self.queried.append((sql.strip(), params or ()))
         if isinstance(self.rows, Exception):
             raise self.rows
         return self.rows
 
     def execute(self, sql, params=None):
         self.executed.append((sql.strip(), params or ()))
+
+    def _last_insert_sql(self) -> str:
+        inserts = [sql for sql, _ in self.queried if sql.startswith("INSERT INTO ai_memory")]
+        assert inserts, f"no INSERT INTO ai_memory in query_dicts calls: {[s[:40] for s, _ in self.queried]}"
+        return inserts[-1]
 
 
 UNIT = [1.0, 0.0, 0.0, 0.0]
@@ -146,8 +158,9 @@ def test_dissimilar_summary_blind_inserts(monkeypatch: pytest.MonkeyPatch) -> No
             session_id="s1",
             user_id="u1",
         )
-    assert len(fake.executed) == 1
-    assert fake.executed[0][0].startswith("INSERT INTO ai_memory")
+    # (#2550 চুক্তি): INSERT এখন query_dicts + RETURNING id — probe-এর SELECT-ও
+    # query_dicts, তাই INSERT-টি বিশেষভাবে খোঁজা হয় (executed-এ নয়)।
+    assert fake._last_insert_sql().startswith("INSERT INTO ai_memory")
 
 
 def test_kill_switch_disables_consolidation(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -164,7 +177,8 @@ def test_kill_switch_disables_consolidation(monkeypatch: pytest.MonkeyPatch) -> 
             session_id="s1",
             user_id="u1",
         )
-    assert fake.executed[0][0].startswith("INSERT INTO ai_memory")
+    # (#2550 চুক্তি) dedup off → probe নেই → query_dicts-এ শুধু INSERT
+    assert fake._last_insert_sql().startswith("INSERT INTO ai_memory")
 
 
 def test_unscoped_write_skips_dedup_tenant_isolation(
@@ -177,7 +191,8 @@ def test_unscoped_write_skips_dedup_tenant_isolation(
     with patch.object(memory_service_module, "pooled_pg", fake):
         # user_id/session_id শূন্য — tenant-বহির্ভূত probe নিষিদ্ধ
         svc.store_memory(file_path="f.py", content="c", summary="same", structure="{}")
-    assert fake.executed[0][0].startswith("INSERT INTO ai_memory")
+    # (#2550 চুক্তি): unscoped লেখা → probe স্কিপ → INSERT via query_dicts
+    assert fake._last_insert_sql().startswith("INSERT INTO ai_memory")
 
 
 def test_probe_failure_falls_back_to_insert(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -194,7 +209,9 @@ def test_probe_failure_falls_back_to_insert(monkeypatch: pytest.MonkeyPatch) -> 
             session_id="s1",
             user_id="u1",
         )
-    assert fake.executed[0][0].startswith("INSERT INTO ai_memory")
+    # (#2550 চুক্তি): probe-ও query_dicts — ব্যর্থ হলে INSERT-attempt-ও রেকর্ডেড
+    # (INSERT-নিজে raise করলেও attempt প্রমাণিত; বাইরের fail-safe None ফেরত দেয়)
+    assert fake._last_insert_sql().startswith("INSERT INTO ai_memory")
 
 
 def test_threshold_env_uses_custom_boundary(monkeypatch: pytest.MonkeyPatch) -> None:
