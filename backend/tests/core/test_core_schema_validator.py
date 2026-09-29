@@ -2,12 +2,13 @@
 """Tests for the core pydantic SchemaValidator."""
 
 import pytest
+from pydantic import BaseModel, Field
+
 from backend.core.schema_validator import (
     SchemaValidationError,
     SchemaValidator,
     validator,
 )
-from pydantic import BaseModel, Field
 
 
 class SampleModel(BaseModel):

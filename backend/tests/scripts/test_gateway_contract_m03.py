@@ -118,6 +118,7 @@ async def test_competitive_kit_call_llm_delegates_to_gateway(monkeypatch):
 @pytest.mark.asyncio
 async def test_competitive_kit_call_llm_raises_structured_error_on_gateway_failure(monkeypatch):
     from core.competitive_kit import MultiLLMRouter
+
     from core.llm.llm_gateway.errors import GatewayUnavailableError
 
     kit = MultiLLMRouter()

@@ -34,10 +34,19 @@ async function computeFingerprint(): Promise<string> {
 export const getDeviceFingerprint = async (): Promise<string> => {
   if (cachedFingerprint) return cachedFingerprint;
   if (!inFlight) {
-    inFlight = computeFingerprint().then((fp) => {
-      cachedFingerprint = fp;
-      return fp;
-    });
+    inFlight = computeFingerprint()
+      .then((fp) => {
+        cachedFingerprint = fp;
+        return fp;
+      })
+      .catch((err: unknown) => {
+        // বাংলা মন্তব্য (#2478): ফায়ার-অ্যান্ড-ফরগেট prime পাথে unhandled rejection
+        // না হয় — hash ফাংশনের বিদ্যমান fallback চুক্তিতে নামিয়ে ক্যাশ রিসেট করা হয়
+        // (পরের কলে পুনরায় চেষ্টা করা যাবে)।
+        console.error('🚨 [FINGERPRINT_INFLIGHT_FAILED]: device fingerprint cache failed', err);
+        inFlight = null;
+        return 'fallback_fingerprint';
+      });
   }
   return inFlight;
 };

@@ -19,8 +19,9 @@ import urllib.request
 from datetime import UTC, datetime, timedelta
 from typing import Any
 
-import backend.services.render_preflight_service as rps
 import pytest
+
+import backend.services.render_preflight_service as rps
 from backend.core.contracts.render_preflight_store import RenderPreflightStore
 
 # ---------------------------------------------------------------------------

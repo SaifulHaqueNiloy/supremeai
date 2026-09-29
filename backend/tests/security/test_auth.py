@@ -24,6 +24,7 @@ from typing import Any, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from backend.tests.conftest import (
     TEST_ACCESS_TOKEN_EXPIRE_MINUTES,
     TEST_ALGORITHM,

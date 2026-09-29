@@ -2,6 +2,7 @@
 """Tests for the core SupremeAI exception hierarchy."""
 
 import pytest
+
 from backend.core.exceptions import (
     AuthenticationError,
     AuthorizationError,
