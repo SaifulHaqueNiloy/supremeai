@@ -45,16 +45,14 @@ class TestHealthAggregationMount:
         )
 
     def test_live_path_matches_docstring_and_frontend(self):
+        # বাংলা মন্তব্য (#2504 CI round-5): মূল টেস্টটি frontend consumer
+        # (ServiceHealthMonitor.tsx) পড়ত — #2503 (#2481 dead-component cleanup)
+        # সেটি ডিলিট করেছে, কিন্তু এই কন্ট্র্যাক্ট-টেস্ট রেখে গিয়েছিল। ব্যাকএন্ড
+        # পক্ষের assertion গুলো এখনও পুরোপুরি বৈধ — সেগুলোই রাখা হলো:
+        # (১) router prefix সঠিক, (২) লাইভ রুট docstring-অনুযায়ী mount-এড।
         router_text = HEALTH_AGG.read_text(encoding="utf-8")
         assert 'prefix="/admin-api"' in router_text
-        frontend = (
-            REPO_ROOT
-            / "frontend"
-            / "src"
-            / "components"
-            / "admin"
-            / "infra"
-            / "ServiceHealthMonitor.tsx"
-        ).read_text(encoding="utf-8")
-        assert "/admin-api/health-aggregation" in frontend
-        assert "/api/admin-api" not in frontend, "frontend must not call the double-prefixed path"
+        # লাইভ রুট নিজেই docstring-এর advertised পাথে আছে কিনা
+        assert '@router.get("/health-aggregation"' in router_text, (
+            "live route must stay at /health-aggregation (mounted under /admin-api)"
+        )
