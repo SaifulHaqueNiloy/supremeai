@@ -293,7 +293,12 @@ class TestGetMetrics:
     def test_metrics_psutil_failure(self, monkeypatch):
         """psutil fails → honest None values (Wave-1: no fabricated fallbacks)."""
         from core.config import settings
+        from core.observability.metrics_registry import reset_window_metrics
 
+        # #2558 (order-dependence): একই pytest প্রসেসে আগের টেস্টগুলোর
+        # instrumented request-গুলো module-level rolling window-এ জমে থাকে —
+        # "idle process = honest 0.0" প্রিমিস যাচাই করতে হলে state রিসেট দরকার।
+        reset_window_metrics()
         monkeypatch.setattr(
             settings,
             "_get_cached_secret",
@@ -395,15 +400,23 @@ class TestGetProviders:
             "groq_api_key",
             "deepseek_api_key",
             "openai_api_key",
-            # FIX (#2551, full-tier red 36590898621): mistral_api_key এখন আর
-            # Settings-অনুপস্থিত নয় — Issue #466-এ এটি vault-backed lazy
-            # PROPERTY হয়েছে (config_secrets.py:499 _get_cached_secret)।
-            # আগের টেস্টগুলো secret-cache-এ MISTRAL_API_KEY রেখে গেলে
-            # getattr → truthy → "unknown" (not_configured নয়) —
-            # deterministic assert False। setter-দিয়ে "" বসিয়ে hermetic।
+            # বাংলা মন্তব্য: mistral_api_key vault-backed lazy property ও env দুটো পথেই
+            # যাতে কোনো পূর্ববর্তী টেস্টের অবশিষ্ট কী না লিক হয়, সেজন্য hermetic খালি করা হলো।
             "mistral_api_key",
         ):
             monkeypatch.setattr(settings, provider, "", raising=False)
+        # #2558: _get_cached_secret-এ os.getenv precedence আছে — আগের টেস্ট
+        # env-এ key রেখে গেলে setter-লেখা cache তাকে হারায়।
+        # টেস্টের "no keys" প্রিমিস সত্য রাখতে env থেকেও key সরাতে হয়।
+        for env_key in (
+            "OPENROUTER_API_KEY",
+            "GEMINI_API_KEY",
+            "GROQ_API_KEY",
+            "DEEPSEEK_API_KEY",
+            "OPENAI_API_KEY",
+            "MISTRAL_API_KEY",
+        ):
+            monkeypatch.delenv(env_key, raising=False)
 
         # FIX-2 (#2551, run 36590898621): vault-backed keys-এর জন্য শুধু
         # attribute/cache-সেট যথেষ্ট নয় — _get_cached_secret getter-এ
