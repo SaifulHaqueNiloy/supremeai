@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-29 17:56 UTC
+- **Date:** 2026-09-29 17:57 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,13 +10,47 @@
   - (see git log for details)
 
 ## Files Changed
-  - `scripts/supremeai_toolkit/cli.py`
-  - `docs/master_docs/SCRIPTS_CONSOLIDATION_MASTER.md`
-  - `scripts/_INDEX.md`
-  - `docs/INDEX.md`
-  - `docs/operations/HARVEST-MANIFEST.md`
-  - `CHECKPOINT.md`
+  - `frontend/src/commandcenter/realtime/websocketManager.ts`
+  - `tests/test_sprawl_guard.py`
   - `backend/tests/services/test_phase3_intelligence.py`
+  - `.github/scripts/constitution/lessons_check.py`
+  - `frontend/src/components/admin/shared/ActionCard.tsx`
+  - `.github/workflows/issue-router.yml`
+  - `docs/operations/HARVEST-MANIFEST.md`
+  - `scripts/_INDEX.md`
+  - `frontend/src/components/dashboard/Sidebar.tsx`
+  - `frontend/src/commandcenter/realtime/sseBridges.ts`
+  - `scripts/ci/purge_stale_workflow_runs.py`
+  - `docs/generated/domain_dependency_graph.json`
+  - `docs/audit_reports/route_client_inventory.md`
+  - `.github/workflows/pr.yml`
+  - `.github/workflows/main.yml`
+  - `frontend/src/components/dashboard/Header.tsx`
+  - `scripts/supremeai_toolkit/cli.py`
+  - `docs/audit_reports/route_client_inventory.json`
+  - `frontend/src/components/Header.tsx`
+  - `.github/workflows/has-pr-auto.yml`
+  - `docs/generated/module_capability_matrix.json`
+  - `docs/generated/route_consumer_inventory.json`
+  - `CHECKPOINT.md`
+  - `docs/generated/route_consumer_inventory.md`
+  - `scripts/ci/issue_router.py`
+  - `scripts/ci/smart_priority_merger.py`
+  - `docs/INDEX.md`
+  - `frontend/src/commandcenter/modules/observe/LiveLogs.tsx`
+  - `scripts/ci/sprawl_guard.py`
+  - `docs/master_docs/SCRIPTS_CONSOLIDATION_MASTER.md`
+  - `.github/scripts/constitution/arch_preservation_gate.py`
+  - `frontend/src/commandcenter/realtime/CommandCenterRealtimeProvider.tsx`
+  - `frontend/src/components/core/Sidebar.tsx`
+  - `.github/scripts/constitution/heartbeat_check.py`
+  - `.github/workflows/deploy-train.yml`
+  - `tests/test_purge_stale_workflow_runs.py`
+  - `.github/workflows/nightly-ops.yml`
+  - `.github/workflows/08-production-preflight.yml`
+  - `frontend/src/commandcenter/realtime/channelRegistry.ts`
+  - `frontend/src/components/dashboard/DashboardLayout.tsx`
+  - `.github/workflows/smart-merge-queue.yml`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
