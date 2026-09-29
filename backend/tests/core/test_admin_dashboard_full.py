@@ -314,9 +314,7 @@ class TestGetMetrics:
 
         monkeypatch.setattr(_metrics_registry, "_window_events", deque())
         monkeypatch.setattr(_metrics_registry.metrics_engine, "latency_history", [])
-        monkeypatch.setattr(
-            get_metrics_collector(), "_gauges", defaultdict(float)
-        )
+        monkeypatch.setattr(get_metrics_collector(), "_gauges", defaultdict(float))
         import sys
 
         fake_psutil = MagicMock()
@@ -390,9 +388,7 @@ class TestGetProviders:
         # হলো "keys নেই → fallback key-presence রিপোর্ট" — তাই orchestrator
         # ইমপোর্ট-ই বন্ধ (halt) করে নিশ্চিতভাবে fallback-পথে নামানো হলো
         # (sys.modules None = ImportError → get_providers-এর except-fallback)।
-        monkeypatch.setitem(
-            sys.modules, "services.dynamic_ai.orchestrator", None
-        )
+        monkeypatch.setitem(sys.modules, "services.dynamic_ai.orchestrator", None)
         for provider in (
             "openrouter_api_key",
             "gemini_api_key",

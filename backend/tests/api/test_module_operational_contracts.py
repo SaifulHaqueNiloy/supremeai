@@ -69,10 +69,13 @@ def test_module_boundary_strictly_enforced():
     # de-cataloged) removed → 191 -> 190; 2026-09-29: catalog truth-sync —
     # row #54 backend/tools/ensemble_router.py (verified-dead prune, owner-merged
     # #2449; row itself said "0 active callers (dormant)/owner-review") removed
-    # → 190 -> 189; 224 stays as the historical full-boundary tolerance so a
-    # future sanctioned restore is not a lie either.
-    assert len(modules) in (189, 224), (
-        f"Expected cataloged modules to be 189 (current production boundary) or 224 (historical full boundary), got {len(modules)}"
+    # → 190 -> 189; 2026-09-29: catalog truth-sync #2 (#2555) — row #150
+    # frontend/src/pages/WorkspaceModulePage.tsx (zero-importer dead component,
+    # deletion queued in #2503/#2554's root-audit batch) removed → 189 -> 188;
+    # 224 stays as the historical full-boundary tolerance so a future sanctioned
+    # restore is not a lie either.
+    assert len(modules) in (188, 224), (
+        f"Expected cataloged modules to be 188 (current production boundary) or 224 (historical full boundary), got {len(modules)}"
     )
 
 
