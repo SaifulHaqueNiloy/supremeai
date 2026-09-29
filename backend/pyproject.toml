@@ -244,6 +244,11 @@ filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::UserWarning",
     "ignore::PendingDeprecationWarning",
+    # বাংলা মন্তব্য: google-auth 2.58+ grpcio<1.83-এর জন্য PQC FutureWarning দেয় (#2577),
+    # যা "error" ফিল্টারে conftest ImportError হয়ে pytest exit 4 — পুরো backend CI লাল।
+    # টার্গেটেড suppress: শুধু এই নির্দিষ্ট message-prefix; অন্য সব FutureWarning error-ই থাকবে।
+    # স্থায়ী সমাধান: grpcio>=1.83 pin + lock regenerate (আলাদা PR-এ, #2462-এর bump স্থিতিশীল হলে)।
+    "ignore:grpcio < 1.83:FutureWarning",
 ]
 asyncio_mode = "auto"
 # CI SPEED FIX: 312 test files were taking 30+ minutes. Key optimizations:
