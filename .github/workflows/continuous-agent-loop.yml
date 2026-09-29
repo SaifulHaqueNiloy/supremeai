@@ -23,7 +23,10 @@ on:
   issues:
     types: [opened, closed, reopened]
   pull_request:
-    types: [opened, closed, merged]
+    # বাংলা মন্তব্য: `merged` বৈধ pull_request activity type নয় — GitHub পুরো workflow file
+    # reject করত (zero-job startup failure, #2582)। PR merge হলে `closed` type-ই আসে;
+    # দরকার হলে `github.event.pull_request.merged == true` দিয়ে শনাক্ত করা যায়।
+    types: [opened, reopened, closed]
   workflow_run:
     types: [completed]
   schedule:
