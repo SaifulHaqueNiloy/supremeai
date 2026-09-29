@@ -6,7 +6,6 @@ import sys
 import time
 
 from backend.skills.core_doc_summarizer import execute_tool
-
 from core.logging_config import logger
 
 # প্রোডাকশন-গ্রেড লগিং সেটআপ

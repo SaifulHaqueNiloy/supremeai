@@ -9,7 +9,12 @@ Public surface:
 - bootstrap: build_circle_registry (legacy) + build_federation (FCC)
 """
 
-from core.circles.bootstrap import build_circle_registry, build_federation
+from core.circles.bootstrap import (
+    build_circle_registry,
+    build_federation,
+    get_governance_core,
+    reset_governance_core,
+)
 from core.circles.centers import CircleCenter, build_default_centers
 from core.circles.contracts import (
     CapabilityRef,
@@ -33,8 +38,6 @@ from core.circles.event_journal import CircleEventJournal, circle_event_journal
 from core.circles.governance_core import (
     GovernanceCore,
     default_global_policy,
-    get_governance_core,
-    reset_governance_core,
 )
 from core.circles.manifests import default_manifests
 from core.circles.registry import CircleRegistry, circle_registry

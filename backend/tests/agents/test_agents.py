@@ -24,6 +24,7 @@ from typing import Any, Optional
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+
 from backend.tests.conftest import (
     CustomAssertions,
     sample_admin_data,

@@ -142,7 +142,10 @@ class GovernanceCoreBoundaryTests(unittest.TestCase):
         )
 
     def test_federation_advertises_registered_capabilities_only(self) -> None:
-        from core.circles.governance_core import get_governance_core, reset_governance_core
+        from core.circles.bootstrap import (  # Issue #2476: singleton moved to composition root
+            get_governance_core,
+            reset_governance_core,
+        )
 
         reset_governance_core()
         try:

@@ -1,4 +1,4 @@
-# backend/tools/mcp_server.py
+# backend/tools/mcp/mcp_server.py
 import asyncio
 import json
 import time

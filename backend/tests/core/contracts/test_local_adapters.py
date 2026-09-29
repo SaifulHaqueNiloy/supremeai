@@ -1,4 +1,5 @@
 import pytest
+
 from backend.core.contracts.adapters import ArtifactKind
 from backend.core.contracts.canonical import ExecutionContext
 from backend.core.contracts.local_adapters import (

@@ -1,4 +1,5 @@
 import pytest
+
 from backend.core.contracts.canonical import ExecutionContext
 from backend.core.contracts.control_plane import MemoryCandidate, RealtimeEnvelope
 from backend.core.contracts.control_runtime import LocalMemoryPromotion, LocalRealtimeStream

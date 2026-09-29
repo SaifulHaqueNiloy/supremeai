@@ -37,12 +37,11 @@ try:
 except ImportError:
     CircuitBreaker = None  # type: ignore[misc,assignment]
 
-# বাংলা মন্তব্য (#2476): সাইকেল ১ (model_router↔core.services) ভাঙা — module-লেভেল
-# try-import বাদ। আগের module-লেভেল `from core.services import redis_queue` দুটি
-# সমস্যা করত: (১) AST ইম্পোর্ট-গ্রাফে module-লেভেল ব্যাক-এজ (স্ক্যানার ফ্ল্যাগ),
-# (২) `from X import name` module __getattr__ lazy-factory-কে সাথে সাথে ট্রিগার করে
-# redis_queue singleton আগেভাগেই ইনিস্ট্যান্সিয়েট করত (PATCH v4-এর মেমরি-লক্ষ্যের
-# বিপরীত)। এখন _get_breaker()-এর ভেতরে lazy import — প্রথম ব্যবহারেই কনস্ট্রাক্ট।
+# Issue #2476: `core.services`.redis_queue আর module-level-এ import হয় না —
+# ওই edge-টি রাখলে brain.model_router ↔ core.services সরাসরি static cycle
+# হয়ে যেত (core.services.get_model_router নিজে এই মডিউলকে lazily import করে —
+# সেটি ইচ্ছাকৃত boot-RSS অপ্টিমাইজেশন, সেই docstring দেখুন)। ব্যবহারস্থলে
+# (_get_breaker) lazy import + None-guard একই নীরব-অনুপস্থিতি আচরণ বজায় রাখে।
 
 try:
     from core.llm.free_tier_tracker import get_tracker
@@ -103,12 +102,22 @@ class ModelRouter:
 
     def _get_breaker(self, task_type: str):
         # বাংলা মন্তব্ব: প্রতিটি টাস্ক টাইপের জন্য গ্লোবাল রেডিস-ব্যাকড সার্কিট ব্রেকার তৈরি
-        # বাংলা মন্তব্য (#2476): lazy import — cycle-1 ব্যাক-এজ বাদ + singleton প্রথম ব্যবহারে কনস্ট্রাক্ট
-        try:
-            from core.services import redis_queue
-        except ImportError:
-            redis_queue = None  # type: ignore[misc,assignment]
-        if CircuitBreaker is None or redis_queue is None:
+        # Issue #2476: redis-availability আগে `core.services.redis_queue`-এর মাধ্যমে
+        # চেক হতো — সেই edge-ই brain.model_router ↔ core.services static cycle
+        # তৈরি করত। `core.services.redis_queue` নিজে এখন একটা lazy factory
+        # (get_redis_queue) যা UpstashRedisQueue() construct করে; এখানে সরাসরি
+        # সেই leaf ক্লাসের `.configured` চেক করা হচ্ছে — শর্ত অভিন্ন, cycle-free।
+        # (Constructor হালকা: unconfigured হলে httpx client-ই তৈরি হয় না।)
+        redis_ready = False
+        if CircuitBreaker is not None:
+            try:
+                from core.messaging.upstash_redis_queue import UpstashRedisQueue
+
+                redis_ready = UpstashRedisQueue().configured
+            except ImportError:
+                redis_ready = False
+
+        if not redis_ready:
             return self.performance_optimizer.get_circuit_breaker(f"router_task_{task_type}")
 
         if task_type not in self._breakers:

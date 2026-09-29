@@ -141,6 +141,17 @@ class MetricsCollector:
                 self._gauges["llm_total_cost_usd"] += metrics.estimated_cost_usd
                 self._counters["llm_tokens_total"] += metrics.tokens_used
 
+    def reset_llm_cost_gauge_for_tests(self) -> None:
+        """Test-support hook (#2558): zero the accumulated LLM cost gauge.
+
+        বাংলা: ``get_metrics()``-এর ``cost_per_hour is None`` অ্যাসার্শন
+        "fresh process = কোনো cost রেকর্ড হয়নি" প্রিমিসে দাঁড়িয়ে — full-suite-এ
+        আগের টেস্টগুলোর রেকর্ড করা cost এই gauge-এ জমে থাকলে প্রিমিস ভাঙে।
+        Production কোড-পাথ এটি কল করে না।
+        """
+        with self._lock:
+            self._gauges["llm_total_cost_usd"] = 0.0
+
     def create_alert(
         self, severity: AlertSeverity, source: str, title: str, message: str, **metadata
     ) -> Alert:
