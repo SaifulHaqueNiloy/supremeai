@@ -21,6 +21,6 @@ class SlackPlugin(BasePlugin):
     async def execute_tool(
         self, tool_name: str, params: dict[str, Any], context: dict[str, Any]
     ) -> Any:
-        raise NotImplementedError(
+        raise NotImplementedError(  # #2479: graceful — plugin not yet wired
             "Slack plugin is experimental and not yet implemented. Please check back later."
         )

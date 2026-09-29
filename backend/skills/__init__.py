@@ -28,7 +28,7 @@ except ImportError:
         """Fallback stub when provisioner unavailable."""
 
         async def provision_skill(self, skill_id: str) -> dict:
-            raise NotImplementedError(f"Skill provisioning not available for {skill_id}")
+            raise NotImplementedError(f"Skill provisioning not available for {skill_id} — use manual skill registration instead.")  # #2479: graceful message
 
 
 try:

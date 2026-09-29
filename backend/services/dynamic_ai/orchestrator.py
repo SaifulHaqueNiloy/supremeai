@@ -51,7 +51,7 @@ except ImportError:
             pass
 
         async def process(self, *args, **kwargs):
-            raise NotImplementedError("Dynamic AI learning engine not available")
+            raise NotImplementedError("Dynamic AI learning engine not available — configure DYNAMIC_AI_ENABLED to use this feature.")  # #2479: graceful message
 
 
 try:
