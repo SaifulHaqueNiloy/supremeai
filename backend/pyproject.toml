@@ -11,7 +11,14 @@ python = "^3.11"
 # কিন্তু এটি আগেই python-jose -> ecdsa এর transitive dependency ছিল,
 # যা আমরা PyJWT-এ মাইগ্রেট করেছি (pyjwt[crypto] -> cryptography)।
 # এখন আর ecdsa প্যাকেজ নেই — ঝুঁকি মুক্ত।
-fastapi = ">=0.136,<0.142"
+# (#2504 CI round-7 root cause) FastAPI 0.137 থেকে include_router LAZY (_IncludedRouter)
+# — app.routes-এ APIRoute-instance আর পাওয়া যায় না, ফলে route-introspection
+# ভিত্তিক সব কনজিউমার (route-ownership/RBAC-matrix টেস্ট, metrics, openapi
+# স্ক্যান) নীরবে খালি দেখে। Request-time API ঠিক থাকলেও চুক্তিগুলো ভাঙে।
+# Dependabot 43-bump (#2462) untested উঠিয়েছিল (তার CI skip হয়েছিল)।
+# Eager-mount ফিরতে 0.136-floor + <0.137 ceiling — lazy-router ইকোসিস্টেমে
+# migration আলাদা পরিকল্পনায়।
+fastapi = ">=0.136,<0.137"
 # বাংলা মন্তব্য (DEP-AUDIT): `fastapi[all]` → `fastapi` (bare)। `[all]` extras-এর
 # শুধু httpx সত্যিই কোডে ব্যবহৃত হয় (httpx এখানে explicit রাখা হলো); itsdangerous,
 # jinja2, uvicorn[standard] duplicates আসলে অপ্রয়োজনীয়। python-multipart ও
