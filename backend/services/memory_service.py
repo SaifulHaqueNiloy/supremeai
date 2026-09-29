@@ -375,19 +375,28 @@ class CascadeMemoryService:
                 # = একটি সারি। সদৃশ হলে UPDATE (summary refresh + metadata-
                 # importance bump); সদৃশ না হলে/dedup অফ হলে/probe ব্যর্থ হলে
                 # আজকের blind INSERT (আচরণ-নিরপেক্ষ ফলব্যাক)।
-                if memory_dedup_enabled() and self._consolidate_into_existing(
-                    summary=summary,
-                    embedding=embedding,
-                    session_id=session_id,
-                    user_id=user_id,
-                    metadata=metadata,
-                ):
-                    return
-                # Insert into ai_memory table
-                pooled_pg.execute(
+                # Single Writer Law (#2427 seq:2): consolidation হলে existing row-
+                # id ফেরত যায় — save_memory-র delegate-চেইন সেটিই ব্যবহার করে।
+                consolidated_id: Any = None
+                if memory_dedup_enabled():
+                    consolidated_id = self._consolidate_into_existing(
+                        summary=summary,
+                        embedding=embedding,
+                        session_id=session_id,
+                        user_id=user_id,
+                        metadata=metadata,
+                    )
+                if consolidated_id is not None:
+                    return consolidated_id
+                # Insert into ai_memory table — RETURNING id (seq:2): caller
+                # (save_memory delegate-চেইন) সফল লেখার প্রমাণ হিসেবে id পায়;
+                # আগের execute() None ফেরত দিত, ফলে পৃথক fallback আঁকড়ে
+                # থাকা blind-duplicate writer-এর অস্তিত্বই ছিল।
+                inserted = pooled_pg.query_dicts(
                     """
                     INSERT INTO ai_memory (user_id, session_id, agent_type, task_type, summary, embedding, metadata)
                     VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id
                     """,
                     (
                         user_id,
@@ -399,9 +408,12 @@ class CascadeMemoryService:
                         json.dumps(metadata),
                     ),
                 )
+                return inserted[0].get("id") if inserted else None
             except Exception as exc:
                 logger.error(f"CascadeMemoryService.store_memory: Postgres write failed: {exc}")
-            return
+                # বাংলা: pg-ব্যর্থতায় None — save_memory delegate-চেইন এটি দেখে
+                # Supabase-REST fallback-এ নামবে (আজকের fail-safe চেইন অক্ষুণ্ণ)।
+            return None
 
         if self._degraded_memory:
             # P0: bounded in-process buffer (upsert semantics on file_path key)
@@ -449,17 +461,22 @@ class CascadeMemoryService:
         session_id: str,
         user_id: str | None,
         metadata: dict[str, Any] | None,
-    ) -> bool:
+    ) -> Any:
         """PLAN_006 P-A: similarity-gated consolidation probe (zero schema change)।
 
         বাংলা: ``(user_id, session_id)``-স্কোপড সারিগুলোর সাথে কসাইন-সদৃশতা
         পরীক্ষা — সীমার উপরে হলে বিদ্যমান সারি UPDATE হয় (summary/embedding
         রিফ্রেশ + metadata-ভিত্তিক importance bump; নতুন কলাম নয়)। tenant
         isolation-অক্ষুণ্ণ: স্কোপ-শূন্য লেখায় dedup অচেষ্টিত — সরাসরি blind
-        INSERT-পথ (False)। probe/update ব্যর্থতা = False (আজকের আচরণ)।
+        INSERT-পথ।
+
+        Single Writer Law (#2427 seq:2): রিটার্ন bool → **consolidated row id**
+        (consolidation হলে existing id, অন্যথায় None) — truthy চেক অপরিবর্তিত
+        আচরণ দেয়, পাশাপাশি caller (save_memory delegate-চেইন) প্রকৃত id পায়।
+        probe/update ব্যর্থতা = None (আজকের fail-safe আচরণ)।
         """
         if not (user_id and session_id):
-            return False
+            return None
         threshold = _dedup_similarity_threshold()
         try:
             rows = pooled_pg.query_dicts(
@@ -470,7 +487,7 @@ class CascadeMemoryService:
             )
         except Exception as exc:
             logger.warning(f"store_memory dedup probe failed — falling back to insert: {exc}")
-            return False
+            return None
 
         best_id: Any = None
         best_score = 0.0
@@ -488,7 +505,7 @@ class CascadeMemoryService:
                 best_id, best_score, best_row = row.get("id"), score, row
 
         if best_id is None or best_score < threshold:
-            return False
+            return None
 
         try:
             try:
@@ -514,10 +531,10 @@ class CascadeMemoryService:
                 f"CascadeMemoryService.store_memory: consolidated duplicate "
                 f"(id={best_id}, cosine={best_score:.3f} ≥ {threshold}) into existing row"
             )
-            return True
+            return best_id
         except Exception as exc:
             logger.warning(f"store_memory dedup update failed — falling back to insert: {exc}")
-            return False
+            return None
 
     def retrieve_memories(
         self, session_id: str | None = None, user_id: str | None = None
@@ -922,11 +939,41 @@ async def save_memory(
     metadata: dict[str, Any] | None = None,
     user_id: str | None = None,
 ) -> dict[str, Any]:
-    """Insert a vector memory row into Supabase/Postgres ai_memory.
+    """Insert a vector memory row into the canonical ai_memory writer.
+
+    Single Writer Law (#2427 seq:2): pg-উপলব্ধ থাকলে লেখা যায় **শুধু**
+    ``CascadeMemoryService.store_memory``-এর consolidated পথে (similarity-gated
+    dedup — একই তথ্য একটি সারি) — আগে এখান থেকে blind INSERT হত, ফলে
+    route-স্তরের ৬টি call-site ডুপ্লিকেট সারি জমাত। Supabase-REST সম্পূর্ণ
+    আজকের কোডে **fallback** (supabase-only deployment + pg-ব্যর্থতা) —
+    fail-safe চেইন ও return contract অপরিবর্তিত।
 
     Returns ``{"success": True, "id": <id>}`` on success.
     """
     try:
+        # ── Single Writer Law (seq:2): canonical cascade-first write ──
+        cascade = memory_service
+        if getattr(cascade, "_use_pg", False):
+            mem_id = await asyncio.to_thread(
+                cascade.store_memory,
+                f"{session_id}:{task_type}",  # file_path key (legacy cascade contract)
+                summary,  # content
+                summary,  # summary — embedding এখান থেকেই (W1 চুক্তি)
+                summary,  # structure (legacy cascade contract)
+                session_id=session_id,
+                agent_type=agent_type,
+                task_type=task_type,
+                metadata=metadata,
+                user_id=user_id,
+            )
+            if mem_id:
+                logger.info(
+                    f"Memory saved (cascade consolidated writer) | id={mem_id} | task={task_type}"
+                )
+                return {"success": True, "id": str(mem_id), "backend": "cascade"}
+            # pg-লেখা ব্যর্থ (None) → নিচের Supabase-REST fallback (আজকের পথ)
+
+        # ── Legacy Supabase-REST path (fallback; হুবহু সংরক্ষিত) ──
         from datetime import datetime
 
         embedding = get_embedding(summary)
