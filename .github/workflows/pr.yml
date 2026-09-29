@@ -141,6 +141,8 @@ jobs:
         run: |
           set -euo pipefail
           python -m constitution.gates all --pr "$PR_NUMBER"
+          # #2492: Bengali mandate check (advisory — WARNING, not BLOCK)
+          python .github/scripts/constitution/bengali_check.py "$PR_BODY" || true
           python scripts/ci/generate_agents_md.py --check
 
       - name: 💥 Cross-PR File Collision Check
