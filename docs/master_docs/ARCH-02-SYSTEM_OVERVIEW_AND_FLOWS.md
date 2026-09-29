@@ -6403,7 +6403,7 @@ Once all boxes are checked, you are ready for **Phase 1: Fix embedding dimension
 
 # SupremeAI Board Strategy and Execution TODO
 
-> Long-term training source: `backend/data/supremeai_long_term_knowledge_v1.json`; validate with `python backend/scripts/import_knowledge_base.py --validate-only` and import only after applying `backend/database/migrations/legacy/19_harden_knowledge_base.sql`.
+> Long-term training source: `backend/data/supremeai_long_term_knowledge.json`; validate with `python backend/scripts/import_knowledge_base.py --validate-only` and import only after applying `backend/database/migrations/legacy/19_harden_knowledge_base.sql`.
 
 **Version:** 1.0  
 **Date:** 4 September 2026  

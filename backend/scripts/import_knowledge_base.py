@@ -221,7 +221,7 @@ def run_rollback(rollback_id: str) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "manifest", nargs="?", default="backend/data/supremeai_long_term_knowledge_v1.json"
+        "manifest", nargs="?", default="backend/data/supremeai_long_term_knowledge.json"
     )
     parser.add_argument("--validate-only", action="store_true")
     parser.add_argument(

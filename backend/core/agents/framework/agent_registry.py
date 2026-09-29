@@ -7,7 +7,7 @@ Consolidates agent execution across:
 - backend/core/agents/framework/ (department, orchestrator, pydantic)
 
 Canonical entry point for agent lifecycle (create -> active -> paused -> archived)
-per AGENTS.md and SUPREMEAI_CORE_CONSTITUTION.md.
+per AGENTS.md.
 """
 
 from __future__ import annotations
