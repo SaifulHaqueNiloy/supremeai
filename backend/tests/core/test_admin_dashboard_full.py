@@ -409,6 +409,18 @@ class TestGetProviders:
         ):
             monkeypatch.setattr(settings, provider, "", raising=False)
 
+        # FIX-2 (#2551, run 36590898621): vault-backed keys-এর জন্য শুধু
+        # attribute/cache-সেট যথেষ্ট নয় — _get_cached_secret getter-এ
+        # "12-factor: env ALWAYS take precedence" (config_secrets.py) — ফলে
+        # যেকোনো MISTRAL_API_KEY-জাতীয় env/vault মান ফিরে আসত। ফাইলের নিজস্ব
+        # প্রতিষ্ঠিত প্যাটার্ন (test_metrics_with_keys): getter-ই প্যাচ — সব
+        # vault-backed key নিশ্চিতভাবে খালি।
+        monkeypatch.setattr(
+            settings,
+            "_get_cached_secret",
+            lambda k: "",
+        )
+
         result = await get_providers()
 
         assert len(result) > 0
