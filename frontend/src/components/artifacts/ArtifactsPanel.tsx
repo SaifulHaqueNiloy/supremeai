@@ -13,6 +13,7 @@ import {
   ChevronLeft,
 } from 'lucide-react';
 import { globalShowToastRef } from '../../contexts/ToastContext';
+import { sanitizeSvg } from '../../lib/sanitize';
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -112,18 +113,10 @@ function highlightSyntax(code: string): string {
     .join('\n');
 }
 
-// SECURITY FIX (audit S-3): Robust SVG sanitizer — strips script, foreignObject elements
-// and dangerous event-handler attributes (on*) and javascript: / vbscript: URI values.
-function sanitizeSvg(svgContent: string): string {
-  // Remove <script> and <foreignObject> blocks entirely.
-  let safe = svgContent.replace(/<script[\s\S]*?<\/script>/gi, '');
-  safe = safe.replace(/<foreignObject[\s\S]*?<\/foreignObject>/gi, '');
-  // Strip event-handler attributes (onclick, onerror, onload, …).
-  safe = safe.replace(/\s+on\w+\s*=\s*("[^"]*"|'[^']*'|\S+)/gi, '');
-  // Strip javascript: and vbscript: href/xlink:href values.
-  safe = safe.replace(/(href|xlink:href)\s*=\s*["']\s*(?:javascript|vbscript|data):[^"']*["']/gi, '');
-  return safe;
-}
+// SECURITY FIX (#2509): the regex sanitizer above (audit S-3) was bypassable —
+// unterminated tags, entity-encoded schemes and SMIL retargeting all slipped
+// past pattern stripping. Replaced by the shared DOMPurify allowlist in
+// src/lib/sanitize.ts (guarded by src/lib/sanitize.test.ts).
 
 // ─── Sub-components ──────────────────────────────────────────────────────
 
