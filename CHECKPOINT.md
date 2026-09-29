@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-28 23:06 UTC
+- **Date:** 2026-09-29 17:56 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,15 +10,13 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/dependabot.yml`
-  - `.github/scripts/pr_helper/dependabot_classify.py`
+  - `scripts/supremeai_toolkit/cli.py`
+  - `docs/master_docs/SCRIPTS_CONSOLIDATION_MASTER.md`
+  - `scripts/_INDEX.md`
+  - `docs/INDEX.md`
+  - `docs/operations/HARVEST-MANIFEST.md`
   - `CHECKPOINT.md`
-  - `.github/workflows/pr-helper.yml`
-  - `.github/workflows/pr.yml`
-  - `.github/workflows/system-gates.yml`
-  - `.github/scripts/constitution/gates.py`
-  - `.github/constitution/rules.yml`
-  - `docs/operations/ACTIVE_ISSUES_AND_PRIORITY_ROADMAP.md`
+  - `backend/tests/services/test_phase3_intelligence.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
