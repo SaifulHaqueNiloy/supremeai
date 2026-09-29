@@ -142,7 +142,7 @@ export const useStore = create<SupremeState>((set) => ({
     // বাংলা মন্তব্য: raw fetch() → apiClient — Authorization header সহ, 402/429 status properly throw হবে
     set({ isForging: true, forgeFeedback: "🧠 Self-Evolution Core is structuring your request...", forgeSuccessCode: null });
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       // #2206: router mounted under /api/v1
       const data = await apiClient.post<any>('/api/v1/evolution/forge', {
         skill_name: skillName,
