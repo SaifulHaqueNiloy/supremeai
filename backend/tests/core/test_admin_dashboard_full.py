@@ -399,7 +399,14 @@ class TestGetProviders:
             "groq_api_key",
             "deepseek_api_key",
             "openai_api_key",
-        ):  # NOTE: mistral_api_key Settings-এ নেই — getattr fallback None-ই not_configured দেয়
+            # FIX (#2551, full-tier red 36590898621): mistral_api_key এখন আর
+            # Settings-অনুপস্থিত নয় — Issue #466-এ এটি vault-backed lazy
+            # PROPERTY হয়েছে (config_secrets.py:499 _get_cached_secret)।
+            # আগের টেস্টগুলো secret-cache-এ MISTRAL_API_KEY রেখে গেলে
+            # getattr → truthy → "unknown" (not_configured নয়) —
+            # deterministic assert False। setter-দিয়ে "" বসিয়ে hermetic।
+            "mistral_api_key",
+        ):
             monkeypatch.setattr(settings, provider, "", raising=False)
 
         result = await get_providers()
