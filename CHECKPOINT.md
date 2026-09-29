@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-29 18:28 UTC
+- **Date:** 2026-09-29 18:52 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,11 +10,22 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/tests/tools/social/test_viral_referral_engine_full.py`
+  - `MODULES_LIST.md`
+  - `backend/core/cache/__init__.py`
   - `CHECKPOINT.md`
-  - `archives/legacy-docs-2026-09-28.tar.gz`
-  - `scripts/backup/backup_telegram.py`
+  - `docs/reference/MODULES_LIST.md`
+  - `backend/tests/core/test_agent_factory.py`
   - `.gitignore`
+  - `backend/tests/core/test_lifespan.py`
+  - `scripts/backup/backup_telegram.py`
+  - `backend/tests/core/test_admin_dashboard_full.py`
+  - `docs/audit_reports/module_wiring_audit.json`
+  - `backend/tests/tools/social/test_viral_referral_engine_full.py`
+  - `backend/skills/__init__.py`
+  - `.github/constitution/rules.yml`
+  - `backend/tests/api/test_module_operational_contracts.py`
+  - `backend/scripts/__init__.py`
+  - `AGENTS.md`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)

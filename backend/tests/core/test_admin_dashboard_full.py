@@ -299,6 +299,22 @@ class TestGetMetrics:
             "_get_cached_secret",
             lambda k: "key1" if k == "OPENROUTER_API_KEY" else "",
         )
+        # ISOLATION FIX (#2551 gate, full-tier red 36586150660 attempt 1+2):
+        # ফুল স্যুটে এই টেস্টের আগে ~১৮০০টি টেস্ট চলে — আগের endpoint-টেস্টের
+        # ObservabilityMiddleware রেকর্ড করা রিয়েল ট্রাফিক শেয়ার্ড গ্লোবালে
+        # জমে: ৬০-সেকেন্ড rolling window (rps 2.817), metrics_engine.
+        # latency_history (p50 6.4ms), collector _gauges (llm cost)। টেস্টটির
+        # চুক্তি হলো "psutil ব্যর্থতা → সৎ None/0.0" — ট্রাফিক-গণিত নয়; তাই
+        # idle-অবস্থা এখানেই hermetic ভাবে তৈরি করা হলো (fresh state swap —
+        # monkeypatch টেস্ট-শেষে নিজেই ফেরত দেয়)।
+        from collections import defaultdict, deque
+
+        import core.observability.metrics_registry as _metrics_registry
+        from core.monitoring import get_metrics_collector
+
+        monkeypatch.setattr(_metrics_registry, "_window_events", deque())
+        monkeypatch.setattr(_metrics_registry.metrics_engine, "latency_history", [])
+        monkeypatch.setattr(get_metrics_collector(), "_gauges", defaultdict(float))
         import sys
 
         fake_psutil = MagicMock()
@@ -361,17 +377,45 @@ class TestGetProviders:
 
     async def test_providers_no_keys(self, monkeypatch):
         """No API keys → every fallback provider reported as not_configured (no fake data)."""
+        import sys
+
         from core.config import settings
 
-        self._empty_registry(monkeypatch)
+        # ISOLATION FIX (#2551): ফুল স্যুটে আগের টেস্টগুলো services.dynamic_ai
+        # orchestrator/registry singleton-এ প্রোভাইডার রেজিস্টার করে রাখে —
+        # ফলে get_providers-এর registry-নির্ভর প্রথম শাখা fallback-এর বদলে
+        # দূষিত state পড়ে (deterministic assert False, ২ রান)। টেস্টের চুক্তি
+        # হলো "keys নেই → fallback key-presence রিপোর্ট" — তাই orchestrator
+        # ইমপোর্ট-ই বন্ধ (halt) করে নিশ্চিতভাবে fallback-পথে নামানো হলো
+        # (sys.modules None = ImportError → get_providers-এর except-fallback)।
+        monkeypatch.setitem(sys.modules, "services.dynamic_ai.orchestrator", None)
         for provider in (
             "openrouter_api_key",
             "gemini_api_key",
             "groq_api_key",
             "deepseek_api_key",
             "openai_api_key",
-        ):  # NOTE: mistral_api_key Settings-এ নেই — getattr fallback None-ই not_configured দেয়
+            # FIX (#2551, full-tier red 36590898621): mistral_api_key এখন আর
+            # Settings-অনুপস্থিত নয় — Issue #466-এ এটি vault-backed lazy
+            # PROPERTY হয়েছে (config_secrets.py:499 _get_cached_secret)।
+            # আগের টেস্টগুলো secret-cache-এ MISTRAL_API_KEY রেখে গেলে
+            # getattr → truthy → "unknown" (not_configured নয়) —
+            # deterministic assert False। setter-দিয়ে "" বসিয়ে hermetic।
+            "mistral_api_key",
+        ):
             monkeypatch.setattr(settings, provider, "", raising=False)
+
+        # FIX-2 (#2551, run 36590898621): vault-backed keys-এর জন্য শুধু
+        # attribute/cache-সেট যথেষ্ট নয় — _get_cached_secret getter-এ
+        # "12-factor: env ALWAYS take precedence" (config_secrets.py) — ফলে
+        # যেকোনো MISTRAL_API_KEY-জাতীয় env/vault মান ফিরে আসত। ফাইলের নিজস্ব
+        # প্রতিষ্ঠিত প্যাটার্ন (test_metrics_with_keys): getter-ই প্যাচ — সব
+        # vault-backed key নিশ্চিতভাবে খালি।
+        monkeypatch.setattr(
+            settings,
+            "_get_cached_secret",
+            lambda k: "",
+        )
 
         result = await get_providers()
 
