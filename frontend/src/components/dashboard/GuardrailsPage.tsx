@@ -23,7 +23,7 @@ export function GuardrailsPage() {
   const [activeScope, setActiveScope] = useState<'global' | 'platform' | 'action'>('global');
 
   useEffect(() => {
-    apiClient.get<{items: ExecutionPolicy[]}>('/api/admin/execution-policies')
+    apiClient.get<{items: ExecutionPolicy[]}>('/api/admin/execution-policies/')
       .then(data => setPolicies(data.items || []))
       .catch(err => console.error("Failed to load policies", err))
       .finally(() => setLoading(false));

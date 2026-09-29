@@ -49,7 +49,14 @@ async def test_voice_service(monkeypatch):
     # --- Unavailable path: no STT/TTS provider configured ---
     monkeypatch.delenv("GROQ_API_KEY", raising=False)
     monkeypatch.delenv("ELEVENLABS_API_KEY", raising=False)
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.delenv("GEMINI_API_KEY", raising=False)
+    monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
+    monkeypatch.delenv("HUGGINGFACE_API_KEY", raising=False)
+    monkeypatch.delenv("HF_API_KEY", raising=False)
     monkeypatch.setattr(settings, "groq_api_key", "", raising=False)
+    monkeypatch.setattr(settings, "openai_api_key", "", raising=False)
+    monkeypatch.setattr(settings, "hf_api_key", "", raising=False)
     # NOTE: Settings has no elevenlabs_api_key field — voice_service reads it
     # via getattr(..., default) so clearing the env var alone is sufficient.
     # Block the edge-tts import (keyless real TTS) so the fallback is honest.
