@@ -376,7 +376,7 @@ class SelfEvolutionAgent:
         proposal_id = f"prop-{uuid.uuid4().hex[:8]}"
         metadata = metadata or {}
 
-        # Step 1: Record Proposal
+        # ধাপ ১: প্রোপোজাল রেকর্ড করো
         async with session.begin():
             proposal = CodeProposal(
                 proposal_id=proposal_id,
@@ -388,7 +388,7 @@ class SelfEvolutionAgent:
             session.add(proposal)
             await session.flush()
 
-            # Step 2: Strict AST Security Scan
+            # ধাপ ২: কঠোর AST সিকিউরিটি সแกন করো
             res = self.scanner.scan_code(generated_code)
             if not res["safe"]:
                 logger.critical(
@@ -402,7 +402,7 @@ class SelfEvolutionAgent:
             proposal.ast_validated = True
             logger.success(f"Proposal {proposal_id} passed AST Security Scan.")
 
-        # Step 3: CI/CD Real Dry Run (Isolated Sandbox Execution)
+        # ধাপ ৩: CI/CD রিয়াল ড্রাই রান (বিচ্ছিন্ন স্যান্ডবক্স এক্সিকিউশন)
         ci_passed = await self._run_ci_cd_dry_run(proposal_id, skill_name, generated_code)
 
         async with session.begin():
@@ -417,7 +417,7 @@ class SelfEvolutionAgent:
                     p.ci_passed = False
                     return False
 
-                # Step 4: Final Approval for Merge/Apply
+                # ধাপ ৪: মার্জ/অ্যাপ্লাইয়ের জন্য চূড়ান্ত অনুমোদন
                 p.status = "ci_passed"
                 p.ci_passed = True
                 logger.success(

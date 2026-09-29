@@ -26,9 +26,9 @@ class ModelTrainer:
     async def trigger_lora_finetune(
         self, dataset_path: str, base_model: str = "llama3-8b"
     ) -> dict[str, Any]:
-        # Issue #440 fix: the old code silently WROTE A FAKE 1-row dataset
-        # ("hello"→"world") when the path was missing and then trained on it —
-        # fabricated data → fabricated model.  Missing dataset is a loud error.
+        # Issue #440 ফিক্স: পুরানো কোড silently একটি ফেক 1-row ডাটাসেট লিখে
+        # ("hello"→"world") ত্রুটি প্যাথেই তৈরি করা হতো এবং তার উপর ট্রেইন করা হতো —
+        # ফেব্রিকেটেড ডাটা → ফেব্রিকেটেড মডেল। মিসিং ডাটাসেট Loud error হতেই হবে।
         if not os.path.exists(dataset_path):
             raise FileNotFoundError(
                 f"Dataset not found: {dataset_path} — refusing to fabricate one "

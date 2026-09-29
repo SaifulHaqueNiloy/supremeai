@@ -26,10 +26,10 @@ router = APIRouter(prefix="/api/billing", tags=["Billing & Credit Wallet"])
 token_deductor = TokenDeductor()
 
 _raw_stripe_key = settings.stripe_api_key.get_secret_value() if settings.stripe_api_key else None
-# FINAL-TEST FIX (2026-09-13): the deployment's STRIPE_SECRET_KEY was an
-# "mk_..." restricted-key ID (not a usable sk_live_/sk_test_ key), so every
-# checkout failed with an opaque provider error mid-request. Detect obviously
-# invalid key shapes at import and treat Stripe as unconfigured instead.
+# FINAL-TEST ফিক্স (2026-09-13): ডিপ্লয়মেন্টের STRIPE_SECRET_KEY একটি
+# "mk_..." restricted-key ID ছিল (ব্যবহারযোগ্য sk_live_/sk_test_ নয়), তাই প্রতিটি
+# checkout অপন广大 provider error mid-request-এ ব্যর্থ হতো। ইম্পোর্টে obvious
+# invalid key shapes ডিটেক্ট করো এবং Stripe-কে unconfigured হিসেবে তait করো।
 if _raw_stripe_key and not _raw_stripe_key.startswith(
     ("sk_live_", "sk_test_", "rk_live_", "rk_test_")
 ):

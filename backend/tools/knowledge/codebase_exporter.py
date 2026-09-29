@@ -207,7 +207,7 @@ async def export_codebase_to_markdown(
     temp_dir = None
 
     try:
-        # Step 1: Clone public repo if specified
+        # ধাপ ১: স্পেসিফাইড হলে পাবলিক রিপো ক্লোন করো
         if clone_url:
             logger.info(f"Cloning public repository: {clone_url}")
             temp_dir = tempfile.mkdtemp()
@@ -229,7 +229,7 @@ async def export_codebase_to_markdown(
         else:
             export_dir = os.path.abspath(root_dir)
 
-        # Step 2: Determine file list and Git history summary
+        # ধাপ ২: ফাইল লিস্ট ও গিট হিস্ট্রি সামারি নির্ধারণ করো
         changed_files = None
         git_summary = ""
 
@@ -239,7 +239,7 @@ async def export_codebase_to_markdown(
 
         files = _collect_files(export_dir, changed_files if git_diff_only else None)
 
-        # Step 3: Run concurrent file reads and assembly
+        # ধাপ ৩: কনকারেন্ট ফাইল রিড এবং অ্যাসেম্বলি চালাও
         semaphore = asyncio.Semaphore(max_concurrency)
 
         async def bounded(path):

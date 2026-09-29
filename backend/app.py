@@ -30,7 +30,7 @@ from core.app_builder import create_app
 from core.health_check import health_checker
 from monitoring import init_observability
 
-# Initialize observability (Sentry APM & Error Tracking) before creating app
+# অ্যাপ তৈরি করার আগে ওবসারভেবিলিটি শুরু করো (Sentry APM & Error Tracking)
 init_observability()
 
 app = create_app()
@@ -53,7 +53,7 @@ async def aggregated_health_check():
         ) from e
 
 
-# Mount-hygiene note (2026-09-15): the direct ``include_router(admin_router)``
+# Mount-hygiene নোট (2026-09-15): সরাসরি ``include_router(admin_router)``
 # that used to sit here duplicated the canonical ALL_ROUTERS registry entry
 # (api.routes.admin_routes — moved out of core/ per #683, is_critical=True —
 # fail-fast mount with boot-proof accounting), giving every /admin/* route a

@@ -43,7 +43,7 @@ class AIPairProgrammer:
     ) -> dict[str, Any]:
         logger.info(f"Starting pair programming session for: {issue_description[:80]}")
 
-        # Step 1: Plan
+        # ধাপ ১: পরিকল্পনা করো
         plan_prompt = (
             "You are a senior software engineer. Given the following issue, create a concise "
             "implementation plan. Return a numbered list with max 5 clear steps.\n\n"
@@ -53,7 +53,7 @@ class AIPairProgrammer:
         if not plan:
             plan = "1. Analyze issue\n2. Write fix\n3. Add tests\n4. Document changes"
 
-        # Step 2: Generate code
+        # ধাপ ২: কোড জেনারেট করো
         code_prompt = (
             "You are a senior software engineer. Generate the minimal, clean, production-ready "
             "code change needed to resolve the following issue. "
@@ -64,11 +64,11 @@ class AIPairProgrammer:
         if not code:
             code = f"# No code change generated for: {issue_description}"
 
-        # Step 3: Write tests
+        # ধাপ ৩: টেস্ট লিখো
         test_prompt = f"Generate pytest unit tests for the following code change. Return ONLY the test code. No markdown.\n\nCode:\n{code}"
         tests = await self._call_llm(test_prompt, task_type="coding", max_cost=0.03)
 
-        # Step 4: Optionally create PR
+        # ধাপ ৪: ঐচ্ছিকভাবে PR তৈরি করো
         pr_result = None
         if create_pr and repo:
             pr_result = await self._create_github_pr(repo, branch, issue_description, code)

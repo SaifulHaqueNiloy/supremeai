@@ -496,10 +496,10 @@ async def approve_proposal(
 # 🛑 ZERO-GAP: Swarm Forge API Endpoints
 # বাংলা মন্তব্য: ফ্রন্টএন্ড EvolutionForge পেজের সেভ এবং এক্সিকিউট রিকোয়েস্ট হ্যান্ডেল করার জন্য এন্ডপয়েন্ট যোগ করা হলো।
 
-# Issue #446: blueprint persistence root. The old save endpoint returned a
-# fabricated success WITHOUT writing anything anywhere (flow_id was just a
-# timestamp; execute accepted any id and also fabricated success). Blueprints
-# are now really persisted under data/swarm_blueprints/ as JSON files.
+# Issue #446: blueprint persistence root. পুরানো সেভ এন্ডপয়েন্ট fabricated success
+# রিটার্ন করত বিনা বাস্তবে কিছুও লিখতে (flow_id কেবল একটি timestamp ছিল;
+# execute কোনো id গৃহীত করত এবং fabricated success রিটার্ন করত)। ব্লুপ্রিন্ট এখন
+# data/swarm_blueprints/-এ JSON ফাইল হিসেবে সত্যিই সংরক্ষিত হয়।
 _BLUEPRINT_DIR = Path("data") / "swarm_blueprints"
 
 

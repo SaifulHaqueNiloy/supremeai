@@ -38,7 +38,7 @@ __all__ = [
 
 HumanClick = Callable[[Any, str], Any]
 
-# Roles probed in step 2 (accessible name matching).
+# ধাপ ২-এ পরীক্ষা করা রোলসমূহ (অ্যাক্সেসিবল নাম ম্যাচিং).
 _ACCESSIBLE_ROLES: tuple[str, ...] = (
     "button",
     "link",
@@ -133,7 +133,7 @@ async def execute_click_cascade(
       * ``{"success": False, "status": "PAUSED_HITL", ...}`` — escalated to a human,
         never silently "succeeded" without a real click.
     """
-    # ── Step 1: SemanticDOM ────────────────────────────────────────────
+    # ── ধাপ ১: SemanticDOM ────────────────────────────────────────────
     try:
         from browser.semantic_dom import ElementNotFoundSemantically, SemanticDOM
 
@@ -177,10 +177,10 @@ async def execute_click_cascade(
     except asyncio.CancelledError:
         raise
     except Exception as exc:
-        # ISSUE-1570: failures are logged honestly, never silenced into fake success.
+        # ISSUE-1570: ব্যর্থতা সৎভাবে লগ করা হয়, কখনো fake success-এ ন默 কোর না।
         logger.warning(f"[ClickCascade] Step 1 (SemanticDOM) miss for '{target}': {exc}")
 
-    # ── Step 2: Accessible role/name ───────────────────────────────────
+    # ── ধাপ ২: অ্যাক্সেসিবল রোল/নেম ───────────────────────────────────
     try:
         accessible = await _try_accessible_role_click(page, target)
         if accessible is not None:
@@ -190,7 +190,7 @@ async def execute_click_cascade(
     except Exception as exc:
         logger.warning(f"[ClickCascade] Step 2 (accessible role) miss for '{target}': {exc}")
 
-    # ── Step 3: Known locator (explicit CSS/XPath) ─────────────────────
+    # ── ধাপ ৩: Known locator (স্পষ্ট CSS/XPath) ─────────────────────
     try:
         if _findable(page, target, timeout_ms=2000):
             _dispatch_click(page, target, human_click)
@@ -206,7 +206,7 @@ async def execute_click_cascade(
     except Exception as exc:
         logger.warning(f"[ClickCascade] Step 3 (known locator) miss for '{target}': {exc}")
 
-    # ── Step 4: Vision grounding (confidence-guarded) ──────────────────
+    # ── ধাপ ৪: ভিজন গ্রাউন্ডিং (কনফিডেন্স-গার্ডেড) ──────────────────
     try:
         vg = vision if vision is not None else VisionGrounding(page)
         loc = await vg.locate(target)
@@ -233,7 +233,7 @@ async def execute_click_cascade(
     except Exception as exc:
         logger.warning(f"[ClickCascade] Step 4 (vision) miss for '{target}': {exc}")
 
-    # ── Step 5: HITL escalation — the ONLY honest terminal state ───────
+    # ── ধাপ ৫: HITL এসকেলেশন — একমাত্র সৎ টার্মিনাল স্টেট ───────
     return {
         "success": False,
         "status": "PAUSED_HITL",

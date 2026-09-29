@@ -153,9 +153,8 @@ class RLHFPipeline:
 
             trainer = ModelTrainer()
             res = await trainer.trigger_lora_finetune(dataset_path, base_model)
-            # Issue #440 fix: the delegation previously rewrapped EVERY result
-            # as "success" — propagating the local-simulation fake.  Propagate
-            # the honest status instead.
+            # Issue #440 ফিক্স: প্রতিটি রেজাল্টকে ফিরিয়ে "success" হিসাবে রি-র্যাপ করা হতো —
+            # লোকাল সিমুলেশন ফেক প্রপ্যাগেট করা হতো। এখন সත් স্ট্যাটাস প্রপ্যাগেট করো।
             if res.get("status") != "success":
                 return {
                     "status": res.get("status", "error"),

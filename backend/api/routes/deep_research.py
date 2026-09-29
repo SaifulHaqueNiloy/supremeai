@@ -345,7 +345,7 @@ async def _run_research_pipeline(
             else:
                 await on_step(step, name, content)
 
-    # --- Step 1: Parse and refine the research query ---
+    # --- ধাপ ১: রিসার্চ কুয়েরি পার্স ও রিফাইন করো ---
     refined = query
     try:
         refine_prompt = (
@@ -360,7 +360,7 @@ async def _run_research_pipeline(
         refined = query
     await emit(1, "Parsing query", f"Refined query: {refined}")
 
-    # --- Step 2: Generate sub-queries (3-5) ---
+    # --- ধাপ ২: ৩-৫টি সাব-কুয়েরি জেনারেট করো ---
     sub_queries: list[str] = [refined]
     try:
         sub_prompt = (
@@ -384,7 +384,7 @@ async def _run_research_pipeline(
         f"Generated {len(sub_queries)} sub-queries: " + "; ".join(sub_queries[:3]),
     )
 
-    # --- Step 3: Execute web searches ---
+    # --- ধাপ ৩: ওয়েব সার্চ এক্সিকিউট করো ---
     search_results: list[dict[str, str]] = []
     for sq in sub_queries:
         results = await _web_search(sq, user_id)
@@ -396,7 +396,7 @@ async def _run_research_pipeline(
         f"Found {len(search_results)} results across {len(sub_queries)} queries.",
     )
 
-    # --- Step 4: Index findings via knowledge_base_indexer ---
+    # --- ধাপ ৪: ফাইন্ডিংস ইনডেক্স করো knowledge_base_indexer দিয়ে ---
     indexed_count = _index_findings(search_results, user_id)
     await emit(
         4,
@@ -404,7 +404,7 @@ async def _run_research_pipeline(
         f"Indexed {indexed_count} results into the knowledge base.",
     )
 
-    # --- Step 5: Extract key information ---
+    # --- ধাপ ৫: মূল তথ্য এক্সট্র্যাক্ট করো ---
     key_info_parts: list[str] = []
     for i, src in enumerate(search_results[:15]):
         snippet = src.get("snippet", "")
@@ -420,7 +420,7 @@ async def _run_research_pipeline(
         f"Extracted information from {len(key_info_parts)} sources.",
     )
 
-    # --- Step 6: Identify gaps and generate follow-up queries ---
+    # --- ধাপ ৬: গ্যাপ চিহ্নিত করো ও ফলো-আপ কুয়েরি জেনারেট করো ---
     follow_up_queries: list[str] = []
     try:
         gap_prompt = (
@@ -443,7 +443,7 @@ async def _run_research_pipeline(
         f"Found {len(follow_up_queries)} follow-up queries to fill gaps.",
     )
 
-    # --- Step 7: Execute follow-up searches ---
+    # --- ধাপ ৭: ফলো-আপ সার্চ এক্সিকিউট করো ---
     follow_results: list[dict[str, str]] = []
     for fq in follow_up_queries:
         results = await _web_search(fq, user_id)
@@ -455,7 +455,7 @@ async def _run_research_pipeline(
         f"Found {len(follow_results)} additional results from follow-up searches.",
     )
 
-    # --- Step 8: Synthesize all findings ---
+    # --- ধাপ ৮: সব ফাইন্ডিংস সিনথেসিস করো ---
     all_findings_text = "\n".join(
         f"- [{s.get('title', 'Untitled')}] {s.get('snippet', '')}" for s in all_sources[:20]
     )
@@ -496,7 +496,7 @@ async def _run_research_pipeline(
             f"Synthesized {len(all_sources)} sources into a coherent analysis.",
         )
 
-    # --- Step 9: Generate structured report with citations ---
+    # --- ধাপ ৯: সাইটেশনসহ স্ট্রাকচারড রিপোর্ট জেনারেট করো ---
     report_dict: dict[str, Any] = {
         "title": refined,
         "sections": [],
@@ -549,7 +549,7 @@ async def _run_research_pipeline(
             report_dict["sections"] = [{"title": "Findings", "content": synthesis, "sources": []}]
         await emit(9, "Generating structured report", f"Report titled: {report_dict['title']}")
 
-    # --- Step 10: Store results in memory ---
+    # --- ধাপ ১০: রেজাল্ট মেমোরিতে স্টোর করো ---
     try:
         from services.memory_service import save_memory
 

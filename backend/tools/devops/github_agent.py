@@ -66,11 +66,11 @@ async def create_autonomous_pr(
 
     branch_name = f"supremeai-auto-fix-{dt.now().strftime('%Y%m%d%H%M%S')}"
 
-    # Step 1: Commit the code
+    # ধাপ ১: কোড কমিট করো
     files_to_commit = {file_path: code_content}
     await agent.commit_changes(repo_name, files_to_commit, commit_msg, branch_name)
 
-    # Step 2: Create the Pull Request
+    # ধাপ ২: Pull Request তৈরি করো
     title = f"🚀 SupremeAI Auto-Fix: {commit_msg}"
     body = "This PR was autonomously generated and verified in the SupremeAI Zero-Cost Sandbox.\n\n- ✅ Execution Verified\n- 🧠 Saved to Memory Vault"
     pr_res = await agent.create_pr(repo_name, title, body, branch_name)

@@ -151,7 +151,7 @@ class UpdatesMixin:
 
         from tools.social.telegram_security import security_guard
 
-        # ── Step A: Anti-Hacking & Prompt Injection Guardrail ─────────
+        # ── ধাপ A: অ্যান্টি-হ্যাকিং & প্রম্পট ইঞ্জেকশন গার্ডরেইল ─────────
         injected, _inj_reason = security_guard.detect_prompt_injection(text)
         if injected:
             logger.warning(
@@ -165,7 +165,7 @@ class UpdatesMixin:
             )
             return
 
-        # ── Step B: TOTP 2FA Verification Flow ────────────────────────
+        # ── ধাপ B: TOTP 2FA ভেরিফিকেশন ফ্লো ────────────────────────
         command = text.split(maxsplit=1)[0].lower() if text.startswith("/") else None
         is_verify_cmd = command in ("/verify", "/auth", "/totp", "/otp")
         raw_digits = text.strip()
@@ -182,7 +182,7 @@ class UpdatesMixin:
                 await self._execute_authorized_critical_action(chat_id, challenge)
             return
 
-        # ── Step C: Critical / Destructive Instruction Interceptor ────
+        # ── ধাপ C: কৃত্রিম / ডেস্ট্রাকটিভ ইন্সট্রাকশন ইন্টারসেপ্টর ────
         is_crit, action_type, action_desc = security_guard.detect_critical_action(text)
         if is_crit:
             if not self.is_admin(chat_id, user_id):
@@ -206,7 +206,7 @@ class UpdatesMixin:
             await self.send_message(chat_id, crit_msg)
             return
 
-        # ── Step D: Standard Command Handling ─────────────────────────
+        # ── ধাপ D: স্ট্যান্ডার্ড কমান্ড हैंডলিং ─────────────────────────
         if command:
             if command in ("/start", "/help"):
                 if self.is_admin(chat_id, user_id):
@@ -324,7 +324,7 @@ class UpdatesMixin:
                 await self.send_message(chat_id, reply)
             return
 
-        # ── Step E: AI Conversational Engine ──────────────────────────
+        # ── ধাপ E: AI কনভারসেশনাল ইঞ্জিন ──────────────────────────
         await self.send_typing(chat_id)
         ai_response = await self._ai_response(text, user_id)
         await self.send_message(chat_id, ai_response)

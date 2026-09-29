@@ -41,14 +41,18 @@ except ImportError as e:
 CACHE_TTL_SECONDS: int = int(os.getenv("SECRET_CACHE_TTL") or "300")  # 5 min default
 INFISICAL_TIMEOUT: int = int(os.getenv("INFISICAL_TIMEOUT") or "10")  # 10s default
 
-# ── Secret classification (BE-13, issue #545) ─────────────────────────────────
+# ── Secret classification (BE-13, issue #545) ─────────────────────────────────────────────
 # Secrets that may legitimately be absent in production/staging: a missing
 # value only degrades the corresponding integration (INFO log, empty/None
 # returned). EVERY other secret is FAIL-CLOSED: a missing value raises
 # RuntimeError so a forgotten secret can never silently become "" downstream
 # (e.g. STRIPE_WEBHOOK_SECRET → SecretStr("") accepting forged webhook events).
-# To ship a new optional integration, explicitly add its key here.
-OPTIONAL_SECRETS: set[str] = {
+#
+# বাংলা মন্তব্য: এই sets দুটো hardcoded baseline + secrets_registry.yaml merge।
+# registry থেকে `criticality: critical` key → HARD_REQUIRED_SECRETS-এ যোগ হবে।
+# বাকি সব registry key → OPTIONAL_SECRETS-এ যোগ হবে।
+# ফলে নতুন secret registry-তে যোগ করলেই automatic classification হবে।
+_OPTIONAL_SECRETS_BASELINE: set[str] = {
     "ADMIN_NOTIFICATION_EMAIL",
     "DISCORD_OTP_WEBHOOK_URL",
     "DISCORD_WEBHOOK_URL",
@@ -103,7 +107,7 @@ OPTIONAL_SECRETS: set[str] = {
 }
 # Infra-critical secrets whose absence aborts boot — kept as a separate set so
 # they get the CRITICAL log + alert event before the fail-closed raise.
-HARD_REQUIRED_SECRETS: set[str] = {
+_HARD_REQUIRED_SECRETS_BASELINE: set[str] = {
     "SUPABASE_DATABASE_URL_POOLER",
     "SUPABASE_URL",
     "SUPABASE_KEY",
@@ -112,6 +116,64 @@ HARD_REQUIRED_SECRETS: set[str] = {
     "ENCRYPTION_KEY",
     "SUPREMEAI_API_KEY",
 }
+
+
+def _load_registry_classifications() -> tuple[set[str], set[str]]:
+    """secrets_registry.yaml থেকে criticality classification load করে।
+
+    বাংলা মন্তব্য: registry-তে `criticality: {render-backend: critical}` থাকলে
+    সেই key HARD_REQUIRED_SECRETS-এ যোগ হবে। বাকি সব registered key OPTIONAL-এ।
+    YAML load ব্যর্থ হলে baseline sets-এ fallback — boot কখনো break হবে না।
+    """
+    try:
+        import pathlib as _pathlib
+
+        import yaml  # type: ignore[import]
+
+        # বাংলা: backend/core/security/ থেকে 3 লেভেল উপরে = repo root
+        registry_path = _pathlib.Path(__file__).resolve().parents[3] / "secrets_registry.yaml"
+        if not registry_path.exists():
+            return set(), set()
+
+        with open(registry_path, encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        extra_hard: set[str] = set()
+        extra_optional: set[str] = set()
+
+        for entry in data.get("keys", []):
+            key = entry.get("name", "")
+            if not key:
+                continue
+            criticality = entry.get("criticality", {})
+            # বাংলা: যেকোনো environment-এ 'critical' থাকলে hard-required
+            is_critical = any(v == "critical" for v in criticality.values())
+            if is_critical:
+                extra_hard.add(key)
+            else:
+                extra_optional.add(key)
+
+        return extra_hard, extra_optional
+
+    except Exception as _e:
+        # বাংলা মন্তব্য: registry load failure কখনো boot crash করবে না — baseline-এ fallback
+        logger.debug(f"secrets_registry.yaml load skipped (non-fatal): {_e}")
+        return set(), set()
+
+
+def _build_secret_sets() -> tuple[set[str], set[str]]:
+    """Baseline + registry merge করে final classification sets তৈরি করে।"""
+    extra_hard, extra_optional = _load_registry_classifications()
+    # hard-required baseline সবসময় অক্ষুণ্ণ; registry থেকে critical আরো যোগ হয়
+    hard = _HARD_REQUIRED_SECRETS_BASELINE | extra_hard
+    # optional = registry থেকে যা এলো, কিন্তু hard-required-এ নেই
+    optional = _OPTIONAL_SECRETS_BASELINE | (extra_optional - hard)
+    return optional, hard
+
+
+# বাংলা মন্তব্য: module load-এ একবার build হয় — পরে immutable।
+# নতুন key registry-তে যোগ করলেই পরের deploy-এ automatic classification।
+OPTIONAL_SECRETS, HARD_REQUIRED_SECRETS = _build_secret_sets()
 
 
 class _CacheEntry:

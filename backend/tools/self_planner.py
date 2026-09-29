@@ -91,8 +91,8 @@ class SelfPlanner:
                 prompt, task_type="reasoning", max_cost=0.05
             )
         except Exception as e:
-            # ✅ FIXED: LLM planning failures now propagate as real errors instead of
-            # being masked by a hardcoded fallback plan. A caller must know planning failed.
+            # ✅ ফিক্স: LLM প্ল্যানিং ব্যর্থতা এখন সত্যিকার erroর হিসেবে propagate হয়;
+            # হার্ডকোডেড ফলব্যাক প্ল্যান এটা মাস্ক করে না। কলারকে জানতে হবে প্ল্যানিং ব্যর্থ হয়েছে।
             logger.error(f"LLM planner call failed: {e}")
             raise RuntimeError(f"Agent planning failed: LLM call error ({e})") from e
 
@@ -112,8 +112,8 @@ class SelfPlanner:
                 err_msg = "LLM plan response was not a JSON array"
                 raise TypeError(err_msg)
         except Exception as e:
-            # ✅ FIXED: no more silent fallback to a hardcoded plan — an unparsable
-            # response means planning genuinely failed and must be surfaced as an error.
+            # ✅ ফিক্স: সাইলেন্ট হার্ডকোডেড ফলব্যাক প্ল্যান আর নেই — পার্স অসম্ভব
+            # রেসপন্স হলে প্ল্যানিং সত্যিই ব্যর্থ হয়েছে এবং error হিসেবে উপরে তুলতে হবে।
             logger.error(f"LLM returned non-JSON/invalid plan: {e}")
             err_msg_rt = f"Agent planning failed: LLM returned an invalid plan ({e})"
             raise RuntimeError(err_msg_rt) from e

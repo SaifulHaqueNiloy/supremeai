@@ -44,7 +44,7 @@ class PreferenceUpdate(BaseModel):
 # "_extended" key — nothing silently dropped, no schema migration required.
 # ``verbosity`` / ``preferred_frameworks`` were already accepted by the model
 # but are NOT physical columns, so upserting them verbatim used to fail with
-# an unknown-column error (latent 500) — they now flow through _extended too.
+# an unknown-column error (latent 500) — তাদেরকে এখন _extended এর মাধ্যমে পাস করা হয়।
 _DB_COLUMNS = frozenset({"theme", "default_model", "max_tokens", "auto_save", "custom_shortcuts"})
 _EXTENDED_KEYS = frozenset(
     {

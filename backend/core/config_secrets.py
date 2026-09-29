@@ -15,7 +15,11 @@ from core.logging_config import logger
 # Issue #542 (BE-10): single shared floor for the JWT secret minimum length.
 from core.secret_policy import JWT_SECRET_MIN_LENGTH, resolve_jwt_secret_env
 
-from .security.secret_vault import SecretNotFoundError, get_secret_vault
+from .security.secret_vault import (
+    HARD_REQUIRED_SECRETS,
+    SecretNotFoundError,
+    get_secret_vault,
+)
 
 
 class SettingsSecretsMixin:
@@ -42,10 +46,10 @@ class SettingsSecretsMixin:
             self.__dict__["_secrets_batch_loaded"] = False
         return self.__dict__
 
-    # বাংলা মন্তব্য: ব্যাচ লোডিংয়ের জন্য প্রয়োজনীয় কোর সিক্রেট কীগুলোর তালিকা।
-    # startup-এ একবারে শুধু কোর সিক্রেট লোড করা হবে, যাতে মেমরি এবং স্টার্টআপ টাইম কম লাগে।
-    # অপশনাল ইন্টিগ্রেশনগুলো (যেমন AI providers, Kaggle) দরকার হলে lazily লোড হবে।
-    _CORE_SECRET_KEYS: list[str] = [
+    # বাংলা মন্তব্য: ব্যাচ লোডিংয়ের জন্য কোর সিক্রেট কীগুলোর তালিকা — HARD_REQUIRED_SECRETS +
+    # অতিরিক্ত এসেনশিয়াল কোর/CORS কীগুলোর ইউনিয়ন। secrets_registry.yaml থেকে critical
+    # হিসেবে ক্লাসিফাইড যেকোনো কী স্বয়ংক্রিয়ভাবে এর মধ্যে অন্তর্ভুক্ত হয়।
+    _BASE_ADDITIONAL_KEYS: list[str] = [
         "SUPABASE_DATABASE_URL_POOLER",
         "SUPABASE_DB_CA_CERT",
         "SUPABASE_URL",
@@ -57,15 +61,14 @@ class SettingsSecretsMixin:
         "SUPREMEAI_ADMIN_PASSWORD_HASH",
         "CI_WEBHOOK_SECRET",
         "SUPREMEAI_API_KEY",
-        # Issues #1483/#1484/#1455: CORS origins live in the vault but were
-        # never mapped into the settings cache — os.getenv()-only consumers
-        # (middleware/cors_policy.py, settings.cors_origins) saw EMPTY lists
-        # on deploys whose Render env omits the vars → every browser preflight
-        # 400'd (login/chat/admin dashboard fully blocked).
+        # Issues #1483/#1484/#1455: CORS origins live in the vault
         "CORS_ORIGINS",
         "USER_CORS_ORIGINS",
         "ADMIN_CORS_ORIGINS",
     ]
+    _CORE_SECRET_KEYS: list[str] = sorted(
+        list(set(_BASE_ADDITIONAL_KEYS) | set(HARD_REQUIRED_SECRETS))
+    )
 
     def _ensure_secrets_loaded(self) -> None:
         """Batch-load all secrets at once into memory cache.

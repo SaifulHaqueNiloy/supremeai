@@ -441,28 +441,28 @@ class DailyLearner:
         Returns:
             Dict with sub_goals, discoveries, and execution plan.
         """
-        # Step 1: Decompose
+        # ধাপ ১: ভাগ করো
         sub_goals = await self.decomposer.decompose(objective, force_refresh)
         self.active_goals[objective] = sub_goals
 
-        # Step 2: Extract research topics from sub-goals
+        # ধাপ ২: সাব-গোল থেকে রিসার্চ টপিক এক্সট্র্যাক্ট করো
         topics = []
         for sg in sub_goals:
             words = re.findall(r"\b[a-zA-Z]{4,}\b", sg.description)
             topics.extend(words[:3])
         topics = list(set(topics))[:5]  # Deduplicate & limit
 
-        # Step 3: Scan research sources
+        # ধাপ ৩: রিসার্চ সোর্স স্ক্যান করো
         arxiv_results = await self.scanner.scan_arxiv(topics)
         github_results = await self.scanner.scan_github(topics)
         discoveries = arxiv_results + github_results
 
-        # Step 4: Score and rank discoveries
+        # ধাপ ৪: ডিসকাভারি স্কোর ও র‍্যাঙ্ক করো
         for d in discoveries:
             d["relevance_score"] = self.scorer.score_discovery(d)
         discoveries.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
 
-        # Step 5: Build execution plan
+        # ধাপ ৫: এক্সিকিউশন প্ল্যান বuil্ড করো
         priority_order = [
             LearningPriority.CRITICAL,
             LearningPriority.HIGH,

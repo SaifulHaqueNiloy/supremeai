@@ -189,9 +189,9 @@ class ModelRouter:
             res = run_async_as_sync(self.async_route_and_generate(prompt, task_type, max_cost))
 
         if res is None:
-            # ✅ FIXED: previously returned the same hardcoded fake "portfolio app" JSON
-            # as success:True. async_route_and_generate now always returns a dict, so this
-            # path should not occur in practice — but if it ever does, report it honestly.
+            # ✅ ফিক্স: আগে একই হার্ডকোডেড ফেক "portfolio app" JSON-কে success:True
+            # হিসেবে রিটার্ন করা হতো। async_route_and_generate এখন সবসময় dict রিটার্ন করে,
+            # তাই এই পাথ প্র্যাকটিক্যাললে ওccur করা উচিত নয় — যদি ওccur হয় তাহলে সৎভাবে রিপোর্ট করো।
             error_msg = (
                 "route_and_generate: no response obtained (async_route_and_generate returned None)."
             )

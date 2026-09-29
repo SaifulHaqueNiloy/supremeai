@@ -1188,7 +1188,7 @@ async def github_commit_files(params: CommitFilesInput) -> str:
 
     try:
         async with httpx.AsyncClient(timeout=45.0) as client:
-            # Step 1: branch ref → parent commit SHA
+            # ধাপ ১: ব্রাঞ্চ রেফ → প্যারেন্ট কমিট SHA
             ref_resp = await client.get(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/ref/heads/{params.branch}",
                 headers=_github_headers(github_token),
@@ -1196,7 +1196,7 @@ async def github_commit_files(params: CommitFilesInput) -> str:
             ref_resp.raise_for_status()
             parent_sha = ref_resp.json()["object"]["sha"]
 
-            # Step 2: parent commit → base tree SHA
+            # ধাপ ২: প্যারেন্ট কমিট → বেস ট্রি SHA
             parent_commit_resp = await client.get(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/commits/{parent_sha}",
                 headers=_github_headers(github_token),
@@ -1204,7 +1204,7 @@ async def github_commit_files(params: CommitFilesInput) -> str:
             parent_commit_resp.raise_for_status()
             base_tree_sha = (parent_commit_resp.json().get("tree") or {}).get("sha")
 
-            # Step 3: create blob per file
+            # ধাপ ৩: প্রতি ফাইলের জন্য ব্লব তৈরি করো
             tree_items: list[dict[str, str]] = []
             for f in params.files:
                 encoded_content = (
@@ -1228,7 +1228,7 @@ async def github_commit_files(params: CommitFilesInput) -> str:
                     }
                 )
 
-            # Step 4: create new tree (base_tree + items)
+            # ধাপ ৪: নতুন ট্রি তৈরি করো (base_tree + items)
             tree_payload: dict[str, object] = {"tree": tree_items}
             if base_tree_sha:
                 tree_payload["base_tree"] = base_tree_sha
@@ -1240,7 +1240,7 @@ async def github_commit_files(params: CommitFilesInput) -> str:
             tree_resp.raise_for_status()
             new_tree_sha = tree_resp.json()["sha"]
 
-            # Step 5: create commit pointing to new tree, parent = parent_sha
+            # ধাপ ৫: কমিট তৈরি করো নতুন ট্রি-কে পয়েন্ট করবে, parent = parent_sha
             commit_resp = await client.post(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/commits",
                 headers=_github_headers(github_token),
@@ -1253,7 +1253,7 @@ async def github_commit_files(params: CommitFilesInput) -> str:
             commit_resp.raise_for_status()
             new_commit_sha = commit_resp.json()["sha"]
 
-            # Step 6: update branch ref → fast-forward (force=False)
+            # ধাপ ৬: ব্রাঞ্চ রেফ আপডেট করো → fast-forward (force=False)
             ref_update_resp = await client.patch(
                 f"{GITHUB_API_URL}/repos/{GITHUB_REPO}/git/refs/heads/{params.branch}",
                 headers=_github_headers(github_token),
