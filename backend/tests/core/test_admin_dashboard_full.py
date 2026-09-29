@@ -406,8 +406,7 @@ class TestGetProviders:
         ):
             monkeypatch.setattr(settings, provider, "", raising=False)
         # #2558: _get_cached_secret-এ os.getenv precedence আছে — আগের টেস্ট
-        # (যেমন tests/api/test_api.py:6 মডিউল-লেভেলে OPENROUTER_API_KEY সেট
-        # করে, cleanup ছাড়া) env-এ key রেখে গেলে setter-লেখা cache তাকে হারায়।
+        # env-এ key রেখে গেলে setter-লেখা cache তাকে হারায়।
         # টেস্টের "no keys" প্রিমিস সত্য রাখতে env থেকেও key সরাতে হয়।
         for env_key in (
             "OPENROUTER_API_KEY",
