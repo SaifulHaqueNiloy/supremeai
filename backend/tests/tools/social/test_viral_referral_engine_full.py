@@ -558,12 +558,14 @@ class TestStripePayout:
         assert "card_declined" in out["reason"]
 
     def test_credit_stripe_payout_below_threshold(self, engine, monkeypatch):
+        from pydantic import SecretStr
+
         from core.config import settings
 
         monkeypatch.setattr(
             type(settings),
-            "_get_cached_secret",
-            lambda self, key: "sk_test_x" if key == "STRIPE_API_KEY" else "",
+            "stripe_api_key",
+            property(lambda self: SecretStr("sk_test_x")),
             raising=False,
         )
         out = engine._credit_stripe_payout("u", {"reward": 5.0})
@@ -572,13 +574,14 @@ class TestStripePayout:
 
     def test_credit_stripe_payout_full_cycle(self, engine, monkeypatch):
         import stripe as real_stripe
+        from pydantic import SecretStr
 
         from core.config import settings
 
         monkeypatch.setattr(
             type(settings),
-            "_get_cached_secret",
-            lambda self, key: "sk_test_x" if key == "STRIPE_API_KEY" else "",
+            "stripe_api_key",
+            property(lambda self: SecretStr("sk_test_x")),
             raising=False,
         )
         engine._credit_wallet("u", 49.0, "seed")
@@ -595,13 +598,14 @@ class TestStripePayout:
 
     def test_credit_stripe_payout_failure_keeps_balance(self, engine, monkeypatch):
         import stripe as real_stripe
+        from pydantic import SecretStr
 
         from core.config import settings
 
         monkeypatch.setattr(
             type(settings),
-            "_get_cached_secret",
-            lambda self, key: "sk_test_x" if key == "STRIPE_API_KEY" else "",
+            "stripe_api_key",
+            property(lambda self: SecretStr("sk_test_x")),
             raising=False,
         )
         engine._credit_wallet("u", 60.0, "seed")
