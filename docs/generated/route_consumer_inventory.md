@@ -6,7 +6,7 @@
 |---|---|
 | backend routes | 849 |
 | routes with frontend consumer | 294 |
-| unique frontend `/api/...` refs | 145 |
+| unique frontend `/api/...` refs | 144 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
@@ -891,7 +891,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | DELETE | `/api/v1/sandbox/:param` | `backend/api/routes/sandbox_api.py` | api-only | NONE |
 | POST | `/api/v1/sandbox/:param/execute` | `backend/api/routes/sandbox_api.py` | api-only | NONE |
 | GET | `/api/v1/sandbox/:param/logs` | `backend/api/routes/sandbox_api.py` | api-only | NONE |
-| POST | `/api/v1/sandbox/create` | `backend/api/routes/sandbox_api.py` | user-facing | `frontend/src/components/admin/shared/ActionCard.tsx`, `frontend/src/components/chat/UnifiedChatBubble.tsx` |
+| POST | `/api/v1/sandbox/create` | `backend/api/routes/sandbox_api.py` | user-facing | `frontend/src/components/chat/UnifiedChatBubble.tsx` |
 | GET | `/api/v1/sandbox/list` | `backend/api/routes/sandbox_api.py` | api-only | NONE |
 | POST | `/api/v1/scrape` | `backend/api/routes/scraper.py` | api-only | NONE |
 | GET | `/api/v1/social/drafts` | `backend/api/routes/social_growth.py` | user-facing | `frontend/src/services/socialGrowthService.ts` |
