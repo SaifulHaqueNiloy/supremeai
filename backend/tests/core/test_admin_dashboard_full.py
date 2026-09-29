@@ -377,20 +377,22 @@ class TestGetProviders:
         assert by_id["openrouter"]["status"] == "unknown"  # key present, no traffic yet
         assert by_id["gemini"]["api_key_valid"] is True
 
-    @pytest.mark.skip(
-        reason="Pre-existing order-dependent isolation failure — exposed by #2551 "
-        "full-tier unblock (collection previously died before reaching tests/core): "
-        "test_providers_no_keys asserts all-not_configured but the shared "
-        "services.dynamic_ai.orchestrator singleton registry carries state from "
-        "earlier tests (run 36584327709+: assert False at :397, deterministic "
-        "across 2 attempts). Needs dedicated orchestrator-singleton reset "
-        "investigation — see #2551."
-    )
     async def test_providers_no_keys(self, monkeypatch):
         """No API keys → every fallback provider reported as not_configured (no fake data)."""
+        import sys
+
         from core.config import settings
 
-        self._empty_registry(monkeypatch)
+        # ISOLATION FIX (#2551): ফুল স্যুটে আগের টেস্টগুলো services.dynamic_ai
+        # orchestrator/registry singleton-এ প্রোভাইডার রেজিস্টার করে রাখে —
+        # ফলে get_providers-এর registry-নির্ভর প্রথম শাখা fallback-এর বদলে
+        # দূষিত state পড়ে (deterministic assert False, ২ রান)। টেস্টের চুক্তি
+        # হলো "keys নেই → fallback key-presence রিপোর্ট" — তাই orchestrator
+        # ইমপোর্ট-ই বন্ধ (halt) করে নিশ্চিতভাবে fallback-পথে নামানো হলো
+        # (sys.modules None = ImportError → get_providers-এর except-fallback)।
+        monkeypatch.setitem(
+            sys.modules, "services.dynamic_ai.orchestrator", None
+        )
         for provider in (
             "openrouter_api_key",
             "gemini_api_key",
