@@ -21,7 +21,7 @@ class NotionPlugin(BasePlugin):
     async def execute_tool(
         self, tool_name: str, params: dict[str, Any], context: dict[str, Any]
     ) -> Any:
-        raise NotImplementedError(
+        raise NotImplementedError(  # #2479: graceful — plugin not yet wired
             "Notion plugin is experimental with limited tool coverage. "
             "No tools are implemented yet — check back later."
         )

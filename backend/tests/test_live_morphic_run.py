@@ -5,7 +5,6 @@ import os
 import sys
 
 from backend.skills.core_knowledge_qa import execute_tool
-
 from core.logging_config import logger
 
 # লগিং কনফিগারেশন (যাতে কনসোলে আউটপুট সুন্দরভাবে দেখা যায় এবং লিন্টার পাস করে)

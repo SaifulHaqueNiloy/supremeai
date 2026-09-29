@@ -83,10 +83,17 @@ export function GlobalHeader({ context, onLogout, notifications = [], actions }:
       return;
     }
     // বাংলা: canonical user logout — authStore.logout() সব contextual state পরিষ্কার করে।
-    import('../../store/authStore').then(({ useAuthStore: store }) => {
-      store.getState().logout();
-      navigate('/login');
-    });
+    import('../../store/authStore')
+      .then(({ useAuthStore: store }) => {
+        store.getState().logout();
+        navigate('/login');
+      })
+      .catch((err: unknown) => {
+        // বাংলা মন্তব্য (#2478): authStore লোড ব্যর্থ হলেও ইউজার আটকে থাকবে না —
+        // লগইন পেজে নিরাপদ ডিগ্রেডেশন, ব্যর্থতা কনসোলে দৃশ্যমান।
+        console.error('[GlobalHeader] authStore load failed during logout:', err);
+        navigate('/login');
+      });
   };
 
   const openCommandPalette = () => {

@@ -9,7 +9,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from core.orchestration.conversation_orchestrator import ConversationCommand
+# Issue #2476: টাইপ এখন leaf contracts মডিউল থেকে — hub
+# (conversation_orchestrator) থেকে নিলে adapters↔orchestrator static
+# import cycle তৈরি হতো (orchestrator নিজে handler-registration-এর সময়
+# এই adapters-কে lazily import করে)।
+from core.orchestration.contracts import ConversationCommand
 
 
 async def _status(command: ConversationCommand, spoke: str, message: str) -> dict[str, Any]:

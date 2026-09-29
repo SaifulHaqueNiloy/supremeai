@@ -14,13 +14,14 @@ from __future__ import annotations
 
 import time
 
+# Issue #2476: singleton factory এখন composition root-এ (core.circles.bootstrap)
+from core.circles.bootstrap import get_governance_core
 from core.circles.contracts import (
     CircleName,
     ExecutionStatus,
     RiskLevel,
 )
 from core.circles.envelopes import ExecutionEnvelope
-from core.circles.governance_core import get_governance_core
 from core.circles.registry import circle_registry
 from core.kernel.audit_logger import AuditLogger
 from core.kernel.interface import CircleScope, KernelRequest, KernelResponse

@@ -1,4 +1,5 @@
 import pytest
+
 from backend.core.contracts.adapters import (
     ProviderTaskState,
     ProviderTaskStatus,

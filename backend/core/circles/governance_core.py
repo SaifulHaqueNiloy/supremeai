@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import threading
 import time
 from collections.abc import Awaitable, Callable
 from typing import Any
@@ -309,33 +308,14 @@ class GovernanceCore:
 
 
 # ── process-wide federation singleton ────────────────────────────────
-_governance_core: GovernanceCore | None = None
-_governance_lock = threading.Lock()
-
-
-def get_governance_core() -> GovernanceCore:
-    """Process-wide GovernanceCore; wired with all default centers once."""
-    global _governance_core
-    if _governance_core is None:
-        with _governance_lock:
-            if _governance_core is None:
-                from core.circles.bootstrap import build_federation
-
-                _governance_core = build_federation()
-    return _governance_core
-
-
-def reset_governance_core() -> None:
-    """Test helper: drop the singleton so the next access rebuilds."""
-    global _governance_core
-    with _governance_lock:
-        _governance_core = None
+# Issue #2476: get_governance_core()/reset_governance_core() এখন composition
+# root-এ (core/circles/bootstrap.py) বাসে — এখানে রাখলে bootstrap-এর দিকে
+# উল্টো import-edge দরকার হতো, যা bootstrap ↔ governance_core cycle তৈরি করত।
+# Import পথ বদলেছে: core.circles.bootstrap (ও core.circles re-export)।
 
 
 __all__ = [
     "GovernanceCore",
     "default_global_policy",
-    "get_governance_core",
-    "reset_governance_core",
     "result_envelope_from_execution",
 ]

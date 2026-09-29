@@ -124,7 +124,10 @@ export const useStore = create<SupremeState>((set) => ({
     // path হলো /admin-api/gate/override (আগের /api/admin/gate/override কখনোই
     // backend-এ ছিল না → প্রতিটি override চেষ্টা নীরব 404 দিত)।
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
+      // বাংলা মন্তব্য: সঠিক ব্যাকএন্ড পাথ /admin-api/gate/override (#2475) —
+      // আগের /api/admin/gate/override পাথটি ব্যাকএন্ডে নেই, 404 দিত।
+      // isAdminContextPath() দুই prefix-ই admin backend-এ রাউট করে, তাই শুধু পাথ ঠিক করলেই হয়।
       const data = await apiClient.post<any>('/admin-api/gate/override', {
         target_status: targetStatus,
         reason,

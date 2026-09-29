@@ -21,14 +21,15 @@ export function LiveLogs() {
   //    'supreme_admin_jwt') — the module was permanently disabled for
   //    everyone. Gate on the auth store instead (same pattern as
   //    SecretsHealth.tsx).
-  // 2. Source: GET /admin-api/logs does not exist (404); the CommandCenter
-  //    realtime provider already streams /admin-api/logs/stream SSE into the
-  //    ['cmd','logs'] query cache. Subscribe to that cache (enabled:false →
-  //    observer-only, no fetching) instead of polling a dead endpoint.
+  // 2. Source: GET /admin-api/logs does not exist (404). The old
+  //    CommandCenter realtime provider (the only filler of the ['cmd','logs']
+  //    cache) was zero-importer dead code — deleted in #2553. Until a live
+  //    log source is wired, this cache subscription renders the empty state
+  //    (enabled:false → observer-only, no fetching).
   const isAdminAuthenticated = useAuthStore((s) => s.role === 'admin' && s.status === 'loggedIn');
   const { data: logs, isLoading } = useQuery<LogEntry[]>({
     queryKey: ['cmd', 'logs'],
-    queryFn: () => [], // cache-only: CommandCenterRealtimeProvider fills this
+    queryFn: () => [], // cache-only query — no live filler since #2553 (see comment above)
     enabled: false,
     initialData: [],
     refetchOnMount: false,
