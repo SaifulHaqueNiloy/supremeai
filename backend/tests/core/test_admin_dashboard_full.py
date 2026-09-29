@@ -301,16 +301,22 @@ class TestGetMetrics:
         )
         # ISOLATION FIX (#2551 gate, full-tier red 36586150660 attempt 1+2):
         # ফুল স্যুটে এই টেস্টের আগে ~১৮০০টি টেস্ট চলে — আগের endpoint-টেস্টের
-        # ObservabilityMiddleware রেকর্ড করা রিয়েল ট্রাফিক ৬০-সেকেন্ড rolling
-        # window-তে থেকে যায়, ফলে "idle process → rps 0.0" অনুমান ভাঙে
-        # (নির্ধারিতভাবে 2.817 == 169 req/60s)। টেস্টটির চুক্তি হলো "psutil
-        # ব্যর্থতা → সৎ None" — window-গণিত নয়; তাই idle-অবস্থা এখানেই
-        # hermetic ভাবে তৈরি করা হলো (fresh window, module-global swap)।
-        from collections import deque
+        # ObservabilityMiddleware রেকর্ড করা রিয়েল ট্রাফিক শেয়ার্ড গ্লোবালে
+        # জমে: ৬০-সেকেন্ড rolling window (rps 2.817), metrics_engine.
+        # latency_history (p50 6.4ms), collector _gauges (llm cost)। টেস্টটির
+        # চুক্তি হলো "psutil ব্যর্থতা → সৎ None/0.0" — ট্রাফিক-গণিত নয়; তাই
+        # idle-অবস্থা এখানেই hermetic ভাবে তৈরি করা হলো (fresh state swap —
+        # monkeypatch টেস্ট-শেষে নিজেই ফেরত দেয়)।
+        from collections import defaultdict, deque
 
         import core.observability.metrics_registry as _metrics_registry
+        from core.monitoring import get_metrics_collector
 
         monkeypatch.setattr(_metrics_registry, "_window_events", deque())
+        monkeypatch.setattr(_metrics_registry.metrics_engine, "latency_history", [])
+        monkeypatch.setattr(
+            get_metrics_collector(), "_gauges", defaultdict(float)
+        )
         import sys
 
         fake_psutil = MagicMock()
