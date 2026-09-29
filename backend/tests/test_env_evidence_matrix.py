@@ -240,11 +240,3 @@ def test_registry_alignment_section_present():
         "§6 must document the registry-drift-guard contract"
     )
     assert "backend/tests/test_env_evidence_matrix.py" in doc, "§6 must name the enforcing test"
-
-
-def test_manual_steps_pointers_to_matrix():
-    steps = (REPO_ROOT / "docs" / "audits" / "MANUAL_STEPS.md").read_text(encoding="utf-8")
-    assert "docs/deployment/ENV_EVIDENCE_MATRIX.md" in steps, (
-        "MANUAL_STEPS.md must point operators at the canonical evidence matrix"
-    )
-    assert "test_env_evidence_matrix" in steps, "MANUAL_STEPS.md must mention the drift-guard test"

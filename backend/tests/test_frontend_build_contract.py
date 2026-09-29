@@ -20,7 +20,7 @@ API URLs, broken admin routing). This check enforces, with zero frontend build r
 5. **Type↔build sync** — ``__APP_BUILD_TIME__`` declared in d.ts is defined in
    ``vite.config.ts``.
 6. **No dev-password fallback in the frontend bundle source.**
-7. **MANUAL_STEPS.md** records the build-time immutability note for the canonical pair.
+7. **ENV_EVIDENCE_MATRIX.md** records the build-time immutability note for the canonical pair.
 
 Wire-first: read-only checks over owner files — zero owner code modified. The
 ``KNOWN_UNDECLARED`` baseline documents pre-existing drift for the owner to close
@@ -215,13 +215,13 @@ def test_no_dev_password_only_fallback_in_frontend():
 
 
 # ---------------------------------------------------------------------------
-# 7 — MANUAL_STEPS.md records build-time immutability for the canonical pair
+# 7 — ENV_EVIDENCE_MATRIX.md records build-time immutability for the canonical pair
 # ---------------------------------------------------------------------------
 def test_manual_steps_documents_vite_build_immutability():
-    doc = _read(REPO_ROOT / "audit_reports" / "supreme-deep-audit-reports" / "MANUAL_STEPS.md")
+    doc = _read(REPO_ROOT / "docs" / "deployment" / "ENV_EVIDENCE_MATRIX.md")
     assert "VITE_USER_BACKEND" in doc and "VITE_ADMIN_BACKEND" in doc, (
-        "MANUAL_STEPS.md must keep the canonical frontend pair in the env evidence matrix"
+        "ENV_EVIDENCE_MATRIX.md must keep the canonical frontend pair in the env evidence matrix"
     )
     assert "cannot be changed after deployment" in doc, (
-        "build-time immutability warning missing from MANUAL_STEPS.md"
+        "build-time immutability warning missing from ENV_EVIDENCE_MATRIX.md"
     )
