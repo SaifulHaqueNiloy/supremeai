@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-29 16:57 UTC
+- **Date:** 2026-09-29 17:01 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,11 +10,9 @@
   - (see git log for details)
 
 ## Files Changed
-  - `scripts/ci/purge_stale_workflow_runs.py`
   - `.github/workflows/nightly-ops.yml`
-  - `scripts/ci/smart_priority_merger.py`
-  - `backend/tests/scripts/test_purge_stale_workflow_runs.py`
-  - `.github/workflows/smart-merge-queue.yml`
+  - `tests/test_purge_stale_workflow_runs.py`
+  - `scripts/ci/purge_stale_workflow_runs.py`
   - `CHECKPOINT.md`
 
 ## Pending (Carry Forward)

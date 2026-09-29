@@ -1,6 +1,8 @@
 """
+tests/test_purge_stale_workflow_runs.py
+=======================================
 Unit tests for scripts/ci/purge_stale_workflow_runs.py
-======================================================
+
 # বাংলা মন্তব্য:
 # এই টেস্ট স্যুটটি workflow run retention ইঞ্জিনের সমস্ত ফিল্টারিং ও নিরাপত্তা নীতি
 # যাচাই করে, যেন প্রোডাকশন বা ওপেন PR-এর প্রয়োজনীয় রান সুরক্ষিত থাকে এবং অপ্রয়োজনীয়
@@ -9,18 +11,15 @@ Unit tests for scripts/ci/purge_stale_workflow_runs.py
 
 from __future__ import annotations
 
+from datetime import datetime, timezone, timedelta
 import importlib.util
-import sys
-from datetime import UTC, datetime, timedelta, timezone
 from pathlib import Path
+import sys
 from unittest.mock import MagicMock, patch
-
 import pytest
 
 # Dynamic import to avoid polluting root package
-SCRIPT_PATH = (
-    Path(__file__).resolve().parents[3] / "scripts" / "ci" / "purge_stale_workflow_runs.py"
-)
+SCRIPT_PATH = Path(__file__).resolve().parents[1] / "scripts" / "ci" / "purge_stale_workflow_runs.py"
 spec = importlib.util.spec_from_file_location("purge_stale_workflow_runs", SCRIPT_PATH)
 module = importlib.util.module_from_spec(spec)
 sys.modules["purge_stale_workflow_runs"] = module
@@ -38,18 +37,18 @@ class TestParseIsoDatetime:
         assert dt.year == 2026
         assert dt.month == 9
         assert dt.day == 29
-        assert dt.tzinfo == UTC
+        assert dt.tzinfo == timezone.utc
 
     def test_parse_offset(self):
         dt = parse_iso_datetime("2026-09-29T10:00:00+00:00")
         assert dt.hour == 10
-        assert dt.tzinfo == UTC
+        assert dt.tzinfo == timezone.utc
 
 
 class TestIsRunStale:
     @pytest.fixture
     def now_dt(self):
-        return datetime(2026, 9, 29, 12, 0, 0, tzinfo=UTC)
+        return datetime(2026, 9, 29, 12, 0, 0, tzinfo=timezone.utc)
 
     def test_in_progress_run_never_stale(self, now_dt):
         run = {
