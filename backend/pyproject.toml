@@ -35,7 +35,11 @@ starlette-context = ">=0.3,<0.6"
 # auto-install হয় না — asyncio ব্যবহারের জন্য extras=["asyncio"] বাধ্যতামূলক,
 # নইলে "The SQLAlchemy asyncio module requires greenlet" ইররে conftest-সহ
 # পুরো backend tier ভাঙে।
-sqlalchemy = {extras = ["asyncio"], version = "^2.0.36"}
+# (#2504 CI round-10/11) <0.137-এর মতোই: sqlalchemy 2.1-এর কঠোর asyncio
+# loop-affinity + StaticPool(:memory:)-এ কনকারেন্ট সেশন-ব্যবহারের টেস্ট-
+# প্যাটার্ন সাংঘর্ষিক (gather-রেস টেস্টে cross-loop lock ইরর)। রিপোর async স্ট্যাক
+# 2.0.x-এ ভ্যালিডেটেড — bump-এর 2.1.1 অপরীক্ষিত এসেছিল।
+sqlalchemy = {extras = ["asyncio"], version = ">=2.0.36,<2.1"}
 alembic = "^1.14.0"
 pydantic = "^2.10.0"
 pydantic-settings = "^2.14.2"  # CVE fix floor (AUDIT-014, GHSA-4xgf-cpjx-pc3j)
