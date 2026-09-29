@@ -15,11 +15,11 @@ def test_control_plane_registry_declares_all_runtime_services():
         assert f'"{service}"' in source
 
 
-def test_worker_exposes_task_lifecycle_routes():
-    source = (_BACKEND_ROOT / "worker_service.py").read_text(encoding="utf-8")
-    assert '@app.post("/tasks"' in source
-    assert '@app.get("/tasks/{task_id}"' in source
-    assert '@app.post("/tasks/{task_id}/cancel"' in source
+# বাংলা মন্তব্য (#2504 CI round-6): test_worker_exposes_task_lifecycle_routes
+# সরানো হয়েছে — worker_service.py module-টি #2541 (#2480 dead-file batch-1)-এ
+# ডিলিট হয়ে গেছে, অথচ এই কন্ট্র্যাক্ট-টেস্ট রেখে গিয়েছিল (FileNotFoundError)।
+# সম্পূর্ণ orphan-টেস্ট ফাইল backend/tests/api/test_worker_service.py-ও একই
+# কারণে ডিলিট (Test Guard-এর allow_deleted_paths-এ নথিভুক্ত)।
 
 
 def test_scraper_boundaries_apply_ssrf_validation():

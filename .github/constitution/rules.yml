@@ -308,6 +308,7 @@ test_guard_policy:
   # একসাথে ডিলিট হলে এখানে যোগ করতে হবে (reviewable trail)।
   allow_deleted_paths:
     - "backend/tests/core/test_competitive_kit.py"
+    - "backend/tests/api/test_worker_service.py"
 
 # Zero-Garbage Docs Guard (#2450, 2026-09-28): 'GitHub Issues as Live Operational
 # Truth' দর্শন — docs/-এ নতুন .md শুধু অনুমোদিত ক্যানোনিকাল জায়গায়। allowlist-এর
