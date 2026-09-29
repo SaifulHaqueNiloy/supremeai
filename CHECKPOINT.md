@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-28 23:06 UTC
+- **Date:** 2026-09-29 18:04 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,15 +10,14 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/dependabot.yml`
-  - `.github/scripts/pr_helper/dependabot_classify.py`
-  - `CHECKPOINT.md`
-  - `.github/workflows/pr-helper.yml`
-  - `.github/workflows/pr.yml`
-  - `.github/workflows/system-gates.yml`
-  - `.github/scripts/constitution/gates.py`
-  - `.github/constitution/rules.yml`
-  - `docs/operations/ACTIVE_ISSUES_AND_PRIORITY_ROADMAP.md`
+  - `backend/services/dynamic_ai/orchestrator.py`
+  - `backend/skills/__init__.py`
+  - `backend/core/plugins/experimental/notion_plugin.py`
+  - `backend/core/plugins/experimental/slack_plugin.py`
+  - `backend/core/plugins/experimental/telegram_plugin.py`
+  - `scripts/git/cross_pr_collision_detector.py`
+  - `backend/core/plugins/experimental/gmail_plugin.py`
+  - `backend/tools/social/email_agent.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)

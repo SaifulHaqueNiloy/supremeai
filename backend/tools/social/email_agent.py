@@ -54,7 +54,9 @@ class EmailAgent:
         logger.warning(
             f"Gmail OAuth connect requested (provider={provider}, scopes={scopes}) — OAuth flow not implemented yet."
         )
-        raise NotImplementedError("Gmail OAuth flow is not implemented yet. Use IMAP or API key auth instead.")  # #2479: graceful message
+        raise NotImplementedError(
+            "Gmail OAuth flow is not implemented yet. Use IMAP or API key auth instead."
+        )  # #2479: graceful message
 
     def connect_imap(self, host: str, port: int, username: str, app_password: str) -> bool:
         """একটি রিয়েল IMAP লগইন করে ক্রেডেনশিয়াল যাচাই করে, তারপর এনক্রিপ্ট করে সংরক্ষণ করে।"""
