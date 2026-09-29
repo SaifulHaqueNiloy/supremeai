@@ -4,6 +4,7 @@
 import enum
 
 import pytest
+
 from backend.core.enum_guard import EnumGuard, EnumGuardError
 
 

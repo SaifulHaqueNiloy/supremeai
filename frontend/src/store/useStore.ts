@@ -120,9 +120,15 @@ export const useStore = create<SupremeState>((set) => ({
 
   executeGateOverride: async (targetStatus, reason, secret) => {
     // বাংলা মন্তব্য: raw fetch() → apiClient — auth header এখন যাচ্ছে। admin_secret এখনো body তে, HTTPS চ্যানেলে safe।
+    // Issue #2475 FIX: endpoint-টি admin-dashboard router-এ mount হয়েছে — সঠিক
+    // path হলো /admin-api/gate/override (আগের /api/admin/gate/override কখনোই
+    // backend-এ ছিল না → প্রতিটি override চেষ্টা নীরব 404 দিত)।
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const data = await apiClient.post<any>('/api/admin/gate/override', {
+       
+      // বাংলা মন্তব্য: সঠিক ব্যাকএন্ড পাথ /admin-api/gate/override (#2475) —
+      // আগের /api/admin/gate/override পাথটি ব্যাকএন্ডে নেই, 404 দিত।
+      // isAdminContextPath() দুই prefix-ই admin backend-এ রাউট করে, তাই শুধু পাথ ঠিক করলেই হয়।
+      const data = await apiClient.post<any>('/admin-api/gate/override', {
         target_status: targetStatus,
         reason,
         admin_secret: secret,
@@ -142,8 +148,8 @@ export const useStore = create<SupremeState>((set) => ({
     // বাংলা মন্তব্য: raw fetch() → apiClient — Authorization header সহ, 402/429 status properly throw হবে
     set({ isForging: true, forgeFeedback: "🧠 Self-Evolution Core is structuring your request...", forgeSuccessCode: null });
     try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       // #2206: router mounted under /api/v1
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const data = await apiClient.post<any>('/api/v1/evolution/forge', {
         skill_name: skillName,
         user_demand: userDemand,

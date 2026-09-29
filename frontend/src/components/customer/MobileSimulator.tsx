@@ -51,9 +51,16 @@ export function MobileSimulator({ html, url = '' }: MobileSimulatorProps) {
     }
     let cancelled = false;
     setTicket(null);
-    fetchRenderTicket().then(t => {
-      if (!cancelled) setTicket(t);
-    });
+    fetchRenderTicket()
+      .then(t => {
+        if (!cancelled) setTicket(t);
+      })
+      .catch((err: unknown) => {
+        // বাংলা মন্তব্য (#2478): unhandled rejection না হয় — টিকেট ছাড়া নিরাপদ
+        // ডিগ্রেডেশন (প্রক্সি-লোডিং চলবে, শুধু টিকেট তথ্য অনুপস্থিত)।
+        console.error('[MobileSimulator] render-ticket fetch failed:', err);
+        if (!cancelled) setTicket(null);
+      });
     return () => {
       cancelled = true;
     };

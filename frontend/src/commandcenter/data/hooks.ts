@@ -202,7 +202,7 @@ export function useCostReport() {
 export function useUsage(refetchIntervalMs?: number | false) {
   return useQuery({
     queryKey: cmdKeys.usage,
-    queryFn: () => apiClient.get<UsageData>('/metrics/usage'),
+    queryFn: () => apiClient.get<UsageData>('/metrics/usage/'),
     refetchInterval: refetchIntervalMs ?? false,
     enabled: hasToken(),
     staleTime: 60_000,

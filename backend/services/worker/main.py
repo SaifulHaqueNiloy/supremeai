@@ -28,12 +28,18 @@ env = os.getenv("ENV", "production").lower()
 if not _CORE_API_URL_RAW:
     if env == "local":
         # Local development fallback — production must set CORE_API_URL explicitly.
+        # বাংলা মন্তব্য: localhost fallback কেবল ENV=local-এ বৈধ (#2482)।
         _CORE_API_URL_RAW = "http://localhost:8000"
     else:
+        # বাংলা মন্তব্য (#2482): প্রোডাকশনে অনুপস্থিত CORE_API_URL = জোম্বি-ওয়ার্কার নয় —
+        # fail-fast exit (ফাইলের redis-প্যাকেজ fail-fast প্যাটার্নের সাথে সামঞ্জস্যপূর্ণ)।
+        # আগে শুধু একটি error লগ হতো, তারপর ওয়ার্কার নীরবে অর্থহীন রিট্রায়-লুপে চলত;
+        # এখন স্পষ্ট ক্র্যাশ — Render/ডকারে অবিলম্বে দৃশ্যমান।
         logger.error(
             "CORE_API_URL is not configured. Worker cannot reach Core API in production. "
-            "Please set the CORE_API_URL environment variable."
+            "Please set the CORE_API_URL environment variable. Exiting (fail-fast, #2482)."
         )
+        sys.exit(1)
 
 CORE_API_URL = _CORE_API_URL_RAW
 POLL_INTERVAL = float(os.getenv("POLL_INTERVAL", "2.0"))

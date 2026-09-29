@@ -6,7 +6,7 @@
 |---|---|
 | backend routes | 849 |
 | routes with frontend consumer | 294 |
-| unique frontend `/api/...` refs | 140 |
+| unique frontend `/api/...` refs | 144 |
 | unmounted routes (not in ALL_ROUTERS) | 0 |
 | orphan routes (unclassified) | 0 |
 | orphan families | 0 |
@@ -306,12 +306,12 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | DELETE | `/admin/trusted-browsers/:param` | `backend/api/routes/admin_routes.py` | admin-only | NONE |
 | POST | `/agent/plan` | `backend/tools/self_planner.py` | api-only | NONE |
 | POST | `/api/admin/actions/:param` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
-| POST | `/api/admin/ai/assign` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/admin/ai/assign` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/components/admin/AISurfaceAssignment.tsx` |
 | GET | `/api/admin/ai/assignment` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
-| GET | `/api/admin/ai/overview` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
+| GET | `/api/admin/ai/overview` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/components/admin/AISurfaceAssignment.tsx` |
 | GET | `/api/admin/ai/providers` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/ai/surfaces` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
-| POST | `/api/admin/ai/test/:param` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/admin/ai/test/:param` | `backend/api/routes/ai_assignment.py` | admin-only | `frontend/src/components/admin/AISurfaceAssignment.tsx` |
 | GET | `/api/admin/alerts` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
 | POST | `/api/admin/alerts` | `backend/api/routes/admin.py` | deprecated | `frontend/src/utils/api.ts` |
 | POST | `/api/admin/alerts/:param/resolve` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
@@ -374,7 +374,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | PUT | `/api/admin/tenant-limits/:param` | `backend/api/routes/admin_routes.py` | admin-only | `frontend/src/utils/api.ts` |
 | POST | `/api/admin/traffic/kill-switch` | `backend/api/routes/admin_routes.py` | admin-only | `frontend/src/utils/api.ts` |
 | GET | `/api/admin/traffic/live` | `backend/api/routes/traffic_monitor.py` | admin-only | `frontend/src/commandcenter/data/hooks.ts` |
-| POST | `/api/admin/verify-otp` | `backend/api/routes/admin.py` | admin-only | `frontend/src/utils/api.ts` |
+| POST | `/api/admin/verify-otp` | `backend/api/routes/admin.py` | admin-only | `frontend/src/components/dashboard/HumanInTheLoopProtocol.tsx` |
 | GET | `/api/agents` | `backend/api/routes/agents.py` | user-facing | `frontend/src/services/agentService.test.ts`, `frontend/src/services/agentService.ts`, `frontend/src/services/apiClient.test.ts` |
 | GET | `/api/agents/:param/status` | `backend/api/routes/agents.py` | user-facing | `frontend/src/services/agentService.test.ts`, `frontend/src/services/agentService.ts`, `frontend/src/services/apiClient.test.ts` |
 | POST | `/api/agents/research/cite` | `backend/api/routes/agents.py` | user-facing | `frontend/src/services/agentService.test.ts`, `frontend/src/services/agentService.ts`, `frontend/src/services/apiClient.test.ts` |
@@ -439,11 +439,11 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | POST | `/api/browser/screenshots` | `backend/api/routes/browser/_crown_jewel.py` | user-facing | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
 | POST | `/api/browser/security-scan` | `backend/api/routes/browser/_crown_jewel.py` | user-facing | `frontend/src/components/admin/admin-browser/useBrowserActions.ts` |
 | POST | `/api/browser/semantic-click` | `backend/api/routes/browser/_cognitive.py` | api-only | NONE |
-| GET | `/api/browser/sessions` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx` |
-| POST | `/api/browser/sessions` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx` |
-| DELETE | `/api/browser/sessions/:param` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx` |
-| GET | `/api/browser/sessions/:param` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx` |
-| PUT | `/api/browser/sessions/:param` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx` |
+| GET | `/api/browser/sessions` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx`, `frontend/src/components/dashboard/sessionStore.ts` |
+| POST | `/api/browser/sessions` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/App.test.tsx`, `frontend/src/components/dashboard/sessionStore.ts` |
+| DELETE | `/api/browser/sessions/:param` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/components/dashboard/sessionStore.ts` |
+| GET | `/api/browser/sessions/:param` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/components/dashboard/sessionStore.ts` |
+| PUT | `/api/browser/sessions/:param` | `backend/api/routes/browser/_session_store.py` | user-facing | `frontend/src/components/dashboard/sessionStore.ts` |
 | POST | `/api/browser/simulate-activity` | `backend/api/routes/browser/_surf_actions.py` | api-only | NONE |
 | POST | `/api/browser/smart-click` | `backend/api/routes/browser/_cognitive.py` | api-only | NONE |
 | GET | `/api/browser/surf/accessibility` | `backend/api/routes/browser/_surf_actions.py` | api-only | NONE |
@@ -891,7 +891,7 @@ None — every route is classified or allowlisted. New orphans fail `tests/test_
 | DELETE | `/api/v1/sandbox/:param` | `backend/api/routes/sandbox_api.py` | api-only | NONE |
 | POST | `/api/v1/sandbox/:param/execute` | `backend/api/routes/sandbox_api.py` | api-only | NONE |
 | GET | `/api/v1/sandbox/:param/logs` | `backend/api/routes/sandbox_api.py` | api-only | NONE |
-| POST | `/api/v1/sandbox/create` | `backend/api/routes/sandbox_api.py` | user-facing | `frontend/src/components/admin/shared/ActionCard.tsx`, `frontend/src/components/chat/UnifiedChatBubble.tsx` |
+| POST | `/api/v1/sandbox/create` | `backend/api/routes/sandbox_api.py` | user-facing | `frontend/src/components/chat/UnifiedChatBubble.tsx` |
 | GET | `/api/v1/sandbox/list` | `backend/api/routes/sandbox_api.py` | api-only | NONE |
 | POST | `/api/v1/scrape` | `backend/api/routes/scraper.py` | api-only | NONE |
 | GET | `/api/v1/social/drafts` | `backend/api/routes/social_growth.py` | user-facing | `frontend/src/services/socialGrowthService.ts` |

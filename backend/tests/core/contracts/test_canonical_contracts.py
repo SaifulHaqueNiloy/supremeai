@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 import pytest
+
 from backend.core.contracts.canonical import (
     ApprovalRequest,
     ApprovalStatus,

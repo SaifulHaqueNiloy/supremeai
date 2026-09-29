@@ -1,11 +1,11 @@
 from types import SimpleNamespace
 
 import pytest
-from backend.ecosystem.citizen import CitizenManifest, CitizenRegistry
-from backend.ecosystem.runtime_selector import PlacementError, select_placement
 
 from adaptive_engine.capability_registry import CapabilityLifecycleState
 from adaptive_engine.resource_registry import ProviderKind, ResourceState
+from backend.ecosystem.citizen import CitizenManifest, CitizenRegistry
+from backend.ecosystem.runtime_selector import PlacementError, select_placement
 
 
 class FakeCapabilityRegistry:

@@ -3,7 +3,11 @@
 import asyncio
 import unittest
 
-from core.circles.bootstrap import build_federation
+from core.circles.bootstrap import (  # Issue #2476: singleton moved to composition root
+    build_federation,
+    get_governance_core,
+    reset_governance_core,
+)
 from core.circles.centers.base import CircleCenter, LocalCapability
 from core.circles.contracts import (
     CircleName,
@@ -16,7 +20,7 @@ from core.circles.envelopes import (
     result_envelope_from_execution,
 )
 from core.circles.event_journal import CircleEventJournal
-from core.circles.governance_core import GovernanceCore, get_governance_core, reset_governance_core
+from core.circles.governance_core import GovernanceCore
 
 
 def _envelope(**overrides) -> ExecutionEnvelope:

@@ -7,7 +7,7 @@
   ],
   "totals": {
     "backend_routes": 594,
-    "frontend_unique_refs": 140,
+    "frontend_unique_refs": 144,
     "matched": 270,
     "orphan_routes": 324
   },
@@ -2497,7 +2497,7 @@
       "resolved": "/api/admin/verify-otp",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/utils/api.ts"
+        "frontend/src/components/dashboard/HumanInTheLoopProtocol.tsx"
       ]
     },
     {
@@ -3399,7 +3399,7 @@
       "resolved": "/api/admin/ai/assign",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/utils/api.ts"
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
       ]
     },
     {
@@ -3409,7 +3409,7 @@
       "resolved": "/api/admin/ai/test/:param",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/utils/api.ts"
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
       ]
     },
     {
@@ -3419,7 +3419,7 @@
       "resolved": "/api/admin/ai/overview",
       "classification": "admin-only",
       "frontend": [
-        "frontend/src/utils/api.ts"
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
       ]
     },
     {
@@ -4762,7 +4762,6 @@
       "resolved": "/api/v1/sandbox/create",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/admin/shared/ActionCard.tsx",
         "frontend/src/components/chat/UnifiedChatBubble.tsx"
       ]
     },
@@ -4773,7 +4772,6 @@
       "resolved": "/api/v1/sandbox/:param",
       "classification": "unclassified-orphan",
       "frontend": [
-        "frontend/src/components/admin/shared/ActionCard.tsx",
         "frontend/src/components/chat/UnifiedChatBubble.tsx"
       ]
     },

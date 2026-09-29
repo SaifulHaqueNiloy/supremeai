@@ -2,6 +2,7 @@
 """Tests for the core Target Platform Registry & permission-scope engine."""
 
 import pytest
+
 from backend.core.target_registry import (
     PermissionScope,
     TargetEntity,

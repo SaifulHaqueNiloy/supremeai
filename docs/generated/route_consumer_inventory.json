@@ -15,7 +15,7 @@
   ],
   "totals": {
     "backend_routes": 849,
-    "frontend_unique_refs": 140,
+    "frontend_unique_refs": 144,
     "routes_with_frontend_consumer": 294,
     "unmounted_routes": 0,
     "orphan_routes": 0,
@@ -1774,7 +1774,7 @@
       "is_admin": true,
       "operation": "assign_ai",
       "frontend_consumers": [
-        "frontend/src/utils/api.ts"
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
       ],
       "classification": "admin-only"
     },
@@ -1806,7 +1806,7 @@
       "is_admin": true,
       "operation": "get_overview",
       "frontend_consumers": [
-        "frontend/src/utils/api.ts"
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
       ],
       "classification": "admin-only"
     },
@@ -1854,7 +1854,7 @@
       "is_admin": true,
       "operation": "test_provider",
       "frontend_consumers": [
-        "frontend/src/utils/api.ts"
+        "frontend/src/components/admin/AISurfaceAssignment.tsx"
       ],
       "classification": "admin-only"
     },
@@ -2868,7 +2868,7 @@
       "is_admin": true,
       "operation": "verify_otp",
       "frontend_consumers": [
-        "frontend/src/utils/api.ts"
+        "frontend/src/components/dashboard/HumanInTheLoopProtocol.tsx"
       ],
       "classification": "admin-only"
     },
@@ -3878,7 +3878,8 @@
       "is_admin": false,
       "operation": "list_sessions",
       "frontend_consumers": [
-        "frontend/src/App.test.tsx"
+        "frontend/src/App.test.tsx",
+        "frontend/src/components/dashboard/sessionStore.ts"
       ],
       "classification": "user-facing"
     },
@@ -3894,7 +3895,8 @@
       "is_admin": false,
       "operation": "create_session",
       "frontend_consumers": [
-        "frontend/src/App.test.tsx"
+        "frontend/src/App.test.tsx",
+        "frontend/src/components/dashboard/sessionStore.ts"
       ],
       "classification": "user-facing"
     },
@@ -3910,7 +3912,7 @@
       "is_admin": false,
       "operation": "delete_session",
       "frontend_consumers": [
-        "frontend/src/App.test.tsx"
+        "frontend/src/components/dashboard/sessionStore.ts"
       ],
       "classification": "user-facing"
     },
@@ -3926,7 +3928,7 @@
       "is_admin": false,
       "operation": "get_session",
       "frontend_consumers": [
-        "frontend/src/App.test.tsx"
+        "frontend/src/components/dashboard/sessionStore.ts"
       ],
       "classification": "user-facing"
     },
@@ -3942,7 +3944,7 @@
       "is_admin": false,
       "operation": "update_session",
       "frontend_consumers": [
-        "frontend/src/App.test.tsx"
+        "frontend/src/components/dashboard/sessionStore.ts"
       ],
       "classification": "user-facing"
     },
@@ -10571,7 +10573,6 @@
       "is_admin": false,
       "operation": "create_sandbox",
       "frontend_consumers": [
-        "frontend/src/components/admin/shared/ActionCard.tsx",
         "frontend/src/components/chat/UnifiedChatBubble.tsx"
       ],
       "classification": "user-facing"
