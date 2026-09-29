@@ -293,7 +293,12 @@ class TestGetMetrics:
     def test_metrics_psutil_failure(self, monkeypatch):
         """psutil fails → honest None values (Wave-1: no fabricated fallbacks)."""
         from core.config import settings
+        from core.observability.metrics_registry import reset_window_metrics
 
+        # #2558 (order-dependence): একই pytest প্রসেসে আগের টেস্টগুলোর
+        # instrumented request-গুলো module-level rolling window-এ জমে থাকে —
+        # "idle process = honest 0.0" প্রিমিস যাচাই করতে হলে state রিসেট দরকার।
+        reset_window_metrics()
         monkeypatch.setattr(
             settings,
             "_get_cached_secret",
@@ -370,8 +375,26 @@ class TestGetProviders:
             "groq_api_key",
             "deepseek_api_key",
             "openai_api_key",
-        ):  # NOTE: mistral_api_key Settings-এ নেই — getattr fallback None-ই not_configured দেয়
+            # #2558 (order-dependence): fresh Settings-এ mistral_api_key নেই,
+            # কিন্তু full-suite-এ আগের কোনো টেস্ট settings-এ এটি set করে রাখলে
+            # getattr-fallback পথে leak হয়ে "not_configured" প্রিমিস ভাঙে —
+            # তাই স্পষ্টভাবে খালি করা হচ্ছে (raising=False: attribute না থাকলেও)।
+            "mistral_api_key",
+        ):
             monkeypatch.setattr(settings, provider, "", raising=False)
+        # #2558: _get_cached_secret-এ os.getenv precedence আছে — আগের টেস্ট
+        # (যেমন tests/api/test_api.py:6 মডিউল-লেভেলে OPENROUTER_API_KEY সেট
+        # করে, cleanup ছাড়া) env-এ key রেখে গেলে setter-লেখা cache তাকে হারায়।
+        # টেস্টের "no keys" প্রিমিস সত্য রাখতে env থেকেও key সরাতে হয়।
+        for env_key in (
+            "OPENROUTER_API_KEY",
+            "GEMINI_API_KEY",
+            "GROQ_API_KEY",
+            "DEEPSEEK_API_KEY",
+            "OPENAI_API_KEY",
+            "MISTRAL_API_KEY",
+        ):
+            monkeypatch.delenv(env_key, raising=False)
 
         result = await get_providers()
 
