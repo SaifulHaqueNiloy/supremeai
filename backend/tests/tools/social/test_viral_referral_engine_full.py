@@ -513,13 +513,14 @@ class TestStripePayout:
 
     def test_payout_success(self, engine, monkeypatch):
         import stripe as real_stripe
+        from pydantic import SecretStr
 
         from core.config import settings
 
         monkeypatch.setattr(
             type(settings),
-            "_get_cached_secret",
-            lambda self, key: "sk_test_x" if key == "STRIPE_API_KEY" else "",
+            "stripe_api_key",
+            property(lambda self: SecretStr("sk_test_x")),
             raising=False,
         )
         monkeypatch.setattr(
@@ -537,13 +538,14 @@ class TestStripePayout:
 
     def test_payout_error(self, engine, monkeypatch):
         import stripe as real_stripe
+        from pydantic import SecretStr
 
         from core.config import settings
 
         monkeypatch.setattr(
             type(settings),
-            "_get_cached_secret",
-            lambda self, key: "sk_test_x" if key == "STRIPE_API_KEY" else "",
+            "stripe_api_key",
+            property(lambda self: SecretStr("sk_test_x")),
             raising=False,
         )
 

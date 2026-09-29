@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-28 23:06 UTC
+- **Date:** 2026-09-29 18:33 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,15 +10,58 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/dependabot.yml`
-  - `.github/scripts/pr_helper/dependabot_classify.py`
+  - `backend/tests/api/test_stream_chat_contract.py`
+  - `frontend/src/commandcenter/realtime/CommandCenterRealtimeProvider.tsx`
   - `CHECKPOINT.md`
-  - `.github/workflows/pr-helper.yml`
+  - `.github/workflows/nightly-ops.yml`
+  - `docs/master_docs/SCRIPTS_CONSOLIDATION_MASTER.md`
+  - `docs/audit_reports/route_client_inventory.json`
+  - `.github/scripts/constitution/arch_preservation_gate.py`
+  - `.github/scripts/constitution/heartbeat_check.py`
+  - `frontend/src/components/core/Sidebar.tsx`
+  - `.github/workflows/smart-merge-queue.yml`
+  - `scripts/git/cross_pr_collision_detector.py`
+  - `frontend/src/commandcenter/modules/observe/LiveLogs.tsx`
+  - `backend/core/cache/__init__.py`
+  - `backend/tests/tools/social/test_viral_referral_engine_full.py`
+  - `docs/generated/route_consumer_inventory.md`
+  - `scripts/supremeai_toolkit/cli.py`
+  - `frontend/src/components/Header.tsx`
+  - `scripts/_INDEX.md`
+  - `scripts/ci/purge_stale_workflow_runs.py`
+  - `.github/workflows/has-pr-auto.yml`
+  - `.github/workflows/08-production-preflight.yml`
+  - `backend/core/monitoring.py`
+  - `frontend/src/commandcenter/realtime/websocketManager.ts`
+  - `.github/workflows/main.yml`
+  - `docs/operations/HARVEST-MANIFEST.md`
+  - `archives/legacy-docs-2026-09-28.tar.gz`
+  - `backend/tests/core/test_admin_dashboard_full.py`
+  - `tests/test_purge_stale_workflow_runs.py`
+  - `frontend/src/commandcenter/realtime/channelRegistry.ts`
+  - `frontend/src/components/dashboard/DashboardLayout.tsx`
+  - `frontend/src/components/dashboard/Sidebar.tsx`
+  - `docs/generated/route_consumer_inventory.json`
+  - `tests/test_sprawl_guard.py`
+  - `backend/tests/core/test_lifespan.py`
+  - `docs/generated/module_capability_matrix.json`
+  - `frontend/src/commandcenter/realtime/sseBridges.ts`
+  - `scripts/ci/sprawl_guard.py`
+  - `.github/workflows/deploy-train.yml`
+  - `docs/INDEX.md`
   - `.github/workflows/pr.yml`
-  - `.github/workflows/system-gates.yml`
-  - `.github/scripts/constitution/gates.py`
-  - `.github/constitution/rules.yml`
-  - `docs/operations/ACTIVE_ISSUES_AND_PRIORITY_ROADMAP.md`
+  - `scripts/ci/issue_router.py`
+  - `docs/audit_reports/route_client_inventory.md`
+  - `scripts/ci/smart_priority_merger.py`
+  - `frontend/src/components/dashboard/Header.tsx`
+  - `backend/core/observability/metrics_registry.py`
+  - `.github/scripts/constitution/bengali_check.py`
+  - `.github/scripts/constitution/lessons_check.py`
+  - `backend/tests/services/test_phase3_intelligence.py`
+  - `.github/workflows/issue-router.yml`
+  - `frontend/src/components/admin/shared/ActionCard.tsx`
+  - `backend/tests/core/test_agent_factory.py`
+  - `docs/generated/domain_dependency_graph.json`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
