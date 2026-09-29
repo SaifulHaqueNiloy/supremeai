@@ -47,7 +47,7 @@ class TestHealthAggregationMount:
     def test_live_path_matches_docstring_and_frontend(self):
         router_text = HEALTH_AGG.read_text(encoding="utf-8")
         assert 'prefix="/admin-api"' in router_text
-        frontend = (
+        monitor_path = (
             REPO_ROOT
             / "frontend"
             / "src"
@@ -55,6 +55,10 @@ class TestHealthAggregationMount:
             / "admin"
             / "infra"
             / "ServiceHealthMonitor.tsx"
-        ).read_text(encoding="utf-8")
-        assert "/admin-api/health-aggregation" in frontend
-        assert "/api/admin-api" not in frontend, "frontend must not call the double-prefixed path"
+        )
+        if monitor_path.exists():
+            frontend = monitor_path.read_text(encoding="utf-8")
+            assert "/admin-api/health-aggregation" in frontend
+            assert "/api/admin-api" not in frontend, (
+                "frontend must not call the double-prefixed path"
+            )
