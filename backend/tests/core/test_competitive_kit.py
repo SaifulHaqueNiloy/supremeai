@@ -28,23 +28,28 @@ import sys
 import types
 from datetime import datetime, timedelta
 
-import core.competitive_kit as ck
 import pytest
-from core.competitive_kit import (
-    PERSONALITIES,
-    SAFETY_CONFIGS,
-    CitationVerifier,
-    ConfidenceScorer,
-    MemoryFragment,
-    MultiLLMRouter,
-    PersonalityEngine,
-    PersonalityType,
-    SafetyLevel,
-    SafetyRule,
-    SmartContextManager,
-    TunableSafetyLayer,
-    demonstrate_competitive_advantages,
-)
+
+try:
+    import core.competitive_kit as ck
+    from core.competitive_kit import (
+        PERSONALITIES,
+        SAFETY_CONFIGS,
+        CitationVerifier,
+        ConfidenceScorer,
+        MemoryFragment,
+        MultiLLMRouter,
+        PersonalityEngine,
+        PersonalityType,
+        SafetyLevel,
+        SafetyRule,
+        SmartContextManager,
+        TunableSafetyLayer,
+        demonstrate_competitive_advantages,
+    )
+except ImportError:
+    # বাংলা মন্তব্য: core.competitive_kit #2480/#2541-এ ডেড কোড হিসেবে প্রুন করা হয়েছে
+    pytest.skip("core.competitive_kit pruned in #2480", allow_module_level=True)
 
 # ───────────────────────── 1. Personality engine ─────────────────────────
 
