@@ -20,9 +20,11 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from api.dependencies import get_current_admin, get_current_user_token
+from core.circles.bootstrap import (
+    get_governance_core,  # Issue #2476: singleton এখন composition root-এ
+)
 from core.circles.contracts import CircleName
 from core.circles.envelopes import ExecutionEnvelope
-from core.circles.governance_core import get_governance_core
 from core.logging_config import logger
 
 router = APIRouter(prefix="/api/v1/circles", tags=["Federated Circles"])
