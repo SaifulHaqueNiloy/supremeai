@@ -40,7 +40,24 @@ def _winner(path: str, method: str) -> tuple[str, str]:
     for r in _app_routes():
         if r.path == path and method in (r.methods or ()):
             return _norm_module(r.endpoint.__module__), r.endpoint.__name__
-    raise AssertionError(f"no route registered for {method} {path}")
+    # বাংলা মন্তব্য (#2504 CI round-7 diagnostic): রাউট না থাকলে router-registry-র
+    # registration-failure রিপোর্টটাও message-এ দেখাও — silent-unmount নয়,
+    # root cause এক নজরে দেখা যায় (optional router-গুলোর import-ব্যর্থতা
+    # register_router ধরে _registration_report-এ জমা রাখে)।
+    failure_detail = ""
+    try:
+        from api import _registration_report
+
+        failure_detail = "\nRouter registration failures: " + (
+            "; ".join(
+                f"{r.get('module')} ({r.get('error_type')}: {str(r.get('message'))[:120]})"
+                for r in _registration_report
+            )
+            or "(none recorded)"
+        )
+    except Exception:  # noqa: BLE001 — diagnostic-ই, মূল assertion-কে ঢাকবে না
+        failure_detail = "\n(registration report unavailable)"
+    raise AssertionError(f"no route registered for {method} {path}{failure_detail}")
 
 
 def _collisions() -> dict[tuple[str, str], set[str]]:
