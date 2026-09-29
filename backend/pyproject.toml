@@ -244,6 +244,12 @@ filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::UserWarning",
     "ignore::PendingDeprecationWarning",
+    # (#2504 CI unblock) dependabot 43-bump (#2462)-এর google-auth এখন grpcio<1.83.0-এর
+    # জন্য FutureWarning ছোড়ে — backend/conftest.py import-এই error-এ পরিণত হয়ে
+    # পুরো critical/important backend tier ভেঙে যায় (bump-এর পরে যেকোনো backend-
+    # source PR আটকে যাবে)। Targeted message-filter (সব FutureWarning নয়) — April
+    # 2027-এ grpcio>=1.83 floor এলে এই লাইন সরানো যাবে।
+    "ignore:grpcio:FutureWarning",
 ]
 asyncio_mode = "auto"
 # CI SPEED FIX: 312 test files were taking 30+ minutes. Key optimizations:
