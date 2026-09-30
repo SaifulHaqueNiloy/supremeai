@@ -13,6 +13,8 @@ The unified master orchestrator coordinating:
 
 from __future__ import annotations
 
+import asyncio
+import json
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -264,6 +266,69 @@ class LivingEngineOrchestrator:
             "general": BaseDomainAdapter(),
         }
 
+        # বাংলা মন্তব্য (Issue #2705): fire-and-forget reflection টাস্কের রেফারেন্স-সেট —
+        # GC-তে গিলে যাওয়া আটকায়; সম্পন্ন হলে স্বয়ংক্রিয়ভাবে বাদ পড়ে।
+        self._pending_reflections: set[asyncio.Task] = set()
+
+    async def _reflect_on_solution(
+        self,
+        prompt: str,
+        execution_output: str,
+        is_success: bool,
+        error_details: str = "",
+        duration_ms: float = 0.0,
+    ) -> None:
+        """বাংলা মন্তব্য (Issue #2705 Gap-F): post-task SelfReflectionLoop production hook.
+
+        ``SelfReflectionLoop.reflect()``-এর একমাত্র প্রোডাকশন কলার — প্রতিটি
+        solve_unpredictable_demand-এর পর (সফল বা ব্যর্থ) ৩টি ক্যানোনিকাল
+        আত্ম-সমালোচনা প্রশ্নের episodic রেকর্ড তৈরি করে। Graceful
+        degradation অপরিহার্য: reflection ব্যর্থ হলে মূল পাইপলাইন কখনো
+        ব্লক/ক্র্যাশ করবে না (সংবিধান অনুচ্ছেদ ৩)।
+        """
+        try:
+            from engine.self_reflection import SelfReflectionLoop
+
+            loop = SelfReflectionLoop()
+            await loop.reflect(
+                task_prompt=str(prompt)[:500],
+                execution_output=str(execution_output)[:1000],
+                is_success=is_success,
+                error_details=str(error_details)[:300],
+            )
+            logger.debug(
+                f"SelfReflection hook completed (success={is_success}, duration_ms={duration_ms:.1f})"
+            )
+        except Exception as exc:
+            # বাংলা মন্তব্য: সৎ ব্যর্থতা-লগ, কোনো নীরব ভান নয় — তবে main পথ অক্ষত।
+            logger.debug(f"SelfReflection hook bypassed: {type(exc).__name__}: {exc}")
+
+    def _schedule_reflection(
+        self,
+        prompt: str,
+        execution_output: str,
+        is_success: bool,
+        error_details: str = "",
+        duration_ms: float = 0.0,
+    ) -> None:
+        """বাংলা মন্তব্য: fire-and-forget reflection — চ্যাট-লেটেন্সি সুরক্ষার জন্য
+        await নয়; রেফারেন্স-সেটে ধরে রাখা হয় (GC-সুরক্ষা)।"""
+        try:
+            task = asyncio.create_task(
+                self._reflect_on_solution(
+                    prompt=prompt,
+                    execution_output=execution_output,
+                    is_success=is_success,
+                    error_details=error_details,
+                    duration_ms=duration_ms,
+                )
+            )
+            self._pending_reflections.add(task)
+            task.add_done_callback(self._pending_reflections.discard)
+        except RuntimeError as exc:
+            # বাংলা মন্তব্য: চলমান event-loop না থাকলে (sync context) সৎ bypass।
+            logger.debug(f"Reflection scheduling bypassed (no event loop): {exc}")
+
     async def solve_unpredictable_demand(
         self,
         prompt: str,
@@ -398,11 +463,29 @@ class LivingEngineOrchestrator:
             logger.info(
                 f"LivingEngine: Task completed in {duration_ms:.1f}ms with fitness {fitness}"
             )
+
+            # বাংলা মন্তব্য (Issue #2705 Gap-F): post-task self-reflection —
+            # fire-and-forget (চ্যাট-লেটেন্সি অক্ষত); ব্যর্থ হলেও main return বাধাপ্রাপ্ত হবে না।
+            self._schedule_reflection(
+                prompt=prompt,
+                execution_output=json.dumps(solution.to_dict(), default=str),
+                is_success=solution.success,
+                duration_ms=duration_ms,
+            )
             return solution
 
         except Exception as exc:
             duration_ms = (time.perf_counter() - start_time) * 1000.0
             logger.error(f"LivingEngine: Pipeline execution failed: {exc}")
+            # বাংলা মন্তব্য (Issue #2705): ব্যর্থ নির্বাহেও self-reflection চলবে —
+            # bottleneck-analysis ইতিহাসই পরবর্তী প্রচেষ্টার উন্নতির উৎস।
+            self._schedule_reflection(
+                prompt=prompt,
+                execution_output=f"pipeline error: {exc}",
+                is_success=False,
+                error_details=str(exc),
+                duration_ms=duration_ms,
+            )
             return SolutionResult(
                 success=False,
                 ultimate_goal=prompt,
