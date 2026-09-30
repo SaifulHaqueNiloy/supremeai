@@ -16,6 +16,8 @@
   - `scripts/_INDEX.md`
   - `backend/core/legit_file_presenter.py`
   - `CHECKPOINT.md`
+  - `.github/constitution/rules.yml`
+  - `.github/ISSUE_TEMPLATE/agent_task.yml`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
