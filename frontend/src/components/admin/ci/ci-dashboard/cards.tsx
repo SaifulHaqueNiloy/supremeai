@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Shuffle,
 } from 'lucide-react';
+import { safeUrl } from '../../../../lib/safeUrl';
 import { STATUS_CONFIG } from './constants';
 import { formatDuration } from './utils';
 import { Badge, AnimatedStatus } from './primitives';
@@ -141,7 +142,8 @@ export function JobRow({ job, onClick, compact = false }: { job: JobResult; onCl
 
         {job.url && (
           <a
-            href={job.url}
+            // বাংলা মন্তব্য: safeUrl allowlist (#2520)
+            href={safeUrl(job.url)}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}

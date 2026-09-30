@@ -9,6 +9,7 @@ import { ArrowRight, FileImage, Trash2, UploadCloud } from 'lucide-react';
 import { WorkspaceLayout } from '../components/layout/WorkspaceLayout';
 import { useListResource } from '../hooks/useListResource';
 import { fileService, formatBytes, type StoredFile } from '../services/fileService';
+import { safeUrl } from '../lib/safeUrl';
 
 const ACCEPTED_MIME =
   'image/jpeg,image/png,image/gif,image/webp,image/svg+xml,image/bmp,image/tiff,image/avif';
@@ -209,7 +210,8 @@ export function FilesPage() {
                     </p>
                     <div className="mt-3 flex items-center justify-between">
                       <a
-                        href={file.url}
+                        // বাংলা মন্তব্য: safeUrl allowlist (#2520)
+                        href={safeUrl(file.url)}
                         target="_blank"
                         rel="noreferrer"
                         className="inline-flex items-center gap-1 text-xs font-medium text-[var(--sa-primary)]"

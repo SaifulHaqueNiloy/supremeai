@@ -45,17 +45,21 @@ export const AIStudio: React.FC = () => {
     );
   };
 
-  // FIX(intent-carryover): consume the ?intent= param set by the dashboard
-  // ask-box (UserDashboard.submitAsk) and submit it once. The ref guard
-  // keeps React 18 StrictMode's double effect-invoke from sending twice,
-  // and the param is stripped (replace) so a refresh never re-fires it.
+  // বাংলা মন্তব্য (FIX intent-carryover #2519): ?intent= প্যারামিটার আর auto-send হয় না —
+  // আগে `void handleSend(intent)` সরাসরি AI-তে পাঠাত, ফলে attacker-চিহ্নিত URL দিয়ে
+  // prompt-injection করা যেত (ব্যবহারকারী কিছু দেখার আগেই প্রম্পট execute)। Root-cause
+  // fix: প্যারামটি consume করে composer input-এ prefill + focus করা হয়, যাতে ব্যবহারকারী
+  // টেক্সট নিজের চোখে দেখে স্পষ্টভাবে Send চাপে। ref guard StrictMode-এর double
+  // effect-invoke-এ দ্বিগুণ prefill আটকায়; param strip (replace) রিফ্রেশে re-fire করে না।
   useEffect(() => {
     if (intentConsumedRef.current) return;
     const intent = searchParams.get('intent');
     if (!intent) return;
     intentConsumedRef.current = true;
     setSearchParams({}, { replace: true });
-    void handleSend(intent);
+    setInput(intent);
+    // বাংলা মন্তব্য: composer ইনপুট InteractiveChatTab-এ (data-testid="chat-input") — ফোকাস করলে prefill দৃশ্যমান থাকে
+    document.querySelector<HTMLInputElement>('[data-testid="chat-input"]')?.focus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

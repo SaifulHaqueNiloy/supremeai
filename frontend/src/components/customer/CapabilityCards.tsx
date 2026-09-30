@@ -1,5 +1,6 @@
 import { AlertCircle, CheckCircle2, ExternalLink, Play, Settings2, Trash2 } from 'lucide-react';
 import type { UnavailableCapability, UserCapability } from '../../types/contracts';
+import { safeUrl } from '../../lib/safeUrl';
 
 export interface ManageItemProps {
   item: UserCapability;
@@ -42,7 +43,8 @@ export function ManageItem({ item, onManage, onUse, onRemove }: ManageItemProps)
         <div className="flex items-center gap-2">
           {item.href ? (
             <a
-              href={item.href}
+              // বাংলা মন্তব্য: safeUrl allowlist (#2520)
+              href={safeUrl(item.href)}
               className="inline-flex items-center gap-1 rounded-md bg-[var(--sa-primary-soft)] px-2.5 py-1.5 font-sans text-xs font-medium text-[var(--sa-primary)] hover:opacity-90"
             >
               Open <ExternalLink size={12} />

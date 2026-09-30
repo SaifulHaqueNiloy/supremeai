@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
 import { getApiBaseUrl } from '../../utils/api';
+import { safeUrl } from '../../lib/safeUrl';
 import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 import { globalShowToastRef } from '../../contexts/ToastContext';
 import { parseResearchSseLine } from './researchEventContract';
@@ -425,7 +426,8 @@ export default function DeepResearchPanel() {
                       {displayReport.sources.map((source, i) => (
                         <a
                           key={i}
-                          href={source.url}
+                          // বাংলা মন্তব্য: safeUrl allowlist (#2520)
+                          href={safeUrl(source.url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={
@@ -579,7 +581,8 @@ export default function DeepResearchPanel() {
                       {viewingReport.sources.map((source, i) => (
                         <a
                           key={i}
-                          href={source.url}
+                          // বাংলা মন্তব্য: safeUrl allowlist (#2520)
+                          href={safeUrl(source.url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className={

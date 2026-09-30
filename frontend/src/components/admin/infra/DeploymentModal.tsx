@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../../../services/apiClient';
 import { useDashboardStore } from '../../../store/dashboardStore';
+import { safeUrl } from '../../../lib/safeUrl';
 
 export interface DeploymentTarget {
   region: 'us-central1' | 'us-east1' | 'eu-west1';
@@ -255,7 +256,8 @@ const DeploymentModal: React.FC<DeploymentModalProps> = ({
                   <p className="text-[11px] text-slate-300 font-mono">{deploymentStatus.message}</p>
                   {deploymentStatus.url && (
                     <a
-                      href={deploymentStatus.url}
+                      // বাংলা মন্তব্য: safeUrl allowlist (#2520)
+                      href={safeUrl(deploymentStatus.url)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-[#00f3ff] hover:text-white text-[11px] font-mono underline mt-2 inline-block"
