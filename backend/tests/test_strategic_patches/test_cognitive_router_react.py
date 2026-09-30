@@ -107,3 +107,31 @@ def test_classify_empty_prompt_safe():
     res = classify_task_complexity("")
     assert res["complexity"] in ("simple", "medium")
     assert res["signals"]["words"] == 0
+
+
+@pytest.mark.unit
+@pytest.mark.asyncio
+async def test_complex_task_with_budget_context_still_reaches_react():
+    """#2705 গুরুত্বপূর্ণ চুক্তি: production API (api/routes/cognitive.py) সবসময়
+    BudgetContext পাঠায় — ReAct গেট বাজেট-শাখার আগে থাকতে হবে, নইলে
+    main chat path-এ react mode অগম্য হয়ে যায়।"""
+    from backend.brain.cognitive_router import BudgetContext  # noqa: F401
+
+    class Decision:
+        provider = "budget-provider"
+        model = "budget-model"
+
+    class Optimizer:
+        async def optimize_route(self, prompt, task_type, budget_context):
+            return Decision()
+
+    result = await CognitiveRouter(Optimizer()).route(
+        "Investigate the root cause of the outage and plan a fix strategy",
+        user_id="react-test-user",
+        budget_context={"monthly_limit": 10},
+    )
+
+    assert result["routing_mode"] == "react"
+    # provider/model এখনো budget-awareভাবে resolve হয়
+    assert result["provider"] == "budget-provider"
+    assert result["model"] == "budget-model"
