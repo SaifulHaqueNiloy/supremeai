@@ -12,6 +12,8 @@ import httpx
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
+from core.logging_config import logger
+
 from api.dependencies import get_current_admin
 from brain.model_registry import ModelRegistry
 from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
@@ -317,9 +319,9 @@ def _emit_drift_event(status: dict) -> None:
     try:
         error_event_bus.emit(event)
     except Exception:
-        # বাংলা মন্তব্য: ইভেন্ট-বাস নিজেই listener-isolated, তবুও হেলথ-এন্ডপয়েন্ট
-        # কখনো emit-ফেইলুরে ভাঙবে না।
-        pass
+        # বাংলা মন্তব্য: ইভেন্ট-বাস নিজেই listener-isolated, তবুও হেলথ-এন্ডপয়েন্ট কখনো
+        # emit-ফেইলুরে ভাঙবে না — তবে নীরবে গিলবে না (#1743): observability বাধ্যতামূলক।
+        logger.debug("schema-drift remediation event emit failed (non-fatal)", exc_info=True)
 
 
 async def probe_schema_drift(force: bool = False, session_factory=None) -> SchemaDriftStatus:
