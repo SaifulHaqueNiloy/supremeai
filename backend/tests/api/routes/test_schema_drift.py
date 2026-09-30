@@ -244,10 +244,9 @@ async def test_probe_ttl_cache_avoids_reprobe():
     assert cached.status == "ok"
 
 
-def test_postgresql_path_uses_information_schema():
+@pytest.mark.asyncio
+async def test_postgresql_path_uses_information_schema():
     """#2681: postgres dialect এক কুয়েরিতে information_schema মারে (cheap probe)।"""
-    import asyncio as _asyncio
-
     from api.routes.health_aggregation import _collect_schema_rows
 
     pg_script = {
@@ -259,7 +258,9 @@ def test_postgresql_path_uses_information_schema():
         ],
     }
     session = _FakeSession("postgresql", pg_script)
-    rows = _asyncio.get_event_loop().run_until_complete(_collect_schema_rows(session))
+    # বাংলা মন্তব্য: asyncio.get_event_loop() sync-টেস্টে CI-python-এ ভাঙে —
+    # native await-ই নিরাপদ (pytest-asyncio AUTO)।
+    rows = await _collect_schema_rows(session)
     assert rows == [("users", "id", "integer"), ("users", "email", "text")]
 
 
