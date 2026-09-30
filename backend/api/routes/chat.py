@@ -34,6 +34,10 @@ router = APIRouter(
 class ChatPayload(BaseModel):
     prompt: str = Field(min_length=1, max_length=20_000)
     model_name: str = "gemini-2.5-pro"
+    # ROOT-CAUSE FIX (#2725): conversation history — previously missing from
+    # ChatPayload, so the non-streaming /api/chat endpoint also had single-turn
+    # amnesia. Frontend now sends history tail (last 20 messages).
+    messages: list[dict] | None = Field(default=None, description="Conversation history for multi-turn context")
 
 
 class OrchestratedChatPayload(BaseModel):
