@@ -51,7 +51,7 @@ defusedxml = "^0.7.1"
 beautifulsoup4 = "^4.15.0"
 docker = "^7.1.0"
 posthog = "^7.29.0"
-mcp = "^1.28.1"
+mcp = ">=1.28.1,<3.0.0"
 stripe = "^15.3.1"
 neo4j = "^6.2.0"
 aiohttp = "^3.14.3"  # CVE fix floor (AUDIT-014, CVE-2026-69244)
