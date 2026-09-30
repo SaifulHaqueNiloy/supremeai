@@ -67,10 +67,15 @@ async def test_get_completion_returns_cached_result(monkeypatch):
 async def test_get_completion_generates_response_and_saves_cache(monkeypatch):
     fake_cache = FakeCache(value=None)
     monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
+    # বাংলা মন্তব্য (#2835): প্রোডাকশন কল-সাইট (#2726) এখন model= override +
+    # InferenceContext পাঠায় — পুরনো (prompt, context=None) স্টাব সিগনেচারে
+    # TypeError → নীরবে graceful-fallback → টেস্ট RED। স্টাব চুক্তি হালনাগাদ।
+    # context-engine ডকুমেন্টেড kill-switch ব্যবহার — raw-prompt passthrough,
+    # যাতে টেস্টের মূল উদ্দেশ্য (completion+cache চুক্তি) prompt-identity ছাড়াই
+    # পৃথক থাকে (ইঞ্জিন ডিফল্ট চালু — enriched prompt ≠ raw prompt)।
+    monkeypatch.setenv("SUPREMEAI_CONTEXT_ENGINE", "off")
 
-    async def mock_acompletion(
-        prompt, context=None
-    ):  # M03 P0-পূর্ণাংশ: context এখন একক-সত্য (tenant/task/stream এর ভেতরে)
+    async def mock_acompletion(prompt, model=None, context=None):
         if prompt == "raise-error":
             raise RuntimeError("boom")
         return {"text": f"generated:{prompt}"}
@@ -98,9 +103,11 @@ async def test_get_completion_returns_graceful_fallback_on_model_failure(monkeyp
     fake_cache = FakeCache(value=None)
     monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
 
-    async def mock_acompletion(
-        prompt, context=None
-    ):  # M03 P0-পূর্ণাংশ: context এখন একক-সত্য (tenant/task/stream এর ভেতরে)
+    # বাংলা মন্তব্য (#2835): #2726-পরবর্তী কল-চুক্তি (model= kwarg) + raw-prompt
+    # passthrough — নইলতে enriched prompt-এ "raise-error" সনাক্ত হয় না।
+    monkeypatch.setenv("SUPREMEAI_CONTEXT_ENGINE", "off")
+
+    async def mock_acompletion(prompt, model=None, context=None):
         raise RuntimeError("boom")
 
     async def mock_recall_memories(*args, **kwargs):
@@ -123,9 +130,9 @@ async def test_get_completion_returns_graceful_fallback_on_model_failure(monkeyp
 
 @pytest.mark.asyncio
 async def test_stream_chat_yields_sse_chunks(monkeypatch):
-    async def mock_acompletion(
-        prompt, context=None
-    ):  # M03 P0-পূর্ণাংশ: context এখন একক-সত্য (tenant/task/stream এর ভেতরে)
+    # বাংলা মন্তব্য (#2835): স্ট্রিমিং পথেও #2726-পরবর্তী model= kwarg —
+    # স্টাব সিগনেচার হালনাগাদ (chunk-চুক্তি অক্ষত)।
+    async def mock_acompletion(prompt, model=None, context=None):
         class Response:
             async def __aiter__(self):
                 yield "chunk-one"
