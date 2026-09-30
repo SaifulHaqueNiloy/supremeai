@@ -31,6 +31,53 @@ router = APIRouter(
 )
 
 
+# ROOT-CAUSE FIX (#2728): versioned system persona registry — previously
+# chat.py had no Section.SYSTEM persona block (only a language directive).
+# Now: task_type-based persona injected as the first SYSTEM context block.
+_SYSTEM_PERSONA_VERSION = "1.0"
+_SYSTEM_PERSONAS = {
+    "chat": (
+        "You are SupremeAI, an intelligent AI assistant. "
+        "Provide clear, accurate, and helpful responses. "
+        "If you're unsure, say so honestly rather than fabricating. "
+        "Format code blocks with proper language tags. "
+        "Cite sources when referencing external information."
+    ),
+    "reasoning": (
+        "You are SupremeAI, an expert reasoning engine. "
+        "Think step-by-step before answering. "
+        "For code: provide complete, runnable examples with type hints. "
+        "For architecture: explain trade-offs, not just solutions. "
+        "If a request is ambiguous, state your assumptions before proceeding."
+    ),
+    "analysis": (
+        "You are SupremeAI, an analytical assistant. "
+        "Summarize concisely, highlight key insights, and flag uncertainties. "
+        "Structure responses with clear headings when appropriate."
+    ),
+}
+
+
+def _derive_task_type(prompt: str) -> str:
+    """ROOT-CAUSE FIX (#2726 + #2728): derive task_type from prompt keywords."""
+    p = (prompt or "").lower()
+    hard_kw = ("reasoning", "math", "code", "coding", "algorithm", "design",
+               "architect", "implement", "debug", "refactor", "optimize",
+               "analyze", "synthesize", "compare", "evaluate", "step by step")
+    if any(kw in p for kw in hard_kw):
+        return "reasoning"
+    medium_kw = ("agent", "analysis", "summarize", "explain", "describe",
+                 "research", "investigate", "review")
+    if any(kw in p for kw in medium_kw):
+        return "analysis"
+    return "chat"
+
+
+def _get_system_persona(task_type: str) -> str:
+    """ROOT-CAUSE FIX (#2728): return the versioned system persona for a task_type."""
+    return _SYSTEM_PERSONAS.get(task_type, _SYSTEM_PERSONAS["chat"])
+
+
 class ChatPayload(BaseModel):
     prompt: str = Field(min_length=1, max_length=20_000)
     model_name: str = "gemini-2.5-pro"
@@ -145,7 +192,12 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
     try:
         # M2 Context Engine: memory/RAG ফ্যাক্ট এখন budgeted block হিসেবে যোগ হয়
         # (আগে অবাধ্য concatenation হতো — ERR-F03 context bloat)
+        # ROOT-CAUSE FIX (#2728): system persona block — previously the only
+        # Section.SYSTEM was the language directive. No behavioral contract existed.
+        # Now: a task_type-based persona is injected as the FIRST SYSTEM block.
+        _derived_task = _derive_task_type(payload.prompt)
         context_blocks: list[ContextBlock] = [
+            ContextBlock(section=Section.SYSTEM, text=_get_system_persona(_derived_task), priority=0, block_id="system-persona"),  # #2728
             ContextBlock(section=Section.USER, text=payload.prompt, priority=0, block_id="user")
         ]
 
