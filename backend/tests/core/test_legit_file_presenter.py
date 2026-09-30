@@ -128,3 +128,24 @@ CREATE TABLE customers (
 """
     name_sql = NaturalFilePresenter.naturalize_filename("tmp_query.sql", content=sql_code)
     assert name_sql == "customers_schema.sql"
+
+
+def test_humanize_prompt():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    রোবোটিক যান্ত্রিক প্রম্পটকে মানুষের মতো স্বাভাবিক ও সাধারণ প্রশ্নে রূপান্তর যাচাই।
+    - "SYSTEM DIRECTIVE: ..." ছেঁটে ফেলে স্বাভাবিক প্রশ্ন রাখা
+    - "STRICTLY ONLY OUTPUT CODE" কে মার্জিত অনুরোধে রূপান্তর
+    """
+    robotic_prompt = """SYSTEM DIRECTIVE: You are an autonomous coding bot.
+Write a FastAPI route for user registration.
+STRICTLY ONLY OUTPUT CODE. DO NOT EXPLAIN."""
+
+    human_prompt = NaturalFilePresenter.humanize_prompt(robotic_prompt)
+
+    assert "SYSTEM DIRECTIVE" not in human_prompt
+    assert "autonomous coding bot" in human_prompt
+    assert "Write a FastAPI route for user registration" in human_prompt
+    assert "Just the clean code snippet would be great, thanks!" in human_prompt
+    assert "STRICTLY ONLY OUTPUT CODE" not in human_prompt

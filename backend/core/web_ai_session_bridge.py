@@ -362,13 +362,20 @@ class WebAISessionBridge:
         headers = self._get_headers(service)
         reply_text = ""
 
+        # বাংলা মন্তব্য: রোবোটিক বা কৃত্রিম এজেন্ট প্রম্পটকে মানুষের মতো স্বাভাবিক ও সহজ প্রশ্নে রূপান্তর
+        from core.natural_file_presenter import NaturalFilePresenter
+
+        natural_prompt = NaturalFilePresenter.humanize_prompt(prompt)
+
         # সার্ভিস অনুযায়ী স্পেসিফিক হ্যান্ডলার
         if service == "claude":
-            reply_text = await self._call_claude_session(prompt, system_prompt, cookies, headers)
+            reply_text = await self._call_claude_session(
+                natural_prompt, system_prompt, cookies, headers
+            )
         elif service == "chatgpt":
-            reply_text = await self._call_chatgpt_session(prompt, cookies, headers)
+            reply_text = await self._call_chatgpt_session(natural_prompt, cookies, headers)
         elif service == "v0":
-            reply_text = await self._call_v0_session(prompt, cookies, headers)
+            reply_text = await self._call_v0_session(natural_prompt, cookies, headers)
         else:
             raise WebAISessionError(f"Unsupported web session service: {service}")
 

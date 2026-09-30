@@ -237,6 +237,60 @@ class NaturalFilePresenter:
 
         return title if len(title) >= 3 else ""
 
+    @classmethod
+    def humanize_prompt(cls, prompt: str) -> str:
+        """
+        বাংলা সারসংক্ষেপ:
+        ------------------
+        ইউজার নীতি: "human logic... qstn e amon vabe koro jeno ans thik e paowa jay and simple qstn o mone hoy"
+        রোবোটিক এজেন্টের খটমটে কমান্ডকে একজন স্বাভাবিক মানুষের কথোপকথনমূলক সহজ প্রশ্নে রূপান্তর:
+        ১. 'SYSTEM DIRECTIVE', 'AGENT INSTRUCTION' ইত্যাদি যান্ত্রিক হেডার ছেঁটে ফেলা।
+        ২. কঠোর কমান্ড ("DO NOT TALK. RETURN RAW JSON ONLY.") কে স্বাভাবিক ও মার্জিত মানবীয় ভাষায় রূপান্তর।
+        ৩. মূল কারিগরি নির্দেশ এবং সঠিক উত্তর পাওয়ার নির্ভুলতা পুরোপুরি বজায় রাখা।
+        """
+        text = prompt.strip()
+        if not text:
+            return text
+
+        # ১. রোবোটিক প্রিফিক্স ফিল্টার
+        robotic_prefixes = [
+            r"^SYSTEM\s*(?:PROMPT|DIRECTIVE|INSTRUCTION)?\s*:?\s*",
+            r"^AGENT\s*(?:TASK|INSTRUCTION)?\s*:?\s*",
+            r"^FAIL-SAFE\s*(?:PROTOCOL)?\s*:?\s*",
+            r"^CRITICAL\s*COMMAND\s*:?\s*",
+            r"^MANDATORY\s*DIRECTIVE\s*:?\s*",
+        ]
+        for pat in robotic_prefixes:
+            text = re.sub(pat, "", text, flags=re.IGNORECASE | re.MULTILINE).strip()
+
+        # ২. রোবোটিক আউটপুট বাধ্যবাধকতাকে মানুষের মতো পরিচ্ছন্ন রিকোয়েস্টে রূপান্তর
+        text = re.sub(
+            r"(?:STRICTLY\s*)?ONLY\s+OUTPUT\s+(?:RAW\s+)?JSON\b.*",
+            "Please format the output as clean JSON, thanks!",
+            text,
+            flags=re.IGNORECASE,
+        )
+        text = re.sub(
+            r"(?:STRICTLY\s*)?ONLY\s+OUTPUT\s+(?:RAW\s+)?CODE\b.*",
+            "Just the clean code snippet would be great, thanks!",
+            text,
+            flags=re.IGNORECASE,
+        )
+        text = re.sub(
+            r"DO\s+NOT\s+EXPLAIN\b.*",
+            "No need for a long explanation, just the code is perfect.",
+            text,
+            flags=re.IGNORECASE,
+        )
+        text = re.sub(
+            r"DO\s+NOT\s+INCLUDE\s+(?:ANY\s+)?PREAMBLE\b.*",
+            "Feel free to get straight to the code without extra intro.",
+            text,
+            flags=re.IGNORECASE,
+        )
+
+        return text
+
 
 # অ্যালিয়াস
 LegitFilePresenter = NaturalFilePresenter
