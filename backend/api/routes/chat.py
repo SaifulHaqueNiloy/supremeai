@@ -21,6 +21,30 @@ from core.orchestration.conversation_orchestrator import (
 )
 from core.resilience.circuit_breaker import RedisCircuitBreaker
 
+
+# ROOT-CAUSE FIX (#2726): derive task_type from prompt complexity instead of
+# hardcoding "chat". The routing layer (routing.py:161-165) checks task_type
+# keywords to pick the model chain: "reasoning"/"math"/"code" -> hard chain
+# (llama-3.3-70b + gemini-2.5-pro), "agent"/"analysis" -> medium chain,
+# everything else -> easy chain (flash + instant). With task_type="chat"
+# hardcoded, even "design a distributed rate limiter" went to the easy chain.
+def _derive_task_type(prompt: str) -> str:
+    """বাংলা: প্রম্পট বিশ্লেষণ করে task_type নির্ধারণ — routing layer সঠিক
+    model chain বাছাই করতে পারে। Hardcoded 'chat' এর বদলে dynamic classification।"""
+    p = (prompt or "").lower()
+    # Hard: reasoning + math + code patterns
+    hard_keywords = ("reasoning", "math", "code", "coding", "algorithm", "design",
+                     "architect", "implement", "debug", "refactor", "optimize",
+                     "analyze", "synthesize", "compare", "evaluate", "step by step")
+    if any(kw in p for kw in hard_keywords):
+        return "reasoning"
+    # Medium: agent + analysis patterns
+    medium_keywords = ("agent", "analysis", "summarize", "explain", "describe",
+                       "research", "investigate", "review")
+    if any(kw in p for kw in medium_keywords):
+        return "analysis"
+    return "chat"
+
 # Global circuit breaker instance
 main_llm_circuit = RedisCircuitBreaker(
     name="llm_gateway", failure_threshold=3, recovery_timeout=30.0
@@ -266,9 +290,16 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                     prompt=enriched_prompt,
                     # M03 P0-পূর্ণাংশ: InferenceContext বাধ্যতামূলক — টেন্যান্ট/
                     # টাস্ক অ্যাট্রিবিউশন এক-কাঠামোয় (M16 P-A spend feed এই পথেই)।
+                    # ROOT-CAUSE FIX (#2726): task_type derived from prompt complexity
+                    # instead of hardcoded "chat" — so "design a distributed rate limiter"
+                    # routes to the hard model chain (llama-3.3-70b + gemini-2.5-pro),
+                    # not the easy flash chain.
+                    # Also honor user's model_name as the model override (previously
+                    # it was only used as a cache key, never reached the gateway).
+                    model=payload.model_name if payload.model_name != "gemini-2.5-pro" else None,
                     context=InferenceContext(
                         tenant_id=str(db.tenant_id) if db.tenant_id else "anonymous",
-                        task_type="chat",
+                        task_type=_derive_task_type(payload.prompt),
                         stream=False,
                     ),
                 )
@@ -434,9 +465,12 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                         prompt=enriched_prompt,
                         # M03 P0-পূর্ণাংশ: streaming পথেও context বাধ্যতামূলক —
                         # non-streaming-এর সাথে একই attribution parity।
+                        # ROOT-CAUSE FIX (#2726): task_type derived from prompt complexity
+                        # + honor user's model_name override (same as non-streaming path).
+                        model=payload.model_name if payload.model_name != "gemini-2.5-pro" else None,
                         context=InferenceContext(
                             tenant_id=str(db.tenant_id) if db.tenant_id else "anonymous",
-                            task_type="chat",
+                            task_type=_derive_task_type(payload.prompt),  # #2726: derived not hardcoded
                             stream=True,
                         ),
                     )
