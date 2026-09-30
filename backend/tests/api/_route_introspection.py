@@ -20,7 +20,8 @@ booted with mounted=157/157).
 
 from __future__ import annotations
 
-from typing import Any, Iterator
+from collections.abc import Iterator
+from typing import Any
 
 from fastapi.routing import APIRoute
 
