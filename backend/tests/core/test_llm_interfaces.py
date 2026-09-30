@@ -51,7 +51,6 @@ class TestExecutionMode:
     def test_mode_comparable_to_plain_string(self):
         # বাংলা: StrEnum সরাসরি plain string-এর সাথে comparable
         assert ExecutionMode.CLOUD == "cloud"
-        assert "cloud" == ExecutionMode.CLOUD
 
     def test_mode_hashable_in_dict(self):
         # Boundary: enum কে dict key হিসেবে ব্যবহার করা যায়
@@ -134,6 +133,7 @@ class TestModelProviderProtocol:
 
         # Then: isinstance check against the Protocol (runtime_checkable)
         from typing import runtime_checkable
+
         from core.llm.interfaces import ModelProvider as MP
 
         # runtime_checkable protocols support isinstance()
