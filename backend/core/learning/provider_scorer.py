@@ -38,11 +38,15 @@ MIN_SAMPLES_CAUTIOUS = 10
 MIN_SAMPLES_NORMAL = 50
 
 # Fixed weights (sum = 1.0). Configurable via env, bounded to [0, 1] each.
+# ROOT-CAUSE FIX (#2727): added "feedback" dimension — previously user thumbs
+# up/down was written to the learning store but NEVER read by the scorer.
+# Now: feedback joins provider/model and contributes 0.15 to the weighted score.
 _DEFAULT_WEIGHTS = {
-    "quality": 0.45,
-    "reliability": 0.25,
+    "quality": 0.35,     # was 0.45 — redistributed to make room for feedback
+    "reliability": 0.20, # was 0.25
     "latency": 0.15,
     "cost": 0.15,
+    "feedback": 0.15,    # ROOT-CAUSE FIX (#2727): NEW — user judgment
 }
 # Reference points for the bounded component scores.
 _P95_REFERENCE_MS = 1000.0
@@ -64,6 +68,9 @@ class ProviderScore:
     sample_tier: str  # "insufficient" | "cautious" | "normal"
     score: float  # bounded [0,1]; 0.0 for insufficient evidence
     components: dict[str, float] = field(default_factory=dict)
+    # ROOT-CAUSE FIX (#2727): user feedback counts — previously write-only
+    thumbs_up: int = 0
+    thumbs_down: int = 0
 
 
 def _weight(name: str) -> float:
@@ -109,17 +116,33 @@ def compute_provider_scores(rows: list[dict[str, Any]] | None) -> list[ProviderS
         latency_score = max(0.0, 1.0 - (float(p95) / _P95_REFERENCE_MS)) if p95 is not None else 0.5
         cost_score = max(0.0, 1.0 - (est_cost / _COST_REFERENCE_USD))
 
+        # ROOT-CAUSE FIX (#2727): feedback score from user thumbs up/down.
+        # Previously feedback was write-only — stored in learning_events but
+        # never read by the scorer. Now: thumbs_up / (thumbs_up + thumbs_down)
+        # gives a [0, 1] user-satisfaction score. Statistical floor: if
+        # feedback samples < MIN_SAMPLES_CAUTIOUS, feedback_score = 0.5
+        # (neutral) — prevents single thumbs-down from tanking a provider.
+        thumbs_up = int(row.get("thumbs_up") or 0)
+        thumbs_down = int(row.get("thumbs_down") or 0)
+        feedback_total = thumbs_up + thumbs_down
+        if feedback_total >= MIN_SAMPLES_CAUTIOUS:
+            feedback_score = thumbs_up / float(feedback_total)
+        else:
+            feedback_score = 0.5  # neutral — insufficient feedback samples
+
         components = {
             "quality": round(min(1.0, max(0.0, quality)), 4),
             "reliability": round(reliability, 4),
             "latency": round(latency_score, 4),
             "cost": round(cost_score, 4),
+            "feedback": round(feedback_score, 4),  # ROOT-CAUSE FIX (#2727)
         }
         raw = (
             _weight("quality") * components["quality"]
             + _weight("reliability") * components["reliability"]
             + _weight("latency") * components["latency"]
             + _weight("cost") * components["cost"]
+            + _weight("feedback") * components["feedback"]  # ROOT-CAUSE FIX (#2727)
         )
         if tier == "insufficient":
             score = 0.0  # §8.1: insufficient observations can never be preferred
@@ -141,6 +164,8 @@ def compute_provider_scores(rows: list[dict[str, Any]] | None) -> list[ProviderS
                 sample_tier=tier,
                 score=score,
                 components=components,
+                thumbs_up=thumbs_up,      # ROOT-CAUSE FIX (#2727)
+                thumbs_down=thumbs_down,  # ROOT-CAUSE FIX (#2727)
             )
         )
     scores.sort(key=lambda s: s.score, reverse=True)
