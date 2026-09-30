@@ -806,3 +806,14 @@ fix নয়, reproducibility issue।
 - **ENGINE (09:36Z)**: কিউ EMPTY; main `12c44a7` **RED** (3-redGates); baseline re-anchor 09:35Z-জানালা।
 - **শিক্ষা**: dead-green-ফিক্স (#2622)-এর-সরাসরি-ফল — লুকানো-ব্যর্থতা-এখন-দৃশ্যমান; এটি-অবনতি-নয়, পর্যবেক্ষণ-ক্ষমতা-বৃদ্ধি (নন-ব্লেম-ফ্রেমিং-ইস্যুতে-লেখা)।
 - **এই চক্রে: 0 merge-আমার-পক্ষে/0 force-push/0 main-push; ২ issue (#2624 P1 + #2625 P2)/0 কমেন্ট; playbook T144 addendum; watch: #2624-admin-সিদ্ধান্ত (backend-50x+rollback-বেসলাইন), smoke-warmup-ফিক্স-PR, #2625-provider-অ্যাক্সেস, #2619/#2621-owner-ক্লোজ, #2623-deps-ব্যাচ-প্রবাহ, AGENTS-৩য়-সংশোধন।**
+
+### Addendum — Task 145 (2026-09-30 ~10:02Z, 18:00+08 cron): Station-3/4-re-run-পুনরুদ্ধার + #2624-নতুন-প্রমাণ-কমেন্ট + ফ্লিট-দ্বিমুখী-ফিক্স (#2628/#2629)
+
+- **HANDSHAKE (10:00Z)**: worklog last=144; তিন-পোর্ট UP; lane @`47012d50`-অটুট (808)।
+- **POLICY SYNC**: main @`12c44a7c`-অপরিবর্তিত (২য়-চক্র); অ্যাঙ্কর-অটুট blob-direct (AGENTS `3db1a7cd`, rules.yml `e62d5f03`)।
+- **SWEEP (09:35→10:01Z, ঘটনাসমৃদ্ধ)**: same-SHA main **10ok/3fail→14ok/1fail** — 🚉 Station 3 + 🚨 Station 4 **re-run-এ সবুজ** (T144-এর-50x/no-target-দুটোই-আর-ফেল-নেই) → **warmup-race/transient-অনুমান-সমর্থিত**; একমাত্র-red এখন 🏷️ **Station 5: Release Tag** (committer-identity — **#2627-ট্র্যাকড, dedupe-সম্মান → 0-নতুন-ইস্যু**)।
+- **ফ্লিট-রেসপন্স-দ্রুততা**: আমার-ইস্যু-দুটোতেই-কর্ম — **#2624** → coder-1-bot-ব্রাঞ্চ `coder-1-2624-deploy-train-suspension-guard` (09:59Z) → **🆕 PR #2628** (suspension-fail-fast-গার্ড + ফ্রি-কোটা-pre-light-পুনঃওয়্যারিং); **#2627** → planner-ব্রাঞ্চ → **🆕 PR #2629** (Station-5-committer-identity)। উভয়-PR প্রাথমিকভাবে **GATE-FAIL** (Unified PR Gate + Constitutional System Gates — ইটারেশন-প্রারম্ভিক)। নতুন-ইস্যু **#2626** (planner: wrangler.toml-মৃত-primary-URL)।
+- **নতুন-প্রমাণ-কমেন্ট (নিয়ম-মেনে ১টি)**: **#2624-তে কমেন্ট** — same-SHA-14ok/1fail + Station-3/4-সবুজ + warmup-অনুমান-সমর্থন + Station-5-ভিন্ন-সমস্যা-নির্দেশ (#2627-রেফার) + rollback-বেসলাইন-পরামর্শ-বহাল; নতুন-ইস্যু-নয়-স্পষ্ট-বলা।
+- **ENGINE (10:02Z)**: কিউ **#2628+#2629 GATE-FAIL**; main `12c44a7` RED (Station 5); baseline re-anchor 10:01Z-জানালা।
+- **শিক্ষা**: headchecks-পুরোনো-স্ক্রিপ্ট per_page=100-সীমায় 235-রেকর্ডে-আংশিক-পড়ে — ইঞ্জিন-ভিউ-ই-কর্তৃত্বপূর্ণ; ভবিষ্যৎ-অডিটে-pagination-সচেতন-হতে-হবে।
+- **এই চক্রে: 0 merge/0 force-push/0 main-push/0 নতুন-ইস্যু/**১ নতুন-প্রমাণ-কমেন্ট (#2624)**; playbook T145 addendum; watch: #2628/#2629-গেট-পাস→মার্জ (পাস-হলে post-merge-অডিট: Station-5-সবুজ + smoke-warmup-পুনঃপরীক্ষা), #2624/#2627-ক্লোজ-সংকেত, #2626-wrangler-ফিক্স, #2625-provider-অ্যাক্সেস (এখনও-নীরব), #2623-deps-ব্যাচ, AGENTS-৩য়-সংশোধন।**
