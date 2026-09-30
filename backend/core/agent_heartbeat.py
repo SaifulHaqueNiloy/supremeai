@@ -36,6 +36,7 @@ Env:
 """
 
 import asyncio
+import calendar
 import json
 import os
 import time
@@ -57,6 +58,31 @@ _PLACEHOLDER_TOKENS = ("<your-redis-url>", "<your", "example.com")
 # Canonical account order — mirrors settings.upstash_redis_rest_pool and the
 # tower/dashboard chain labels.
 _ACCOUNT_LABELS = ("primary", "secondary", "tertiary", "quaternary", "quinary")
+
+# ── দৈনিক-কোটা cooldown (#2613 — R2, #2452 free-tier permanent fix) ─────────
+# বাংলা মন্তব্য: Upstash free tier-এর দৈনিক কোটা শেষ হলে HTTP 400 +
+# "max requests limit ..." মার্কার-সহ body আসে। এই মার্কার দেখা মাত্রই ওই
+# account-কে পরবর্তী UTC মধ্যরাত পর্যন্ত cooldown-এ ফেলি — ফলে প্রতি ৪৫s
+# tick-এ exhausted account-এ নিশ্চিত-ব্যর্থ একটি request যাওয়া বন্ধ হয়
+# (wasted latency + কোটা নষ্ট উভয়ই শূন্যে নামে)।
+_QUOTA_EXCEEDED_MARKER = "max requests limit"
+_ACCOUNT_COOLDOWN: dict[str, float] = {}
+
+
+def _next_utc_reset_epoch() -> float:
+    """পরবর্তী UTC মধ্যরাত + ৬০s grace (Upstash দৈনিক রিসেটের আনুমানিক সময়)।"""
+    now = time.gmtime()
+    # বাংলা মন্তব্য: calendar.timegm = time.gmtime-এর সঠিক UTC inverse —
+    # time.mktime ব্যবহার করলে সার্ভারের local timezone মেনে ভুল সময় আসতো।
+    tomorrow_epoch = calendar.timegm(
+        (now.tm_year, now.tm_mon, now.tm_mday + 1, 0, 0, 0, 0, 0, 0)
+    )
+    return tomorrow_epoch + 60.0
+
+
+def _account_in_cooldown(label: str) -> bool:
+    until = _ACCOUNT_COOLDOWN.get(label, 0.0)
+    return time.time() < until
 
 
 def _redis_url() -> str:
@@ -141,9 +167,24 @@ async def _ping_rest(label: str, url: str, token: str, payload: str) -> str:
             headers={"Authorization": f"Bearer {token}"},
         )
     if res.status_code != 200:
+        # বাংলা মন্তব্য (#2613 R2): কোটা-ত্রুটি সনাক্ত করে ওই account-কে UTC রিসেট
+        # পর্যন্ত cooldown-এ ফেলি — পরের tick থেকে এই account স্কিপ হবে।
+        if _QUOTA_EXCEEDED_MARKER in res.text:
+            _ACCOUNT_COOLDOWN[label] = _next_utc_reset_epoch()
+            logger.warning(
+                f"⚠️ agent-10 heartbeat: upstash[{label}] দৈনিক কোটা শেষ — "
+                f"UTC রিসেট পর্যন্ত cooldown, চেইনের পরের account-এ shift।"
+            )
+            raise RuntimeError(f"upstash[{label}] daily quota exceeded (cooldown until UTC reset)")
         raise RuntimeError(f"upstash[{label}] HTTP {res.status_code}: {res.text[:120]}")
     data: dict[str, Any] = res.json()
     if data.get("error"):
+        if _QUOTA_EXCEEDED_MARKER in str(data["error"]):
+            _ACCOUNT_COOLDOWN[label] = _next_utc_reset_epoch()
+            logger.warning(
+                f"⚠️ agent-10 heartbeat: upstash[{label}] কোটা-ত্রুটি (body) — cooldown পর্যন্ত স্কিপ।"
+            )
+            raise RuntimeError(f"upstash[{label}] daily quota exceeded (cooldown until UTC reset)")
         raise RuntimeError(f"upstash[{label}]: {data['error']}")
     return f"{label}/rest"
 
@@ -174,6 +215,10 @@ async def run_agent_heartbeat_loop() -> None:
 
             if wrote_via is None:
                 for label, url, token in _rest_pool():
+                    # বাংলা মন্তব্য (#2613 R2): কোটা cooldown-এ থাকা account এই tick-এ
+                    # একটিও request পাঠাই না — সরাসরি পরের account-এ যাই।
+                    if _account_in_cooldown(label):
+                        continue
                     try:
                         wrote_via = await _ping_rest(label, url, token, payload)
                         break
