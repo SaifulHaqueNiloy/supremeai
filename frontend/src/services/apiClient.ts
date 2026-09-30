@@ -252,7 +252,20 @@ const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = D
   const fetchOptions: RequestInit = { ...options };
   const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');
   if (!isTest) {
-    fetchOptions.signal = controller.signal;
+    // Issue #2522 (batch-2): কলার নিজের signal (stop button / probe timeout) পাঠালে তা
+    // timeout signal-এর সাথে combine হয় — দুটির যেকোনো একটি ফায়ার করলেই abort।
+    // আগে কলারের signal নীরবে ওভাররাইট হয়ে যেত, ফলে UI stop-button অকার্যকর ছিল।
+    const callerSignal = options.signal;
+    const signalAny = typeof AbortSignal !== 'undefined'
+      ? (AbortSignal as unknown as { any?: (...signals: AbortSignal[]) => AbortSignal }).any
+      : undefined;
+    if (callerSignal && callerSignal.aborted) {
+      fetchOptions.signal = callerSignal;
+    } else if (callerSignal && typeof signalAny === 'function') {
+      fetchOptions.signal = signalAny.call(AbortSignal, controller.signal, callerSignal);
+    } else {
+      fetchOptions.signal = controller.signal;
+    }
   }
 
   try {
@@ -294,6 +307,9 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
         }
         return res;
       } catch (e: unknown) {
+        // Issue #2522 (batch-2): কলার abort (stop button / unmount) হলে retry অর্থহীন ও
+        // ক্ষতিকর — বাতিল অনুরোধ আগে ৪ বার পর্যন্ত পুনঃপ্রেরণ হতো। সঙ্গে সঙ্গে rethrow।
+        if (fetchOptions.signal?.aborted) throw e;
         attempts++;
         if (attempts >= MAX_ATTEMPTS) {
           if (isDev()) console.error(`[Queue Interceptor] Network failure for ${currentUrl} after ${MAX_ATTEMPTS} attempts:`, e);

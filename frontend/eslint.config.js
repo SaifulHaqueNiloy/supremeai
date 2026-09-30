@@ -39,7 +39,7 @@ export default tseslint.config({ ignores: ['dist', 'dist-admin', 'dist-user', 's
   // হেলথ-প্রোব (কিউ-বাইপাস ইচ্ছাকৃত), ক্র্যাশ-টাইম টেলিমেট্রি, এবং ক্লায়েন্ট নিজে।
   files: ['src/**/*.{ts,tsx}'],
   rules: {
-    'no-restricted-syntax': ['warn', {
+    'no-restricted-syntax': ['error', {
       selector: "CallExpression[callee.name='fetch']",
       message: '#2522: raw fetch() নিষিদ্ধ — services/apiClient ব্যবহার করুন (timeout/auth/error-handling কেন্দ্রীয়)। বৈধ ব্যতিক্রম হলে লাইনে // eslint-disable-next-line no-restricted-syntax + কারণ কমেন্ট দিন।',
     }],

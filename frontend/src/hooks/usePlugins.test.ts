@@ -6,8 +6,19 @@ vi.mock('../utils/api', () => ({
   getApiBaseUrl: vi.fn(() => 'http://localhost:8080'),
 }));
 
+// Issue #2522: hook now uses apiClient (get/post/delete) — module mocked here.
+const { mockGet, mockPost, mockDelete } = vi.hoisted(() => ({
+  mockGet: vi.fn(),
+  mockPost: vi.fn(),
+  mockDelete: vi.fn(),
+}));
+
 vi.mock('../services/apiClient', () => ({
-  getAuthHeaders: vi.fn(async () => ({ Authorization: 'Bearer mock-token' })),
+  apiClient: {
+    get: (...args: unknown[]) => mockGet(...args),
+    post: (...args: unknown[]) => mockPost(...args),
+    delete: (...args: unknown[]) => mockDelete(...args),
+  },
 }));
 
 describe('usePlugins hook', () => {
@@ -19,21 +30,15 @@ describe('usePlugins hook', () => {
     const mockMarketplace = [{ id: 'p1', name: 'Plugin 1', description: 'Desc 1', category: 'tools' }];
     const mockInstalled = [{ id: 'i1', plugin_id: 'p1', status: 'active', is_enabled: true }];
 
-    global.fetch = vi.fn((url: string) => {
-      if (url.includes('/marketplace')) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ plugins: mockMarketplace }),
-        } as Response);
+    mockGet.mockImplementation((path: string) => {
+      if (String(path).includes('/marketplace')) {
+        return Promise.resolve({ plugins: mockMarketplace });
       }
-      if (url.includes('/installed')) {
-        return Promise.resolve({
-          ok: true,
-          json: async () => ({ installations: mockInstalled }),
-        } as Response);
+      if (String(path).includes('/installed')) {
+        return Promise.resolve({ installations: mockInstalled });
       }
       return Promise.reject(new Error('Unknown url'));
-    }) as any;
+    });
 
     const { result } = renderHook(() => usePlugins());
 
@@ -48,8 +53,10 @@ describe('usePlugins hook', () => {
     expect(result.current.error).toBeNull();
   });
 
-  it('handles fetch errors gracefully', async () => {
-    global.fetch = vi.fn(() => Promise.reject(new Error('Network error'))) as any;
+  it('degrades silently when fetch errors (batch-1 per-request catch semantics)', async () => {
+    // Issue #2522 batch-1: usePlugins প্রতি-request-এ .catch(() => null) — নেটওয়ার্ক
+    // ব্যর্থতায় error state নয়, খালি তালিকায় নামে (silent degrade contract)।
+    mockGet.mockRejectedValue(new Error('Network error'));
 
     const { result } = renderHook(() => usePlugins());
 
@@ -57,16 +64,14 @@ describe('usePlugins hook', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    expect(result.current.error).toBe('Network error');
+    expect(result.current.error).toBeNull();
+    expect(result.current.marketplacePlugins).toEqual([]);
+    expect(result.current.installedPlugins).toEqual([]);
   });
 
   it('installs a plugin successfully and refreshes list', async () => {
-    global.fetch = vi.fn((url: string, opts?: RequestInit) => {
-      if (opts?.method === 'POST') {
-        return Promise.resolve({ ok: true, json: async () => ({ success: true }) } as Response);
-      }
-      return Promise.resolve({ ok: true, json: async () => ({ plugins: [], installations: [] }) } as Response);
-    }) as any;
+    mockPost.mockResolvedValue({ success: true });
+    mockGet.mockResolvedValue({ plugins: [], installations: [] });
 
     const { result } = renderHook(() => usePlugins());
 
@@ -78,19 +83,15 @@ describe('usePlugins hook', () => {
       await result.current.installPlugin('p1', ['read']);
     });
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/v1/plugins/install'),
-      expect.objectContaining({ method: 'POST' })
+    expect(mockPost).toHaveBeenCalledWith(
+      '/api/v1/plugins/install',
+      { plugin_id: 'p1', granted_capabilities: ['read'] }
     );
   });
 
   it('uninstalls a plugin and refreshes the list', async () => {
-    global.fetch = vi.fn((url: string, opts?: RequestInit) => {
-      if (opts?.method === 'DELETE') {
-        return Promise.resolve({ ok: true, json: async () => ({ success: true }) } as Response);
-      }
-      return Promise.resolve({ ok: true, json: async () => ({ plugins: [], installations: [] }) } as Response);
-    }) as any;
+    mockDelete.mockResolvedValue(undefined);
+    mockGet.mockResolvedValue({ plugins: [], installations: [] });
 
     const { result } = renderHook(() => usePlugins());
 
@@ -102,9 +103,6 @@ describe('usePlugins hook', () => {
       await result.current.uninstallPlugin('p1');
     });
 
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('/api/v1/plugins/uninstall/p1'),
-      expect.objectContaining({ method: 'DELETE' })
-    );
+    expect(mockDelete).toHaveBeenCalledWith('/api/v1/plugins/uninstall/p1');
   });
 });
