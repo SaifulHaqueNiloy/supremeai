@@ -27,7 +27,7 @@
 # and root package.json engines.node is ">=24.0.0". Testing the build on Node 24
 # while shipping node:20-alpine meant Node 22+/24-only APIs (node:sqlite,
 # webcrypto additions, RegExp.escape) passed CI but broke at runtime.
-FROM node:24-alpine AS builder
+FROM node:26-alpine AS builder
 WORKDIR /app
 
 # Install the exact dependency tree first (typescript is a devDependency, used here)
@@ -40,7 +40,7 @@ COPY infrastructure/mcp-control-plane/src/ ./src/
 RUN npm run build
 
 # ── Stage 2: runtime ──────────────────────────────────────────────────────────
-FROM node:24-alpine
+FROM node:26-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 
