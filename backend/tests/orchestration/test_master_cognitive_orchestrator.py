@@ -106,8 +106,11 @@ async def test_self_healing_wires_real_decide_and_execute():
     # পুরনো স্টাব ফিরে আসা নিষিদ্ধ
     assert "candidate_solutions" not in result.artifacts
     patch = result.artifacts["patch_candidate"]
-    # sandbox-verified দাবি এখন কেবল টুল সত্যিই চললেই True
-    assert patch["verified_in_sandbox"] == result.artifacts["discovery_outcome"]["executed"]
+    # #2707: verified_in_sandbox এখন প্রকৃত playground-স্যান্ডবক্স ফলাফল —
+    # tool-gate executed থেকে স্বাধীন; sandbox না থাকলে সৎ False।
+    assert "playground_verification" in result.artifacts
+    pg = result.artifacts["playground_verification"]
+    assert pg["verified"] == patch["verified_in_sandbox"]
     assert "diff" not in patch  # fake diff আর নেই
 
 

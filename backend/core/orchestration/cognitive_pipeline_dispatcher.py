@@ -332,17 +332,68 @@ class MasterCognitiveOrchestrator:
         stages.append("03_knowledge_quarantine_gate")
         artifacts["quarantine_status"] = "PASSED" if executed else "DEFERRED_NO_LIVE_EVIDENCE"
 
-        # 4. Solution Synthesis (honest record of governed discovery outcome)
+        # 4. Solution Synthesis & REAL sandbox verification (#2707)
         stages.append("04_solution_synthesis_sandbox")
+        # বাংলা মন্তব্য (#2707 Gap-H): "verified_in_sandbox" এখন প্রকৃত
+        # playground-রান থেকে — alternative candidates parallel-ভাবে আসল
+        # স্যান্ডবক্সে (execute_code_securely: AST-gate + MicroVM/Docker) চলে,
+        # winner আসল execution-output score-এ নির্বাচিত হয়। স্যান্ডবক্স
+        # unavailable হলে সৎ False (ভান-verification নিষিদ্ধ)।
+        playground_summary: dict[str, Any] = {"status": "skipped", "verified": False}
+        verified_in_sandbox = False
+        try:
+            from core.advanced_reasoning import AdvancedReasoningEngine
+            from core.intelligence.playground_runner import (
+                PlaygroundCandidate,
+                PlaygroundRunner,
+            )
+
+            candidates_raw = await AdvancedReasoningEngine().generate_executable_alternatives(
+                query, {"error": error_msg, "target_file": target_file}
+            )
+            if candidates_raw:
+                candidates = [
+                    PlaygroundCandidate(label=str(c["label"]), code=str(c["code"]))
+                    for c in candidates_raw
+                ]
+                playground = PlaygroundRunner(per_candidate_timeout=10.0)
+                playground_result = await playground.generate_test_select(
+                    candidates, task=query
+                )
+                verified_in_sandbox = bool(playground_result.get("verified_in_sandbox"))
+                playground_summary = {
+                    "status": "executed",
+                    "verified": verified_in_sandbox,
+                    "winner": playground_result.get("winner"),
+                    "candidates_tested": len(candidates_raw),
+                    "reason": playground_result.get("reason"),
+                    "results": playground_result.get("results", []),
+                }
+            else:
+                playground_summary = {
+                    "status": "no_candidates",
+                    "verified": False,
+                }
+        except Exception as exc:
+            # বাংলা মন্তব্য: graceful degradation (Rule #3) — স্যান্ডবক্স-ব্যর্থতা
+            # পাইপলাইন ভাঙবে না, তবে verified=False-ই থাকবে (সৎ)।
+            logger.debug(f"Playground sandbox verification unavailable: {exc}")
+            playground_summary = {
+                "status": "unavailable",
+                "verified": False,
+                "detail": str(exc)[:200],
+            }
+
         artifacts["patch_candidate"] = {
             "target": target_file,
             "decision_source": decision_source,
             "discovery_executed": executed,
             "observation": observation,
-            # বাংলা মন্তব্য: আগে fake "verified_in_sandbox": True ছিল — এখন কেবল
-            # টুল-গেট সত্যিই পার হলে (executed) True, নয়তো সৎ False।
-            "verified_in_sandbox": executed,
+            # বাংলা মন্তব্য: আগে fake True (#2705-তে tool-gate flag-এ নামিয়েছিলাম) —
+            # #2707-এ এখন প্রকৃত স্যান্ডবক্স-রানের ফলাফল।
+            "verified_in_sandbox": verified_in_sandbox,
         }
+        artifacts["playground_verification"] = playground_summary
 
         # 5. Governance Shield & Security Authorization
         stages.append("05_governance_policy_authorization")
