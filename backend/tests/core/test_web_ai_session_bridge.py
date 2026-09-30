@@ -354,3 +354,83 @@ async def test_fastapi_web_ai_proxy_routes():
             data = chat_resp.json()
             assert data["choices"][0]["message"]["content"] == "API proxy answer!"
             assert data["usage"]["cost_usd"] == 0.0
+
+
+# ── Session Silent Refresh & Turnstile Auto-Pause Tests ───────────────────────
+
+
+@pytest.mark.asyncio
+async def test_refresh_session_and_vault_persistence(test_vault):
+    """বাংলা মন্তব্য: সেশন রিফ্রেশ এবং ভল্টে ফ্রেশ টোকেন ও হেডার সিঙ্ক টেস্ট।"""
+    vault, key, vault_path = test_vault
+    bridge = WebAISessionBridge(vault_path=vault_path, encryption_key=key)
+
+    async def mock_execute(
+        service, method, url, headers, cookies, json_data=None, timeout_seconds=30.0, proxy=None
+    ):
+        if "api/auth/session" in url:
+            return 200, {
+                "accessToken": "fresh-refreshed-token-2026",
+                "user": {"email": "test@dev.ai"},
+            }
+        return 404, {}
+
+    with patch.object(bridge, "execute_http_request", side_effect=mock_execute):
+        ok, res = await bridge.refresh_session(
+            service="chatgpt",
+            explicit_token="initial-token",
+            custom_ua="Mozilla/5.0 Custom Test UA",
+        )
+        assert ok is True
+        assert res["status"] == "refreshed"
+
+        # ভল্টে রিফ্রেশড ডাটা যাচাই
+        saved_cookies, saved_storage = vault.load_session("chatgpt")
+        assert len(saved_cookies) > 0
+        assert saved_storage.get("accessToken") == "fresh-refreshed-token-2026"
+        assert saved_storage["headers"]["User-Agent"] == "Mozilla/5.0 Custom Test UA"
+
+
+@pytest.mark.asyncio
+async def test_turnstile_challenge_auto_pause():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    কোনো অ্যাকাউন্টে ক্লাউডফ্লেয়ার টার্নস্টাইল চ্যালেঞ্জ (HTTP 403) আসলে
+    অ্যাকাউন্টটি পুলে সাময়িক পজ হবে এবং পরবর্তী সচল অ্যাকাউন্ট পিক করবে।
+    """
+    from core.web_ai_session_bridge import WebAISessionPool
+
+    pool = WebAISessionPool()
+    pool.accounts.clear()
+
+    acc1 = pool.register_account("claude", "turnstile-token", "claude-turnstile")
+    acc2 = pool.register_account("claude", "clean-token", "claude-clean")
+
+    # মার্ক ফেইলিউর উইথ টার্নস্টাইল চ্যালেঞ্জ
+    pool.mark_failure("claude", acc1.account_id, "Cloudflare Turnstile 403 Forbidden")
+    assert acc1.turnstile_paused is True
+
+    # পরবর্তী অনুরোধে টার্নস্টাইল আক্রান্ত অ্যাকাউন্ট এড়িয়ে ফ্রেশ অ্যাকাউন্ট ২ পাওয়া উচিত
+    chosen = pool.get_available_account("claude")
+    assert chosen.account_id == acc2.account_id
+
+
+@pytest.mark.asyncio
+async def test_refresh_pool_sessions_batch():
+    """বাংলা মন্তব্য: পুলে থাকা সমস্ত অ্যাকাউন্টের বাল্ক রিফ্রেশ টেস্ট।"""
+    from core.web_ai_session_bridge import WebAISessionPool
+
+    bridge = WebAISessionBridge()
+    pool = WebAISessionPool(bridge=bridge)
+    pool.accounts.clear()
+
+    pool.register_account("chatgpt", "cg-token-1", "cg-1")
+
+    async def mock_refresh(service, explicit_token=None, custom_ua=None):
+        return True, {"status": "ok"}
+
+    with patch.object(bridge, "refresh_session", side_effect=mock_refresh):
+        results = await pool.refresh_pool_sessions(custom_ua="Sniffed-Local-UA")
+        assert "chatgpt" in results
+        assert results["chatgpt"][0]["refreshed"] is True

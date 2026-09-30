@@ -266,6 +266,76 @@ class WebAISessionBridge:
             logger.error(f"[WebAISessionBridge] HTTP request error: {exc}")
             raise WebAISessionError(f"HTTP request failed: {exc}") from exc
 
+    # ── Session Silent Refresh (Gap 1 & Gap 4 Solution) ───────────────────────
+    async def refresh_session(
+        self,
+        service: str,
+        explicit_token: str | None = None,
+        custom_ua: str | None = None,
+    ) -> tuple[bool, dict[str, Any]]:
+        """
+        বাংলা সারসংক্ষেপ:
+        ------------------
+        টোকেন এক্সপায়ার হওয়ার আগেই সেশন এন্ডপয়েন্টে পিং করে লাইভ রিফ্রেশ ও ভল্ট সিঙ্ক:
+        ১. ChatGPT: https://chatgpt.com/api/auth/session কল করে fresh accessToken সংগ্রহ।
+        ২. Claude: https://claude.ai/api/organizations পিং করে সেশন ভ্যালিডেশন।
+        ৩. v0: https://v0.dev/api/user পিং করে প্রোফাইল ও সেশন নবায়ন।
+        ৪. ব্রাউজার হেডার ও রিফ্রেশড কুকিজ ভল্টে সেভ করা (Header Drift সমাধান)।
+        """
+        service = service.lower().strip()
+        cookies = self.resolve_session_cookies(service, explicit_token=explicit_token)
+        if not cookies:
+            return False, {"error": "No cookies found to refresh"}
+
+        headers = self._get_headers(service)
+        if custom_ua:
+            headers["User-Agent"] = custom_ua
+
+        url_map = {
+            "chatgpt": "https://chatgpt.com/api/auth/session",
+            "claude": "https://claude.ai/api/organizations",
+            "v0": "https://v0.dev/api/user",
+        }
+        url = url_map.get(service)
+        if not url:
+            return False, {"error": f"No refresh endpoint known for {service}"}
+
+        status, payload = await self.execute_http_request(
+            service=service,
+            method="GET",
+            url=url,
+            headers=headers,
+            cookies=cookies,
+        )
+
+        if status == 200:
+            if self.vault:
+                vault_cookies = [{"name": k, "value": v} for k, v in cookies.items()]
+                storage = {"headers": headers, "last_refreshed": time.time()}
+                if service == "chatgpt" and isinstance(payload, dict) and "accessToken" in payload:
+                    storage["accessToken"] = payload["accessToken"]
+                try:
+                    self.vault.save_session(service, vault_cookies, storage)
+                    logger.info(
+                        f"[WebAISessionBridge] Successfully refreshed and vaulted session for {service}"
+                    )
+                except Exception as exc:
+                    logger.warning(
+                        f"[WebAISessionBridge] Failed to persist refreshed session: {exc}"
+                    )
+            return True, {"status": "refreshed", "service": service, "details": payload}
+        elif status == 403:
+            logger.warning(
+                f"[WebAISessionBridge] {service} session refresh hit Turnstile Challenge (HTTP 403)"
+            )
+            return False, {
+                "error": "turnstile_challenge",
+                "status_code": status,
+                "payload": payload,
+            }
+        else:
+            return False, {"error": f"Refresh failed HTTP {status}", "payload": payload}
+
     # ── High-Level Completion Interface ───────────────────────────────────────
     async def complete(
         self,
@@ -486,6 +556,7 @@ class AccountSession:
     token: str
     cooldown_until: float = 0.0
     is_active: bool = True
+    turnstile_paused: bool = False
     last_used: float = 0.0
     error_count: int = 0
     success_count: int = 0
@@ -499,6 +570,7 @@ class WebAISessionPool:
     ১. Multi-Account Pooling: একই সার্ভিসের একাধিক অ্যাকাউন্ট লোড করে।
     ২. 429 Auto-Rotation: কোনো অ্যাকাউন্ট রেট লিমিট পেলে সাথে সাথে পরবর্তী অ্যাকাউন্টে শিফট করে।
     ৩. Cross-Provider Fallback Cascade: Claude ডাউন হলে ChatGPT, তারপর v0-তে ফলব্যাক।
+    ৪. Turnstile Auto-Pause: ক্লাউডফ্লেয়ার চ্যালেঞ্জ ডিটেক্ট হলে আক্রান্ত অ্যাকাউন্ট সাময়িক পজ।
     """
 
     def __init__(self, bridge: WebAISessionBridge | None = None) -> None:
@@ -522,6 +594,7 @@ class WebAISessionPool:
                 acc.token = token
                 acc.is_active = True
                 acc.cooldown_until = 0.0
+                acc.turnstile_paused = False
                 return acc
 
         new_acc = AccountSession(service=service, account_id=account_id, token=token)
@@ -530,12 +603,12 @@ class WebAISessionPool:
         return new_acc
 
     def get_available_account(self, service: str) -> AccountSession | None:
-        """বাংলা মন্তব্য: কুলডাউনে নেই এমন সবচেয়ে কম ব্যবহৃত (LRU) অ্যাকাউন্ট নির্বাচন।"""
+        """বাংলা মন্তব্য: কুলডাউন বা টার্নস্টাইল পজে নেই এমন সবচেয়ে কম ব্যবহৃত (LRU) অ্যাকাউন্ট নির্বাচন।"""
         now = time.time()
         candidates = [
             acc
             for acc in self.accounts.get(service, [])
-            if acc.is_active and acc.cooldown_until <= now
+            if acc.is_active and acc.cooldown_until <= now and not acc.turnstile_paused
         ]
         if not candidates:
             return None
@@ -565,15 +638,46 @@ class WebAISessionPool:
                 acc.last_used = time.time()
                 acc.success_count += 1
                 acc.error_count = 0
+                acc.turnstile_paused = False
                 break
 
     def mark_failure(self, service: str, account_id: str, error_detail: str = "") -> None:
-        """বাংলা মন্তব্য: ব্যর্থতায় এরর কাউন্ট বৃদ্ধি।"""
+        """বাংলা মন্তব্য: ব্যর্থতায় এরর কাউন্ট বৃদ্ধি এবং Turnstile চ্যালেঞ্জ পেলে অ্যাকাউন্ট সাময়িক পজ।"""
         for acc in self.accounts.get(service, []):
             if acc.account_id == account_id:
                 acc.error_count += 1
-                logger.warning(f"[WebAISessionPool] Account {account_id} failed: {error_detail}")
+                if (
+                    "403" in error_detail
+                    or "turnstile" in error_detail.lower()
+                    or "challenge" in error_detail.lower()
+                ):
+                    acc.turnstile_paused = True
+                    logger.warning(
+                        f"[WebAISessionPool] Account {account_id} paused due to Turnstile/WAF challenge."
+                    )
+                else:
+                    logger.warning(
+                        f"[WebAISessionPool] Account {account_id} failed: {error_detail}"
+                    )
                 break
+
+    async def refresh_pool_sessions(self, custom_ua: str | None = None) -> dict[str, Any]:
+        """বাংলা মন্তব্য: পুলে থাকা সমস্ত সার্ভিসের অ্যাকাউন্ট সাইলেন্ট রিফ্রেশ করা (২৪ ঘণ্টার রুটিন)।"""
+        results: dict[str, Any] = {}
+        for service, accounts in self.accounts.items():
+            service_results = []
+            for acc in accounts:
+                ok, res = await self.bridge.refresh_session(
+                    service, explicit_token=acc.token, custom_ua=custom_ua
+                )
+                if ok:
+                    acc.turnstile_paused = False
+                    acc.error_count = 0
+                service_results.append(
+                    {"account_id": acc.account_id, "refreshed": ok, "details": res}
+                )
+            results[service] = service_results
+        return results
 
     def hydrate_from_env_and_vault(self) -> None:
         """বাংলা মন্তব্য: সিস্টেমের ENV এবং BrowserSessionVault থেকে সমস্ত বিদ্যমান অ্যাকাউন্ট অটো-লোড।"""

@@ -44,10 +44,25 @@ async def main_async() -> int:
         help="এনক্রিপ্টেড সেশন ভল্টের পাথ",
     )
     parser.add_argument("--status", action="store_true", help="ভল্ট ও সেশন স্ট্যাটাস পরীক্ষা করুন")
+    parser.add_argument("--refresh", action="store_true", help="পিসির লোকাল আইপি দিয়ে সমস্ত সেশন রিফ্রেশ ও ভল্ট আপডেট করুন")
     parser.add_argument("--relay-server", action="store_true", help="লোকাল রেসিডেন্সিয়াল আইপি রিলে সার্ভার চালু করুন")
     parser.add_argument("--port", type=int, default=8765, help="রিলে সার্ভার পোর্ট (default: 8765)")
 
     args = parser.parse_args()
+
+    # বাংলা মন্তব্য: ব্রিজ ও পুল ইনস্ট্যান্স তৈরি
+    bridge = WebAISessionBridge(vault_path=args.vault_path)
+
+    # বাংলা মন্তব্য: লোকাল পিসি অন হলে বা --refresh দিলে সাইলেন্ট রিফ্রেশ এক্সিকিউট করা (Gap 1 & 4 Solution)
+    if args.refresh or args.relay_server:
+        from core.web_ai_session_bridge import WebAISessionPool
+
+        print("🔄 [Local PC Boot] Initiating silent session refresh with residential IP...")
+        pool = WebAISessionPool(bridge=bridge)
+        ref_results = await pool.refresh_pool_sessions()
+        print(f"✅ [Local PC Boot] Refresh Summary: {json.dumps(ref_results, indent=2, ensure_ascii=False)}")
+        if args.refresh and not args.relay_server:
+            return 0
 
     # বাংলা মন্তব্য: রিলে সার্ভার ডেমন মোড (Cloud vs Local IP গ্যাপ বাইপাস)
     if args.relay_server:

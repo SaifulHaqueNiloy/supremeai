@@ -373,7 +373,9 @@ class CodebaseRefactorProposer(BaseSkill):
                     ApprovalProposal(
                         kind=ProposalKind.LEARNING_PROPOSAL,
                         title=(
-                            f"tier8 refactor: {proposal.weakness_type} in {proposal.target_file}"[:200]
+                            f"tier8 refactor: {proposal.weakness_type} in {proposal.target_file}"[
+                                :200
+                            ]
                         ),
                         description=(
                             f"Self-improvement refactor proposal (dry-run passed, confidence "
@@ -408,7 +410,9 @@ class CodebaseRefactorProposer(BaseSkill):
             except ProposalCooldownError:
                 # একই প্রস্তাব cooldown-এ — নতুন queue-entry নয়, এটাই প্রত্যাশিত।
                 routed = True
-                logger.debug(f"[tier8] proposal in cooldown (already pending): {proposal.weakness_type} in {proposal.target_file}")
+                logger.debug(
+                    f"[tier8] proposal in cooldown (already pending): {proposal.weakness_type} in {proposal.target_file}"
+                )
             except Exception as exc:  # noqa: BLE001 — routing ব্যর্থ হলে feedback-পাথ থাকবেই
                 logger.warning(f"[tier8] approval routing failed ({exc}) — feedback log fallback")
             if not routed:
