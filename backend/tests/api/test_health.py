@@ -48,6 +48,11 @@ def test_health_ready_returns_ok():
 
 def test_health_check_ok_without_subsystems():
     # বাংলা: app.state-এ db_pool/redis সাবসিস্টেম না থাকলে 'degraded' ফেরত দেওয়া উচিত (HTTP 503)
+    # বাংলা মন্তব্য (#2613-verification): /health রাউটও DB-সাবসিস্টেম চেকে SQLAlchemy
+    # asyncio ইঞ্জিন ছোঁয় — উপরের importorskip-এর মতোই (greenlet অনুপস্থিত → সৎ skip)।
+    pytest.importorskip(
+        "greenlet", reason="greenlet not installed — required for SQLAlchemy asyncio engine"
+    )
     client = TestClient(_build_client())
     resp = client.get("/health")
     assert resp.status_code == 503
