@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // বাংলা মন্তব্য: লগইন পেজের জন্য Public Service Health Bar — কোনো Authentication লাগবে না
-import { getApiBaseUrl } from '../../utils/api';
+import { apiClient } from '../../services/apiClient';
 
 interface HealthCheckResult {
   status: string;
@@ -114,24 +114,18 @@ const ServiceStatusItem: React.FC<ServiceStatusProps> = ({ name, status, respons
 
 // বাংলা মন্তব্য: Public Health Check Function — কোনো Auth Header ছাড়াই কল হবে
 const fetchPublicHealth = async (): Promise<HealthData> => {
-  const apiBaseUrl = getApiBaseUrl();
   
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for health check
-
   try {
-    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: হেলথ-প্রোব — নিজস্ব AbortSignal, কিউ-বাইপাস ইচ্ছাকৃত (probe ≠ ইউজার ট্রাফিক)
-    // eslint-disable-next-line no-restricted-syntax
-    const res = await fetch(`${apiBaseUrl}/api/health-aggregation`, {
+    // Issue #2522: raw fetch -> apiClient.stream(auth:false) — public endpoint,
+    // তাই Authorization পাঠানো হয় না; timeout/queue ক্লায়েন্ট থেকে আসে।
+    const res = await apiClient.stream('/api/health-aggregation', {
       method: 'GET',
+      auth: false,
       headers: {
         'Content-Type': 'application/json',
         // বাংলা: কোনো Authorization header নেই — public endpoint
       },
-      signal: controller.signal,
     });
-
-    clearTimeout(timeoutId);
 
     const contentType = res.headers.get('content-type') || '';
     const body = await res.text();
@@ -153,20 +147,18 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
       throw new Error(`Health check returned invalid JSON from ${res.url}`);
     }
   } catch (error) {
-    clearTimeout(timeoutId);
 
     // The aggregate endpoint may be unavailable while the canonical liveness
     // endpoint is healthy. Keep the status chip truthful instead of reporting
     // individual services as down from a stale/degraded aggregate response.
     try {
-      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): হেলথ-প্রোব fallback — নিজস্ব timeout, কিউ-বাইপাস ইচ্ছাকৃত
-      // eslint-disable-next-line no-restricted-syntax
-      const fallback = await fetch(`${apiBaseUrl}/api/v1/health`, {
+      // Issue #2522: raw fetch -> apiClient.get — 4s caller-signal এখন
+      // client timeout-এর সাথে AbortSignal.any দিয়ে combine হয়।
+      const payload = await apiClient.get<{ status?: string; database?: string }>('/api/v1/health', {
         headers: { Accept: 'application/json' },
         signal: AbortSignal.timeout(4000),
       });
-      if (fallback.ok) {
-        const payload = await fallback.json() as { status?: string; database?: string };
+      {
         const healthy = payload.status === 'healthy';
         return {
           status: healthy ? 'healthy' : 'degraded',

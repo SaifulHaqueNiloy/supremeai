@@ -76,24 +76,25 @@ describe('skillsService', () => {
     expect(getStatusBadge('weird' as never).label).toBe('weird');
   });
 
+  // Issue #2522: probes now go through apiClient.get (timeout/retry/queue) —
+  // mocks updated from global.fetch stubs to the apiClient contract.
   it('checkLiveness returns true when the endpoint is ok', async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
+    (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      status: 'ok',
     });
     expect(await checkLiveness()).toBe(true);
   });
 
   it('checkLiveness returns false when the request throws', async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+    (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
       new Error('network')
     );
     expect(await checkLiveness()).toBe(false);
   });
 
   it('checkReadiness returns subsystems when ready', async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
-      ok: true,
-      json: async () => ({ subsystems: { db: 'up' } }),
+    (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
+      subsystems: { db: 'up' },
     });
     const res = await checkReadiness();
     expect(res.ready).toBe(true);
@@ -101,7 +102,7 @@ describe('skillsService', () => {
   });
 
   it('checkReadiness returns not-ready on failure', async () => {
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+    (apiClient.get as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
       new Error('down')
     );
     const res = await checkReadiness();

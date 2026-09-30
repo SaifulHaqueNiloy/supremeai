@@ -21,8 +21,9 @@ export const LibrarianQueue: React.FC = () => {
 
   useEffect(() => {
     (async () => {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get — auth+timeout কেন্দ্রীয়
-      apiClient.get<SkillMetadata[]>('/api/admin/librarian/queue')
+      // Issue #2522: raw fetch -> apiClient.get — auth/timeout/queue অটোমেটিক।
+      apiClient
+        .get<SkillMetadata[]>('/api/admin/librarian/queue')
         .then(data => { setQueue(data); setLoading(false); })
         .catch(err => console.error("Error fetching quarantine queue:", err));
     })();
@@ -30,8 +31,8 @@ export const LibrarianQueue: React.FC = () => {
 
   const handleAction = async (skillId: string, action: 'APPROVE' | 'APPROVE_AS_EPHEMERAL' | 'REJECT') => {
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post
-      const result = await apiClient.post<{ success: boolean }>('/api/admin/librarian/process', { skill_id: skillId, action });
+      // Issue #2522: raw fetch -> apiClient.post।
+      const result = await apiClient.post<{ success?: boolean }>('/api/admin/librarian/process', { skill_id: skillId, action });
       if (result.success) {
         // সফল হলে লোকাল স্টেট থেকে রিমুভ
         setQueue(prev => prev.filter(item => item.skill_id !== skillId));

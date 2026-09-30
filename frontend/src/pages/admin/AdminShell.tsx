@@ -164,13 +164,18 @@ export function AdminShell() {
     abortRef.current = new AbortController();
     try {
       // Same real chat endpoint the user-facing chat uses.
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — auth কেন্দ্রীয়।
-      const res = await apiClient.postStream('/api/chat/stream', {
-        message: prompt,
-        project_id: "admin_sandbox",
-        idempotency_key: crypto.randomUUID(),
-      }, { signal: abortRef.current.signal });
-      if (!res.body) throw new Error('Chat request failed: no stream body');
+      // Issue #2522: raw fetch -> apiClient.stream — auth/timeout/queue + abort passthrough।
+      const res = await apiClient.stream('/api/chat/stream', {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: prompt,
+          project_id: "admin_sandbox",
+          idempotency_key: crypto.randomUUID(),
+        }),
+        signal: abortRef.current.signal,
+      });
+      if (!res.ok || !res.body) throw new Error(`Chat request failed: ${res.status}`);
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let assistantContent = "";

@@ -32,56 +32,24 @@ export async function sendMessageStream(
   abortSignal?: AbortSignal,
 ): Promise<void> {
 
-  // Issue #1680 (streaming cold-start retry): the stream endpoint had no
-  // retry — a single 502/503/504 (Render free-tier cold start) or transient
-  // network blip killed the chat. Before the stream starts, we now retry
-  // connection-level failures up to 4 attempts with exponential backoff +
-  // jitter (mirrors apiClient.throttledFetch #1679). Once the reader is
-  // obtained, no retry happens — duplicate tokens would corrupt the UI.
-  // বাংলা: স্ট্রিম শুরু হওয়ার আগে 50x/নেটওয়ার্ক ত্রুটিতে সূচকীয় ব্যাকঅফসহ
-  // রিট্রাই; স্ট্রিম শুরু হওয়ার পর কোনো রিট্রাই নেই (ডুপ্লিকেট টোকেন এড়াতে)।
-  const STREAM_MAX_ATTEMPTS = 4;
-
   try {
     // 🔒 SECURITY FIX: Now includes authentication headers (previously missing)
     // FIX (API-contract audit): migrated to the hardened SSE pipeline
     // (POST /api/v1/stream/chat) — state machine, 15s heartbeat, chunk
     // sanitization. Body sends { message }; backend harmonizes to `prompt`.
-    let res: Response | null = null;
-    let lastHttpError = '';
+    // Issue #2522: manual retry loop সরানো হলো — apiClient.stream() নিজেই
+    // throttledFetch-এর ৪-attempt exponential backoff + jitter (network + 50x,
+    // cold-start) দেয়, আর caller abort হলে সঙ্গে সঙ্গে বেরিয়ে যায়। একই জায়গা থেকে
+    // auth header, timeout ও concurrency queue-ও নিশ্চিত হয়।
+    const res = await apiClient.stream('/api/v1/stream/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message }),
+      signal: abortSignal,
+    });
 
-    for (let attempt = 1; attempt <= STREAM_MAX_ATTEMPTS; attempt++) {
-      let attemptRes: Response;
-      try {
-        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — auth header
-        // কেন্দ্রীয়; নিচের নিজস্ব retry-loop (৫০২-৫০৪ backoff) অপরিবর্তিত রেখেছি।
-        attemptRes = await apiClient.postStream('/api/v1/stream/chat', { message }, { signal: abortSignal });
-      } catch (err) {
-        if (abortSignal?.aborted) throw err;  // user cancelled — not retryable
-        if (attempt >= STREAM_MAX_ATTEMPTS) throw err;
-        lastHttpError = (err as Error)?.message ?? 'network error';
-        const delayMs = Math.round(Math.pow(2, attempt) * 1000 + Math.random() * 1000);
-        await new Promise(resolve => setTimeout(resolve, delayMs));
-        continue;
-      }
-
-      if (attemptRes.ok) {
-        res = attemptRes;
-        break;
-      }
-
-      const retryable = attemptRes.status >= 502 && attemptRes.status <= 504;
-      lastHttpError = `HTTP ${attemptRes.status}: ${attemptRes.statusText}`;
-      if (!retryable || attempt >= STREAM_MAX_ATTEMPTS) {
-        onError(lastHttpError);
-        return;
-      }
-      const delayMs = Math.round(Math.pow(2, attempt) * 1000 + Math.random() * 1000);
-      await new Promise(resolve => setTimeout(resolve, delayMs));
-    }
-
-    if (!res) {
-      onError(lastHttpError || 'Stream connection failed after retries');
+    if (!res.ok) {
+      onError(`HTTP ${res.status}: ${res.statusText}`);
       return;
     }
 
@@ -123,14 +91,10 @@ export async function sendMessageStream(
     }
     if (pending) consumeLine(pending);
     // Prompt-to-Action metadata fallback (legacy path only)
+    // Issue #2522: raw fetch → apiClient.post — auth, timeout, queue, error mapping ক্লায়েন্টেই।
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — auth কেন্দ্রীয় ট্রান্সপোর্টে
-      const actionData = await apiClient.post<{ action?: ChatResponse['action'] }>('/api/chat/prompt-action', { message }).catch(() => null);
-      if (actionData) {
-        onDone(actionData.action);
-      } else {
-        onDone(undefined);
-      }
+      const actionData = await apiClient.post<{ action?: ChatResponse['action'] }>('/api/chat/prompt-action', { message });
+      onDone(actionData.action);
     } catch {
       onDone(undefined);
     }

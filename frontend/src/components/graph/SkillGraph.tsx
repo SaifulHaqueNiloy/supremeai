@@ -1,5 +1,4 @@
 import { useEffect, useCallback } from 'react';
-import { apiClient } from '../../services/apiClient';
 import {
   ReactFlow,
   type Node,
@@ -21,6 +20,7 @@ interface GraphData {
   edges: { id: string; source: string; target: string; label: string }[];
 }
 
+import { apiClient } from '../../services/apiClient';
 
 export default function SkillGraph() {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
@@ -29,7 +29,8 @@ export default function SkillGraph() {
   // বাংলা মন্তব্য: ব্যাকএন্ড থেকে গ্রাফ ডেটা ফেচ করার ফাংশন
   const fetchGraphData = async () => {
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get — auth header কেন্দ্রীয় ট্রান্সপোর্ট থেকে
+      // Issue #2522: raw fetch -> apiClient.get — auth/timeout/queue অটোমেটিক
+      // (manual Bearer header আর দরকার নেই, ক্লায়েন্ট token storage থেকে নেয়)।
       const data = await apiClient.get<GraphData>('/api/v1/graph/skills');
 
       // বাংলা মন্তব্য: নোডগুলোকে একটি জ্যামিতিক বৃত্তাকার (Circular) লেআউটে সাজানোর লজিক

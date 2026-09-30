@@ -82,7 +82,7 @@ export function MeshAgentsPanel() {
 
   const fetchNodes = useCallback(async () => {
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get — !ok হলে ApiError নিজেই ফেলে
+      // Issue #2522: raw fetch -> apiClient.get — auth হেডার এখন যাচ্ছে (আগে ছিল না), timeout/queue সহ।
       const data = await apiClient.get<{ nodes?: MeshNode[] } | MeshNode[]>('/api/v1/nodes');
       const list = Array.isArray(data) ? data : (data.nodes ?? []);
       if (mountedRef.current) {
@@ -115,7 +115,7 @@ export function MeshAgentsPanel() {
       // Optimistic update
       setNodes(prev => prev.map(n => (n.node_id === nodeId ? { ...n, role } : n)));
       try {
-        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.patch — ApiError-এ detail বার্তা আসে
+        // Issue #2522: raw fetch -> apiClient.patch — non-ok হলে ApiError (status সহ)।
         const data = await apiClient.patch<{ node?: MeshNode }>(`/api/v1/nodes/${encodeURIComponent(nodeId)}`, { role });
         if (data.node) {
           setNodes(prev => prev.map(n => (n.node_id === nodeId ? data.node! : n)));

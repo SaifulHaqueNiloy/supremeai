@@ -1,7 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import type { ChatMessage } from '../types/customer';
-// বাংলা মন্তব্য: getAuthHeaders import — streaming fetch এ Authorization header মিসিং ছিল, এখন যোগ হলো
 import { apiClient } from '../services/apiClient';
 
 
@@ -68,16 +67,21 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       abortRef.current = new AbortController();
 
       try {
-        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — auth header
-        // কেন্দ্রীয়ভাবে যায়, আগের ম্যানুয়াল getAuthHeaders-spread আর লাগে না;
-        // reader-loop অপরিবর্তিত (কাঁচা Response ফেরায়)।
-        const res = await apiClient.postStream('/api/chat/stream', {
-          message: userMsg.content,
-          project_id: projectId,
-          idempotency_key: crypto.randomUUID(),
-        }, { signal: abortRef.current.signal });
+        // Issue #2522: raw fetch -> apiClient.stream — auth/timeout/queue + abort
+        // signal passthrough (AbortSignal.any) ক্লায়েন্ট নিজেই সামলায়।
+        const res = await apiClient.stream('/api/chat/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userMsg.content,
+            project_id: projectId,
+            idempotency_key: crypto.randomUUID(),
+          }),
+          signal: abortRef.current.signal,
+        });
 
-        // postStream !ok হলে নিজেই ApiError ফেলে — এখানে শুধু body চেক
+        if (!res.ok) throw new Error(`Chat request failed: ${res.status}`);
+
         const reader = res.body?.getReader();
         const decoder = new TextDecoder();
         let assistantContent = '';
@@ -159,12 +163,11 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       }
     } else {
       try {
-        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — নন-স্ট্রিমিং পাথ
-        const data = await apiClient.post<{ response?: string; message?: string; model?: string; tokens?: number }>('/api/chat', {
-          message: userMsg.content,
-          project_id: projectId,
-        });
-
+        // Issue #2522: raw fetch -> apiClient.post — non-ok হলে ApiError throw হয়।
+        const data = await apiClient.post<{ response?: string; message?: string; model?: string; tokens?: number }>(
+          '/api/chat',
+          { message: userMsg.content, project_id: projectId },
+        );
         const assistantMsg: ChatMessage = {
           id: crypto.randomUUID(),
           role: 'assistant',

@@ -6,8 +6,9 @@ import { getAuth } from 'firebase/auth';
 // Helper to fetch configuration dynamically or fallback to Vite env vars
 const getFirebaseConfig = async () => {
   try {
-    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: স্ট্যাটিক ফায়ারবেজ কনফিগ ফেচ — API কল নয়
-    // eslint-disable-next-line no-restricted-syntax
+    // Justified raw fetch (Issue #2522): Firebase Hosting-এর নিজস্ব init
+    // endpoint — আমাদের backend API নয়; apiClient-এর auth/base-URL/queue
+    // এখানে প্রযোজ্য নয়।
     const res = await fetch('/__/firebase/init.json');
     if (res.ok) {
       const data = await res.json();

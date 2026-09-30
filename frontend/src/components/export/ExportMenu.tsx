@@ -1,5 +1,4 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { apiClient } from '../../services/apiClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Download,
@@ -10,6 +9,7 @@ import {
   File,
 } from 'lucide-react';
 import { globalShowToastRef } from '../../contexts/ToastContext';
+import { apiClient } from '../../services/apiClient';
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -83,18 +83,25 @@ export default function ExportMenu({ conversationId, conversationTitle }: Export
     setIsOpen(false);
 
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.download — auth কেন্দ্রীয়,
-      // blob + filename এক জায়গায়; POST-blob options.method দিয়ে।
-      const { blob: exportBlob } = await apiClient.download('/api/chat/export', {
+      // Fetch export blob directly
+
+      // Issue #2522: raw fetch -> apiClient.stream — token ক্লায়েন্ট বসায়,
+      // blob download-এর জন্য raw Response দরকার।
+      const blobResponse = await apiClient.stream('/api/chat/export', {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversation_id: conversationId,
           format: option.format,
         }),
       });
 
-      // download() !ok হলে নিজেই ApiError ফেলে — blob সরাসরি এসেছে
-      const url = window.URL.createObjectURL(exportBlob);
+      if (!blobResponse.ok) {
+        throw new Error(`Export failed with status ${blobResponse.status}`);
+      }
+
+      const blob = await blobResponse.blob();
+      const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       const safeTitle = (conversationTitle || 'conversation').replace(/[^a-z0-9]/gi, '_').toLowerCase();
       link.href = url;

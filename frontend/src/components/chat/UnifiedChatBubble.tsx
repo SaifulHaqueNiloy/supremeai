@@ -116,16 +116,13 @@ export function UnifiedChatBubble({
       } else if (act.type === 'deploy') {
         setActionStatus('🚀 Deploying...');
         try {
-          // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — admin token getAuthHeaders থেকে
-          try {
-            const data = await apiClient.post<{ message?: string }>('/admin-api/deploy', { code: content, filename: filename || 'component.tsx' });
-            setActionStatus(`✅ ${data.message || 'Deployed!'}`);
-          } catch (deployErr) {
-            setActionStatus(`❌ Deploy failed: ${deployErr instanceof Error ? deployErr.message : 'server error'}.`);
-            throw deployErr;
-          }
+          // Issue #2522: raw fetch -> apiClient.post — admin token ক্লায়েন্ট নিজেই বসায়।
+          const data = await apiClient.post<{ message?: string }>('/admin-api/deploy', {
+            code: content, filename: filename || 'component.tsx',
+          });
+          setActionStatus(`✅ ${data.message || 'Deployed!'}`);
         } catch (e: unknown) {
-          setActionStatus(e instanceof Error ? `❌ Deploy failed: ${e.message}` : '❌ Deploy failed');
+          setActionStatus(e instanceof Error ? `❌ Deploy failed: ${e.message}` : '❌ Deploy failed (unauthorized or server error)');
         }
       } else if (act.type === 'share') {
         setActionStatus('🔗 Share link copied!');
