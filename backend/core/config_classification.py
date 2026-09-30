@@ -2439,13 +2439,9 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({"backend", "security"}),
         description="Admin token used by Telegram integrations to authenticate against the Tower service.",
     ),
-    ConfigSpec(
-        "TOWER_AUTH_TOKEN",
-        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
-        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
-        frozenset({"client", "security"}),
-        description="Authentication token for node client connecting to Tower service.",
-    ),
+    # ROOT-CAUSE FIX (#2722): TOWER_AUTH_TOKEN removed — was declared in
+    # .env.example but never provisioned in Infisical + never read by any
+    # client. Canonical tower auth is MCP_API_KEY (agent) + MCP_ADMIN_KEY (admin).
     ConfigSpec(
         "V0_API_KEY",
         frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
