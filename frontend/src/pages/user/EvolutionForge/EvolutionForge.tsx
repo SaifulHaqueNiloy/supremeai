@@ -22,7 +22,6 @@ import TaskNode from './nodes/TaskNode';
 import { ForgeSidebar } from './ForgeSidebar';
 import { useForgeAutosave } from './hooks/useForgeAutosave';
 import { DebateOverlay } from './DebateOverlay';
-import { getApiBaseUrl } from '../../../utils/api';
 import { apiClient } from '../../../services/apiClient';
 import { getAdminToken, getUserToken } from '../../../services/tokenStorage';
 import { eventBus, Events } from '../../../lib/componentEventBus';
@@ -98,12 +97,11 @@ const EvolutionForgeCanvas = () => {
 
     const connectSSE = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/v1/swarm/stream`, {
-          headers: { Authorization: `Bearer ${token}` },
-          signal: abortController.signal,
-        });
-
-        if (!response.ok || !response.body) return; // Endpoint optional — fail silently
+        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.getStream — SSE GET স্ট্রিম;
+        // endpoint optional, তাই catch-এ নীরব থাকা যায়।
+        const response = await apiClient.getStream('/api/v1/swarm/stream', { signal: abortController.signal })
+          .catch(() => null);
+        if (!response?.body) return; // Endpoint optional — fail silently
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();

@@ -1,9 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import type { ChatMessage } from '../types/customer';
-import { getApiBaseUrl } from '../utils/api';
 // বাংলা মন্তব্য: getAuthHeaders import — streaming fetch এ Authorization header মিসিং ছিল, এখন যোগ হলো
-import { getAuthHeaders } from '../services/apiClient';
+import { apiClient } from '../services/apiClient';
 
 
 interface UseChatOptions {
@@ -69,20 +68,16 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       abortRef.current = new AbortController();
 
       try {
-        const res = await fetch(`${getApiBaseUrl()}/api/chat/stream`, {
-          method: 'POST',
-          // বাংলা মন্তব্য: await getAuthHeaders() যোগ — আগে streaming fetch তে Authorization header Promise Unhandled ছিল
-          headers: { ...(await getAuthHeaders()), 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: userMsg.content,
-            project_id: projectId,
-            idempotency_key: crypto.randomUUID(),
-          }),
-          signal: abortRef.current.signal,
-        });
+        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — auth header
+        // কেন্দ্রীয়ভাবে যায়, আগের ম্যানুয়াল getAuthHeaders-spread আর লাগে না;
+        // reader-loop অপরিবর্তিত (কাঁচা Response ফেরায়)।
+        const res = await apiClient.postStream('/api/chat/stream', {
+          message: userMsg.content,
+          project_id: projectId,
+          idempotency_key: crypto.randomUUID(),
+        }, { signal: abortRef.current.signal });
 
-        if (!res.ok) throw new Error(`Chat request failed: ${res.status}`);
-
+        // postStream !ok হলে নিজেই ApiError ফেলে — এখানে শুধু body চেক
         const reader = res.body?.getReader();
         const decoder = new TextDecoder();
         let assistantContent = '';
@@ -164,19 +159,12 @@ export function useChat(options: UseChatOptions = {}): UseChatReturn {
       }
     } else {
       try {
-        const res = await fetch(`${getApiBaseUrl()}/api/chat`, {
-          method: 'POST',
-          // বাংলা মন্তব্য: non-streaming path এও await auth header যোগ হলো
-          headers: { ...(await getAuthHeaders()), 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: userMsg.content,
-            project_id: projectId,
-          }),
+        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — নন-স্ট্রিমিং পাথ
+        const data = await apiClient.post<{ response?: string; message?: string; model?: string; tokens?: number }>('/api/chat', {
+          message: userMsg.content,
+          project_id: projectId,
         });
 
-        if (!res.ok) throw new Error(`Chat request failed: ${res.status}`);
-
-        const data = await res.json();
         const assistantMsg: ChatMessage = {
           id: crypto.randomUUID(),
           role: 'assistant',

@@ -146,6 +146,8 @@ export const ChatInterface: React.FC = () => {
         const token =
           getUserToken() ||
           getAdminToken();
+        // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: TTS অডিও ব্লব-রেসপন্স — JSON ট্রান্সপোর্ট প্রযোজ্য নয়
+        // eslint-disable-next-line no-restricted-syntax
         const res = await fetch(
           `${getApiBaseUrl()}/api/voice/stream_audio?text=${encodeURIComponent(text.slice(0, 1000))}`,
           { headers: token ? { Authorization: `Bearer ${token}` } : undefined }

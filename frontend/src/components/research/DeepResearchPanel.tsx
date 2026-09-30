@@ -15,9 +15,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
-import { getApiBaseUrl } from '../../utils/api';
 import { safeUrl } from '../../lib/safeUrl';
-import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 import { globalShowToastRef } from '../../contexts/ToastContext';
 import { parseResearchSseLine } from './researchEventContract';
 
@@ -161,27 +159,19 @@ export default function DeepResearchPanel() {
 
     try {
       // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
-      const token = getUserToken() || getAdminToken();
       // Issue #452 fix: window.location.origin breaks whenever the API lives on
       // a different origin than the frontend — use the canonical base URL
       // helper like every other panel.
-      const baseUrl = getApiBaseUrl();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — SSE POST;
+      // Accept-header ও signal options-এ যায়, auth কেন্দ্রীয়।
+      const response = await apiClient.postStream('/api/research/deep/stream',
+        { query: query.trim() },
+        {
+          headers: { Accept: 'text/event-stream' },
+          signal: abortRef.current.signal,
+        });
 
-      const response = await fetch(`${baseUrl}/api/research/deep/stream`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-          Accept: 'text/event-stream',
-        },
-        body: JSON.stringify({ query: query.trim() }),
-        signal: abortRef.current.signal,
-      });
-
-      if (!response.ok) {
-        throw new Error(`Research request failed: ${response.status}`);
-      }
-
+      // postStream !ok হলে নিজেই ApiError ফেলে — শুধু body চেক
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No response body');
 

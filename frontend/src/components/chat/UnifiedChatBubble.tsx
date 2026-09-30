@@ -1,6 +1,4 @@
 import { useState } from 'react';
-import { getApiBaseUrl } from '../../utils/api';
-import { adminTokenStore } from '../../services/adminTokenStore';
 import { apiClient } from '../../services/apiClient';
 
 // --- Bangla comment: UnifiedChatBubble-এ action button-এর জন্য প্রপস ---
@@ -118,19 +116,13 @@ export function UnifiedChatBubble({
       } else if (act.type === 'deploy') {
         setActionStatus('🚀 Deploying...');
         try {
-          const res = await fetch(`${getApiBaseUrl()}/admin-api/deploy`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${adminTokenStore.getRawToken()}`
-            },
-            body: JSON.stringify({ code: content, filename: filename || 'component.tsx' })
-          });
-          if (res.ok) {
-            const data = await res.json();
+          // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — admin token getAuthHeaders থেকে
+          try {
+            const data = await apiClient.post<{ message?: string }>('/admin-api/deploy', { code: content, filename: filename || 'component.tsx' });
             setActionStatus(`✅ ${data.message || 'Deployed!'}`);
-          } else {
-            setActionStatus('❌ Deploy failed (unauthorized or server error).');
+          } catch (deployErr) {
+            setActionStatus(`❌ Deploy failed: ${deployErr instanceof Error ? deployErr.message : 'server error'}.`);
+            throw deployErr;
           }
         } catch (e: unknown) {
           setActionStatus(e instanceof Error ? `❌ Deploy failed: ${e.message}` : '❌ Deploy failed');

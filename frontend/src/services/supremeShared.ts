@@ -97,6 +97,8 @@ export function apiCall(options: {
   if (typeof window !== 'undefined' && window.supremeDesktopAPI) {
     return window.supremeDesktopAPI.apiCall(options);
   }
+  // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: ডেস্কটপ (Electron) প্ল্যাটফর্ম-ইন্টিগ্রেশন র‍্যাপার — নিজস্ব ট্রান্সপোর্ট প্রযোজন
+  // eslint-disable-next-line no-restricted-syntax
   return getAuthHeaders().then((authHeaders) => fetch(`${getApiBaseUrl()}${options.endpoint}`, {
     method: options.method || 'GET',
     headers: { 'Content-Type': 'application/json', ...authHeaders, ...(options.headers || {}) },

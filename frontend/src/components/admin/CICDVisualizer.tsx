@@ -4,8 +4,6 @@ import { Play, RotateCcw, FlaskConical } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import { useCIReports } from '../../hooks/useAdminApi';
-import { getApiBaseUrl } from '../../utils/api';
-import { adminTokenStore } from '../../services/adminTokenStore';
 import { apiClient } from '../../services/apiClient';
 import { CIDashboard } from './ci/CIDashboard';
 import { RenderPreflightWidget } from './RenderPreflightWidget';
@@ -61,19 +59,13 @@ export function CICDVisualizer() {
 
   const handleDeploy = async () => {
     try {
-      const API_BASE = getApiBaseUrl();
-      const res = await fetch(`${API_BASE}/admin-api/deploy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminTokenStore.getRawToken()}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — admin token getAuthHeaders থেকে
+      try {
+        const data = await apiClient.post<{ message?: string }>('/admin-api/deploy');
         alert(`✅ ${data.message || 'Deployment triggered successfully!'}`);
-      } else {
-        alert('❌ Deployment failed (unauthorized or server error).');
+      } catch (deployErr) {
+        alert(`❌ Deployment failed: ${deployErr instanceof Error ? deployErr.message : 'unauthorized or server error'}.`);
+        throw deployErr;
       }
     } catch (e: any) {
       alert(`❌ Deployment failed: ${e.message}`);
