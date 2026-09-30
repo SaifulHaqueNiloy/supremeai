@@ -53,6 +53,9 @@ function calculateBackoff(attempt: number, config: RetryConfig): number {
 /**
  * 🔬 Enhanced fetchWithRetry with Circuit Breaker integration
  */
+// Justified raw fetch (Issue #2522): এটি নিচের প্রিমিটিভ লেয়ার — apiClient
+// নিজেই এই মডিউলের getApiBaseUrl import করে, তাই উল্টোদিকে apiClient
+// ব্যবহার করলে circular dependency হতো। কেবল এই ফাইলে bare fetch অনুমোদিত।
 export async function fetchWithRetry(
   url: string,
   options: RequestInit = {},
@@ -64,8 +67,6 @@ export async function fetchWithRetry(
   for (let attempt = 0; attempt <= config.maxRetries; attempt++) {
     try {
       // Circuit breaker protection
-      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: বেস-URL রেজলভার + লেগেসি fetch র‍্যাপার — কোর ইউটিলিটি
-      // eslint-disable-next-line no-restricted-syntax
       const response = await apiCircuit.execute(() => fetch(url, options));
 
       // Don't retry on success or non-retryable codes

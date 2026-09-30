@@ -94,8 +94,9 @@ export class RouteBoundary extends Component<RouteBoundaryProps, RouteBoundarySt
     console.error('[RouteBoundary] Uncaught error:', error, errorInfo);
 
     try {
-      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: ক্র্যাশ-টাইম টেলিমেট্রি — ন্যূনতম নির্ভরতা
-      // eslint-disable-next-line no-restricted-syntax
+      // Justified raw fetch (Issue #2522): keepalive:true unload-beacon —
+      // apiClient-এর concurrency queue দিয়ে গেলে page unload-এ কল কখনোই আগুন
+      // নাও জ্বলতে পারে; error-report নীরব fire-and-forget-ই সঠিক প্রিমিটিভ।
       fetch(`${getApiBaseUrl()}/api/telemetry/frontend-error`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

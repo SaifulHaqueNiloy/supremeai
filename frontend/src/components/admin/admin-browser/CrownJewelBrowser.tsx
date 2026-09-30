@@ -1,4 +1,3 @@
-import { apiClient } from '../../../services/apiClient';
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 
 import { componentEventBus } from '../../../lib/componentEventBus';
@@ -23,6 +22,7 @@ import type {
   HistoryEntry,
   SecurityScanResult,
 } from './types';
+import { apiClient } from '../../../services/apiClient';
 
 // ════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
@@ -183,7 +183,7 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
         tabId: targetTabId
       });
 
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post (fire-and-forget, catch অক্ষত)
+      // Issue #2522: raw fetch -> apiClient.post (fire-and-forget ইচ্ছাকৃত)।
       apiClient.post('/api/browser/browse-session', { url: normalizedUrl, timestamp: Date.now(), tabId: targetTabId })
         .catch((error) => {
           console.warn('[browser] browse-session persistence failed', error);

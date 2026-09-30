@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
-import { apiClient } from '../../services/apiClient';
 import { Card, Badge } from '../ui';
 import { Smartphone, Tablet, RefreshCw } from 'lucide-react';
 import { getApiBaseUrl } from '../../utils/api';
+import { apiClient } from '../../services/apiClient';
 
 // Issue #1669 (CRITICAL): JWT কখনো iframe URL-এ যায় না। প্রতিটি external
 // render-এর আগে header-auth দিয়ে POST /api/browser/render-ticket কল হয়;
@@ -10,9 +10,12 @@ import { getApiBaseUrl } from '../../utils/api';
 // JWT/history/log-leak-এর কোনো পথ নেই।
 const fetchRenderTicket = async (): Promise<string | null> => {
   try {
-    // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — !ok হলে throw, catch → null
-    const data = await apiClient.post<{ ticket?: unknown }>('/api/browser/render-ticket').catch(() => null);
-    const t = data?.ticket;
+    // Issue #2522: raw fetch -> apiClient.stream — raw Response দরকার (status +
+    // json), auth/timeout/queue অটোমেটিক।
+    const res = await apiClient.stream('/api/browser/render-ticket', { method: 'POST' });
+    if (!res.ok) return null;
+    const data: unknown = await res.json();
+    const t = (data as { ticket?: unknown })?.ticket;
     return typeof t === 'string' && t.length > 0 ? t : null;
   } catch {
     return null;

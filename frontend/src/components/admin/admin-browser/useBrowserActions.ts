@@ -1,11 +1,11 @@
-import { apiClient } from '../../../services/apiClient';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 
 import { componentEventBus } from '../../../lib/componentEventBus';
-import { useUnifiedStore } from '../../../store/unifiedStore';
+import { useUnifiedStore, type SecurityIssue } from '../../../store/unifiedStore';
 
 import { getPageContent, formatLinksFromData, formatIssuesFromData } from './formatHelpers';
 import type { AIBrowserAction, BrowserTab, ConsoleMessage, DeviceMode, SecurityScanResult } from './types';
+import { apiClient } from '../../../services/apiClient';
 
 // ════════════════════════════════════════════════════════════════════
 // BROWSER ACTIONS HOOK
@@ -53,12 +53,8 @@ export function useBrowserActions({
     try {
       addConsoleMessage('info', `🤖 Running AI action: ${action.type}...`);
 
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — auth/timeout/error-normalization কেন্দ্রীয়
-      const data = await apiClient.post<{
-          response?: string; summary?: string; analysis?: string;
-          links?: Record<string, unknown>[]; issues?: Record<string, unknown>[];
-          criticalIssues?: string[]; dom?: unknown;
-        }>(
+      // Issue #2522: raw fetch -> apiClient.post — timeout/queue/auth অটোমেটিক।
+      const data = await apiClient.post<{ response?: string; summary?: string; analysis?: string; links?: Record<string, unknown>[]; issues?: Record<string, unknown>[]; criticalIssues?: string[] }>(
         '/api/browser/ai-action',
         {
           action: action.type,
@@ -80,14 +76,15 @@ export function useBrowserActions({
           setAiResponse(data.response || data.analysis || 'Analysis complete');
           break;
         case 'extract_links':
-          setAiResponse(formatLinksFromData(data.links || []));
+          setAiResponse(formatLinksFromData(data.links ?? []));
           break;
         case 'find_issues':
-          setAiResponse(formatIssuesFromData(data.issues || []));
+          setAiResponse(formatIssuesFromData(data.issues ?? []));
 
           // ✅ Auto-create alert for critical issues
-          if ((data.criticalIssues?.length ?? 0) > 0) {
-            (data.criticalIssues ?? []).forEach((issue: string) => {
+          {
+            const critical = data.criticalIssues ?? [];
+            critical.forEach((issue: string) => {
               addAlert({ severity: 'error', source: 'Browser-AI', message: issue });
             });
           }
@@ -123,23 +120,27 @@ export function useBrowserActions({
       // ✅ REAL SECURITY SCAN VIA BACKEND
       addConsoleMessage('info', '🔒 Initiating security scan...');
 
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post
-      // বাংলা মন্তব্য: ব্যাকএন্ড ইস্যু-তালিকা স্ট্রিং-অ্যারে হিসেবে ফেরায়; unifiedStore-এর
-      // SecurityIssue[] স্লটে যাওয়ার সময় আগের (untyped-json) আচরণই বজায় রাখতে cast।
-      const result = await apiClient.post<{ score?: number; issues?: string[] }>('/api/browser/security-scan', { url: activeTab?.url });
+      // Issue #2522: raw fetch -> apiClient.post।
+      const result = await apiClient.post<{ score?: number; issues?: string[] }>(
+        '/api/browser/security-scan',
+        { url: activeTab?.url }
+      );
 
-      const scanResult = {
-        score: result.score || 0,
-        issues: result.issues || []
+      const scanResult: SecurityScanResult = {
+        score: result.score ?? 0,
+        issues: result.issues ?? []
       };
 
       setSecurityScanResult(scanResult);
 
       // ✅ UPDATE UNIFIED STORE
+      // NOTE (Issue #2522): store-এর SecurityScanResult.issues (SecurityIssue[])
+      // আর UI-র types.ts SecurityScanResult.issues (string[]) — দুটি স্কিমা আগে
+      // raw `any` দিয়ে লুকানো ছিল; runtime behavior অপরিবর্তিত রেখে সীমিত cast।
       setLastSecurityScan({
         url: activeTab?.url || '',
         score: scanResult.score,
-        issues: scanResult.issues as unknown as import('../../../store/unifiedStore').SecurityIssue[],
+        issues: scanResult.issues as unknown as SecurityIssue[],
         timestamp: Date.now()
       });
 
@@ -183,9 +184,8 @@ export function useBrowserActions({
       addConsoleMessage('log', '📸 Capturing screenshot...');
       setIsLoading(true);
 
-      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: screenshot ব্লব-রেসপন্স — apiClient JSON-envelope পার্স করে, ব্লব নয়
-      // eslint-disable-next-line no-restricted-syntax
-      const response = await fetch('/api/browser/screenshot', {
+      // Issue #2522: raw fetch -> apiClient.stream (raw Response দরকার — blob)।
+      const response = await apiClient.stream('/api/browser/screenshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -209,7 +209,7 @@ export function useBrowserActions({
 
       // ✅ OPTIONAL: Save to gallery (non-blocking)
       if (userId) {
-        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post (fire-and-forget, catch অক্ষত)
+        // Issue #2522: raw fetch -> apiClient.post (fire-and-forget ইচ্ছাকৃত)।
         apiClient.post('/api/browser/screenshots', { url: activeTab?.url, timestamp: Date.now() })
           .catch((error) => {
             console.warn('[browser] screenshot persistence failed', error);

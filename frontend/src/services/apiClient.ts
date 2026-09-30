@@ -252,12 +252,23 @@ const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = D
   const fetchOptions: RequestInit = { ...options };
   const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');
   if (!isTest) {
-    fetchOptions.signal = controller.signal;
+    // Issue #2522: কলার নিজের signal (stop button / probe timeout) পাঠালে তা
+    // timeout signal-এর সাথে combine হয় — দুটির যেকোনো একটি ফায়ার করলেই abort।
+    // আগে কলারের signal নীরবে ওভাররাইট হয়ে যেত, ফলে UI abort কাজ করত না।
+    const callerSignal = options.signal;
+    const signalAny = typeof AbortSignal !== 'undefined'
+      ? (AbortSignal as unknown as { any?: (...signals: AbortSignal[]) => AbortSignal }).any
+      : undefined;
+    if (callerSignal && callerSignal.aborted) {
+      fetchOptions.signal = callerSignal;
+    } else if (callerSignal && typeof signalAny === 'function') {
+      fetchOptions.signal = signalAny.call(AbortSignal, controller.signal, callerSignal);
+    } else {
+      fetchOptions.signal = controller.signal;
+    }
   }
 
   try {
-    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: কেন্দ্রীয় ট্রান্সপোর্ট নিজেই — fetch-এর একমাত্র বৈধ বাসস্থান
-    // eslint-disable-next-line no-restricted-syntax
     return await fetch(url, fetchOptions);
   } catch (e) {
     if (controller.signal.aborted) {
@@ -294,6 +305,9 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
         }
         return res;
       } catch (e: unknown) {
+        // Issue #2522: কলার abort (stop button / unmount) হলে retry অর্থহীন ও
+        // ক্ষতিকর — বাতিল করা অনুরোধ ৪ বার পাঠানো হতো। সঙ্গে সঙ্গে ছড়িয়ে দিই।
+        if (fetchOptions.signal?.aborted) throw e;
         attempts++;
         if (attempts >= MAX_ATTEMPTS) {
           if (isDev()) console.error(`[Queue Interceptor] Network failure for ${currentUrl} after ${MAX_ATTEMPTS} attempts:`, e);
@@ -381,8 +395,6 @@ const tryRefreshSession = async (): Promise<boolean> => {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
-        // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: কেন্দ্রীয় ট্রান্সপোর্ট নিজেই — fetch-এর একমাত্র বৈধ বাসস্থান
-        // eslint-disable-next-line no-restricted-syntax
         const res = await fetch(buildUrl(getApiBaseUrl(REFRESH_PATH), REFRESH_PATH), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -536,68 +548,6 @@ export const apiClient = {
     });
   },
 
-  // #2522 batch-1: raw fetch() sweep-এর জন্য দুটি বিশেষ ট্রান্সপোর্ট —
-  // postStream: SSE/chunk streaming (res.body.getReader() ভোক্তারা) — JSON
-  // envelope পার্স করে না, কাঁচা Response ফেরায় (auth+queue+buildUrl সুবিধা সহ)।
-  postStream: async (path: string, body?: unknown, options?: RequestInit): Promise<Response> => {
-    const authHeaders = await getAuthHeaders();
-    return withAuthRetry(path, async () => {
-      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
-        ...options,
-        method: 'POST',
-        headers: {
-          ...(options?.headers as Record<string, string>),
-          ...authHeaders,
-        },
-        body: body ? JSON.stringify(body) : undefined,
-      });
-      if (!res.ok) throw new ApiError(`HTTP error! status: ${res.status}`, res.status);
-      return res;
-    });
-  },
-
-  // #2522 batch-1: SSE/chunk GET স্ট্রিম (EvolutionForge swarm stream-এর মতো) —
-  // কাঁচা Response ফেরায়, JSON envelope স্পর্শ করে না।
-  getStream: async (path: string, options?: RequestInit): Promise<Response> => {
-    const authHeaders = await getAuthHeaders();
-    return withAuthRetry(path, async () => {
-      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
-        ...options,
-        method: 'GET',
-        headers: {
-          ...(options?.headers as Record<string, string>),
-          ...authHeaders,
-        },
-      });
-      if (!res.ok) throw new ApiError(`HTTP error! status: ${res.status}`, res.status);
-      return res;
-    });
-  },
-
-  // #2522 batch-1: ফাইল ডাউনলোড — Content-Disposition থেকে filename বের করে
-  // { blob, filename } ফেরায় (ExportMenu-র মতো ব্লব ভোক্তাদের জন্য)।
-  // options.method/body দিলে POST-blob ডাউনলোডও চলে (chat export)।
-  download: async (path: string, options?: RequestInit): Promise<{ blob: Blob; filename: string | null }> => {
-    const authHeaders = await getAuthHeaders();
-    delete authHeaders['Content-Type'];
-    const method = options?.method ?? 'GET';
-    return withAuthRetry(path, async () => {
-      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
-        ...options,
-        method,
-        headers: {
-          ...(options?.headers as Record<string, string>),
-          ...authHeaders,
-        },
-      });
-      if (!res.ok) throw new ApiError(`HTTP error! status: ${res.status}`, res.status);
-      const disposition = res.headers.get('Content-Disposition') ?? '';
-      const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(disposition);
-      const filename = match ? decodeURIComponent(match[1] ?? match[2]) : null;
-      return { blob: await res.blob(), filename };
-    });
-  },
-
   delete: async <T>(path: string, options?: RequestInit): Promise<T> => {
     // FIX (P1, review 2026-09-12): options first — see get() above.
     return withAuthRetry(path, async () => {
@@ -626,6 +576,19 @@ export const apiClient = {
     return handleResponse(res);
   },
 
+  // Issue #2522: streaming/raw-response path — SSE, audio, blob download-এর জন্য।
+  // throttledFetch-এর সব সুবিধা (concurrency queue, connect-timeout, cold-start
+  // 50x retry) থাকে, কিন্তু handleResponse/response.json() হয় না — কলার নিজের
+  // মতো body stream পড়ে। `auth: false` দিলে Authorization হেডার যায় না
+  // (public endpoint)। connect-phase timeout শেষ হলে body streaming বন্ধ হয় না —
+  // fetchWithTimeout-এর finally clearTimeout হেডার আসার সাথে সাথেই টাইমার মুছে দেয়।
+  stream: async (path: string, options?: RequestInit & { auth?: boolean }): Promise<Response> => {
+    const { auth = true, ...init } = options ?? {};
+    const headers: Record<string, string> = { ...(init.headers as Record<string, string> | undefined) };
+    if (auth) Object.assign(headers, await getAuthHeaders());
+    return throttledFetch(buildUrl(getApiBaseUrl(path), path), { ...init, headers });
+  },
+
   // 🟢 Non-blocking Telemetry / Background Check (10s timeout, silent fallback)
   // বাংলা মন্তব্য: Telemetry বা Analytics এর জন্য Non-blocking method, যা ফেইল করলে UI ক্র্যাশ করবে না।
   sendTelemetry: async <T>(path: string, body?: unknown, method: 'GET' | 'POST' = 'POST'): Promise<T | null> => {
@@ -633,8 +596,6 @@ export const apiClient = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
 
-      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: কেন্দ্রীয় ট্রান্সপোর্ট নিজেই — fetch-এর একমাত্র বৈধ বাসস্থান
-      // eslint-disable-next-line no-restricted-syntax
       const res = await fetch(buildUrl(getApiBaseUrl(path), path), {
         method,
         headers: await getAuthHeaders(),

@@ -2,7 +2,6 @@
 // বাংলা মন্তব্য: ব্যাকএন্ডের /api/skills/catalog এন্ডপয়েন্ট থেকে
 // রোল-ভিত্তিক স্কিল ক্যাটালগ ফেচ করার সার্ভিস লেয়ার।
 
-import { getApiBaseUrl } from '../utils/api';
 import { apiClient, ApiError } from './apiClient';
 import { eventBus, Events } from '../lib/componentEventBus';
 
@@ -54,15 +53,11 @@ export const fetchSkillCatalog = async (): Promise<CatalogResponse> => {
 
 // বাংলা মন্তব্য: লাইভনেস প্রোব — UI হার্টবিট থেকে /api/v1/live চেক করে
 export const checkLiveness = async (): Promise<boolean> => {
-  const API_BASE = getApiBaseUrl();
+  // Issue #2522: raw fetch → apiClient.get — timeout, retry, queue সব ক্লায়েন্ট থেকে আসে।
+  // non-ok হলে ApiError throw হয় → catch এ false, আগের ok-check সেমান্টিকস অটুট।
   try {
-    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: হেলথ-প্রোব (live) — কিউ-বাইপাস ইচ্ছাকৃত
-    // eslint-disable-next-line no-restricted-syntax
-    const response = await fetch(`${API_BASE}/api/v1/live`, {
-      method: 'GET',
-      headers: { 'Cache-Control': 'no-cache' },
-    });
-    return response.ok;
+    await apiClient.get('/api/v1/live', { headers: { 'Cache-Control': 'no-cache' } });
+    return true;
   } catch {
     return false;
   }
@@ -70,16 +65,12 @@ export const checkLiveness = async (): Promise<boolean> => {
 
 // বাংলা মন্তব্য: রেডিনেস প্রোব — DB ও Redis সহ সম্পূর্ণ dependency চেক
 export const checkReadiness = async (): Promise<{ ready: boolean; subsystems: Record<string, string> }> => {
-  const API_BASE = getApiBaseUrl();
+  // Issue #2522: raw fetch → apiClient.get — non-ok/parse fail উভয়ই degraded রিপোর্ট করে।
   try {
-    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: হেলথ-প্রোব (ready) — কিউ-বাইপাস ইচ্ছাকৃত
-    // eslint-disable-next-line no-restricted-syntax
-    const response = await fetch(`${API_BASE}/api/v1/ready`, {
-      method: 'GET',
+    const data = await apiClient.get<{ subsystems?: Record<string, string> }>('/api/v1/ready', {
       headers: { 'Cache-Control': 'no-cache' },
     });
-    const data = await response.json();
-    return { ready: response.ok, subsystems: data.subsystems || {} };
+    return { ready: true, subsystems: data.subsystems || {} };
   } catch {
     return { ready: false, subsystems: {} };
   }
