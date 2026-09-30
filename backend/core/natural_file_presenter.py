@@ -308,6 +308,15 @@ class NaturalFilePresenter:
             flags=re.IGNORECASE,
         )
 
+        # ৩. বাংলা মন্তব্য: বাইরের মেটা-ডিরেক্টিভ ফিল্টার ('copy this to your ai's chat', 'share this prompt' ইত্যাদি)
+        meta_prompt_leak_patterns = [
+            r"^\s*(?:please\s+)?copy\s+(?:and\s+paste\s+)?this\s+(?:prompt\s+)?(?:in|into|to)\s+(?:your\s+)?(?:ai(?:'s)?|assistant|chat|desired\s+ai(?:'s)?)[^:\n]*[:\n-]*\s*",
+            r"^\s*(?:please\s+)?share\s+this\s+(?:prompt\s+)?(?:with|in)\s+(?:your\s+)?(?:ai(?:'s)?|assistant|chat)[^:\n]*[:\n-]*\s*",
+            r"^\s*(?:prompt\s+to\s+copy|copy\s+the\s+following|paste\s+this\s+below)\s*[:\n-]+\s*",
+        ]
+        for pat in meta_prompt_leak_patterns:
+            text = re.sub(pat, "", text, flags=re.IGNORECASE | re.MULTILINE).strip()
+
         return text
 
     @classmethod

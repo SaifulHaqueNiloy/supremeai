@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-30 19:21 UTC
+- **Date:** 2026-09-30 19:27 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,22 +10,20 @@
   - (see git log for details)
 
 ## Files Changed
-  - `scripts/ci/audit_suite.py`
-  - `backend/core/natural_file_presenter.py`
-  - `backend/api/routes/web_ai_proxy.py`
-  - `scripts/_INDEX.md`
-  - `.github/constitution/rules.yml`
   - `.github/ISSUE_TEMPLATE/agent_task.yml`
-  - `scripts/agents/continuous_agent_loop.py`
-  - `backend/core/prompt_enhancement_engine.py`
-  - `backend/core/web_ai_session_bridge.py`
-  - `backend/tests/core/test_legit_file_presenter.py`
-  - `backend/tests/core/test_prompt_enhancement_engine.py`
   - `tests/unit/test_agent_solution_memory.py`
-  - `scripts/agents/agent_solution_memory.py`
+  - `scripts/_INDEX.md`
+  - `scripts/agents/continuous_agent_loop.py`
+  - `backend/tests/core/test_legit_file_presenter.py`
+  - `backend/core/natural_file_presenter.py`
   - `.github/workflows/pr.yml`
   - `CHECKPOINT.md`
+  - `backend/tests/core/test_prompt_enhancement_engine.py`
+  - `scripts/agents/agent_solution_memory.py`
   - `tests/test_audit_suite.py`
+  - `.github/constitution/rules.yml`
+  - `backend/core/prompt_enhancement_engine.py`
+  - `scripts/ci/audit_suite.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)

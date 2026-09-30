@@ -52,18 +52,12 @@ class PromptEnhancementEngine:
     প্রম্পট অপ্টিমাইজেশন এবং অ্যান্টি-বট ক্যামোফ্লেজ প্রসেসর।
     """
 
-    # বাংলা মন্তব্য: কপি-পেস্ট ও সেকেন্ড ওপিনিয়ন ছদ্মবেশের হিউম্যান ওপেনারস (আইডেন্টিটি ডিক্লেয়ারেশন রোধ সহ)
-    SHARED_PROMPT_CAMOUFLAGE_OPENERS = [
-        "Hey, someone in my team shared this prompt from another chat, can you take a look and help me out?\n\n{prompt}",
-        "Pasting this prompt from another tab to get your take on it:\n\n{prompt}",
-        "I copied this prompt from a colleague's workspace to double-check the logic. Here is what they sent:\n\n{prompt}",
-        "Got this prompt from another chat/assistant, can you solve it or refine it for me?\n\n{prompt}",
-        'Sharing this prompt my friend gave me to review:\n\n"{prompt}"\n\nWhat is the best way to handle this?',
-        "Someone sent me this query earlier. Can you answer this properly?\n\n{prompt}",
-        "Quick sanity check — pasting this from my notes/another chat:\n\n{prompt}",
-        "Hey, check out this prompt someone posted in our channel:\n\n{prompt}\n\nCan you write the code for it?",
-        "Hey, a teammate asked for help with this prompt from their chat. Please provide just the direct code/solution without extra intro or preamble:\n\n{prompt}",
-        "Pasting this prompt from another tab to get a second opinion. Just give the clean implementation directly:\n\n{prompt}",
+    # বাংলা মন্তব্য: মেটা-ডিরেক্টিভ প্যাটার্ন (বাইরের প্রম্পট জেনারেটর বা টেমপ্লেটের লিক হওয়া টেক্সট)
+    META_DIRECTIVE_PATTERNS = [
+        r"^\s*(?:please\s+)?copy\s+(?:and\s+paste\s+)?this\s+(?:prompt\s+)?(?:in|into|to)\s+(?:your\s+)?(?:ai(?:'s)?|assistant|chat|desired\s+ai(?:'s)?)[^:\n]*[:\n-]*\s*",
+        r"^\s*(?:please\s+)?share\s+this\s+(?:prompt\s+)?(?:with|in)\s+(?:your\s+)?(?:ai(?:'s)?|assistant|chat)[^:\n]*[:\n-]*\s*",
+        r"^\s*(?:prompt\s+to\s+copy|copy\s+the\s+following|paste\s+this\s+below)\s*[:\n-]+\s*",
+        r"^\s*prompt\s+for\s+(?:the\s+)?(?:ai|assistant|model)[:\s-]*\s*",
     ]
 
     # বাংলা মন্তব্য: রোবটিক প্রিফিক্স যেগুলো বট ডিটেক্টর সহজে ধরে ফেলে
@@ -100,13 +94,21 @@ class PromptEnhancementEngine:
         clean_prompt = prompt.strip()
         tricks: list[str] = []
 
-        # ধাপ ১: রোবটিক প্রিফিক্স থাকলে তা পরিষ্কার করা
+        # ধাপ ১: মেটা-ডিরেক্টিভ লিক ("copy this to your ai...") মুছে ফেলা
+        for pat in self.META_DIRECTIVE_PATTERNS:
+            if re.search(pat, clean_prompt, flags=re.IGNORECASE | re.MULTILINE):
+                clean_prompt = re.sub(
+                    pat, "", clean_prompt, flags=re.IGNORECASE | re.MULTILINE
+                ).strip()
+                tricks.append("stripped_meta_generator_watermarks")
+
+        # ধাপ ২: রোবটিক প্রিফিক্স থাকলে তা পরিষ্কার করা
         for pat in self.ROBOTIC_PREFIX_PATTERNS:
             if re.search(pat, clean_prompt, flags=re.IGNORECASE):
                 clean_prompt = re.sub(pat, "", clean_prompt, flags=re.IGNORECASE).strip()
                 tricks.append("stripped_robotic_prefix")
 
-        # ধাপ ২: মোড অনুযায়ী স্পেসিফিক ট্রান্সফর্মেশন
+        # ধাপ ৩: মোড অনুযায়ী স্পেসিফিক ট্রান্সফর্মেশন
         if mode == EnhancementMode.STEALTH_CHAT:
             enhanced = self._apply_stealth_chat_camouflage(clean_prompt, tricks)
         elif mode == EnhancementMode.ENHANCE_UI_CLICK:
@@ -126,24 +128,16 @@ class PromptEnhancementEngine:
 
     def _apply_stealth_chat_camouflage(self, prompt: str, tricks: list[str]) -> str:
         """
-        বাংলা মন্তব্য: অন্য চ্যাট বা কলিগের কাছ থেকে প্রম্পট কপি করে পেস্ট করার সাইকোলজিক্যাল কেমোফ্লেজ।
+        বাংলা সারসংক্ষেপ:
+        ------------------
+        ন্যাচারাল হিউম্যান প্রম্পট (Anti-Bot Organic Clean):
+        ১. কোনো কৃত্রিম টেমপ্লেট প্রিফিক্স ('hey someone shared this...') যোগ করা সম্পূর্ণ নিষিদ্ধ,
+           কারণ প্রতি মেসেজে একই টেমপ্লেট থাকলে এআই এটিকে ১০০% বট বলে চিহ্নিত করে।
+        ২. বাইরের প্রম্পট জেনারেটর বা টুলের মেটা-ইনস্ট্রাকশন ('Copy this to your AI...') মুছে ফেলা।
+        ৩. একজন সত্যিকারের ডেভেলপার যেভাবে সরাসরি টু-দ্য-পয়েন্ট চ্যাট করে, ঠিক সেই আসল প্রশ্ন বজায় রাখা।
         """
-        template = self._rng.choice(self.SHARED_PROMPT_CAMOUFLAGE_OPENERS)
-        camouflaged = template.format(prompt=prompt)
-        tricks.append("shared_from_another_chat_camouflage")
-
-        # বাংলা মন্তব্য: র্যান্ডম ক্যাজুয়াল সাইন-অফ বা রিভিউ মার্কার যোগ করা
-        if self._rng.random() < 0.35:
-            closers = [
-                "\n\n(Let me know if anything looks off in this)",
-                "\n\nThanks in advance!",
-                "\n\nPrefer a clean and concise implementation.",
-                "\n\nAny gotchas or edge cases to watch out for?",
-            ]
-            camouflaged += self._rng.choice(closers)
-            tricks.append("casual_human_signoff")
-
-        return camouflaged
+        tricks.append("organic_human_direct_flow")
+        return prompt
 
     def _apply_ui_sparkle_enhancement(
         self, prompt: str, context: EnhancementContext | None, tricks: list[str]

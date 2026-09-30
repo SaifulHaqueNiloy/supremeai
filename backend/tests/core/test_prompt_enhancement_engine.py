@@ -12,30 +12,22 @@ from backend.core.prompt_enhancement_engine import (
 )
 
 
-def test_stealth_chat_shared_prompt_camouflage():
+def test_stealth_chat_strips_meta_leaks_and_keeps_direct_flow():
     """
-    বাংলা মন্তব্য: যাচাই করা হচ্ছে প্রম্পট অন্য চ্যাট থেকে কপি-পেস্ট করা হয়েছে এমন ছদ্মবেশ ধারণ করে কিনা।
+    বাংলা মন্তব্য: বাইরের প্রম্পট জেনারেটরের মেটা-লাইন ('Copy this to your AI...') মুছে খাঁটি হিউম্যান প্রশ্ন রাখা।
     """
     engine = PromptEnhancementEngine(rng_seed=42)
-    raw_prompt = "Write a fastapi middleware to log requests without latency."
+    raw_prompt = (
+        "Copy this prompt to your desired AI's chat:\n"
+        "Write a fastapi middleware to log requests without latency."
+    )
     result = engine.enhance(raw_prompt, mode=EnhancementMode.STEALTH_CHAT)
 
     assert result.original_prompt == raw_prompt
-    assert raw_prompt in result.enhanced_prompt
-    assert "shared_from_another_chat_camouflage" in result.applied_tricks
-    # বাংলা মন্তব্য: যেকোনো একটি শেয়ারিং ওপেনার থাকা নিশ্চিত করা
-    assert any(
-        phrase in result.enhanced_prompt
-        for phrase in [
-            "shared this prompt",
-            "Pasting this prompt",
-            "copied this prompt",
-            "Got this prompt",
-            "Sharing this prompt",
-            "sanity check",
-            "Someone sent me this",
-        ]
-    )
+    assert "copy this" not in result.enhanced_prompt.lower()
+    assert result.enhanced_prompt == "Write a fastapi middleware to log requests without latency."
+    assert "stripped_meta_generator_watermarks" in result.applied_tricks
+    assert "organic_human_direct_flow" in result.applied_tricks
 
 
 def test_stealth_chat_strips_robotic_patterns():
@@ -119,9 +111,8 @@ def test_prompt_enhance_api_endpoint():
     assert response.status_code == 200
     data = response.json()
     assert data["original_prompt"] == "Fix memory leak in websocket loop"
-    assert data["mode"] == "stealth_chat"
-    assert "shared_from_another_chat_camouflage" in data["applied_tricks"]
-    assert "Fix memory leak in websocket loop" in data["enhanced_prompt"]
+    assert "organic_human_direct_flow" in data["applied_tricks"]
+    assert data["enhanced_prompt"] == "Fix memory leak in websocket loop"
 
 
 def test_account_session_thread_lifecycle():

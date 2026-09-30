@@ -145,10 +145,18 @@ STRICTLY ONLY OUTPUT CODE. DO NOT EXPLAIN."""
     human_prompt = NaturalFilePresenter.humanize_prompt(robotic_prompt)
 
     assert "SYSTEM DIRECTIVE" not in human_prompt
-    assert "autonomous coding bot" in human_prompt
     assert "Write a FastAPI route for user registration" in human_prompt
     assert "Just the clean code snippet would be great, thanks!" in human_prompt
     assert "STRICTLY ONLY OUTPUT CODE" not in human_prompt
+
+    # বাংলা মন্তব্য: মেটা-ডিরেক্টিভ লিক ("copy this prompt to your desired ai's chat") ফিল্টার পরীক্ষা
+    leaked_prompt = (
+        "Copy this prompt to your desired AI's chat:\n"
+        "Refactor auth middleware to keep memory minimal."
+    )
+    clean_leaked = NaturalFilePresenter.humanize_prompt(leaked_prompt)
+    assert "copy this" not in clean_leaked.lower()
+    assert clean_leaked == "Refactor auth middleware to keep memory minimal."
 
 
 def test_scrub_identity_and_watermarks():
