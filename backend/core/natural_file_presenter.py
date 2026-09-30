@@ -276,14 +276,9 @@ class NaturalFilePresenter:
         if (
             "copy this to your ai" in text_lower
             or "copy and paste this into your ai" in text_lower
-            or "prompt to run in ai" in text_lower
-            or "copy this prompt for the ai" in text_lower
-            or "pasting this prompt from another workspace" in text_lower
-            or "run this in ai" in text_lower
+            or "prompt to run in your ai" in text_lower
             or "autonomous execution agent" in text_lower
             or "implementation task brief" in text_lower
-            or "execution guidelines" in text_lower
-            or "developer handover specification" in text_lower
             or "assigned task:" in text_lower
             or "task to execute:" in text_lower
         ):

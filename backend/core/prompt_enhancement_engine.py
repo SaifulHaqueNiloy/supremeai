@@ -59,6 +59,7 @@ class PromptEnhancementEngine:
         r"^\s*(?:please\s+)?share\s+this\s+(?:prompt\s+)?(?:with|in)\s+(?:your\s+)?(?:ai(?:'s)?|assistant|chat)[^:\n]*[:\n-]*\s*",
         r"^\s*(?:prompt\s+to\s+copy|copy\s+the\s+following|paste\s+this\s+below)\s*[:\n-]+\s*",
         r"^\s*prompt\s+for\s+(?:the\s+)?(?:ai|assistant|model)[:\s-]*\s*",
+        r"^\s*pasting\s+this\s+prompt[^\n]*[:\n-]*\s*",
     ]
 
     # বাংলা মন্তব্য: রোবটিক প্রিফিক্স যেগুলো বট ডিটেক্টর সহজে ধরে ফেলে
@@ -134,15 +135,14 @@ class PromptEnhancementEngine:
             confidence_score=0.98,
         )
 
-    # বাংলা মন্তব্য: বিহেভিওরাল জ্যামিতি — একই স্টাইল বারবার ব্যবহার না করে র্যান্ডম ভ্যারিয়েশন (Random Behavioral Entropy)
+    # বাংলা মন্তব্য: খাঁটি হিউম্যান মাল্টি-এআই অর্কেস্ট্রেশন হেডার (যেগুলো প্রমাণ করে রিয়েল হিউম্যান কাজ করছে)
+    # কৃত্রিম বা স্ক্রিপ্টেড যেমন 'Pasting this prompt from another workspace' সম্পূর্ণ পরিহার
     CONDUCTOR_HEADER_VARIANTS = [
         "Copy this to your AI:",
         "Copy and paste this into your AI chat:",
-        "Prompt to run in AI:",
-        "Copy this prompt for the AI assistant:",
-        "Pasting this prompt from another workspace:",
-        "Run this in AI:",
-        "Prompt from dev chat to run in AI:",
+        "Copy and paste this into your AI:",
+        "Prompt to run in your AI:",
+        "",  # বাংলা মন্তব্য: হেডার ছাড়া সরাসরি ডিরেক্ট পেস্ট (অনেক মানুষ সরাসরি প্রম্পট পেস্ট করে)
     ]
 
     CONDUCTOR_STYLE_TEMPLATES = [
@@ -199,20 +199,11 @@ class PromptEnhancementEngine:
         (
             "{header}\n\n"
             "Please execute the following assignment end-to-end without pausing for mid-step approval.\n\n"
-            "### EXECUTION GUIDELINES\n"
+            "Directives:\n"
             "- Implement all requirements completely.\n"
             "- Ensure zero unhandled exceptions, robust error trapping, and clean typing.\n"
             "- Deliver the verified, ready-to-run result.\n\n"
-            "TARGET ASSIGNMENT:\n"
-            "{task}"
-        ),
-        # স্টাইল ৫: মাল্টি-ওয়ার্কস্পেস ডেভেলপার হ্যান্ডওভার
-        (
-            "{header}\n\n"
-            "Developer handover specification:\n"
-            "Take full ownership of the following task and complete all steps autonomously.\n"
-            "Verify all changes and ensure no stubbed or unfinished methods remain.\n\n"
-            "TASK SPECIFICATION:\n"
+            "TASK:\n"
             "{task}"
         ),
     ]
@@ -233,7 +224,7 @@ class PromptEnhancementEngine:
         বাংলা সারসংক্ষেপ:
         ------------------
         ২টা এআই নিয়ে একজন মানুষের মাল্টি-এআই কাজের বাস্তবসম্মত ট্রিক (Dual AI Conductor):
-        ১. হেডার, স্টাইল এবং ক্লোজারে র্যান্ডম হিউম্যান বিহেভিওরাল ভ্যারিয়েশন (Entropy) প্রয়োগ।
+        ১. 'Copy this to your AI:' ইত্যাদি ন্যাচারাল হিউম্যান কনডাক্টর ভ্যারিয়েশন (Entropy) প্রয়োগ।
         ২. একই সাথে Autonomous Execution ফ্রেমওয়ার্ক বজায় রাখা — যাতে এআই মাঝপথে না থামে।
         ৩. কোডিং বা ব্রাউজিং কনটেক্সট থাকলে নির্দিষ্ট এনভায়রনমেন্ট রুলস যুক্ত হয়।
         """
@@ -244,7 +235,12 @@ class PromptEnhancementEngine:
         template = self._rng.choice(self.CONDUCTOR_STYLE_TEMPLATES)
         closer = self._rng.choice(self.CONDUCTOR_CLOSERS)
 
-        result = template.format(header=header, task=prompt)
+        if header:
+            result = template.format(header=header, task=prompt)
+        else:
+            # বাংলা মন্তব্য: হেডার খালি থাকলে লিডিং নিউলাইন ট্রিম করে ক্লিন প্রম্পট রাখা
+            result = template.format(header="", task=prompt).lstrip()
+
         if closer:
             result += closer
             tricks.append("natural_closer_jitter")

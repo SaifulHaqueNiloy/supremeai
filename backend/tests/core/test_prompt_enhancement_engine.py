@@ -30,6 +30,18 @@ def test_stealth_chat_strips_meta_leaks_and_keeps_direct_flow():
     assert "organic_human_direct_flow" in result.applied_tricks
 
 
+def test_stealth_chat_strips_unnatural_bot_pasting_line():
+    """
+    বাংলা মন্তব্য: 'Pasting this prompt from another workspace:' এর মতো কৃত্রিম বট টেক্সট মুছে ফেলা।
+    """
+    engine = PromptEnhancementEngine(rng_seed=42)
+    raw = "Pasting this prompt from another workspace:\nBuild a user profile view."
+    res = engine.enhance(raw, mode=EnhancementMode.STEALTH_CHAT)
+    assert "pasting this prompt" not in res.enhanced_prompt.lower()
+    assert res.enhanced_prompt == "Build a user profile view."
+    assert "stripped_meta_generator_watermarks" in res.applied_tricks
+
+
 def test_stealth_chat_strips_robotic_patterns():
     """
     বাংলা মন্তব্য: রোবটিক প্রিফিক্স স্বয়ংক্রিয়ভাবে ক্লিন করে কিনা যাচাই।
@@ -207,10 +219,14 @@ def test_dual_ai_conductor_random_behavior_variation():
 
     for _ in range(25):
         res = engine.enhance(task, mode=EnhancementMode.DUAL_AI_CONDUCTOR)
+        matched_header = False
         for h in PromptEnhancementEngine.CONDUCTOR_HEADER_VARIANTS:
-            if res.enhanced_prompt.startswith(h):
+            if h and res.enhanced_prompt.startswith(h):
                 seen_headers.add(h)
+                matched_header = True
                 break
+        if not matched_header:
+            seen_headers.add("<direct_no_header>")
         seen_outputs.add(res.enhanced_prompt)
 
     # প্রমাণ: একাধিক ভিন্ন হেডার এবং ভিন্ন ভিন্ন স্টাইল আউটপুট তৈরি হয়েছে (স্থির বা রোবটিক নয়)

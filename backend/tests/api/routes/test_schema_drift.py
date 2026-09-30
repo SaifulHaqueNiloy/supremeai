@@ -100,8 +100,13 @@ async def test_probe_first_success_sets_baseline_ok():
     """#2681: প্রথম সফল প্রোব = baseline; একই স্কিমা পরেও = ok।"""
     _reset_state()
     sqlite_script = {
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'": [("users",)],
-        'PRAGMA table_info("users")': [(0, "id", "INTEGER", 0, None, 1), (1, "name", "TEXT", 0, None, 0)],
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'": [
+            ("users",)
+        ],
+        'PRAGMA table_info("users")': [
+            (0, "id", "INTEGER", 0, None, 1),
+            (1, "name", "TEXT", 0, None, 0),
+        ],
     }
     factory, _state = _factory({"sqlite": sqlite_script})
 
@@ -121,11 +126,15 @@ async def test_probe_detects_drift_and_emits_event_once():
     """#2681: schema বদলালে drift + ERROR ইভেন্ট ঠিক একবার (spam-guard)।"""
     _reset_state()
     base_script = {
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'": [("users",)],
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'": [
+            ("users",)
+        ],
         'PRAGMA table_info("users")': [(0, "id", "INTEGER", 0, None, 1)],
     }
     drifted_script = {
-        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'": [("users",)],
+        "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'": [
+            ("users",)
+        ],
         'PRAGMA table_info("users")': [
             (0, "id", "INTEGER", 0, None, 1),
             (1, "email", "TEXT", 0, None, 0),
@@ -133,11 +142,15 @@ async def test_probe_detects_drift_and_emits_event_once():
     }
 
     with patch("core.messaging.event_bus.error_event_bus.emit") as mock_emit:
-        ok = await probe_schema_drift(force=True, session_factory=_factory({"sqlite": base_script})[0]())
+        ok = await probe_schema_drift(
+            force=True, session_factory=_factory({"sqlite": base_script})[0]()
+        )
         assert ok.status == "ok"
         assert not mock_emit.called
 
-        drifted = await probe_schema_drift(force=True, session_factory=_factory({"sqlite": drifted_script})[0]())
+        drifted = await probe_schema_drift(
+            force=True, session_factory=_factory({"sqlite": drifted_script})[0]()
+        )
         assert drifted.status == "drift"
         assert drifted.fingerprint != drifted.baseline_fingerprint
         assert mock_emit.call_count == 1
@@ -147,7 +160,9 @@ async def test_probe_detects_drift_and_emits_event_once():
         assert "connection-pool recycle" in emitted.context["remediation"]
 
         # বাংলা মন্তব্য: একই drift-অবস্থা পুনরায় প্রোব করলে আবার emit হবে না।
-        again = await probe_schema_drift(force=True, session_factory=_factory({"sqlite": drifted_script})[0]())
+        again = await probe_schema_drift(
+            force=True, session_factory=_factory({"sqlite": drifted_script})[0]()
+        )
         assert again.status == "drift"
         assert mock_emit.call_count == 1
 
@@ -167,10 +182,14 @@ async def test_probe_recovery_emits_resolved_event():
 
     with patch("core.messaging.event_bus.error_event_bus.emit") as mock_emit:
         await probe_schema_drift(force=True, session_factory=_factory({"sqlite": base_script})[0]())
-        await probe_schema_drift(force=True, session_factory=_factory({"sqlite": drifted_script})[0]())
+        await probe_schema_drift(
+            force=True, session_factory=_factory({"sqlite": drifted_script})[0]()
+        )
         assert mock_emit.call_count == 1  # drift-ইভেন্ট
 
-        recovered = await probe_schema_drift(force=True, session_factory=_factory({"sqlite": base_script})[0]())
+        recovered = await probe_schema_drift(
+            force=True, session_factory=_factory({"sqlite": base_script})[0]()
+        )
         assert recovered.status == "ok"
         assert mock_emit.call_count == 2
         resolved_event = mock_emit.call_args_list[1][0][0]
