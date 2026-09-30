@@ -23,46 +23,88 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT / "backend"))
 
-from core.web_ai_session_bridge import WebAISessionBridge, WebAISessionError
-
-
 async def main_async() -> int:
+    # বাংলা মন্তব্য: উইন্ডোজ কনসোলে বাংলা বা ইউনিকোড প্রিন্ট ক্র্যাশ এড়াতে UTF-8 এনকোডিং নিশ্চিতকরণ
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+
     parser = argparse.ArgumentParser(description="SupremeAI Web Session AI Client")
     parser.add_argument(
         "--service",
         choices=["claude", "chatgpt", "v0"],
         default="claude",
-        help="কোন ওয়েব সেশন সার্ভিস ব্যবহার করবেন",
+        help="Target web session AI service (claude, chatgpt, v0)",
     )
-    parser.add_argument("--prompt", type=str, help="AI-কে পাঠানোর প্রম্পট")
-    parser.add_argument("--system", type=str, default=None, help="সিস্টেম প্রম্পট")
-    parser.add_argument("--token", type=str, default=None, help="সরাসরি সেশন টোকেন বা কুকি স্ট্রিং")
+    parser.add_argument("--prompt", type=str, help="Prompt to send to AI")
+    parser.add_argument("--system", type=str, default=None, help="System prompt")
+    parser.add_argument("--token", type=str, default=None, help="Direct session token / cookie string")
     parser.add_argument(
         "--vault-path",
         type=str,
         default=os.getenv("BROWSER_VAULT_PATH", str(REPO_ROOT / ".browser_vault")),
-        help="এনক্রিপ্টেড সেশন ভল্টের পাথ",
+        help="Path to encrypted browser session vault",
     )
-    parser.add_argument("--status", action="store_true", help="ভল্ট ও সেশন স্ট্যাটাস পরীক্ষা করুন")
-    parser.add_argument("--refresh", action="store_true", help="পিসির লোকাল আইপি দিয়ে সমস্ত সেশন রিফ্রেশ ও ভল্ট আপডেট করুন")
-    parser.add_argument("--relay-server", action="store_true", help="লোকাল রেসিডেন্সিয়াল আইপি রিলে সার্ভার চালু করুন")
-    parser.add_argument("--port", type=int, default=8765, help="রিলে সার্ভার পোর্ট (default: 8765)")
+    parser.add_argument("--status", action="store_true", help="Check session health & vault status")
+    parser.add_argument(
+        "--refresh",
+        action="store_true",
+        help="Silently refresh all active sessions using local IP and update vault",
+    )
+    parser.add_argument(
+        "--boot-sync",
+        action="store_true",
+        help="Run silent session refresh after 5-min natural delay on PC boot (Anti-Spike Delay)",
+    )
+    parser.add_argument(
+        "--delay",
+        type=int,
+        default=0,
+        help="Delay in seconds before initiating refresh (default: 0, or ~300s with --boot-sync)",
+    )
+    parser.add_argument(
+        "--relay-server",
+        action="store_true",
+        help="Run local residential IP relay server for Cloud/Render bridge",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8765,
+        help="Port for local relay server (default: 8765)",
+    )
 
     args = parser.parse_args()
+
+    from core.web_ai_session_bridge import WebAISessionBridge, WebAISessionError
 
     # বাংলা মন্তব্য: ব্রিজ ও পুল ইনস্ট্যান্স তৈরি
     bridge = WebAISessionBridge(vault_path=args.vault_path)
 
-    # বাংলা মন্তব্য: লোকাল পিসি অন হলে বা --refresh দিলে সাইলেন্ট রিফ্রেশ এক্সিকিউট করা (Gap 1 & 4 Solution)
-    if args.refresh or args.relay_server:
-        from core.web_ai_session_bridge import WebAISessionPool
+    # বাংলা মন্তব্য: বুট সিঙ্ক ডিলে নির্ধারণ (৫ মিনিট / ৩০০ সেকেন্ড, স্বাভাবিক মানুষের মতো জ্যাম এড়াতে)
+    delay_sec = args.delay
+    if args.boot_sync and delay_sec == 0:
+        import random
+        # ২৭০ থেকে ৩৩০ সেকেন্ডের মধ্যে স্বাভাবিক মানুষের অ্যাক্টিভিটি জিম্যাপিং
+        delay_sec = random.randint(270, 330)
 
+    from core.web_ai_session_bridge import WebAISessionPool
+    pool = WebAISessionPool(bridge=bridge)
+
+    async def _execute_silent_refresh(delay: int) -> dict:
+        if delay > 0:
+            print(f"⏳ [Boot Sync] Waiting {delay}s (~{round(delay/60, 1)}m) for network stabilization & human realism...")
+            await asyncio.sleep(delay)
         print("🔄 [Local PC Boot] Initiating silent session refresh with residential IP...")
-        pool = WebAISessionPool(bridge=bridge)
-        ref_results = await pool.refresh_pool_sessions()
-        print(f"✅ [Local PC Boot] Refresh Summary: {json.dumps(ref_results, indent=2, ensure_ascii=False)}")
-        if args.refresh and not args.relay_server:
-            return 0
+        res = await pool.refresh_pool_sessions()
+        print(f"✅ [Local PC Boot] Refresh Summary: {json.dumps(res, indent=2, ensure_ascii=False)}")
+        return res
+
+    # বাংলা মন্তব্য: লোকাল পিসি অন হলে বা --refresh/--boot-sync দিলে সাইলেন্ট রিফ্রেশ এক্সিকিউট করা
+    if (args.refresh or args.boot_sync) and not args.relay_server:
+        await _execute_silent_refresh(delay_sec)
+        return 0
 
     # বাংলা মন্তব্য: রিলে সার্ভার ডেমন মোড (Cloud vs Local IP গ্যাপ বাইপাস)
     if args.relay_server:
@@ -88,6 +130,8 @@ async def main_async() -> int:
 
         print(f"=== SupremeAI Local Residential IP Relay running on http://127.0.0.1:{args.port} ===")
         print("Set LOCAL_SESSION_RELAY_URL=http://127.0.0.1:8765 on Cloud/Render to bridge the IP gap!")
+        # বাংলা মন্তব্য: রিলে সার্ভার চালু হওয়ার পর ব্যাকগ্রাউন্ডে ৫ মিনিট অপেক্ষা করে সাইলেন্ট রিফ্রেশ
+        asyncio.create_task(_execute_silent_refresh(delay_sec or 300))
         config = uvicorn.Config(relay_app, host="127.0.0.1", port=args.port, log_level="warning")
         server = uvicorn.Server(config)
         await server.serve()
