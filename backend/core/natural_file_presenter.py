@@ -271,6 +271,10 @@ class NaturalFilePresenter:
         if not text:
             return text
 
+        # বাংলা মন্তব্য: প্রম্পটে যদি 'Copy this to your AI:' বা Autonomous Agent ব্লুপ্রিন্ট থাকে, তা হুবহু বজায় রাখা
+        if "copy this to your ai" in text.lower() or "autonomous execution agent" in text.lower():
+            return text
+
         # ১. রোবোটিক প্রিফিক্স ফিল্টার
         robotic_prefixes = [
             r"^SYSTEM\s*(?:PROMPT|DIRECTIVE|INSTRUCTION)?\s*:?\s*",
@@ -307,15 +311,6 @@ class NaturalFilePresenter:
             text,
             flags=re.IGNORECASE,
         )
-
-        # ৩. বাংলা মন্তব্য: বাইরের মেটা-ডিরেক্টিভ ফিল্টার ('copy this to your ai's chat', 'share this prompt' ইত্যাদি)
-        meta_prompt_leak_patterns = [
-            r"^\s*(?:please\s+)?copy\s+(?:and\s+paste\s+)?this\s+(?:prompt\s+)?(?:in|into|to)\s+(?:your\s+)?(?:ai(?:'s)?|assistant|chat|desired\s+ai(?:'s)?)[^:\n]*[:\n-]*\s*",
-            r"^\s*(?:please\s+)?share\s+this\s+(?:prompt\s+)?(?:with|in)\s+(?:your\s+)?(?:ai(?:'s)?|assistant|chat)[^:\n]*[:\n-]*\s*",
-            r"^\s*(?:prompt\s+to\s+copy|copy\s+the\s+following|paste\s+this\s+below)\s*[:\n-]+\s*",
-        ]
-        for pat in meta_prompt_leak_patterns:
-            text = re.sub(pat, "", text, flags=re.IGNORECASE | re.MULTILINE).strip()
 
         return text
 

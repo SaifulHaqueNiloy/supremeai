@@ -95,19 +95,24 @@ class PromptEnhancementEngine:
         clean_prompt = prompt.strip()
         tricks: list[str] = []
 
-        # ধাপ ১: মেটা-ডিরেক্টিভ লিক ("copy this to your ai...") মুছে ফেলা
-        for pat in self.META_DIRECTIVE_PATTERNS:
-            if re.search(pat, clean_prompt, flags=re.IGNORECASE | re.MULTILINE):
-                clean_prompt = re.sub(
-                    pat, "", clean_prompt, flags=re.IGNORECASE | re.MULTILINE
-                ).strip()
-                tricks.append("stripped_meta_generator_watermarks")
+        # বাংলা মন্তব্য: যদি DUAL_AI_CONDUCTOR মোড হয় বা প্রম্পটে অলরেডি অটোনোমাস ব্লুপ্রিন্ট থাকে, তা পূর্ণ শক্তিতে অক্ষুণ্ণ রাখা
+        if mode != EnhancementMode.DUAL_AI_CONDUCTOR and not (
+            "copy this to your ai" in clean_prompt.lower()
+            or "autonomous execution agent" in clean_prompt.lower()
+        ):
+            # ধাপ ১: অপ্রাসঙ্গিক মেটা-লিক ফিল্টার
+            for pat in self.META_DIRECTIVE_PATTERNS:
+                if re.search(pat, clean_prompt, flags=re.IGNORECASE | re.MULTILINE):
+                    clean_prompt = re.sub(
+                        pat, "", clean_prompt, flags=re.IGNORECASE | re.MULTILINE
+                    ).strip()
+                    tricks.append("stripped_meta_generator_watermarks")
 
-        # ধাপ ২: রোবটিক প্রিফিক্স থাকলে তা পরিষ্কার করা
-        for pat in self.ROBOTIC_PREFIX_PATTERNS:
-            if re.search(pat, clean_prompt, flags=re.IGNORECASE):
-                clean_prompt = re.sub(pat, "", clean_prompt, flags=re.IGNORECASE).strip()
-                tricks.append("stripped_robotic_prefix")
+            # ধাপ ২: রোবটিক প্রিফিক্স থাকলে তা পরিষ্কার করা
+            for pat in self.ROBOTIC_PREFIX_PATTERNS:
+                if re.search(pat, clean_prompt, flags=re.IGNORECASE):
+                    clean_prompt = re.sub(pat, "", clean_prompt, flags=re.IGNORECASE).strip()
+                    tricks.append("stripped_robotic_prefix")
 
         # ধাপ ৩: মোড অনুযায়ী স্পেসিফিক ট্রান্সফর্মেশন
         if mode == EnhancementMode.DUAL_AI_CONDUCTOR:

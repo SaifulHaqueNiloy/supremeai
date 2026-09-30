@@ -149,14 +149,17 @@ STRICTLY ONLY OUTPUT CODE. DO NOT EXPLAIN."""
     assert "Just the clean code snippet would be great, thanks!" in human_prompt
     assert "STRICTLY ONLY OUTPUT CODE" not in human_prompt
 
-    # বাংলা মন্তব্য: মেটা-ডিরেক্টিভ লিক ("copy this prompt to your desired ai's chat") ফিল্টার পরীক্ষা
-    leaked_prompt = (
-        "Copy this prompt to your desired AI's chat:\n"
+    # বাংলা মন্তব্য: 'Copy this to your AI:' থাকলে তা অটোনোমাস হিউম্যান ব্লুপ্রিন্ট হিসেবে অক্ষুণ্ণ থাকবে
+    conductor_prompt = (
+        "Copy this to your AI:\n"
+        "You are an Autonomous Execution Agent.\n"
+        "TASK TO EXECUTE:\n"
         "Refactor auth middleware to keep memory minimal."
     )
-    clean_leaked = NaturalFilePresenter.humanize_prompt(leaked_prompt)
-    assert "copy this" not in clean_leaked.lower()
-    assert clean_leaked == "Refactor auth middleware to keep memory minimal."
+    preserved = NaturalFilePresenter.humanize_prompt(conductor_prompt)
+    assert "Copy this to your AI:" in preserved
+    assert "Autonomous Execution Agent" in preserved
+    assert "Refactor auth middleware to keep memory minimal." in preserved
 
 
 def test_scrub_identity_and_watermarks():
