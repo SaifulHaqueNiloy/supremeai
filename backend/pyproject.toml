@@ -24,7 +24,12 @@ httpx = "^0.28.1"
 ddgs = "^9.16.0"
 uvicorn = {extras = ["standard"], version = ">=0.51,<0.55"}
 starlette-context = ">=0.3,<0.6"
-sqlalchemy = "^2.0.36"
+# বাংলা মন্তব্য (#2597/#2601): sqlalchemy[asyncio] = runtime হার্ড চুক্তি —
+# core/db.py-র async engine greenlet ছাড়া ImportError করে (প্রমাণ: PR Gate
+# Test & Build ১ failed + Worker deploy failure #2601/#2602, "No deploy log")।
+# greenlet আগে কেবল browser group-এ (playwright transitively) ছিল — ফলে
+# prod `poetry install --only main` ও PR gate দুটোতেই অনুপস্থিত।
+sqlalchemy = { extras = ["asyncio"], version = "^2.0.36" }
 alembic = "^1.14.0"
 pydantic = "^2.10.0"
 pydantic-settings = "^2.14.2"  # CVE fix floor (AUDIT-014, GHSA-4xgf-cpjx-pc3j)
