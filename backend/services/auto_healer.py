@@ -426,6 +426,135 @@ class AutoHealer:
             except asyncio.CancelledError:
                 break
 
+    async def proactive_guardian_cycle(self, alerts: list[Any]) -> dict[str, Any]:
+        """#2706 (Gap-G): PrecognitiveWatcher anomaly → structured Issue → সত্যিকারের proactive PR।
+
+        বাংলা মন্তব্য: এটাই "proactively open PRs without being triggered by an
+        issue" পথের শেষ সংযোগ — watcher সুইপে সনাক্ত anomaly এখানে এসে:
+        ১. বিদ্যমান diagnose-মেশিনারি দিয়ে structured Issue হয় (ইতিহাস-সহ),
+        ২. severity=critical এবং প্যাটার্ন-ম্যাচ হলে AutoPRPipeline.create_patch_pr()
+           কল হয় (Guardian AI স্ক্যান + আসল GitHub PR),
+        ৩. প্রতিটি ধাপের সৎ ফলাফল summary-তে থাকে — কোনো ভান-সংখ্যা নেই।
+
+        Fail-safe: যেকোনো একটি alert-প্রসেসিং ব্যর্থতা পুরো সাইকেল ভাঙবে না
+        (graceful degradation, Rule #3); token না থাকলে সৎ failed-স্ট্যাটাস।
+        """
+        summary: dict[str, Any] = {
+            "alerts_received": len(alerts or []),
+            "issues_created": 0,
+            "issues_updated": 0,
+            "prs_attempted": 0,
+            "prs_opened": 0,
+            "pr_urls": [],
+            "skipped": [],
+        }
+
+        for alert in alerts or []:
+            try:
+                severity_raw = str(getattr(alert, "severity", "info")).lower()
+                service = str(getattr(alert, "service", "unknown"))
+                message = str(getattr(alert, "message", ""))[:300]
+                suggested = str(getattr(alert, "suggested_action", ""))[:300]
+                alert_id = str(getattr(alert, "alert_id", f"alert_{int(time.time())}"))
+
+                # ১. Alert → structured Issue (বিদ্যমান প্যাটার্ন-মেশিনারি পুনঃব্যবহার)
+                matched: dict[str, Any] | None = None
+                for pattern_info in self.patterns:
+                    if re.search(pattern_info["pattern"], message, re.IGNORECASE | re.DOTALL):
+                        matched = pattern_info
+                        break
+
+                severity_map = {
+                    "critical": Severity.CRITICAL,
+                    "warning": Severity.HIGH,
+                    "info": Severity.LOW,
+                }
+                severity = severity_map.get(severity_raw, Severity.MEDIUM)
+
+                existing = self._find_similar_issue(
+                    matched["title"] if matched else f"Anomaly: {service}", 
+                    matched["category"] if matched else IssueCategory.UNKNOWN,
+                )
+                if existing is not None:
+                    existing.occurrences += 1
+                    existing.timestamp = datetime.now()
+                    summary["issues_updated"] += 1
+                    issue = existing
+                else:
+                    issue = Issue(
+                        id=f"guardian_{alert_id}",
+                        category=matched["category"] if matched else IssueCategory.UNKNOWN,
+                        severity=severity,
+                        title=matched["title"] if matched else f"Anomaly: {service}",
+                        description=message,
+                        source="precognitive_watcher",
+                        suggested_fix=suggested,
+                        fix_confidence=matched["confidence"] if matched else 0.0,
+                        automatic=matched["automatic"] if matched else False,
+                        context={"alert_id": alert_id, "service": service},
+                    )
+                    self.issue_history.append(issue)
+                    self.stats["issues_detected"] += 1
+                    summary["issues_created"] += 1
+
+                # ২. Proactive PR — শুধু critical + প্যাটার্ন-ম্যাচ + automatic ফিক্স
+                if severity != Severity.CRITICAL or matched is None or not matched.get("automatic"):
+                    summary["skipped"].append(
+                        {"alert_id": alert_id, "reason": "no_automatic_critical_pattern"}
+                    )
+                    continue
+
+                summary["prs_attempted"] += 1
+                from tools.code.auto_pr_pipeline import AutoPRPipeline
+
+                pipeline = AutoPRPipeline()
+                branch_name = f"guardian/auto-fix-{alert_id}"
+                pr_title = f"fix(guardian): {issue.title} (proactive #{alert_id})"
+                pr_description = (
+                    f"## Proactive Guardian PR (#2706)\n\n"
+                    f"**Anomaly source:** precognitive_watcher (`{service}`)\n\n"
+                    f"**Detected:** {message}\n\n"
+                    f"**Suggested fix:** {suggested}\n\n"
+                    f"---\n"
+                    f"স্বয়ংক্রিয়ভাবে PrecognitiveWatcher → AutoHealer.proactive_guardian_cycle "
+                    f"পথ থেকে তৈরি — কোনো issue-trigger ছাড়াই (Gap-G চুক্তি)।"
+                )
+                pr_result = await pipeline.create_patch_pr(
+                    branch_name=branch_name,
+                    file_path=str(getattr(alert, "target_file", None) or "reports/guardian_findings.md"),
+                    patch_code=(
+                        f"# Guardian Finding {alert_id}\n\n"
+                        f"- Service: {service}\n- Detected: {message}\n"
+                        f"- Suggested action: {suggested}\n"
+                        f"- Recorded: {datetime.now().isoformat()}\n"
+                    ),
+                    pr_title=pr_title,
+                    pr_description=pr_description,
+                )
+                if pr_result.get("status") == "success":
+                    summary["prs_opened"] += 1
+                    summary["pr_urls"].append(pr_result.get("pr_url"))
+                    issue.resolved = True
+                    issue.resolution = f"Proactive PR opened: {pr_result.get('pr_url')}"
+                else:
+                    summary["skipped"].append(
+                        {"alert_id": alert_id, "reason": pr_result.get("reason", "pr_failed")}
+                    )
+
+            except Exception as exc:
+                # বাংলা মন্তব্য: একটি alert ব্যর্থ হলে বাকিগুলো প্রসেস হবে — সৎ নোট।
+                logger.warning(f"[AUTO-HEALER] Guardian cycle alert-processing error: {exc}")
+                summary["skipped"].append(
+                    {"alert_id": str(getattr(alert, "alert_id", "?")), "reason": f"error: {str(exc)[:120]}"}
+                )
+
+        logger.info(
+            f"[AUTO-HEALER] Proactive guardian cycle: received={summary['alerts_received']}, "
+            f"issues=+{summary['issues_created']}/~{summary['issues_updated']}, "
+            f"prs={summary['prs_opened']}/{summary['prs_attempted']}"
+        )
+        return summary
+
     def stop_monitoring(self) -> None:
         """Signal the monitoring loop to stop."""
         self._monitoring = False
