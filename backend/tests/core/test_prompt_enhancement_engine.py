@@ -176,22 +176,48 @@ def test_dual_ai_conductor_mode():
     বাংলা সারসংক্ষেপ:
     ------------------
     DUAL_AI_CONDUCTOR মোড যাচাই:
-    ১. 'Copy this to your AI:' দিয়ে শুরু হবে (২টা এআই নিয়ে মানুষের কাজের প্রমাণ)।
-    ২. Autonomous Execution Agent ডিরেক্টিভ থাকবে (টাস্ক ব্রেকডাউন, আনইন্টারাপ্টেড এক্সিকিউশন, সেলফ-হিলিং)।
-    ৩. আসল টাস্কটি 'TASK TO EXECUTE:' সেকশনে বসবে।
+    ১. CONDUCTOR_HEADER_VARIANTS-এর যেকোনো একটি অর্গানিক হেডার দিয়ে শুরু হবে।
+    ২. Autonomous Execution Agent / Implementation Brief ডিরেক্টিভ থাকবে।
+    ৩. আসল টাস্কটি প্রম্পটে নিখুঁতভাবে অন্তর্ভুক্ত থাকবে।
     """
-    engine = PromptEnhancementEngine()
+    engine = PromptEnhancementEngine(rng_seed=42)
     task = "Build a zero-latency memory cache middleware in FastAPI."
     result = engine.enhance(task, mode=EnhancementMode.DUAL_AI_CONDUCTOR)
 
-    assert "Copy this to your AI:" in result.enhanced_prompt
-    assert "You are an Autonomous Execution Agent." in result.enhanced_prompt
-    assert "TASK BREAKDOWN & SCRATCHPAD" in result.enhanced_prompt
-    assert "UNINTERRUPTED EXECUTION LOOP" in result.enhanced_prompt
-    assert "AUTONOMOUS ERROR RECOVERY & SELF-HEALING" in result.enhanced_prompt
-    assert "Build a zero-latency memory cache middleware in FastAPI." in result.enhanced_prompt
+    assert any(
+        h in result.enhanced_prompt for h in PromptEnhancementEngine.CONDUCTOR_HEADER_VARIANTS
+    )
+    assert task in result.enhanced_prompt
     assert "dual_ai_conductor_proven_human" in result.applied_tricks
-    assert "autonomous_execution_blueprint" in result.applied_tricks
+    assert "behavioral_style_entropy" in result.applied_tricks
+
+
+def test_dual_ai_conductor_random_behavior_variation():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    বিহেভিয়ার র‍্যান্ডম ভ্যারিয়েশন যাচাই (Behavior Randomly Changes):
+    একাধিকবার কল করলে সবসময় একই স্টাইল বা হেডার তৈরি হবে না, বরং ডায়নামিক এন্ট্রপি বজায় থাকবে।
+    """
+    engine = PromptEnhancementEngine()
+    task = "Implement robust retry with circuit breaker"
+
+    seen_headers = set()
+    seen_outputs = set()
+
+    for _ in range(25):
+        res = engine.enhance(task, mode=EnhancementMode.DUAL_AI_CONDUCTOR)
+        for h in PromptEnhancementEngine.CONDUCTOR_HEADER_VARIANTS:
+            if res.enhanced_prompt.startswith(h):
+                seen_headers.add(h)
+                break
+        seen_outputs.add(res.enhanced_prompt)
+
+    # প্রমাণ: একাধিক ভিন্ন হেডার এবং ভিন্ন ভিন্ন স্টাইল আউটপুট তৈরি হয়েছে (স্থির বা রোবটিক নয়)
+    assert len(seen_headers) > 1, f"Expected varied headers, got: {seen_headers}"
+    assert len(seen_outputs) > 2, (
+        f"Expected varied styles, got {len(seen_outputs)} distinct outputs"
+    )
 
 
 def test_dual_ai_conductor_with_coding_context():
@@ -200,13 +226,15 @@ def test_dual_ai_conductor_with_coding_context():
     ------------------
     কোডিং কনটেক্সট থাকলে নির্দিষ্ট এনভায়রনমেন্ট রুলস (ইউনিট টেস্ট চালানো) যুক্ত হওয়া যাচাই।
     """
-    engine = PromptEnhancementEngine()
+    engine = PromptEnhancementEngine(rng_seed=99)
     context = EnhancementContext(language="python", current_file_path="backend/core/cache.py")
     result = engine.enhance(
         "Refactor cache pool", mode=EnhancementMode.DUAL_AI_CONDUCTOR, context=context
     )
 
-    assert "Copy this to your AI:" in result.enhanced_prompt
+    assert any(
+        h in result.enhanced_prompt for h in PromptEnhancementEngine.CONDUCTOR_HEADER_VARIANTS
+    )
     assert "ENVIRONMENT DIRECTIVE (Coding Agent):" in result.enhanced_prompt
     assert "run unit tests or syntax checks after every edit" in result.enhanced_prompt
     assert "coding_agent_env_directive" in result.applied_tricks

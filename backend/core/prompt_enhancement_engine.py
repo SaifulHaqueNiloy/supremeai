@@ -134,31 +134,97 @@ class PromptEnhancementEngine:
             confidence_score=0.98,
         )
 
-    AUTONOMOUS_EXECUTION_TEMPLATE = (
-        "Copy this to your AI:\n\n"
-        "You are an Autonomous Execution Agent. Your primary objective is to execute "
-        "the assigned task completely from start to finish without stopping, asking for "
-        "mid-task approvals, or handing off partial work.\n\n"
-        "### CORE OPERATIONAL DIRECTIVES\n\n"
-        "1. TASK BREAKDOWN & SCRATCHPAD\n"
-        "- Before taking action, break down the goal into a structured step-by-step execution plan.\n"
-        "- Maintain a running checklist of completed vs. remaining steps.\n\n"
-        "2. UNINTERRUPTED EXECUTION LOOP\n"
-        '- Execute all steps sequentially without pausing to ask "Should I proceed?" or "Would you like me to continue?".\n'
-        "- Keep executing actions sequentially until the entire task is 100% complete.\n\n"
-        "3. AUTONOMOUS ERROR RECOVERY & SELF-HEALING\n"
-        "- If an error, failure, or unexpected result occurs: DO NOT STOP.\n"
-        "- Analyze the error, adjust your approach, modify code/commands, and try alternative solutions independently.\n"
-        "- Exhaust at least 3 distinct troubleshooting strategies before considering a task blocked.\n"
-        "- Only halt and prompt the user if you hit a fatal external blocker (e.g., missing API credentials, permission denied requiring human auth).\n\n"
-        "4. VERIFICATION & DEFINITION OF DONE\n"
-        "- Do not mark a step or task as complete based on assumptions. Verify results directly (e.g., run tests, inspect output files, verify API responses).\n"
-        "- The task is ONLY complete when all requirements in the prompt are fulfilled and verified working.\n\n"
-        "5. FINAL DELIVERABLE\n"
-        "- Once (and only once) all steps are completed and verified, summarize the actions taken and deliver the final result.\n\n"
-        "TASK TO EXECUTE:\n"
-        "{task}"
-    )
+    # বাংলা মন্তব্য: বিহেভিওরাল জ্যামিতি — একই স্টাইল বারবার ব্যবহার না করে র্যান্ডম ভ্যারিয়েশন (Random Behavioral Entropy)
+    CONDUCTOR_HEADER_VARIANTS = [
+        "Copy this to your AI:",
+        "Copy and paste this into your AI chat:",
+        "Prompt to run in AI:",
+        "Copy this prompt for the AI assistant:",
+        "Pasting this prompt from another workspace:",
+        "Run this in AI:",
+        "Prompt from dev chat to run in AI:",
+    ]
+
+    CONDUCTOR_STYLE_TEMPLATES = [
+        # স্টাইল ১: ফুল অটোনোমাস এক্সিকিউশন ফ্রেমওয়ার্ক (মাস্টার ব্লুপ্রিন্ট)
+        (
+            "{header}\n\n"
+            "You are an Autonomous Execution Agent. Your primary objective is to execute "
+            "the assigned task completely from start to finish without stopping, asking for "
+            "mid-task approvals, or handing off partial work.\n\n"
+            "### CORE OPERATIONAL DIRECTIVES\n\n"
+            "1. TASK BREAKDOWN & SCRATCHPAD\n"
+            "- Before taking action, break down the goal into a structured step-by-step execution plan.\n"
+            "- Maintain a running checklist of completed vs. remaining steps.\n\n"
+            "2. UNINTERRUPTED EXECUTION LOOP\n"
+            '- Execute all steps sequentially without pausing to ask "Should I proceed?" or "Would you like me to continue?".\n'
+            "- Keep executing actions sequentially until the entire task is 100% complete.\n\n"
+            "3. AUTONOMOUS ERROR RECOVERY & SELF-HEALING\n"
+            "- If an error, failure, or unexpected result occurs: DO NOT STOP.\n"
+            "- Analyze the error, adjust your approach, modify code/commands, and try alternative solutions independently.\n"
+            "- Exhaust at least 3 distinct troubleshooting strategies before considering a task blocked.\n"
+            "- Only halt and prompt the user if you hit a fatal external blocker (e.g., missing API credentials, permission denied requiring human auth).\n\n"
+            "4. VERIFICATION & DEFINITION OF DONE\n"
+            "- Do not mark a step or task as complete based on assumptions. Verify results directly (e.g., run tests, inspect output files, verify API responses).\n"
+            "- The task is ONLY complete when all requirements in the prompt are fulfilled and verified working.\n\n"
+            "5. FINAL DELIVERABLE\n"
+            "- Once (and only once) all steps are completed and verified, summarize the actions taken and deliver the final result.\n\n"
+            "TASK TO EXECUTE:\n"
+            "{task}"
+        ),
+        # স্টাইল ২: প্র্যাগম্যাটিক সিনিয়র ডেভেলপার স্পেক্স
+        (
+            "{header}\n\n"
+            "### IMPLEMENTATION TASK BRIEF\n\n"
+            "Please execute the following assignment end-to-end with high autonomy.\n"
+            "Directives:\n"
+            "- Provide a complete, production-ready implementation without leaving TODOs or placeholder stubs.\n"
+            "- Handle edge cases, connection failures, and error paths gracefully.\n"
+            "- Verify that the solution is self-contained and immediately executable.\n\n"
+            "TASK:\n"
+            "{task}"
+        ),
+        # স্টাইল ৩: স্টেপ-বাই-স্টেপ প্র্যাকটিক্যাল এক্সিকিউশন
+        (
+            "{header}\n\n"
+            "Goal: Execute the task below completely from start to finish.\n\n"
+            "Execution Guidelines:\n"
+            "1. Break down the logic into clean, modular steps.\n"
+            "2. Write robust, idiomatic code with clean structure.\n"
+            "3. Self-correct any edge case issues and provide the finished deliverable.\n\n"
+            "ASSIGNED TASK:\n"
+            "{task}"
+        ),
+        # স্টাইল ৪: ডিরেক্ট এন্ড-টু-এন্ড অ্যাকশন স্পেসিফিকেশন
+        (
+            "{header}\n\n"
+            "Please execute the following assignment end-to-end without pausing for mid-step approval.\n\n"
+            "### EXECUTION GUIDELINES\n"
+            "- Implement all requirements completely.\n"
+            "- Ensure zero unhandled exceptions, robust error trapping, and clean typing.\n"
+            "- Deliver the verified, ready-to-run result.\n\n"
+            "TARGET ASSIGNMENT:\n"
+            "{task}"
+        ),
+        # স্টাইল ৫: মাল্টি-ওয়ার্কস্পেস ডেভেলপার হ্যান্ডওভার
+        (
+            "{header}\n\n"
+            "Developer handover specification:\n"
+            "Take full ownership of the following task and complete all steps autonomously.\n"
+            "Verify all changes and ensure no stubbed or unfinished methods remain.\n\n"
+            "TASK SPECIFICATION:\n"
+            "{task}"
+        ),
+    ]
+
+    CONDUCTOR_CLOSERS = [
+        "",  # বেশিরভাগ সময় কোনো ক্লোজার ছাড়া (ন্যাচারাল ও ক্লিন)
+        "",
+        "\n\nThanks in advance!",
+        "\n\nKeep the solution clean, robust, and well-documented.",
+        "\n\nEnsure all edge cases and boundary conditions are handled properly.",
+        "\n\nAppreciate the thorough execution!",
+    ]
 
     def _apply_dual_ai_conductor(
         self, prompt: str, context: EnhancementContext | None, tricks: list[str]
@@ -167,14 +233,21 @@ class PromptEnhancementEngine:
         বাংলা সারসংক্ষেপ:
         ------------------
         ২টা এআই নিয়ে একজন মানুষের মাল্টি-এআই কাজের বাস্তবসম্মত ট্রিক (Dual AI Conductor):
-        ১. 'Copy this to your AI:' দিয়ে শুরু হয় — যা ২য় এআই-র কাছে প্রমাণ করে এটা একজন মানুষের কপি-পেস্ট করা নির্দেশ।
-        ২. একই সাথে Autonomous Execution Agent ফ্রেমওয়ার্ক যুক্ত থাকে — যাতে এআই মাঝপথে থেমে না গিয়ে পুরো কাজ শেষ করে।
+        ১. হেডার, স্টাইল এবং ক্লোজারে র্যান্ডম হিউম্যান বিহেভিওরাল ভ্যারিয়েশন (Entropy) প্রয়োগ।
+        ২. একই সাথে Autonomous Execution ফ্রেমওয়ার্ক বজায় রাখা — যাতে এআই মাঝপথে না থামে।
         ৩. কোডিং বা ব্রাউজিং কনটেক্সট থাকলে নির্দিষ্ট এনভায়রনমেন্ট রুলস যুক্ত হয়।
         """
         tricks.append("dual_ai_conductor_proven_human")
-        tricks.append("autonomous_execution_blueprint")
+        tricks.append("behavioral_style_entropy")
 
-        result = self.AUTONOMOUS_EXECUTION_TEMPLATE.format(task=prompt)
+        header = self._rng.choice(self.CONDUCTOR_HEADER_VARIANTS)
+        template = self._rng.choice(self.CONDUCTOR_STYLE_TEMPLATES)
+        closer = self._rng.choice(self.CONDUCTOR_CLOSERS)
+
+        result = template.format(header=header, task=prompt)
+        if closer:
+            result += closer
+            tricks.append("natural_closer_jitter")
 
         # এনভায়রনমেন্ট অ্যাডিশন (কোডিং বা টুল স্পেসিফিক রুলস)
         if context:

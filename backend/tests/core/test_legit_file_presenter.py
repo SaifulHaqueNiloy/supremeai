@@ -146,7 +146,13 @@ STRICTLY ONLY OUTPUT CODE. DO NOT EXPLAIN."""
 
     assert "SYSTEM DIRECTIVE" not in human_prompt
     assert "Write a FastAPI route for user registration" in human_prompt
-    assert "Just the clean code snippet would be great, thanks!" in human_prompt
+    valid_code_phrases = [
+        "Just the clean code snippet would be great, thanks!",
+        "Only need the code implementation, no extra commentary.",
+        "Please output the clean code directly.",
+        "Just the working code snippet please.",
+    ]
+    assert any(p in human_prompt for p in valid_code_phrases)
     assert "STRICTLY ONLY OUTPUT CODE" not in human_prompt
 
     # বাংলা মন্তব্য: 'Copy this to your AI:' থাকলে তা অটোনোমাস হিউম্যান ব্লুপ্রিন্ট হিসেবে অক্ষুণ্ণ থাকবে
@@ -160,6 +166,17 @@ STRICTLY ONLY OUTPUT CODE. DO NOT EXPLAIN."""
     assert "Copy this to your AI:" in preserved
     assert "Autonomous Execution Agent" in preserved
     assert "Refactor auth middleware to keep memory minimal." in preserved
+
+    # বাংলা মন্তব্য: অন্যান্য র্যান্ডমাইজড কনডাক্টর ভ্যারিয়েন্টও অবিকৃত থাকবে
+    conductor_prompt2 = (
+        "Copy and paste this into your AI chat:\n"
+        "### IMPLEMENTATION TASK BRIEF\n"
+        "TASK:\n"
+        "Refactor auth middleware to keep memory minimal."
+    )
+    preserved2 = NaturalFilePresenter.humanize_prompt(conductor_prompt2)
+    assert "Copy and paste this into your AI chat:" in preserved2
+    assert "IMPLEMENTATION TASK BRIEF" in preserved2
 
 
 def test_scrub_identity_and_watermarks():

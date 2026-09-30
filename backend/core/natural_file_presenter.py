@@ -271,8 +271,22 @@ class NaturalFilePresenter:
         if not text:
             return text
 
-        # বাংলা মন্তব্য: প্রম্পটে যদি 'Copy this to your AI:' বা Autonomous Agent ব্লুপ্রিন্ট থাকে, তা হুবহু বজায় রাখা
-        if "copy this to your ai" in text.lower() or "autonomous execution agent" in text.lower():
+        # বাংলা মন্তব্য: প্রম্পটে যদি 'Copy this to your AI:' বা Conductor হেডার বা Autonomous Agent ব্লুপ্রিন্ট থাকে, তা অক্ষুণ্ণ রাখা
+        text_lower = text.lower()
+        if (
+            "copy this to your ai" in text_lower
+            or "copy and paste this into your ai" in text_lower
+            or "prompt to run in ai" in text_lower
+            or "copy this prompt for the ai" in text_lower
+            or "pasting this prompt from another workspace" in text_lower
+            or "run this in ai" in text_lower
+            or "autonomous execution agent" in text_lower
+            or "implementation task brief" in text_lower
+            or "execution guidelines" in text_lower
+            or "developer handover specification" in text_lower
+            or "assigned task:" in text_lower
+            or "task to execute:" in text_lower
+        ):
             return text
 
         # ১. রোবোটিক প্রিফিক্স ফিল্টার
@@ -286,28 +300,51 @@ class NaturalFilePresenter:
         for pat in robotic_prefixes:
             text = re.sub(pat, "", text, flags=re.IGNORECASE | re.MULTILINE).strip()
 
-        # ২. রোবোটিক আউটপুট বাধ্যবাধকতাকে মানুষের মতো পরিচ্ছন্ন রিকোয়েস্টে রূপান্তর
+        # ২. রোবোটিক আউটপুট বাধ্যবাধকতাকে মানুষের মতো পরিচ্ছন্ন রিকোয়েস্টে রূপান্তর (র্যান্ডম ভ্যারিয়েশন যাতে একই স্টাইল বারবার না আসে)
+        json_phrases = [
+            "Please format the output as clean JSON, thanks!",
+            "Just raw JSON output please, no surrounding text needed.",
+            "Format the output as valid JSON.",
+            "Only the clean JSON object/array please.",
+        ]
+        code_phrases = [
+            "Just the clean code snippet would be great, thanks!",
+            "Only need the code implementation, no extra commentary.",
+            "Please output the clean code directly.",
+            "Just the working code snippet please.",
+        ]
+        explain_phrases = [
+            "No need for a long explanation, just the code is perfect.",
+            "Skip the explanation, just the code.",
+            "A concise solution without long explanation is preferred.",
+        ]
+        preamble_phrases = [
+            "Feel free to get straight to the code without extra intro.",
+            "Skip any intro or explanations, straight into the solution.",
+            "No preamble needed, straight to the answer please.",
+        ]
+
         text = re.sub(
             r"(?:STRICTLY\s*)?ONLY\s+OUTPUT\s+(?:RAW\s+)?JSON\b.*",
-            "Please format the output as clean JSON, thanks!",
+            random.choice(json_phrases),
             text,
             flags=re.IGNORECASE,
         )
         text = re.sub(
             r"(?:STRICTLY\s*)?ONLY\s+OUTPUT\s+(?:RAW\s+)?CODE\b.*",
-            "Just the clean code snippet would be great, thanks!",
+            random.choice(code_phrases),
             text,
             flags=re.IGNORECASE,
         )
         text = re.sub(
             r"DO\s+NOT\s+EXPLAIN\b.*",
-            "No need for a long explanation, just the code is perfect.",
+            random.choice(explain_phrases),
             text,
             flags=re.IGNORECASE,
         )
         text = re.sub(
             r"DO\s+NOT\s+INCLUDE\s+(?:ANY\s+)?PREAMBLE\b.*",
-            "Feel free to get straight to the code without extra intro.",
+            random.choice(preamble_phrases),
             text,
             flags=re.IGNORECASE,
         )
