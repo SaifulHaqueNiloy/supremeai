@@ -548,6 +548,21 @@ agent_rules:
       - "claim লক নেওয়া (শুধুমাত্র issue create)"
     auto_inject: true
 
+  ecosystem_scout:
+    description: "বিশ্বের শীর্ষস্থানীয় (World-Class) AI টুলস, আর্কিটেকচার ও ওপেন-সোর্স প্রজেক্ট পর্যবেক্ষণ করে সুপ্রিমএআই-কে টপ-অব-দ্য-ওয়ার্ল্ড পর্যায়ে উন্নীত করার প্ল্যান প্রণয়ন: (১) সরাসরি ব্যবহার (Direct Use / MCP / Zero-Cost Integration) অথবা (২) তার শ্রেষ্ঠ মেকানিজম থেকে শিক্ষা নিয়ে আত্মস্থ করা (Architectural Learning & Absorption)।"
+    applicable_rules:
+      - "architecture.rule_002"
+      - "architecture.rule_003"
+      - "free_tier_constraint"
+      - "hard_rules.conciseness_and_zero_bloat"
+      - "hard_rules.peer_autonomy_and_synthesis"
+    prohibited_actions:
+      - "কোনো কোড সরাসরি এডিট বা ডিলিট"
+      - "র‍্যাম ব্লোটকারী ভারী ডিপেন্ডেন্সি সরাসরি ইনস্টল"
+      - "কোনো PR তৈরি বা মার্জ"
+      - "ক্লেইম লক নেওয়া (শুধুমাত্র অডিট, ব্লুপ্রিন্ট ও অ্যাকশনেবল প্ল্যান তৈরি)"
+    auto_inject: true
+
 # Scope Gate policy (parsed by gates.py — do not rename keys).
 scope_policy:
   declaration_marker: "Touching files:"
