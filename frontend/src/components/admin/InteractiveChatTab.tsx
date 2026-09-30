@@ -34,7 +34,7 @@ interface InteractiveChatTabProps {
 }
 
 import { getApiBaseUrl } from '../../utils/api';
-import { getAuthHeaders } from '../../services/apiClient';
+import { apiClient } from '../../services/apiClient';
 
 
 export function InteractiveChatTab({
@@ -95,13 +95,8 @@ export function InteractiveChatTab({
   // --- বোনাস API কল (Prompt Action metadata) ---
   const fetchActionMetadata = useCallback(async (prompt: string): Promise<Message['action']> => {
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/chat/prompt-action`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
-        body: JSON.stringify({ message: prompt }),
-      });
-      if (!res.ok) return undefined;
-      const data = await res.json();
+      // Issue #2522: raw fetch -> apiClient.post।
+      const data = await apiClient.post<{ action?: Message['action'] }>('/api/chat/prompt-action', { message: prompt });
       return data.action;
     } catch {
       return undefined;
@@ -121,9 +116,10 @@ export function InteractiveChatTab({
     ]);
 
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/chat/stream`, {
+      // Issue #2522: raw fetch -> apiClient.stream — auth/timeout/queue + abort passthrough।
+      const res = await apiClient.stream('/api/chat/stream', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...(await getAuthHeaders()) },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: userPrompt, idempotency_key: crypto.randomUUID() }),
         signal: (abortControllerRef.current = new AbortController()).signal,
       });

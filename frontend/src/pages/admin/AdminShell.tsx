@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAdminStore } from "../../store/adminStore";
 import { AdminConsole } from "../../components/admin/AdminConsole";
-import { apiClient, getAuthHeaders } from "../../services/apiClient";
-import { getApiBaseUrl } from "../../utils/api";
+import { apiClient } from "../../services/apiClient";
 import { Shield } from "lucide-react";
 import type { AdminSubTab, ChatMessage } from "../../types";
 import { useCostReport, useHealthMap, useSkills, useCheckpoints, useDeleteCheckpoint, useInstallSkill } from "../../hooks";
@@ -165,9 +164,10 @@ export function AdminShell() {
     abortRef.current = new AbortController();
     try {
       // Same real chat endpoint the user-facing chat uses.
-      const res = await fetch(`${getApiBaseUrl()}/api/chat/stream`, {
+      // Issue #2522: raw fetch -> apiClient.stream — auth/timeout/queue + abort passthrough।
+      const res = await apiClient.stream('/api/chat/stream', {
         method: "POST",
-        headers: { ...(await getAuthHeaders()), "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: prompt,
           project_id: "admin_sandbox",

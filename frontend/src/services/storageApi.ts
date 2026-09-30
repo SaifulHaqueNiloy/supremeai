@@ -1,36 +1,20 @@
 // FrR2 Storage API
 
-import { getApiBaseUrl } from '../utils/api';
-import { adminTokenStore } from './adminTokenStore';
-
-
-const getAuthToken = () => {
-    return adminTokenStore.getRawToken();
-};
+import { apiClient } from './apiClient';
 
 export const uploadFileToR2 = async (file: File) => {
     try {
         // বাংলা মন্তব্য: ১. ব্যাকএন্ড থেকে প্রে-সাইন্ড আপলোড ইউআরএল নিয়ে আসা
-        const response = await fetch(`${getApiBaseUrl()}/api/v1/media/generate-upload-url`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${getAuthToken()}`
-            },
-            body: JSON.stringify({
-                file_name: file.name,
-                file_type: file.type,
-                folder: 'custom_skills'
-            })
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to generate upload URL');
-        }
-
-        const { upload_url, file_path } = await response.json();
+        // Issue #2522: raw fetch -> apiClient.post — manual Authorization হেডার আর দরকার নেই,
+        // timeout/queue/error-mapping ক্লায়েন্ট নিজেই দেয়।
+        const { upload_url, file_path } = await apiClient.post<{ upload_url: string; file_path: string }>(
+            '/api/v1/media/generate-upload-url',
+            { file_name: file.name, file_type: file.type, folder: 'custom_skills' },
+        );
 
         // বাংলা মন্তব্য: ২. সরাসরি Cloudflare R2-তে ফাইল আপলোড (ব্যাকএন্ড বাইপাস করে)
+        // Justified raw fetch (Issue #2522): এটি আমাদের backend API নয় — pre-signed
+        // external storage URL; apiClient-এর auth/retry/base-URL এখানে প্রযোজ্য নয়।
         const uploadResponse = await fetch(upload_url, {
             method: 'PUT',
             headers: {

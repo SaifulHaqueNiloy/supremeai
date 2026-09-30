@@ -22,7 +22,6 @@ import TaskNode from './nodes/TaskNode';
 import { ForgeSidebar } from './ForgeSidebar';
 import { useForgeAutosave } from './hooks/useForgeAutosave';
 import { DebateOverlay } from './DebateOverlay';
-import { getApiBaseUrl } from '../../../utils/api';
 import { apiClient } from '../../../services/apiClient';
 import { getAdminToken, getUserToken } from '../../../services/tokenStorage';
 import { eventBus, Events } from '../../../lib/componentEventBus';
@@ -98,8 +97,9 @@ const EvolutionForgeCanvas = () => {
 
     const connectSSE = async () => {
       try {
-        const response = await fetch(`${getApiBaseUrl()}/api/v1/swarm/stream`, {
-          headers: { Authorization: `Bearer ${token}` },
+        // Issue #2522: raw fetch -> apiClient.stream — token ক্লায়েন্ট বসায়,
+        // timeout/queue/cold-start retry + abort passthrough অটোমেটিক।
+        const response = await apiClient.stream('/api/v1/swarm/stream', {
           signal: abortController.signal,
         });
 

@@ -15,9 +15,7 @@ import {
   XCircle,
 } from 'lucide-react';
 import { apiClient } from '../../services/apiClient';
-import { getApiBaseUrl } from '../../utils/api';
 import { safeUrl } from '../../lib/safeUrl';
-import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 import { globalShowToastRef } from '../../contexts/ToastContext';
 import { parseResearchSseLine } from './researchEventContract';
 
@@ -160,18 +158,15 @@ export default function DeepResearchPanel() {
     abortRef.current = new AbortController();
 
     try {
-      // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
-      const token = getUserToken() || getAdminToken();
       // Issue #452 fix: window.location.origin breaks whenever the API lives on
       // a different origin than the frontend — use the canonical base URL
       // helper like every other panel.
-      const baseUrl = getApiBaseUrl();
-
-      const response = await fetch(`${baseUrl}/api/research/deep/stream`, {
+      // Issue #2522: raw fetch -> apiClient.stream — token ক্লায়েন্ট বসায়,
+      // timeout/queue/cold-start retry + abort passthrough অটোমেটিক।
+      const response = await apiClient.stream('/api/research/deep/stream', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
           Accept: 'text/event-stream',
         },
         body: JSON.stringify({ query: query.trim() }),

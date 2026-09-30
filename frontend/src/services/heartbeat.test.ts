@@ -1,15 +1,16 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { startAntiSleepHeartbeat } from './heartbeat';
 
-vi.mock('../utils/api', () => ({
-  getApiBaseUrl: vi.fn(() => 'https://api.test-domain.com'),
+// Issue #2522: heartbeat now probes via apiClient.get — module mocked here.
+const { mockGet } = vi.hoisted(() => ({ mockGet: vi.fn() }));
+vi.mock('./apiClient', () => ({
+  apiClient: { get: (...args: unknown[]) => mockGet(...args) },
 }));
 
 describe('heartbeat', () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.clearAllMocks();
-    (global as unknown as { fetch: ReturnType<typeof vi.fn> }).fetch = vi.fn();
   });
 
   afterEach(() => {
@@ -23,23 +24,21 @@ describe('heartbeat', () => {
   });
 
   it('pings the health endpoint on schedule', async () => {
-    const mockFetch = (global as unknown as { fetch: ReturnType<typeof vi.fn> }).fetch;
-    mockFetch.mockResolvedValue({ ok: true } as Response);
+    mockGet.mockResolvedValue({ status: 'ok' });
 
     startAntiSleepHeartbeat();
-    expect(mockFetch).not.toHaveBeenCalled();
+    expect(mockGet).not.toHaveBeenCalled();
 
     await vi.advanceTimersByTimeAsync(10_000);
-    expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.test-domain.com/api/v1/live',
-      expect.objectContaining({ method: 'GET' })
+    expect(mockGet).toHaveBeenCalledWith(
+      '/api/v1/live',
+      expect.objectContaining({ headers: expect.any(Object) })
     );
   });
 
   it('logs a warning when the health endpoint returns non-ok', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const mockFetch = (global as unknown as { fetch: ReturnType<typeof vi.fn> }).fetch;
-    mockFetch.mockResolvedValue({ ok: false, status: 500 } as Response);
+    mockGet.mockRejectedValue(Object.assign(new Error('HTTP 500'), { status: 500 }));
 
     startAntiSleepHeartbeat();
     await vi.advanceTimersByTimeAsync(10_000);
@@ -50,10 +49,9 @@ describe('heartbeat', () => {
     consoleSpy.mockRestore();
   });
 
-  it('logs a warning when the fetch throws', async () => {
+  it('logs a warning when the probe throws', async () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const mockFetch = (global as unknown as { fetch: ReturnType<typeof vi.fn> }).fetch;
-    mockFetch.mockRejectedValue(new Error('network down'));
+    mockGet.mockRejectedValue(new Error('network down'));
 
     startAntiSleepHeartbeat();
     await vi.advanceTimersByTimeAsync(10_000);

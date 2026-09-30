@@ -14,6 +14,8 @@ function normalizeUrl(value: string): string {
 }
 
 async function getJson(url: string, token: string): Promise<Record<string, unknown>> {
+  // Justified raw fetch (Issue #2522): URL ইউজার-কনফিগার করা EXTERNAL MCP
+  // সার্ভার — আমাদের backend নয়; নিজস্ব 10s AbortSignal.timeout আছে।
   const response = await fetch(url, {
     headers: {
       Accept: 'application/json',

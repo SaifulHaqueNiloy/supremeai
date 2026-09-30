@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '../../store/authStore';
 import { ServiceHealthBar } from '../../components/auth/ServiceHealthBar';
-import { getApiBaseUrl } from '../../utils/api';
+import { apiClient } from '../../services/apiClient';
 
 export const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -103,7 +103,9 @@ export const LoginPage: React.FC = () => {
     try {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), 10000);
-      const resp = await fetch(`${getApiBaseUrl()}/api/v1/health`, {
+      // Issue #2522: raw fetch -> apiClient.stream — resp.ok/status রেখেই
+      // timeout/queue/retry পাওয়া যায় (diagnostic-এ raw status দরকার)।
+      const resp = await apiClient.stream('/api/v1/health', {
         method: 'GET',
         signal: controller.signal,
       });

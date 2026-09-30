@@ -8,6 +8,7 @@ vi.mock('./apiClient', () => ({
   apiClient: {
     post: vi.fn(),
     get: vi.fn(),
+    stream: vi.fn(),
   },
   getAuthHeaders: vi.fn(async () => ({ Authorization: 'Bearer x' })),
 }));
@@ -89,12 +90,11 @@ describe('chatService', () => {
     const onToken = vi.fn();
     const onDone = vi.fn();
     const onError = vi.fn();
-    (global.fetch as unknown as ReturnType<typeof vi.fn>)
-      .mockResolvedValueOnce(makeStreamReader(['data: {"token":"Hello"}\n', 'data: [DONE]\n']))
-      .mockResolvedValueOnce({
-        ok: true,
-        json: async () => ({ action: { type: 'open' } }),
-      });
+    // Issue #2522: streaming now via apiClient.stream; prompt-action via apiClient.post.
+    (apiClient.stream as unknown as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce(makeStreamReader(['data: {"token":"Hello"}\n', 'data: [DONE]\n']));
+    (apiClient.post as unknown as ReturnType<typeof vi.fn>)
+      .mockResolvedValueOnce({ action: { type: 'open' } });
     await sendMessageStream('hi', onToken, onDone, onError);
     expect(onToken).toHaveBeenCalledWith('Hello');
     expect(onDone).toHaveBeenCalledWith({ type: 'open' });
@@ -105,7 +105,7 @@ describe('chatService', () => {
     const onToken = vi.fn();
     const onDone = vi.fn();
     const onError = vi.fn();
-    (global.fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+    (apiClient.stream as unknown as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
       ok: false,
       status: 500,
       statusText: 'Internal',

@@ -252,7 +252,20 @@ const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = D
   const fetchOptions: RequestInit = { ...options };
   const isTest = typeof process !== 'undefined' && (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true');
   if (!isTest) {
-    fetchOptions.signal = controller.signal;
+    // Issue #2522: কলার নিজের signal (stop button / probe timeout) পাঠালে তা
+    // timeout signal-এর সাথে combine হয় — দুটির যেকোনো একটি ফায়ার করলেই abort।
+    // আগে কলারের signal নীরবে ওভাররাইট হয়ে যেত, ফলে UI abort কাজ করত না।
+    const callerSignal = options.signal;
+    const signalAny = typeof AbortSignal !== 'undefined'
+      ? (AbortSignal as unknown as { any?: (...signals: AbortSignal[]) => AbortSignal }).any
+      : undefined;
+    if (callerSignal && callerSignal.aborted) {
+      fetchOptions.signal = callerSignal;
+    } else if (callerSignal && typeof signalAny === 'function') {
+      fetchOptions.signal = signalAny.call(AbortSignal, controller.signal, callerSignal);
+    } else {
+      fetchOptions.signal = controller.signal;
+    }
   }
 
   try {
@@ -292,6 +305,9 @@ const throttledFetch = async (url: string, options: RequestInit): Promise<Respon
         }
         return res;
       } catch (e: unknown) {
+        // Issue #2522: কলার abort (stop button / unmount) হলে retry অর্থহীন ও
+        // ক্ষতিকর — বাতিল করা অনুরোধ ৪ বার পাঠানো হতো। সঙ্গে সঙ্গে ছড়িয়ে দিই।
+        if (fetchOptions.signal?.aborted) throw e;
         attempts++;
         if (attempts >= MAX_ATTEMPTS) {
           if (isDev()) console.error(`[Queue Interceptor] Network failure for ${currentUrl} after ${MAX_ATTEMPTS} attempts:`, e);
@@ -558,6 +574,19 @@ export const apiClient = {
       body: body ? JSON.stringify(body) : undefined,
     });
     return handleResponse(res);
+  },
+
+  // Issue #2522: streaming/raw-response path — SSE, audio, blob download-এর জন্য।
+  // throttledFetch-এর সব সুবিধা (concurrency queue, connect-timeout, cold-start
+  // 50x retry) থাকে, কিন্তু handleResponse/response.json() হয় না — কলার নিজের
+  // মতো body stream পড়ে। `auth: false` দিলে Authorization হেডার যায় না
+  // (public endpoint)। connect-phase timeout শেষ হলে body streaming বন্ধ হয় না —
+  // fetchWithTimeout-এর finally clearTimeout হেডার আসার সাথে সাথেই টাইমার মুছে দেয়।
+  stream: async (path: string, options?: RequestInit & { auth?: boolean }): Promise<Response> => {
+    const { auth = true, ...init } = options ?? {};
+    const headers: Record<string, string> = { ...(init.headers as Record<string, string> | undefined) };
+    if (auth) Object.assign(headers, await getAuthHeaders());
+    return throttledFetch(buildUrl(getApiBaseUrl(path), path), { ...init, headers });
   },
 
   // 🟢 Non-blocking Telemetry / Background Check (10s timeout, silent fallback)

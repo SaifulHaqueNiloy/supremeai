@@ -9,7 +9,7 @@ import {
   File,
 } from 'lucide-react';
 import { globalShowToastRef } from '../../contexts/ToastContext';
-import { getAdminToken, getUserToken } from '../../services/tokenStorage';
+import { apiClient } from '../../services/apiClient';
 
 // ─── Types ───────────────────────────────────────────────────────────────
 
@@ -84,16 +84,12 @@ export default function ExportMenu({ conversationId, conversationTitle }: Export
 
     try {
       // Fetch export blob directly
-      const baseUrl = window.location.origin;
-      // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
-      const token = getUserToken() || getAdminToken();
 
-      const blobResponse = await fetch(`${baseUrl}/api/chat/export`, {
+      // Issue #2522: raw fetch -> apiClient.stream — token ক্লায়েন্ট বসায়,
+      // blob download-এর জন্য raw Response দরকার।
+      const blobResponse = await apiClient.stream('/api/chat/export', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           conversation_id: conversationId,
           format: option.format,

@@ -32,12 +32,40 @@ export default tseslint.config({ ignores: ['dist', 'dist-admin', 'dist-user', 's
     '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
     'react-hooks/set-state-in-effect': 'off',
     'no-console': ['warn', { allow: ['warn', 'error', 'debug'] }],
+    // Issue #2522: bare fetch() regression guard — সব API কল apiClient দিয়ে যাবে
+    // (timeout, concurrency queue, auth header, cold-start retry, error mapping)।
+    // Justified raw users নিচের override block-এ allowlisted।
+    'no-restricted-syntax': ['error', {
+      selector: "CallExpression[callee.name='fetch']",
+      message: "bare fetch() is forbidden (Issue #2522) — use apiClient from src/services/apiClient.ts (timeout/queue/auth/retry). For justified raw usage see the allowlist in eslint.config.js.",
+    }],
+  },
+}, {
+  // Issue #2522: justified bare-fetch allowlist — এই ফাইলগুলোতে raw fetch সচেতনভাবে রাখা হয়েছে:
+  //  - apiClient.ts: ক্লায়েন্ট নিজেই প্রিমিটিভ লেয়ার
+  //  - utils/api.ts: fetchWithRetry foundation (apiClient এই মডিউল import করে — circular এড়াতে)
+  //  - firebase.ts: Firebase Hosting-এর নিজস্ব init endpoint (backend API নয়)
+  //  - mcpViewer.ts: ইউজার-কনফিগার করা external MCP সার্ভার URL
+  //  - storageApi.ts: Cloudflare R2 pre-signed PUT (external storage, backend বাইপাস)
+  //  - GlobalErrorBoundary/RouteBoundary: keepalive unload-beacon (queue-তে গেলে unload-এ হারায়)
+  files: [
+    'src/services/apiClient.ts',
+    'src/utils/api.ts',
+    'src/firebase.ts',
+    'src/services/mcpViewer.ts',
+    'src/services/storageApi.ts',
+    'src/components/GlobalErrorBoundary.tsx',
+    'src/router/RouteBoundary.tsx',
+  ],
+  rules: {
+    'no-restricted-syntax': 'off',
   },
 }, {
   // Test files: Allow any in tests (mocks, stubs, test fixtures)
   files: ['**/*.{test,spec}.{ts,tsx}', '**/test/**/*.{ts,tsx}'],
   rules: {
     '@typescript-eslint/no-explicit-any': 'off',
+    'no-restricted-syntax': 'off',
   },
 }, {
   // Routes and config files export route objects, not React components

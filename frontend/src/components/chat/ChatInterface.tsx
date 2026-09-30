@@ -8,8 +8,6 @@ import { UnifiedChatBubble } from './UnifiedChatBubble';
 import { controlPlane } from '../../services/controlPlane';
 import { useEventBus } from '../../hooks/useEventBus';
 import { eventBus, Events } from '../../lib/componentEventBus';
-import { getApiBaseUrl } from '../../utils/api';
-import { getAdminToken, getUserToken } from '../../services/tokenStorage';
 import { AudioPlaybackService } from '../../services/audio/AudioPlaybackService';
 import { BrainCircuit, Download, FileCode2, Volume2, VolumeX, Share2 } from 'lucide-react';
 
@@ -32,6 +30,7 @@ import {
   type Artifact as WorkspaceArtifact,
   type ReasoningStep,
 } from '../../store/workspaceUiStateStore';
+import { apiClient } from '../../services/apiClient';
 
 // M10 (issue #453) বাংলা: backend orchestration response-এ চুক্তি-অনুযায়ী ফিল্ড
 // এলে সেগুলোই S2/S3 স্টোরে যাবে — টাইপ-গার্ড ছাড়া কিছুই গ্রহণ করা হবে না।
@@ -142,13 +141,9 @@ export const ChatInterface: React.FC = () => {
 
       // ২) fallback: backend TTS (auth header সহ fetch + blob playback)
       try {
-        // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
-        const token =
-          getUserToken() ||
-          getAdminToken();
-        const res = await fetch(
-          `${getApiBaseUrl()}/api/voice/stream_audio?text=${encodeURIComponent(text.slice(0, 1000))}`,
-          { headers: token ? { Authorization: `Bearer ${token}` } : undefined }
+        // Issue #2522: raw fetch -> apiClient.stream — auth/timeout/queue অটোমেটিক।
+        const res = await apiClient.stream(
+          `/api/voice/stream_audio?text=${encodeURIComponent(text.slice(0, 1000))}`,
         );
         if (!res.ok) {
           addMessage({

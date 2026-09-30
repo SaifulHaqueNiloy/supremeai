@@ -13,7 +13,7 @@
  * default 10 min — the backend already filters, the badge mirrors it).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { getApiBaseUrl } from '../../utils/api';
+import { apiClient } from '../../services/apiClient';
 
 const VALID_ROLES = ['planner', 'coder', 'tester', 'gate', 'observer'] as const;
 type MeshRole = (typeof VALID_ROLES)[number];
@@ -82,11 +82,8 @@ export function MeshAgentsPanel() {
 
   const fetchNodes = useCallback(async () => {
     try {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/nodes`, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-      if (!res.ok) throw new Error(`GET /nodes -> HTTP ${res.status}`);
-      const data = (await res.json()) as { nodes?: MeshNode[] } | MeshNode[];
+      // Issue #2522: raw fetch -> apiClient.get — auth হেডার এখন যাচ্ছে (আগে ছিল না), timeout/queue সহ।
+      const data = await apiClient.get<{ nodes?: MeshNode[] } | MeshNode[]>('/api/v1/nodes');
       const list = Array.isArray(data) ? data : (data.nodes ?? []);
       if (mountedRef.current) {
         setNodes(list);
@@ -118,16 +115,8 @@ export function MeshAgentsPanel() {
       // Optimistic update
       setNodes(prev => prev.map(n => (n.node_id === nodeId ? { ...n, role } : n)));
       try {
-        const res = await fetch(`${getApiBaseUrl()}/api/v1/nodes/${encodeURIComponent(nodeId)}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ role }),
-        });
-        if (!res.ok) {
-          const detail = await res.json().catch(() => null);
-          throw new Error(detail?.detail ?? `HTTP ${res.status}`);
-        }
-        const data = (await res.json()) as { node?: MeshNode };
+        // Issue #2522: raw fetch -> apiClient.patch — non-ok হলে ApiError (status সহ)।
+        const data = await apiClient.patch<{ node?: MeshNode }>(`/api/v1/nodes/${encodeURIComponent(nodeId)}`, { role });
         if (data.node) {
           setNodes(prev => prev.map(n => (n.node_id === nodeId ? data.node! : n)));
         }

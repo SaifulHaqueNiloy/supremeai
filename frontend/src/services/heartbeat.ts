@@ -1,4 +1,5 @@
 import { getApiBaseUrl } from '../utils/api';
+import { apiClient } from './apiClient';
 
 // বাংলা মন্তব্য: এটি একটি গ্লোবাল হার্টবিট সার্ভিস, যা প্রতি ১০ মিনিট অন্তর /api/v1/live ইনফ্রাস্ট্রাকচার প্রোব দিয়ে
 // সার্ভারগুলোকে স্লিপিং মোডে যাওয়া থেকে বিরত রাখে। /health থেকে /api/v1/live তে মাইগ্রেটেড
@@ -23,18 +24,13 @@ export const pingServers = () => {
   const targets = [getApiBaseUrl()];
   targets.forEach(async (url) => {
     try {
-      // বাংলা: /api/v1/live প্রোব ব্যাকেন্ডের নতুন Liveness Probe দিয়ে পিং করার জন্য মাইগ্রেটেড
-      const response = await fetch(`${url}/api/v1/live`, {
-        method: 'GET',
-        headers: { 'Cache-Control': 'no-cache' }
-      });
-      if (response.ok) {
-        console.warn(`[Heartbeat] ✅ Live: ${url}/api/v1/live`);
-      } else {
-        console.warn(`[Heartbeat] ⚠️ Non-ok response from: ${url}/api/v1/live (${response.status})`);
-      }
-    } catch {
-      console.warn(`[Heartbeat] ❌ Could not reach: ${url}/api/v1/live`);
+      // বাংলা: /api/v1/live প্রোব — raw fetch → apiClient (timeout + queue + cold-start retry)।
+      // non-ok হলে ApiError — status সহ warn, আগের ok/non-ok বিভাজন অটুট।
+      await apiClient.get('/api/v1/live', { headers: { 'Cache-Control': 'no-cache' } });
+      console.warn(`[Heartbeat] ✅ Live: ${url}/api/v1/live`);
+    } catch (e) {
+      const status = e && typeof e === 'object' && 'status' in e ? ` (HTTP ${(e as { status?: number }).status})` : '';
+      console.warn(`[Heartbeat] ❌ Could not reach: ${url}/api/v1/live${status}`);
     }
   });
 };

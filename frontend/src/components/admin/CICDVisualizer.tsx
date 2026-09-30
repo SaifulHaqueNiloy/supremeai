@@ -1,11 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, Badge } from '../ui';
 import { Play, RotateCcw, FlaskConical } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useStore } from '../../store/useStore';
 import { useCIReports } from '../../hooks/useAdminApi';
-import { getApiBaseUrl } from '../../utils/api';
-import { adminTokenStore } from '../../services/adminTokenStore';
 import { apiClient } from '../../services/apiClient';
 import { CIDashboard } from './ci/CIDashboard';
 import { RenderPreflightWidget } from './RenderPreflightWidget';
@@ -61,22 +58,11 @@ export function CICDVisualizer() {
 
   const handleDeploy = async () => {
     try {
-      const API_BASE = getApiBaseUrl();
-      const res = await fetch(`${API_BASE}/admin-api/deploy`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminTokenStore.getRawToken()}`
-        }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        alert(`✅ ${data.message || 'Deployment triggered successfully!'}`);
-      } else {
-        alert('❌ Deployment failed (unauthorized or server error).');
-      }
-    } catch (e: any) {
-      alert(`❌ Deployment failed: ${e.message}`);
+      // Issue #2522: raw fetch -> apiClient.post — admin auth/timeout/queue অটোমেটিক।
+      const data = await apiClient.post<{ message?: string }>('/admin-api/deploy');
+      alert(`✅ ${data.message || 'Deployment triggered successfully!'}`);
+    } catch (e: unknown) {
+      alert(`❌ Deployment failed: ${e instanceof Error ? e.message : 'unauthorized or server error'}`);
     }
   };
 
