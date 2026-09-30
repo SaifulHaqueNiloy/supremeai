@@ -4,6 +4,7 @@ Aggregates health status from all microservices and external dependencies.
 """
 
 import asyncio
+import hashlib
 import os
 from datetime import datetime
 
@@ -19,6 +20,7 @@ from core.health.uptime_tracker import (
     get_uptime_summary,
     record_check,
 )
+from core.logging_config import logger
 
 router = APIRouter(prefix="/admin-api", tags=["health"], dependencies=[Depends(get_current_admin)])
 
@@ -42,6 +44,21 @@ class ServiceHealth(BaseModel):
     uptime_30d: float | None = None
 
 
+class SchemaDriftStatus(BaseModel):
+    """#2681 Finding 2: DB schema-fingerprint প্রোবের ফলাফল।
+
+    status: ok (baseline-এর সাথে মিল) · drift (live schema বদলেছে) ·
+            error (প্রোব ব্যর্থ) · skipped (dialect সাপোর্টেড নয়)
+    """
+
+    status: str
+    fingerprint: str | None = None
+    baseline_fingerprint: str | None = None
+    tables: int = 0
+    columns: int = 0
+    detail: str = ""
+
+
 class HealthAggregationResponse(BaseModel):
     timestamp: datetime
     overall_status: str
@@ -49,6 +66,9 @@ class HealthAggregationResponse(BaseModel):
     summary: dict[str, int]
     uptime_percentage: float
     alerts: list[str]
+    # বাংলা মন্তব্য (#2681 Finding 2): runtime schema-drift প্রোবের ফলাফল —
+    # None = প্রোব এখনো চলেনি/স্কিপড; backward-compat-এর জন্য optional।
+    schema_drift: SchemaDriftStatus | None = None
 
 
 class DependencyHealth(BaseModel):
@@ -173,6 +193,191 @@ async def check_single_service(config: dict) -> ServiceHealth:
         )
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# #2681 Finding 2 — SCHEMA-DRIFT PROBE (deep health diagnostic)
+# বাংলা মন্তব্য: আগের হেলথ-চেক presence-only ছিল (HTTP status/DB connectivity)।
+# এখন cheap information_schema fingerprint দিয়ে runtime schema drift ধরা হয় —
+# প্রথম সফল প্রোব = baseline; পরের প্রোবে fingerprint বদলালে = DRIFT + error_event_bus-এ
+# remediation ইভেন্ট (#2527-এর issue-filer ব্রিজের একই পরিবার)।
+# ══════════════════════════════════════════════════════════════════════════════
+
+# বাংলা মন্তব্য: /health-aggregation কল-প্রতি DB প্রোব এড়াতে ৬০s TTL ক্যাশ।
+_SCHEMA_PROBE_TTL_S = 60.0
+
+_schema_state: dict = {
+    "baseline": None,  # প্রথম সফল fingerprint — known-good হিসেবে
+    "fingerprint": None,
+    "status": "skipped",
+    "tables": 0,
+    "columns": 0,
+    "detail": "",
+    "probed_at": 0.0,
+    "alert_key": None,  # শেষ emit-করা ইভেন্টের key — ডুপ্লিকেট স্প্যাম আটকায়
+}
+_schema_probe_lock = asyncio.Lock()
+
+
+def _fingerprint_rows(rows: list[tuple[str, str, str]]) -> str:
+    """#2681: (table, column, type) সারিগুলোর স্থিতিশীল sha256 ফিঙ্গারপ্রিন্ট।"""
+    # বাংলা মন্তব্য: sort করে hash — কলাম-অর্ডার/কেস যেকোনো পরিবর্তন নির্ণয়যোগ্য, কিন্তু
+    # একই স্কিমার জন্য ফিঙ্গারপ্রিন্ট অপরিবর্তিত থাকে (deterministic)।
+    canonical = "\n".join(f"{t}.{c}:{y}" for t, c, y in sorted(rows))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()[:16]
+
+
+async def _collect_schema_rows(session) -> list[tuple[str, str, str]]:
+    """#2681: dialect-aware সস্তা স্কিমা সারি সংগ্রহ।
+
+    postgresql → information_schema.columns (public ছাড়া সিস্টেম স্কিমা বাদ)
+    sqlite → sqlite_master + PRAGMA table_info (রেফারেন্স ফাইলের স্কিমা পাওয়া যায় না)
+    অন্য dialect → ValueError (স্কিপড হবে)
+    """
+    dialect = getattr(getattr(session, "bind", None), "dialect", None)
+    dialect_name = getattr(dialect, "name", "") or ""
+
+    if dialect_name == "postgresql":
+        # বাংলা মন্তব্য: এক কুয়েরিতে পুরো পাবলিক স্কিমা — সস্তা ও নিরাপদ (read-only)।
+        from sqlalchemy import text
+
+        result = await session.execute(
+            text(
+                "SELECT table_name, column_name, data_type FROM information_schema.columns "
+                "WHERE table_schema NOT IN ('pg_catalog', 'information_schema') "
+                "ORDER BY table_name, column_name"
+            )
+        )
+        return [(str(r[0]), str(r[1]), str(r[2])) for r in result.fetchall()]
+
+    if dialect_name == "sqlite":
+        from sqlalchemy import text
+
+        tables_result = await session.execute(
+            text("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")
+        )
+        rows: list[tuple[str, str, str]] = []
+        for (table_name,) in tables_result.fetchall():
+            info_result = await session.execute(text(f'PRAGMA table_info("{table_name}")'))
+            for col in info_result.fetchall():
+                # বাংলা মন্তব্য: PRAGMA → (cid, name, type, notnull, dflt_value, pk)।
+                rows.append((str(table_name), str(col[1]), str(col[2])))
+        return rows
+
+    raise ValueError(f"unsupported dialect for schema probe: {dialect_name!r}")
+
+
+def _emit_drift_event(status: dict) -> None:
+    """#2681: drift/error ট্রানজিশনে একবারই remediation ইভেন্ট — spam-guard সহ।
+
+    error_event_bus (#2527 issue-filer ব্রিজ) একই পরিবারের পাইপলাইন —
+    severity ERROR হলে GitHub issue পর্যন্ত পৌঁছাতে পারে।
+    """
+    from core.messaging.event_bus import ErrorEvent, error_event_bus
+
+    if status["status"] == "drift":
+        alert_key = f"drift:{status['baseline']}->{status['fingerprint']}"
+        event = ErrorEvent(
+            module="health_aggregation",
+            error_type="SCHEMA_DRIFT",
+            message=(
+                f"Live DB schema drifted from baseline "
+                f"({status['baseline']} -> {status['fingerprint']}); "
+                f"tables={status['tables']} columns={status['columns']}"
+            ),
+            severity="ERROR",
+            context={
+                "remediation": "connection-pool recycle + migration reconciliation advised",
+                **{k: status[k] for k in ("baseline", "fingerprint", "tables", "columns")},
+            },
+        )
+    elif status["status"] == "error":
+        alert_key = f"error:{status['detail'][:80]}"
+        event = ErrorEvent(
+            module="health_aggregation",
+            error_type="SCHEMA_PROBE_FAILED",
+            message=f"Schema drift probe failed: {status['detail'][:200]}",
+            severity="WARNING",
+            context={"remediation": "check DB connectivity + privileges for information_schema"},
+        )
+    elif status["status"] == "ok" and str(_schema_state.get("alert_key") or "").startswith(("drift:", "error:")):
+        # বাংলা মন্তব্য: drift/error থেকে সুস্থতায় ফেরা — resolved ইভেন্ট (নীরব স্কিপ নয়)।
+        alert_key = "recovered"
+        event = ErrorEvent(
+            module="health_aggregation",
+            error_type="SCHEMA_DRIFT",
+            message="Schema drift resolved — live fingerprint matches baseline again",
+            severity="INFO",
+            resolved=True,
+            context={"fingerprint": status["fingerprint"]},
+        )
+    else:
+        return
+
+    if alert_key == _schema_state.get("alert_key"):
+        return  # বাংলা মন্তব্য: একই অবস্থা পুনরায় emit হবে না — ডুপ্লিকেট স্প্যাম আটকাও।
+    _schema_state["alert_key"] = alert_key
+    try:
+        error_event_bus.emit(event)
+    except Exception:
+        # বাংলা মন্তব্য: ইভেন্ট-বাস নিজেই listener-isolated, তবুও হেলথ-এন্ডপয়েন্ট কখনো
+        # emit-ফেইলুরে ভাঙবে না — তবে নীরবে গিলবে না (#1743): observability বাধ্যতামূলক।
+        logger.debug("schema-drift remediation event emit failed (non-fatal)", exc_info=True)
+
+
+async def probe_schema_drift(force: bool = False, session_factory=None) -> SchemaDriftStatus:
+    """#2681 Finding 2: TTL-ক্যাশড schema-drift প্রোব (injectable factory — টেস্টবিল)।"""
+    import time as _time
+
+    async with _schema_probe_lock:
+        now = _time.monotonic()
+        if not force and _schema_state["probed_at"] and (now - _schema_state["probed_at"]) < _SCHEMA_PROBE_TTL_S:
+            return SchemaDriftStatus(
+                status=_schema_state["status"],
+                fingerprint=_schema_state["fingerprint"],
+                baseline_fingerprint=_schema_state["baseline"],
+                tables=_schema_state["tables"],
+                columns=_schema_state["columns"],
+                detail=_schema_state["detail"],
+            )
+
+        _schema_state["probed_at"] = now
+        try:
+            if session_factory is None:
+                # বাংলা মন্তব্য: lazy resolve — app-boot ছাড়া ইমপোর্ট-টাইমে DB টানবে না।
+                from core.db import get_session_factory
+
+                session_factory = get_session_factory()
+            async with session_factory() as session:
+                rows = await _collect_schema_rows(session)
+        except ValueError as err:
+            _schema_state.update(status="skipped", detail=str(err)[:200])
+        except Exception as err:
+            _schema_state.update(status="error", detail=str(err)[:200], fingerprint=None)
+        else:
+            fingerprint = _fingerprint_rows(rows)
+            tables = len({t for t, _, _ in rows})
+            # বাংলা মন্তব্য: প্রথম সফল প্রোবই baseline — known-good স্ন্যাপশট।
+            baseline = _schema_state["baseline"] or fingerprint
+            drift_status = "ok" if fingerprint == baseline else "drift"
+            _schema_state.update(
+                status=drift_status,
+                fingerprint=fingerprint,
+                baseline=baseline,
+                tables=tables,
+                columns=len(rows),
+                detail="",
+            )
+
+        _emit_drift_event(dict(_schema_state))
+        return SchemaDriftStatus(
+            status=_schema_state["status"],
+            fingerprint=_schema_state["fingerprint"],
+            baseline_fingerprint=_schema_state["baseline"],
+            tables=_schema_state["tables"],
+            columns=_schema_state["columns"],
+            detail=_schema_state["detail"],
+        )
+
+
 async def check_all_services() -> list[ServiceHealth]:
     """Check all registered services concurrently."""
     tasks = [check_single_service(svc) for svc in SERVICE_REGISTRY]
@@ -263,6 +468,10 @@ async def get_health_aggregation():
         if services
         else 0,
         alerts=alerts,
+        # বাংলা মন্তব্য (#2681 Finding 2): প্রতি কলে deep-diagnostic স্কিমা-ড্রিফট
+        # প্রোব — ভেতরে ৬০s TTL ক্যাশ, তাই এন্ডপয়েন্ট সস্তাই থাকে। প্রোব নিজে
+        # fail-safe: DB নেমা থাকলে status=error ফেরায়, এন্ডপয়েন্ট ভাঙে না।
+        schema_drift=await probe_schema_drift(),
     )
 
 
