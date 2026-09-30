@@ -1,11 +1,88 @@
 from __future__ import annotations
 
+import os
+import threading
+import time
+from collections import OrderedDict
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
 import httpx
 
 from core.config import settings
 from core.logging_config import logger
+
+# ── দৈনিক-কোটা সনাক্তকরণ (#2613 — R2/R3) ────────────────────────────────────
+# বাংলা মন্তব্য: Upstash free tier-এ কোটা শেষ হলে REST API HTTP 400 + সুনির্দিষ্ট
+# এই মার্কার-সহ body দেয়। এই মার্কার দেখলেই ওই account-কে পরবর্তী UTC মধ্যরাত
+# পর্যন্ত cooldown-এ ফেলা হয় — ফলে প্রতি command-এ exhausted account-এ একটি
+# নিশ্চিত-ব্যর্থ request যাওয়া বন্ধ হয় এবং পরের মুহূর্তেই secondary-তে read-shift
+# হয়ে যায় (issue #2452-র free-tier permanent solution)।
+_QUOTA_EXCEEDED_MARKER = "max requests limit"
+
+
+class QuotaExhaustedError(RuntimeError):
+    """চেইনের সব Upstash account-ই দৈনিক কোটা cooldown-এ আছে (R3)।
+
+    RuntimeError-এর subclass হওয়া ইচ্ছাকৃত — বিদ্যমান callers ইতিমধ্যে
+    ``(httpx.RequestError, httpx.HTTPStatusError, RuntimeError)`` ধরে থাকে,
+    তাই API signature/behavior অপরিবর্তিত থাকে (graceful degradation)।
+    """
+
+
+def _next_utc_reset_epoch() -> float:
+    """পরবর্তী UTC মধ্যরাত + ৬০s grace — Upstash দৈনিক কোটা রিসেটের আনুমানিক সময়।"""
+    now = datetime.now(UTC)
+    tomorrow = (now + timedelta(days=1)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    return tomorrow.timestamp() + 60.0
+
+
+class _LocalTTLCache:
+    """Bounded LRU + TTL লোকাল ক্যাশ (#2613 — R1 command-reduction)।
+
+    বাংলা মন্তব্য: read-heavy caller (parallel_cloud_router ইত্যাদি) একই key
+    বারবার GET করে — প্রতিটি GET একটি Upstash command খরচ করে। এই ক্যাশ ছোট
+    TTL-এ (default 10s) repeated read স্থানীয়ভাবে শোষণ করে; দৈনিক command
+    বাজেটে উল্লেখযোগ্য সাশ্রয় হয়। Thread-safe (নিজস্ব lock)।
+    """
+
+    _MISS = object()  # sentinel — None আসল value হতে পারে (negative cache)
+
+    def __init__(self, max_entries: int = 512) -> None:
+        self._data: OrderedDict[str, tuple[float, Any]] = OrderedDict()
+        self._lock = threading.Lock()
+        self._max_entries = max(1, max_entries)
+
+    def get(self, key: str) -> Any:
+        with self._lock:
+            entry = self._data.get(key)
+            if entry is None:
+                return self._MISS
+            expires_at, value = entry
+            if time.time() >= expires_at:
+                del self._data[key]
+                return self._MISS
+            self._data.move_to_end(key)
+            return value
+
+    def put(self, key: str, value: Any, ttl: float) -> None:
+        if ttl <= 0:
+            return
+        with self._lock:
+            self._data[key] = (time.time() + ttl, value)
+            self._data.move_to_end(key)
+            while len(self._data) > self._max_entries:
+                self._data.popitem(last=False)
+
+    def invalidate(self, key: str) -> None:
+        with self._lock:
+            self._data.pop(key, None)
+
+    def clear(self) -> None:
+        with self._lock:
+            self._data.clear()
 
 
 class UpstashRedisQueue:
@@ -31,10 +108,62 @@ class UpstashRedisQueue:
             else None
         )
         self._active_pool_idx = 0
+        # ── #2613: quota-aware cooldown + local read cache + command stats ──
+        # বাংলা মন্তব্য: cooldown registry key হলো account-এর REST URL —
+        # pool-এর order/index যেকোনো সময় বদলালেও সঠিক থাকে।
+        self._cooldown_until: dict[str, float] = {}
+        self._cooldown_lock = threading.Lock()
+        self._stats: dict[str, int] = {
+            "commands_sent": 0,
+            "cache_hits": 0,
+            "quota_cooldowns": 0,
+            "quota_refusals": 0,
+            "failovers": 0,
+        }
+        try:
+            self._read_cache_ttl = max(0.0, float(os.getenv("UPSTASH_READ_CACHE_TTL", "10")))
+            self._negative_cache_ttl = max(0.0, float(os.getenv("UPSTASH_NEGATIVE_CACHE_TTL", "3")))
+            cache_size = max(1, int(os.getenv("UPSTASH_READ_CACHE_SIZE", "512")))
+        except ValueError:
+            self._read_cache_ttl, self._negative_cache_ttl, cache_size = 10.0, 3.0, 512
+        self._read_cache = _LocalTTLCache(max_entries=cache_size)
 
     @property
     def configured(self) -> bool:
         return bool(self._client)
+
+    # ── #2613: cooldown helpers ──────────────────────────────────────────────
+    def _mark_quota_cooldown(self, url: str) -> float:
+        """ওই account-কে পরবর্তী UTC রিসেট পর্যন্ত cooldown-এ ফেলে (R2)।"""
+        until = _next_utc_reset_epoch()
+        with self._cooldown_lock:
+            self._cooldown_until[url] = until
+            self._stats["quota_cooldowns"] += 1
+        logger.warning(
+            f"Upstash REST [{url}] দৈনিক কোটা শেষ — UTC রিসেট "
+            f"({datetime.fromtimestamp(until, UTC).isoformat()}) পর্যন্ত cooldown, "
+            f"চেইনের পরের account-এ shift করা হলো।"
+        )
+        return until
+
+    def _in_cooldown(self, url: str) -> bool:
+        with self._cooldown_lock:
+            until = self._cooldown_until.get(url, 0.0)
+            return time.time() < until
+
+    def quota_status(self) -> dict[str, Any]:
+        """কোন account কতক্ষণ cooldown-এ — পর্যবেক্ষণযোগ্য প্রমাণ (invariant #5)।"""
+        with self._cooldown_lock:
+            now = time.time()
+            return {
+                "cooldown_accounts": {
+                    url: datetime.fromtimestamp(until, UTC).isoformat()
+                    for url, until in self._cooldown_until.items()
+                    if now < until
+                },
+                "stats": dict(self._stats),
+                "read_cache_ttl_s": self._read_cache_ttl,
+            }
 
     def _request(self, *args: str) -> dict[str, Any]:
         if not self._client:
@@ -52,20 +181,49 @@ class UpstashRedisQueue:
         if not endpoints:
             raise RuntimeError("No configured Upstash Redis REST endpoints available")
 
+        # বাংলা মন্তব্য (#2613 R2): কোটা-exhausted account-গুলো আগেই বাদ দিই —
+        # একটিও wasted request যাবে না; বাকিদের মধ্যে sticky-start (শেষ সফল
+        # account থেকে শুরু) থেকে failover চালাই।
+        active: list[tuple[int, str, str]] = [
+            (i, url, token)
+            for i, (url, token) in enumerate(endpoints)
+            if not self._in_cooldown(url)
+        ]
+        if not active:
+            # R3: সব account কোটা cooldown-এ — সৎ, স্পষ্ট ত্রুটি (মিথ্যা "Redis down" নয়)।
+            with self._cooldown_lock:
+                self._stats["quota_refusals"] += 1
+            raise QuotaExhaustedError(
+                "all Upstash REST accounts are in daily-quota cooldown until the next "
+                "UTC reset (free-tier federation fully consumed)"
+            )
+
         last_err: Exception | None = None
-        for i in range(len(endpoints)):
-            idx = (self._active_pool_idx + i) % len(endpoints)
-            target_url, target_token = endpoints[idx]
+        for offset, (idx, target_url, target_token) in enumerate(active):
             try:
                 response = self._client.post(
                     target_url,
                     headers={"Authorization": f"Bearer {target_token}"},
                     json=list(args),
                 )
+                # বাংলা মন্তব্য (#2613 R2): HTTP 400-ও Upstash কোটা-ত্রুটি হতে পারে —
+                # raise_for_status-এর আগেই body পরীক্ষা করে সঠিক কারণ আলাদা করি।
+                if response.status_code == 400 and _QUOTA_EXCEEDED_MARKER in response.text:
+                    self._mark_quota_cooldown(target_url)
+                    last_err = QuotaExhaustedError(
+                        f"upstash[{target_url}] daily quota exceeded — cooldown until UTC reset"
+                    )
+                    continue
                 response.raise_for_status()
                 if idx != self._active_pool_idx:
                     self._active_pool_idx = idx
+                    with self._cooldown_lock:
+                        self._stats["failovers"] += 1
+                with self._cooldown_lock:
+                    self._stats["commands_sent"] += 1
                 return response.json()
+            except QuotaExhaustedError:
+                continue  # উপরে ইতিমধ্যে cooldown চিহ্নিত — পরের account
             except Exception as exc:
                 last_err = exc
                 logger.warning(f"Upstash Redis REST instance {idx} failed ({exc}); failing over...")
@@ -83,8 +241,11 @@ class UpstashRedisQueue:
             if ex:
                 command.extend(["EX", str(ex)])
             response = self._request(*command)
-            # Upstash REST-এর ক্ষেত্রে সেট সফল হলে {"result": "OK"} অন্যথায় {"result": null} আসে
-            return response.get("result") == "OK"
+            # Upstash REST-এর ক্ষেত্রে সেট সফল হলে {"result": "OK"} অন্যথায় {"result": null} আসে
+            ok = response.get("result") == "OK"
+            if ok:
+                self._read_cache.invalidate(key)
+            return ok
         except (httpx.RequestError, httpx.HTTPStatusError, RuntimeError) as exc:
             logger.error(f"Upstash Redis SET NX failed: {exc}")
             return False
@@ -97,16 +258,45 @@ class UpstashRedisQueue:
             command: list[Any] = ["EVAL", script, str(numkeys)]
             command.extend(args)
             response = self._request(*command)
+            # বাংলা মন্তব্য: EVAL যেসব key ছুঁয়ে যেতে পারে তার লোকাল ক্যাশ-কপি
+            # অবিশ্বস্ত হয়ে যায় — সব string-arg invalidate করে দিই (সস্তা ও নিরাপদ)।
+            for maybe_key in args:
+                if isinstance(maybe_key, str):
+                    self._read_cache.invalidate(maybe_key)
             return response.get("result")
         except (httpx.RequestError, httpx.HTTPStatusError, RuntimeError) as exc:
             logger.error(f"Upstash Redis EVAL failed: {exc}")
             return None
 
-    def get(self, key: str) -> str | None:
+    def get(self, key: str, ttl: float | None = None) -> str | None:
+        """GET — local TTL ক্যাশ সহ (#2613 R1)।
+
+        Args:
+            key: যে key পড়তে হবে।
+            ttl: এই read-এর জন্য লোকাল ক্যাশের TTL (সেকেন্ড)। None হলে
+                 ক্লাস-ডিফল্ট (UPSTASH_READ_CACHE_TTL, default 10s)। 0 দিলে
+                 ক্যাশ বাইপাস হয়ে সরাসরি REST-এ যাবে।
+        """
         if not self.configured:
             return None
+        # R1: লোকাল ক্যাশে থাকলে একটিও REST command খরচ হয় না।
+        if ttl is None or ttl > 0:
+            cached = self._read_cache.get(key)
+            if cached is not _LocalTTLCache._MISS:
+                with self._cooldown_lock:
+                    self._stats["cache_hits"] += 1
+                return cached
         try:
-            return self._request("GET", key).get("result")
+            result = self._request("GET", key).get("result")
+            # বাংলা মন্তব্য: negative result (None) সংক্ষিপ্ত TTL-এ ক্যাশ করি —
+            # একই missing-key বারবার REST-এ গিয়ে কোটা পোড়ানো ঠেকাতে।
+            cache_ttl = (
+                self._negative_cache_ttl
+                if result is None
+                else (self._read_cache_ttl if ttl is None else ttl)
+            )
+            self._read_cache.put(key, result, cache_ttl)
+            return result
         except (httpx.RequestError, httpx.HTTPStatusError, RuntimeError) as exc:
             logger.error(f"Upstash Redis GET failed: {exc}")
             return None
@@ -119,6 +309,8 @@ class UpstashRedisQueue:
             if ex:
                 command.extend(["EX", ex])
             self._request(*command)
+            # বাংলা মন্তব্য: write-এর পর লোকাল ক্যাশের সেই key-কপি বাতিল — stale read ঠেকাই।
+            self._read_cache.invalidate(key)
             return True
         except (httpx.RequestError, httpx.HTTPStatusError, RuntimeError) as exc:
             logger.error(f"Upstash Redis SET failed: {exc}")
@@ -129,6 +321,7 @@ class UpstashRedisQueue:
             return None
         try:
             result = self._request("INCR", key).get("result")
+            self._read_cache.invalidate(key)
             return int(result) if result is not None else None
         except (
             httpx.RequestError,
@@ -144,6 +337,7 @@ class UpstashRedisQueue:
             return None
         try:
             result = self._request("DECR", key).get("result")
+            self._read_cache.invalidate(key)
             return int(result) if result is not None else None
         except (
             httpx.RequestError,
@@ -179,6 +373,7 @@ class UpstashRedisQueue:
             return None
         try:
             result = self._request("LPUSH", key, value).get("result")
+            self._read_cache.invalidate(key)
             return int(result) if result is not None else None
         except (
             httpx.RequestError,
@@ -202,3 +397,4 @@ class UpstashRedisQueue:
         if self._client is not None:
             self._client.close()
             self._client = None
+        self._read_cache.clear()

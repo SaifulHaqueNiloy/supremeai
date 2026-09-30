@@ -6,6 +6,7 @@
 
 from __future__ import annotations
 
+import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
@@ -26,6 +27,14 @@ def test_health_live_returns_alive():
 
 
 def test_health_ready_returns_ok():
+    # বাংলা মন্তব্য: #2613-verification চলাকালে ধরা পড়া gap — /ready রাউটের
+    # DB-সাবসিস্টেম চেক SQLAlchemy asyncio ইঞ্জিন ছোঁয়; CI venv-এ greenlet
+    # অনুপস্থিত থাকলে repo-র canonical importorskip প্যাটার্ন অনুযায়ী সৎ skip
+    # (#2587 প্যাটার্ন: test_billing_api_routes.py:37, test_mcp_hub.py:38,
+    # test_missions_boundaries.py:44)। /live ও /health টেস্ট প্রভাবিত নয়।
+    pytest.importorskip(
+        "greenlet", reason="greenlet not installed — required for SQLAlchemy asyncio engine"
+    )
     client = TestClient(_build_client())
     resp = client.get("/ready")
     # In a bare FastAPI context without mocked redis/db, this should now return 503
@@ -39,6 +48,11 @@ def test_health_ready_returns_ok():
 
 def test_health_check_ok_without_subsystems():
     # বাংলা: app.state-এ db_pool/redis সাবসিস্টেম না থাকলে 'degraded' ফেরত দেওয়া উচিত (HTTP 503)
+    # বাংলা মন্তব্য (#2613-verification): /health রাউটও DB-সাবসিস্টেম চেকে SQLAlchemy
+    # asyncio ইঞ্জিন ছোঁয় — উপরের importorskip-এর মতোই (greenlet অনুপস্থিত → সৎ skip)।
+    pytest.importorskip(
+        "greenlet", reason="greenlet not installed — required for SQLAlchemy asyncio engine"
+    )
     client = TestClient(_build_client())
     resp = client.get("/health")
     assert resp.status_code == 503
