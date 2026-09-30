@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-30 19:20 UTC
+- **Date:** 2026-09-30 19:21 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,51 +10,22 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/eslint.config.js`
-  - `frontend/src/components/chat/UnifiedChatBubble.tsx`
-  - `frontend/src/components/customer/MobileSimulator.tsx`
-  - `frontend/src/services/storageApi.ts`
-  - `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx`
-  - `frontend/src/pages/auth/LoginPage.tsx`
-  - `frontend/src/services/heartbeat.test.ts`
-  - `frontend/src/pages/admin/AdminShell.tsx`
-  - `frontend/src/components/admin/security/RateLimitManager.tsx`
-  - `frontend/src/components/admin/InteractiveChatTab.tsx`
-  - `backend/tests/core/test_legit_file_presenter.py`
-  - `frontend/src/hooks/usePlugins.ts`
-  - `frontend/src/components/admin/admin-browser/CrownJewelBrowser.tsx`
-  - `frontend/src/hooks/usePlugins.test.ts`
-  - `backend/core/web_ai_session_bridge.py`
-  - `frontend/src/services/supremeShared.ts`
-  - `frontend/src/components/admin/CICDVisualizer.tsx`
-  - `frontend/src/components/research/DeepResearchPanel.tsx`
-  - `frontend/src/components/admin/ci/CIDashboard.tsx`
-  - `frontend/src/components/auth/ServiceHealthBar.tsx`
-  - `backend/core/prompt_enhancement_engine.py`
-  - `frontend/src/pages/user/SystemHealthDashboard.tsx`
-  - `frontend/src/components/admin/admin-browser/useBrowserActions.ts`
-  - `frontend/src/components/export/ExportMenu.tsx`
-  - `frontend/src/services/skillsService.test.ts`
-  - `frontend/src/services/mcpViewer.ts`
-  - `frontend/src/hooks/useServerStream.ts`
-  - `frontend/src/services/chatService.test.ts`
-  - `frontend/src/services/chatService.ts`
-  - `frontend/src/utils/api.ts`
+  - `scripts/ci/audit_suite.py`
   - `backend/core/natural_file_presenter.py`
-  - `backend/tests/core/test_prompt_enhancement_engine.py`
-  - `frontend/src/firebase.ts`
-  - `frontend/src/services/heartbeat.ts`
-  - `frontend/src/services/apiClient.ts`
-  - `frontend/src/components/admin/MeshAgentsPanel.tsx`
-  - `frontend/src/components/GlobalErrorBoundary.tsx`
-  - `frontend/src/router/RouteBoundary.tsx`
-  - `frontend/src/components/graph/SkillGraph.tsx`
-  - `frontend/src/hooks/useSwarmGraph.ts`
-  - `frontend/src/components/chat/ChatInterface.tsx`
-  - `frontend/src/hooks/useChat.ts`
-  - `frontend/src/components/admin/LibrarianQueue.tsx`
   - `backend/api/routes/web_ai_proxy.py`
-  - `frontend/src/services/skillsService.ts`
+  - `scripts/_INDEX.md`
+  - `.github/constitution/rules.yml`
+  - `.github/ISSUE_TEMPLATE/agent_task.yml`
+  - `scripts/agents/continuous_agent_loop.py`
+  - `backend/core/prompt_enhancement_engine.py`
+  - `backend/core/web_ai_session_bridge.py`
+  - `backend/tests/core/test_legit_file_presenter.py`
+  - `backend/tests/core/test_prompt_enhancement_engine.py`
+  - `tests/unit/test_agent_solution_memory.py`
+  - `scripts/agents/agent_solution_memory.py`
+  - `.github/workflows/pr.yml`
+  - `CHECKPOINT.md`
+  - `tests/test_audit_suite.py`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)

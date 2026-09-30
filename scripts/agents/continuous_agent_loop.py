@@ -44,6 +44,12 @@ if str(ROOT_DIR) not in sys.path:
 REPO = os.environ.get("GH_REPO", "SaifulHaqueNiloy/supremeai")
 RULES_PATH = ROOT_DIR / ".github" / "constitution" / "rules.yml"
 
+# Issue #2682: টপোলজিক্যাল লেয়ারিং ইনভেরিয়েন্ট — টাস্ক-সিলেকশন গেটের প্রিমিটিভ
+from scripts.ci.audit_suite import (  # noqa: E402
+    scan_open_issue_layers,
+    topological_task_gate,
+)
+
 
 def _load_agent_rules(role: str) -> tuple[list[str], list[str]]:
     """Load applicable rules and prohibited actions for a given agent role from rules.yml."""
@@ -114,6 +120,56 @@ def inject_rules_into_pr_body(pr_number: int, role: str) -> None:
         "--repo", REPO,
         "--body", body,
     ])
+
+
+def inject_strategic_memory(issue_number: int, task: dict) -> None:
+    """#2691: কাজ শুরুর আগে প্রাসঙ্গিক লাল দাগ ও স্ট্র্যাটেজিক পূর্ব-সিদ্ধান্ত ইনজেক্ট।
+
+    Auditor/Ecosystem-Scout-এর হার্ভেস্ট করা 'কেন না' সিদ্ধান্তগুলো ইস্যুতে
+    কমেন্ট হিসেবে ইনজেক্ট হয় — কোডার প্রথম লাইন কোড লেখার আগেই লাল দাগ দেখে।
+    Fail-safe: যেকোনো ব্যর্থতা নীরবে স্কিপ — ইনজেকশন কখনো লুপ ভাঙবে না।
+    """
+    try:
+        # বাংলা মন্তব্য: lazy import — মেমরি মডিউল নিজেই import-safe, তবে টেস্টে patch সহজ হয়।
+        from scripts.agents.agent_solution_memory import (
+            format_strategic_block,
+            search_strategic_memory,
+        )
+
+        # বাংলা মন্তব্য: কুয়েরি = টাস্ক শিরোনাম + লেবেল; টাস্ক ডেটাতে শিরোনাম না থাকলে gh থেকে।
+        title = str(task.get("title") or "").strip()
+        if not title:
+            res = run([
+                "gh", "issue", "view", str(issue_number), "--repo", REPO,
+                "--json", "title", "--jq", ".title",
+            ])
+            if res.returncode == 0:
+                title = (res.stdout or "").strip().strip('"')
+        labels = " ".join(str(x) for x in (task.get("labels") or []))
+        query = f"{title} {labels}".strip()
+        if not query:
+            return
+
+        entries = search_strategic_memory(query, limit=5)
+        if not entries:
+            print("ℹ️ কোনো প্রাসঙ্গিক স্ট্র্যাটেজিক লাল দাগ নেই — স্বাধীনভাবে এগোন (#2691)।")
+            return
+
+        body = (
+            f"🚫 **Strategic Memory Injection (#2691)** — কাজ শুরুর আগে প্রাসঙ্গিক "
+            f"পূর্ব-সিদ্ধান্ত ও লাল দাগ:\\n\\n{format_strategic_block(entries)}\\n\\n"
+            f"_Source: `data/strategic_decisions.jsonl` · `agent_solution_memory.py search-strategic`_"
+        )
+        res = run([
+            "gh", "issue", "comment", str(issue_number),
+            "--repo", REPO, "--body", body,
+        ])
+        if res.returncode == 0:
+            print(f"🧠 Injected {len(entries)} strategic red-line(s) into issue #{issue_number} (#2691).")
+        else:
+            print(f"⚠️ Strategic injection comment failed: {res.stderr}")
+    except Exception as err:  # বাংলা মন্তব্য: fail-safe — মেমরি অনুপস্থিতি কখনো কাজ থামাবে না
+        print(f"⚠️ Strategic memory injection skipped ({err}) — continuing (#2691 fail-safe).")
 
 
 def run(cmd: list[str], **kwargs) -> subprocess.CompletedProcess:
@@ -328,6 +384,28 @@ def run_work_command(cmd: list, role: str, agent_name: str, slot: str = "") -> i
     return cm.run(cmd, env)
 
 
+def topological_task_claim_check(issue_number: int) -> tuple[bool, str]:
+    """Issue #2682: ক্লেইম-পূর্ব টপোলজিক্যাল গেট — নিচের লেয়ার খোলা থাকলে ওপরের লেয়ার ক্লেইম নিষিদ্ধ।
+
+    gh দিয়ে open issues-এর ঘোষিত Layer স্ক্যান করে গেট সিদ্ধান্ত দেয়।
+    gh ব্যর্থ হলে fail-open — অডিট-স্ক্যান ব্যর্থতা ফ্লিট বন্ধ রাখবে না
+    (PR Gate-এর topological_sequence_gate-ই শেষ প্রতিবন্ধক)।
+    """
+    try:
+        res = run([
+            "gh", "issue", "list", "--repo", REPO, "--state", "open",
+            "--limit", "200", "--json", "number,body",
+        ])
+        if res.returncode != 0:
+            return True, ""
+        issues = json.loads(res.stdout or "[]")
+        open_layers = scan_open_issue_layers(issues)
+        declared = open_layers.get(int(issue_number))
+        return topological_task_gate(int(issue_number), declared, open_layers)
+    except (json.JSONDecodeError, ValueError, OSError):
+        return True, ""
+
+
 def run_continuous_loop(role: str, agent_name: str, max_iterations: int = 10,
                         slot: str = "", exec_cmd: list | None = None) -> None:
     if role == "rules_breaker":
@@ -362,6 +440,17 @@ def run_continuous_loop(role: str, agent_name: str, max_iterations: int = 10,
             print("ℹ️ No issue number in task. Waiting...")
             break
 
+        # Issue #2682 (mandate 1): ওপরের লেয়ারের (API/UI) টাস্ক তখনই ক্লেইম করা
+        # যাবে যখন নিচের লেয়ারের কোনো টাস্ক খোলা নেই — খোলা থাকলে ভিত্তি
+        # অসম্পূর্ণ; টাস্ক স্কিপ করে এ ইটারেশন শেষ হবে।
+        allowed, gate_reason = topological_task_claim_check(int(issue_number))
+        if not allowed:
+            print(f"⛔ {gate_reason}")
+            print("ℹ️ Topological gate: foundation layers still open — waiting for lower layers.")
+            break
+        if gate_reason:
+            print(f"✅ {gate_reason}")
+
         branch_name = task.get("branch_name", "")
         agent_slot = task.get("slot_index") or agent_name
         if claim_with_backoff(issue_number, str(agent_slot)):
@@ -370,6 +459,9 @@ def run_continuous_loop(role: str, agent_name: str, max_iterations: int = 10,
             print(f"   Role: {task.get('role')}")
             print(f"   Workflow: {task.get('workflow')}")
             inject_rules_into_issue_body(issue_number, role)
+            # বাংলা মন্তব্য (#2691): claim-সফলের ঠিক পরে, কাজ শুরুর আগেই লাল-দাগ ইনজেক্ট —
+            # 'কেন না' জ্ঞান পুনর্ব্যবহার (Reuse) প্রতিটি টাস্কে স্বয়ংক্রিয়।
+            inject_strategic_memory(int(issue_number), task)
             pr_number = task.get("pr_number")
             if pr_number:
                 inject_rules_into_pr_body(int(pr_number), role)
