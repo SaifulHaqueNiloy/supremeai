@@ -113,6 +113,11 @@ def _should_file(event: ErrorEvent, now: float = time.monotonic()) -> bool:
 def _build_issue_payload(event: ErrorEvent, sig: str) -> dict[str, Any]:
     """ইস্যু টাইটেল/বডি/লেবেল — create_discovery_issue-র স্কিমা অনুসরণে।"""
     title = f"[self-filed] {event.module}: {event.error_type} — {event.severity} production error"
+    # বাংলা মন্তব্য: context-section আগেই বানিয়ে রাখি — Python 3.11-এ f-string-এর
+    # expression-part-এ backslash নিষিদ্ধ, তাই nested f-string এড়ানো হলো।
+    context_section = ""
+    if getattr(event, "context", None):
+        context_section = "## Context\n```json\n" + str(event.context) + "\n```\n"
     body = f"""**সারসংক্ষেপ (Banglish):** `error_event_bus` self-filer — production error tracker-এ auto-filed (#2527)।
 
 ## Error Event
@@ -127,7 +132,7 @@ def _build_issue_payload(event: ErrorEvent, sig: str) -> dict[str, Any]:
 ```
 {str(event.message)[:1500]}
 ```
-{f"## Context\n```json\n{event.context}\n```" if getattr(event, "context", None) else ""}
+{context_section}
 ## ফিক্স দিকনির্দেশ
 - SelfHealer-এর heal-log-এর পাশাপাশি এই ইস্যুটি fleet-এর work queue-তে এসেছে
 - Dedup: একই signature ({sig}) ২৪ঘণ্টায় নতুন ইস্যু খুলবে না — নতুন ঘটনা কমেন্টে জমা হবে
