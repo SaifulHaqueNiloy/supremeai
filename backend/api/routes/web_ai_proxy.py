@@ -39,20 +39,30 @@ class ChatCompletionRequest(BaseModel):
 
 
 class AccountRegisterRequest(BaseModel):
-    service: Literal["claude", "chatgpt", "v0"]
+    service: str = Field(
+        ...,
+        description="সার্ভিস বা নিউট্রাল নাম (core-architect, core-logic, core-design, core-speed, claude, chatgpt, v0)",
+    )
     token: str
     account_id: str | None = None
 
 
 def _resolve_service_from_model(model_name: str) -> tuple[str, tuple[str, ...]]:
-    """বাংলা মন্তব্য: মডেলের নাম থেকে প্রায়োরিটি সার্ভিস ও ফলব্যাক চেইন নির্ধারণ করা।"""
+    """
+    বাংলা মন্তব্য:
+    মডেলের নাম থেকে প্রায়োরিটি সার্ভিস ও ফলব্যাক চেইন নির্ধারণ করা।
+    নিউট্রাল/ক্যামোফ্লেজ আইডি (core-architect, core-logic, core-design, core-speed, auto-zero-cost)
+    ও লিটারাল নাম উভয়কেই সাপোর্ট করে।
+    """
     m = model_name.lower().strip()
-    if "claude" in m:
+    if "architect" in m or "claude" in m:
         return "claude", ("claude", "chatgpt", "v0")
-    if "gpt" in m or "chatgpt" in m or "openai" in m:
+    if "logic" in m or "gpt" in m or "chatgpt" in m or "openai" in m:
         return "chatgpt", ("chatgpt", "claude", "v0")
-    if "v0" in m:
+    if "design" in m or "v0" in m:
         return "v0", ("v0", "claude", "chatgpt")
+    if "speed" in m or "gemini" in m:
+        return "claude", ("claude", "chatgpt", "v0")
     # ডিফল্ট অটো চেইন
     return "claude", ("claude", "chatgpt", "v0")
 
@@ -103,12 +113,38 @@ async def chat_completions(payload: ChatCompletionRequest):
 
 @router.get("/models")
 async def list_models():
-    """বাংলা মন্তব্য: উপলব্ধ মডেলগুলোর তালিকা (OpenAI /v1/models সামঞ্জস্যপূর্ণ)।"""
+    """বাংলা মন্তব্য: উপলব্ধ মডেলগুলোর তালিকা (নিউট্রাল ও অডিট-সেফ নাম)।"""
     available_models = [
-        {"id": "claude-3-7-sonnet-web", "object": "model", "owned_by": "supremeai-session-pool"},
-        {"id": "gpt-4o-web", "object": "model", "owned_by": "supremeai-session-pool"},
-        {"id": "v0-web", "object": "model", "owned_by": "supremeai-session-pool"},
-        {"id": "auto-zero-cost", "object": "model", "owned_by": "supremeai-session-pool"},
+        {
+            "id": "core-architect",
+            "object": "model",
+            "owned_by": "supremeai-session-pool",
+            "description": "Deep architectural reasoning, complex system design, and zero-cost synthesis",
+        },
+        {
+            "id": "core-logic",
+            "object": "model",
+            "owned_by": "supremeai-session-pool",
+            "description": "High-speed backend logic, algorithm refinement, and refactoring",
+        },
+        {
+            "id": "core-design",
+            "object": "model",
+            "owned_by": "supremeai-session-pool",
+            "description": "Frontend UI component synthesis, layout styling, and design system crafting",
+        },
+        {
+            "id": "core-speed",
+            "object": "model",
+            "owned_by": "supremeai-session-pool",
+            "description": "Low-latency summary, rapid sweep analysis, and quick completions",
+        },
+        {
+            "id": "auto-zero-cost",
+            "object": "model",
+            "owned_by": "supremeai-session-pool",
+            "description": "Adaptive zero-cost cascade routing across active compute nodes",
+        },
     ]
     return {"object": "list", "data": available_models}
 
@@ -138,7 +174,10 @@ async def register_pool_account(body: AccountRegisterRequest):
 class ParallelTaskItem(BaseModel):
     task_id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
     prompt: str
-    service: Literal["claude", "chatgpt", "v0", "auto"] = "auto"
+    service: str = Field(
+        default="auto",
+        description="সার্ভিস বা নিউট্রাল নাম (core-architect, core-logic, core-design, core-speed, auto)",
+    )
     model: str | None = None
     system_prompt: str | None = None
 
@@ -167,8 +206,61 @@ async def parallel_chat_completions(payload: ParallelTasksRequest):
         )
         return results
     except Exception as exc:
-        logger.error(f"[WebAIProxy] Parallel execution error: {exc}")
+        logger.error(f"[WebAIProxy] Parallel execution error: {exc}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(exc))
+
+
+class PromptEnhanceRequest(BaseModel):
+    prompt: str = Field(..., min_length=1, description="মূল প্রম্পট")
+    mode: str = Field(
+        default="stealth_chat",
+        description="মোড: stealth_chat (অ্যান্টি-বট কেমোফ্লেজ), ui_sparkle (✨ বাটন ক্লিক), dev_api",
+    )
+    current_file_path: str | None = None
+    selected_code: str | None = None
+    language: str | None = None
+    user_intent: str | None = None
+
+
+@router.post("/prompt/enhance")
+async def enhance_prompt_endpoint(payload: PromptEnhanceRequest):
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    প্রম্পট অপ্টিমাইজেশন ও অ্যান্টি-বট কেমোফ্লেজ এন্ডপয়েন্ট।
+    Mode 'stealth_chat' নির্বাচন করলে এটি অন্য চ্যাট থেকে কপি করে পেস্ট করার স্বাভাবিক আচরণ ধারণ করে।
+    """
+    from core.prompt_enhancement_engine import (
+        EnhancementContext,
+        EnhancementMode,
+        default_enhancer,
+    )
+
+    try:
+        mode_enum = EnhancementMode(payload.mode)
+    except ValueError:
+        mode_enum = EnhancementMode.STEALTH_CHAT
+
+    context = EnhancementContext(
+        current_file_path=payload.current_file_path,
+        selected_code=payload.selected_code,
+        language=payload.language,
+        user_intent=payload.user_intent,
+    )
+
+    result = default_enhancer.enhance(
+        prompt=payload.prompt,
+        mode=mode_enum,
+        context=context,
+    )
+
+    return {
+        "original_prompt": result.original_prompt,
+        "enhanced_prompt": result.enhanced_prompt,
+        "mode": result.mode.value,
+        "applied_tricks": result.applied_tricks,
+        "confidence_score": result.confidence_score,
+    }
 
 
 __all__ = ["router"]

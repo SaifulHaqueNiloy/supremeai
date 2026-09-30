@@ -5,6 +5,16 @@
 অফিসিয়াল পেইড এপিআইয়ের বিকল্প হিসেবে ওয়েব ব্রাউজারের সেশন কুকি ও টোকেন
 (Claude Web, ChatGPT Web, v0, Gemini) ব্যবহার করে জিরো-কস্টে AI ইনফারেন্স চালানোর ব্রিজ।
 
+⚠️ CRITICAL OPERATIONAL & ToS RISK NOTICE:
+------------------------------------------
+১. ToS Violation Risk: ক্লাউড সেশন (Claude.ai, ChatGPT.com, v0.dev) ব্যবহার আন-অফিসিয়াল।
+   অ্যাকাউন্ট পার্মানেন্ট ব্যান বা ক্লাউডফ্লেয়ার টার্নস্টাইল ব্লকের বাস্তব ঝুঁকি বিদ্যমান।
+২. Internal API Volatility: এই এন্ডপয়েন্টগুলো যে কোনো সময় প্রোভাইডার কর্তৃক পরিবর্তিত হতে পারে।
+৩. Sustainability & Positioning:
+   - এই আর্কিটেকচারটি শুধুমাত্র নন-ক্রিটিক্যাল ডেভেলপমেন্ট, টেস্টিং এবং সেকেন্ডারি ফলব্যাকের জন্য।
+   - প্রোডাকশন-ক্রিটিক্যাল কাজের জন্য পেইড অফিসিয়াল এপিআই ও বাজেট গার্ডিয়ান ব্যবহার বাধ্যতামূলক।
+   - অ্যাকাউন্টের স্থায়িত্ব বাড়াতে সার্কিট ব্রেকার, এক্সপোনেনশিয়াল ব্যাকঅফ ও পার-অ্যাকাউন্ট লক সক্রিয়।
+
 মূল বৈশিষ্ট্য ও নীতি:
 1. Zero-Cost & Free-Tier First: কোনো ভারী ব্রাউজার (Chromium) চালু করে রেন্ডারের
    512MB RAM নষ্ট করে না; এটি সরাসরি লাইটওয়েট HTTP ও TLS স্পুফিং ব্যবহার করে (<20MB RAM)।
@@ -45,6 +55,41 @@ DEFAULT_USER_AGENTS = [
 
 class WebAISessionError(RuntimeError):
     """ওয়েব সেশন বা কুকি অপারেশনে ত্রুটি (Fail-closed)।"""
+
+
+# বাংলা মন্তব্য: নিউট্রাল বা ক্যামোফ্লেজ সার্ভিস অ্যালিয়াস ম্যাপিং (অডিট ও পলিসি সেফ)
+SERVICE_NAME_ALIASES: dict[str, str] = {
+    "core-architect": "claude",
+    "engine-architect": "claude",
+    "architect": "claude",
+    "core-logic": "chatgpt",
+    "engine-logic": "chatgpt",
+    "logic": "chatgpt",
+    "core-design": "v0",
+    "engine-design": "v0",
+    "design": "v0",
+    "core-speed": "gemini",
+    "engine-speed": "gemini",
+    "speed": "gemini",
+    "claude": "claude",
+    "chatgpt": "chatgpt",
+    "v0": "v0",
+    "gemini": "gemini",
+}
+
+# বাংলা মন্তব্য: পাবলিক বা রেসপন্স মেটাডেটার জন্য নিউট্রাল ডিসপ্লে নাম
+SERVICE_DISPLAY_NAMES: dict[str, str] = {
+    "claude": "core-architect",
+    "chatgpt": "core-logic",
+    "v0": "core-design",
+    "gemini": "core-speed",
+}
+
+
+def normalize_service_name(service: str) -> str:
+    """বাংলা মন্তব্য: নিউট্রাল বা লিটারাল সার্ভিস নামকে অভ্যন্তরীণ প্রোভাইডার কি-তে রূপান্তর।"""
+    s = service.lower().strip()
+    return SERVICE_NAME_ALIASES.get(s, s)
 
 
 class WebAISessionBridge:
@@ -167,7 +212,11 @@ class WebAISessionBridge:
                         raw_cookies = browser_fn([f".{service}.ai", f".{service}.com"])
                         if raw_cookies:
                             break
-                    except Exception:
+                    except Exception as exc:
+                        logger.debug(
+                            f"[WebAISessionBridge] Browser cookie read skipped for {service}: {exc}",
+                            exc_info=True,
+                        )
                         continue
                 for c in raw_cookies:
                     if isinstance(c, dict) and "name" in c and "value" in c:
@@ -345,12 +394,14 @@ class WebAISessionBridge:
         system_prompt: str | None = None,
         model: str | None = None,
         session_token: str | None = None,
+        conversation_id: str | None = None,
+        is_new_thread: bool = True,
     ) -> dict[str, Any]:
         """
         বাংলা মন্তব্য: স্ট্যান্ডার্ড OpenAI-কম্প্যাটিবল রেসপন্স তৈরি করা।
         জিরো-কস্ট ইনভ্যারিয়েন্ট মেনে এটি খরচ ০.০০ দেখায় এবং সেশন ব্রাউজার মাধ্যমে চালায়।
         """
-        service = service.lower().strip()
+        service = normalize_service_name(service)
         cookies = self.resolve_session_cookies(service, explicit_token=session_token)
 
         if not cookies:
@@ -370,39 +421,57 @@ class WebAISessionBridge:
         # সার্ভিস অনুযায়ী স্পেসিফিক হ্যান্ডলার
         if service == "claude":
             reply_text = await self._call_claude_session(
-                natural_prompt, system_prompt, cookies, headers
+                natural_prompt,
+                system_prompt,
+                cookies,
+                headers,
+                conversation_id=conversation_id,
+                is_new_thread=is_new_thread,
             )
         elif service == "chatgpt":
-            reply_text = await self._call_chatgpt_session(natural_prompt, cookies, headers)
+            reply_text = await self._call_chatgpt_session(
+                natural_prompt,
+                cookies,
+                headers,
+                conversation_id=conversation_id,
+                is_new_thread=is_new_thread,
+            )
         elif service == "v0":
             reply_text = await self._call_v0_session(natural_prompt, cookies, headers)
         else:
             raise WebAISessionError(f"Unsupported web session service: {service}")
 
+        # বাংলা মন্তব্য: সেলফ-আইডেন্টিটি ও ওয়াটারমার্ক স্ক্রাবিং (ব্র্যান্ড লিক ও থিংকিং ট্যাগ ক্লিন করা)
+        clean_reply_text = NaturalFilePresenter.scrub_identity_and_watermarks(reply_text)
+
+        # বাংলা মন্তব্য: নিউট্রাল ডিসপ্লে নাম নির্ধারণ (বট বা লিটারাল নাম পরিহার)
+        display_engine = SERVICE_DISPLAY_NAMES.get(service, service)
+
         # OpenAI ChatCompletion রেসপন্স স্কিমা
         return {
-            "id": f"web-ai-{uuid.uuid4().hex[:12]}",
+            "id": f"core-ai-{uuid.uuid4().hex[:12]}",
             "object": "chat.completion",
             "created": int(time.time()),
-            "model": model or f"{service}-web-session",
+            "model": model or f"{display_engine}-node",
             "choices": [
                 {
                     "index": 0,
                     "message": {
                         "role": "assistant",
-                        "content": reply_text,
+                        "content": clean_reply_text,
                     },
                     "finish_reason": "stop",
                 }
             ],
             "usage": {
                 "prompt_tokens": len(prompt.split()),
-                "completion_tokens": len(reply_text.split()),
-                "total_tokens": len(prompt.split()) + len(reply_text.split()),
+                "completion_tokens": len(clean_reply_text.split()),
+                "total_tokens": len(prompt.split()) + len(clean_reply_text.split()),
                 "cost_usd": 0.0,  # বাংলা মন্তব্য: জিরো-কস্ট ইনভ্যারিয়েন্ট
             },
             "metadata": {
                 "service": service,
+                "engine": display_engine,
                 "zero_cost": True,
                 "tls_impersonated": CURL_CFFI_AVAILABLE,
             },
@@ -414,8 +483,10 @@ class WebAISessionBridge:
         system_prompt: str | None,
         cookies: dict[str, str],
         headers: dict[str, str],
+        conversation_id: str | None = None,
+        is_new_thread: bool = True,
     ) -> str:
-        """বাংলা মন্তব্য: Claude.ai ওয়েব সেশন হ্যান্ডলার।"""
+        """বাংলা মন্তব্য: Claude.ai ওয়েব সেশন হ্যান্ডলার (থ্রেড রিইউজ ও লাইফসাইকেল সাপোর্ট সহ)।"""
         # ১. অর্গানাইজেশন আইডি সংগ্রহ
         status, orgs = await self.execute_http_request(
             service="claude",
@@ -431,24 +502,25 @@ class WebAISessionBridge:
         if not org_uuid:
             raise WebAISessionError(f"Invalid organization payload from Claude: {orgs}")
 
-        # ২. নতুন কনভারসেশন তৈরি (মানুষের মতো স্বাভাবিক অর্গানিক টাইটেল দিয়ে)
-        from core.natural_file_presenter import NaturalFilePresenter
+        # ২. কনভারসেশন তৈরি বা রিইউজ (স্প্যাম ও হিস্ট্রি ব্লোট রোধ)
+        conv_uuid = conversation_id or str(uuid.uuid4())
+        if is_new_thread or not conversation_id:
+            from core.natural_file_presenter import NaturalFilePresenter
 
-        conv_uuid = str(uuid.uuid4())
-        human_title = NaturalFilePresenter.humanize_conversation_title(prompt)
-        create_payload = {"uuid": conv_uuid, "name": human_title}
-        status, conv_res = await self.execute_http_request(
-            service="claude",
-            method="POST",
-            url=f"https://claude.ai/api/organizations/{org_uuid}/chat_conversations",
-            headers=headers,
-            cookies=cookies,
-            json_data=create_payload,
-        )
-        if status not in (200, 201):
-            raise WebAISessionError(
-                f"Claude conversation creation failed (HTTP {status}): {conv_res}"
+            human_title = NaturalFilePresenter.humanize_conversation_title(prompt)
+            create_payload = {"uuid": conv_uuid, "name": human_title}
+            status, conv_res = await self.execute_http_request(
+                service="claude",
+                method="POST",
+                url=f"https://claude.ai/api/organizations/{org_uuid}/chat_conversations",
+                headers=headers,
+                cookies=cookies,
+                json_data=create_payload,
             )
+            if status not in (200, 201):
+                raise WebAISessionError(
+                    f"Claude conversation creation failed (HTTP {status}): {conv_res}"
+                )
 
         # ৩. প্রম্পট পাঠানো ও রেসপন্স সংগ্রহ
         prompt_payload = {
@@ -477,8 +549,10 @@ class WebAISessionBridge:
         prompt: str,
         cookies: dict[str, str],
         headers: dict[str, str],
+        conversation_id: str | None = None,
+        is_new_thread: bool = True,
     ) -> str:
-        """বাংলা মন্তব্য: ChatGPT ওয়েব সেশন হ্যান্ডলার।"""
+        """বাংলা মন্তব্য: ChatGPT ওয়েব সেশন হ্যান্ডলার (থ্রেড রিইউজ ও লাইফসাইকেল সাপোর্ট সহ)।"""
         # ১. সেশন টোকেন বৈধতা চেক
         status, session_info = await self.execute_http_request(
             service="chatgpt",
@@ -496,7 +570,7 @@ class WebAISessionBridge:
         auth_headers = {**headers, "Authorization": f"Bearer {access_token}"}
 
         # ২. কনভারসেশন মেসেজ পাঠানো
-        body = {
+        body: dict[str, Any] = {
             "action": "next",
             "messages": [
                 {
@@ -509,6 +583,9 @@ class WebAISessionBridge:
             "model": "auto",
             "parent_message_id": str(uuid.uuid4()),
         }
+        if conversation_id and not is_new_thread:
+            body["conversation_id"] = conversation_id
+
         status, chat_res = await self.execute_http_request(
             service="chatgpt",
             method="POST",
@@ -560,7 +637,7 @@ from dataclasses import dataclass, field
 
 @dataclass
 class AccountSession:
-    """বাংলা মন্তব্য: মাল্টি-অ্যাকাউন্ট পুলে প্রতিটি সেশন অ্যাকাউন্টের ট্র্যাক রেকর্ড।"""
+    """বাংলা মন্তব্য: মাল্টি-অ্যাকাউন্ট পুলে প্রতিটি সেশন অ্যাকাউন্টের ট্র্যাক রেকর্ড ও স্টেট ম্যানেজমেন্ট।"""
 
     service: str
     account_id: str
@@ -568,9 +645,42 @@ class AccountSession:
     cooldown_until: float = 0.0
     is_active: bool = True
     turnstile_paused: bool = False
+    turnstile_challenge_count: int = 0
+    retired: bool = False
     last_used: float = 0.0
+    consecutive_rate_limits: int = 0
     error_count: int = 0
     success_count: int = 0
+    proxy_url: str | None = None
+    last_validated_at: float = 0.0
+    _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    active_thread_id: str | None = None
+    thread_turn_count: int = 0
+    max_thread_turns: int = 6  # বাংলা মন্তব্য: প্রতি ৬টি টার্নে থ্রেড রোটেশন (স্প্যাম ও হিস্ট্রি ব্লোট রোধ)
+
+    @property
+    def health_rate(self) -> float:
+        """বাংলা মন্তব্য: অ্যাকাউন্টের লাইভ সাকসেস রেট শতাংশে হিসেব।"""
+        total = self.success_count + self.error_count
+        if total == 0:
+            return 100.0
+        return round((self.success_count / total) * 100, 2)
+
+    def get_or_rotate_thread_id(self) -> tuple[str, bool]:
+        """
+        বাংলা সারসংক্ষেপ:
+        ------------------
+        থ্রেড লাইফসাইকেল ম্যানেজমেন্ট (Thread Lifecycle Management):
+        ১. প্রতি রিকোয়েস্টে নতুন চ্যাট তৈরি (Spamming) রোধ করে।
+        ২. আবার অনন্তকাল ১টি চ্যাটে থেকে মেমোরি শেষ (History Bloat) হওয়াও রোধ করে।
+        রিটার্ন: (thread_id, is_new_thread)
+        """
+        if not self.active_thread_id or self.thread_turn_count >= self.max_thread_turns:
+            self.active_thread_id = str(uuid.uuid4())
+            self.thread_turn_count = 1
+            return self.active_thread_id, True
+        self.thread_turn_count += 1
+        return self.active_thread_id, False
 
 
 class WebAISessionPool:
@@ -579,47 +689,119 @@ class WebAISessionPool:
     ------------------
     auth2api + g4f + askalf অনুপ্রাণিত মাল্টি-অ্যাকাউন্ট পুল ও ক্রস-প্রোভাইডার ক্যাস্কেড ইঞ্জিন।
     ১. Multi-Account Pooling: একই সার্ভিসের একাধিক অ্যাকাউন্ট লোড করে।
-    ২. 429 Auto-Rotation: কোনো অ্যাকাউন্ট রেট লিমিট পেলে সাথে সাথে পরবর্তী অ্যাকাউন্টে শিফট করে।
-    ৩. Cross-Provider Fallback Cascade: Claude ডাউন হলে ChatGPT, তারপর v0-তে ফলব্যাক।
-    ৪. Turnstile Auto-Pause: ক্লাউডফ্লেয়ার চ্যালেঞ্জ ডিটেক্ট হলে আক্রান্ত অ্যাকাউন্ট সাময়িক পজ।
+    ২. Exponential Backoff with Jitter: রেট লিমিট পেলে ব্যাকঅফ (৬০সে - ১৮০০সে) দিয়ে কুলডাউন।
+    ৩. Circuit Breaker: পরপর ৫টি ব্যর্থতায় প্রোভাইডারকে ৫ মিনিট পজ করে পরবর্তী প্রোভাইডারে শিফট।
+    ৪. Per-Account Concurrency Lock: প্যারালাল টাস্কে একই অ্যাকাউন্টে একসাথে একাধিক রিকোয়েস্ট যাওয়া প্রতিরোধ।
+    ৫. Auto-Retirement: ৩টি টার্নস্টাইল চ্যালেঞ্জ বা <৩০% সাকসেস রেট পেলে ক্ষতিকর অ্যাকাউন্ট স্বয়ংক্রিয় রিটায়ার।
     """
 
     def __init__(self, bridge: WebAISessionBridge | None = None) -> None:
         self.bridge = bridge or WebAISessionBridge()
         self.accounts: dict[str, list[AccountSession]] = defaultdict(list)
+        self.provider_consecutive_errors: dict[str, int] = defaultdict(int)
+        self.circuit_open_until: dict[str, float] = defaultdict(float)
         self.hydrate_from_env_and_vault()
+
+    def is_circuit_open(self, service: str) -> bool:
+        """বাংলা মন্তব্য: কোনো প্রোভাইডারের সার্কিট ব্রেকার ওপেন (ট্রিপড) থাকলে True ফেরত দেবে।"""
+        s = normalize_service_name(service)
+        return self.circuit_open_until.get(s, 0.0) > time.time()
+
+    async def validate_session_alive(self, acc: AccountSession) -> bool:
+        """
+        বাংলা মন্তব্য: টাস্ক পাঠানোর আগে লাইটওয়েট প্রি-ভ্যালিডেশন (TTL: ৩০০ সেকেন্ড ক্যাশ)।
+        """
+        now = time.time()
+        if now - acc.last_validated_at < 300.0:
+            return True
+
+        cookies = self.bridge.resolve_session_cookies(acc.service, explicit_token=acc.token)
+        if not cookies:
+            return False
+
+        headers = self.bridge._get_headers(acc.service)
+        probe_url = ""
+        if acc.service == "claude":
+            probe_url = "https://claude.ai/api/organizations"
+        elif acc.service == "chatgpt":
+            probe_url = "https://chatgpt.com/api/auth/session"
+        elif acc.service == "v0":
+            probe_url = "https://v0.dev/api/user"
+
+        if not probe_url:
+            return True
+
+        try:
+            status, _ = await self.bridge.execute_http_request(
+                service=acc.service,
+                method="GET",
+                url=probe_url,
+                headers=headers,
+                cookies=cookies,
+            )
+            if status in (200, 201, 304):
+                acc.last_validated_at = now
+                return True
+            elif status == 403:
+                acc.turnstile_paused = True
+                acc.turnstile_challenge_count += 1
+                return False
+            else:
+                return False
+        except Exception as exc:
+            logger.debug(
+                f"[WebAISessionPool] Pre-validation failed for {acc.account_id}: {exc}",
+                exc_info=True,
+            )
+            return False
 
     def register_account(
         self,
         service: str,
         token: str,
         account_id: str | None = None,
+        proxy_url: str | None = None,
     ) -> AccountSession:
         """বাংলা মন্তব্য: পুলে নতুন অ্যাকাউন্ট বা সেশন টোকেন যুক্ত করা।"""
-        service = service.lower().strip()
-        account_id = account_id or f"{service}-{uuid.uuid4().hex[:6]}"
+        s = normalize_service_name(service)
+        account_id = account_id or f"{s}-{uuid.uuid4().hex[:6]}"
 
         # চেক করা ইতিমধ্যে আছে কি না
-        for acc in self.accounts[service]:
+        for acc in self.accounts[s]:
             if acc.token == token or acc.account_id == account_id:
                 acc.token = token
                 acc.is_active = True
+                acc.retired = False
                 acc.cooldown_until = 0.0
                 acc.turnstile_paused = False
+                if proxy_url:
+                    acc.proxy_url = proxy_url
                 return acc
 
-        new_acc = AccountSession(service=service, account_id=account_id, token=token)
-        self.accounts[service].append(new_acc)
-        logger.info(f"[WebAISessionPool] Registered account {account_id} for {service}")
+        new_acc = AccountSession(
+            service=s,
+            account_id=account_id,
+            token=token,
+            proxy_url=proxy_url,
+        )
+        self.accounts[s].append(new_acc)
+        logger.info(f"[WebAISessionPool] Registered account {account_id} for {s}")
         return new_acc
 
-    def get_available_account(self, service: str) -> AccountSession | None:
-        """বাংলা মন্তব্য: কুলডাউন বা টার্নস্টাইল পজে নেই এমন সবচেয়ে কম ব্যবহৃত (LRU) অ্যাকাউন্ট নির্বাচন।"""
+    def get_available_account(
+        self, service: str, lock_required: bool = False
+    ) -> AccountSession | None:
+        """বাংলা মন্তব্য: রিটায়ার্ড বা কুলডাউনে নেই এমন সবচেয়ে কম ব্যবহৃত (LRU) অ্যাকাউন্ট নির্বাচন।"""
+        s = normalize_service_name(service)
         now = time.time()
         candidates = [
             acc
-            for acc in self.accounts.get(service, [])
-            if acc.is_active and acc.cooldown_until <= now and not acc.turnstile_paused
+            for acc in self.accounts.get(s, [])
+            if acc.is_active
+            and not acc.retired
+            and acc.cooldown_until <= now
+            and not acc.turnstile_paused
+            and (not lock_required or not acc._lock.locked())
         ]
         if not candidates:
             return None
@@ -628,33 +810,60 @@ class WebAISessionPool:
         return candidates[0]
 
     def mark_rate_limited(
-        self, service: str, account_id: str, cooldown_seconds: float = 300.0
-    ) -> None:
-        """বাংলা মন্তব্য: 429 Too Many Requests পেলে অ্যাকাউন্টকে নির্দিষ্ট সময়ের জন্য কুলডাউনে পাঠানো।"""
+        self, service: str, account_id: str, cooldown_seconds: float | None = None
+    ) -> float:
+        """
+        বাংলা মন্তব্য: ফিক্সড ৩০০ সেকেন্ডের বদলে Exponential Backoff with Jitter:
+        Base: 60s, Multiplier: 2^(consecutive_rate_limits - 1), Max: 1800s, Jitter: ±20%
+        """
+        s = normalize_service_name(service)
         now = time.time()
-        for acc in self.accounts.get(service, []):
+        for acc in self.accounts.get(s, []):
             if acc.account_id == account_id:
-                acc.cooldown_until = now + cooldown_seconds
+                acc.consecutive_rate_limits += 1
+                if cooldown_seconds is not None:
+                    cooldown = cooldown_seconds
+                else:
+                    base = 60.0 * (2 ** min(acc.consecutive_rate_limits - 1, 5))
+                    jitter = random.uniform(0.8, 1.2)
+                    cooldown = min(1800.0, base * jitter)
+
+                acc.cooldown_until = now + cooldown
                 acc.error_count += 1
                 logger.warning(
-                    f"[WebAISessionPool] Account {account_id} for {service} rate-limited! "
-                    f"Cooldown set for {cooldown_seconds}s (until {acc.cooldown_until})"
+                    f"[WebAISessionPool] Account {account_id} for {s} rate-limited! "
+                    f"Backoff cooldown set for {round(cooldown, 1)}s (level #{acc.consecutive_rate_limits})"
                 )
-                break
+                return cooldown
+        return 60.0
 
     def mark_success(self, service: str, account_id: str) -> None:
-        """বাংলা মন্তব্য: সফল রিকোয়েস্টে টাইমস্ট্যাম্প ও সাফল্য কাউন্ট আপডেট।"""
-        for acc in self.accounts.get(service, []):
+        """বাংলা মন্তব্য: সফল রিকোয়েস্টে সাকসেস কাউন্ট আপডেট ও ফেইলিউর রিসেট।"""
+        s = normalize_service_name(service)
+        self.provider_consecutive_errors[s] = 0
+        for acc in self.accounts.get(s, []):
             if acc.account_id == account_id:
                 acc.last_used = time.time()
                 acc.success_count += 1
-                acc.error_count = 0
+                acc.consecutive_rate_limits = 0
                 acc.turnstile_paused = False
                 break
 
     def mark_failure(self, service: str, account_id: str, error_detail: str = "") -> None:
-        """বাংলা মন্তব্য: ব্যর্থতায় এরর কাউন্ট বৃদ্ধি এবং Turnstile চ্যালেঞ্জ পেলে অ্যাকাউন্ট সাময়িক পজ।"""
-        for acc in self.accounts.get(service, []):
+        """বাংলা মন্তব্য: ব্যর্থতায় এরর কাউন্ট বৃদ্ধি, সার্কিট ব্রেকার ট্রিগার ও অটো-রিটায়ারমেন্ট।"""
+        s = normalize_service_name(service)
+        self.provider_consecutive_errors[s] += 1
+        now = time.time()
+
+        # সার্কিট ব্রেকার চেক: কোনো প্রোভাইডারে পরপর ৫টি ব্যর্থতা এলে ৫ মিনিট সার্কিট ওপেন
+        if self.provider_consecutive_errors[s] >= 5:
+            self.circuit_open_until[s] = now + 300.0
+            logger.error(
+                f"[WebAISessionPool] Circuit Breaker TRIPPED for provider '{s}'! "
+                f"5 consecutive failures. Pausing provider for 300s."
+            )
+
+        for acc in self.accounts.get(s, []):
             if acc.account_id == account_id:
                 acc.error_count += 1
                 if (
@@ -663,12 +872,22 @@ class WebAISessionPool:
                     or "challenge" in error_detail.lower()
                 ):
                     acc.turnstile_paused = True
+                    acc.turnstile_challenge_count += 1
                     logger.warning(
-                        f"[WebAISessionPool] Account {account_id} paused due to Turnstile/WAF challenge."
+                        f"[WebAISessionPool] Account {account_id} paused due to Turnstile challenge "
+                        f"(Total challenges: {acc.turnstile_challenge_count})"
                     )
-                else:
-                    logger.warning(
-                        f"[WebAISessionPool] Account {account_id} failed: {error_detail}"
+
+                # অটো-রিটায়ারমেন্ট: ৩টি টার্নস্টাইল চ্যালেঞ্জ অথবা ৫+ রিকোয়েস্টে সাকসেস রেট < ৩০%
+                total_calls = acc.success_count + acc.error_count
+                if acc.turnstile_challenge_count >= 3 or (
+                    total_calls >= 5 and acc.health_rate < 30.0
+                ):
+                    acc.retired = True
+                    acc.is_active = False
+                    logger.error(
+                        f"[WebAISessionPool] [ALERT] Account {account_id} AUTO-RETIRED! "
+                        f"Health Rate: {acc.health_rate}%, Turnstile Count: {acc.turnstile_challenge_count}"
                     )
                 break
 
@@ -753,7 +972,14 @@ class WebAISessionPool:
         failovers_count = 0
 
         for service in chain:
-            accounts = [acc for acc in self.accounts.get(service, []) if acc.is_active]
+            # বাংলা মন্তব্য: সার্কিট ব্রেকার চেক — পরপর ৫টি ব্যর্থতায় প্রোভাইডার সাময়িক পজ থাকলে দ্রুত স্কিপ
+            if self.is_circuit_open(service):
+                errors_log.append(f"{service}: Circuit open (5 consecutive failures), skipping")
+                continue
+
+            accounts = [
+                acc for acc in self.accounts.get(service, []) if acc.is_active and not acc.retired
+            ]
 
             # যদি কোনো অ্যাকাউন্ট রেজিস্টার্ড না থাকে, তবে ব্রিজ নিজে ENV/রুকিপি থেকে চেষ্টা করবে
             if not accounts:
@@ -776,45 +1002,61 @@ class WebAISessionPool:
 
             # রেজিস্টার্ড অ্যাকাউন্টগুলোর ওপর লুপ
             for _ in range(len(accounts)):
-                acc = self.get_available_account(service)
+                acc = self.get_available_account(service, lock_required=True)
                 if not acc:
-                    errors_log.append(f"{service}: All {len(accounts)} accounts in cooldown")
+                    errors_log.append(f"{service}: All {len(accounts)} accounts in cooldown/busy")
                     break
 
-                try:
-                    logger.info(
-                        f"[WebAISessionPool] Routing to {service} using account {acc.account_id}"
-                    )
-                    res = await self.bridge.complete(
-                        service=service,
-                        prompt=prompt,
-                        system_prompt=system_prompt,
-                        model=model,
-                        session_token=acc.token,
-                    )
-                    self.mark_success(service, acc.account_id)
-                    res["metadata"]["service_used"] = service
-                    res["metadata"]["account_used"] = acc.account_id
-                    res["metadata"]["failovers_triggered"] = failovers_count
-                    return res
-                except WebAISessionError as exc:
-                    err_msg = str(exc)
-                    errors_log.append(f"{service} [{acc.account_id}]: {err_msg}")
-                    failovers_count += 1
+                # বাংলা মন্তব্য: পার-অ্যাকাউন্ট কনকারেন্সি লক (একই অ্যাকাউন্টে সমান্তরাল রিকোয়েস্ট সম্পূর্ণ ব্লক)
+                async with acc._lock:
+                    # বাংলা মন্তব্য: লাইটওয়েট প্রি-ভ্যালিডেশন (সেশন সক্রিয় কি না তা নিশ্চিতকরণ)
+                    is_alive = await self.validate_session_alive(acc)
+                    if not is_alive:
+                        errors_log.append(f"{service} [{acc.account_id}]: Pre-validation failed")
+                        self.mark_failure(service, acc.account_id, "Pre-validation dead session")
+                        continue
 
-                    # 429 রেট লিমিট ডিটেকশন
-                    if (
-                        "429" in err_msg
-                        or "rate" in err_msg.lower()
-                        or "too many requests" in err_msg.lower()
-                    ):
-                        self.mark_rate_limited(service, acc.account_id, cooldown_seconds=300.0)
-                    else:
-                        self.mark_failure(service, acc.account_id, err_msg)
-                except Exception as exc:
-                    errors_log.append(f"{service} [{acc.account_id}] unexpected: {exc}")
-                    failovers_count += 1
-                    self.mark_failure(service, acc.account_id, str(exc))
+                    # বাংলা মন্তব্য: থ্রেড লাইফসাইকেল (৬ টার্ন পর পর রোটেশন — স্প্যামিং ও ব্লোট রোধ)
+                    thread_id, is_new_thread = acc.get_or_rotate_thread_id()
+
+                    try:
+                        logger.info(
+                            f"[WebAISessionPool] Routing to {service} using account {acc.account_id} "
+                            f"(thread_turn: {acc.thread_turn_count}, is_new: {is_new_thread})"
+                        )
+                        res = await self.bridge.complete(
+                            service=service,
+                            prompt=prompt,
+                            system_prompt=system_prompt,
+                            model=model,
+                            session_token=acc.token,
+                            conversation_id=thread_id,
+                            is_new_thread=is_new_thread,
+                        )
+                        self.mark_success(service, acc.account_id)
+                        res["metadata"]["service_used"] = service
+                        res["metadata"]["account_used"] = acc.account_id
+                        res["metadata"]["failovers_triggered"] = failovers_count
+                        res["metadata"]["thread_turn"] = acc.thread_turn_count
+                        return res
+                    except WebAISessionError as exc:
+                        err_msg = str(exc)
+                        errors_log.append(f"{service} [{acc.account_id}]: {err_msg}")
+                        failovers_count += 1
+
+                        # 429 রেট লিমিট ডিটেকশন
+                        if (
+                            "429" in err_msg
+                            or "rate" in err_msg.lower()
+                            or "too many requests" in err_msg.lower()
+                        ):
+                            self.mark_rate_limited(service, acc.account_id, cooldown_seconds=300.0)
+                        else:
+                            self.mark_failure(service, acc.account_id, err_msg)
+                    except Exception as exc:
+                        errors_log.append(f"{service} [{acc.account_id}] unexpected: {exc}")
+                        failovers_count += 1
+                        self.mark_failure(service, acc.account_id, str(exc))
 
         # সব প্রোভাইডার ও অ্যাকাউন্ট ফেইল করলে Fail-closed
         raise WebAISessionError(
@@ -886,13 +1128,25 @@ class WebAISessionPool:
                         pref_service = service
                         chain = (service, "claude", "chatgpt", "v0")
 
-                    res = await self.complete_with_cascade(
-                        prompt=prompt,
-                        system_prompt=system,
-                        preferred_service=pref_service,
-                        fallback_chain=chain,
-                        model=model,
-                    )
+                    # বাংলা মন্তব্য: পার-অ্যাকাউন্ট কনকারেন্সি লক (একই অ্যাকাউন্টে সমান্তরালে একাধিক কল প্রতিরোধ)
+                    acc = self.get_available_account(pref_service, lock_required=True)
+                    if acc:
+                        async with acc._lock:
+                            res = await self.complete_with_cascade(
+                                prompt=prompt,
+                                system_prompt=system,
+                                preferred_service=pref_service,
+                                fallback_chain=chain,
+                                model=model,
+                            )
+                    else:
+                        res = await self.complete_with_cascade(
+                            prompt=prompt,
+                            system_prompt=system,
+                            preferred_service=pref_service,
+                            fallback_chain=chain,
+                            model=model,
+                        )
                     content = res.get("choices", [{}])[0].get("message", {}).get("content", "")
                     return {
                         "task_id": t_id,
