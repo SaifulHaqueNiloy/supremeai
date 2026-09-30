@@ -42,10 +42,16 @@ class BrowserStealth:
     async def create_stealth_browser(self) -> Any:
         if not HAS_PLAYWRIGHT:
             raise RuntimeError("playwright not installed")
-        self.playwright = await async_playwright().start()
-        browser = await self.playwright.chromium.launch(
-            headless=getattr(settings, "browser_headless", "true").lower() != "false"
-        )
+        # #2428 refactor: use the global async Playwright singleton from
+        # core.playwright_manager instead of launching a fresh playwright+chromium
+        # instance on every call. This was the source of per-call Chromium
+        # process sprawl (10+ sites in playwright_browser_agent.py + 1 in
+        # web_fallback_agent.py all called this). The singleton is process-level
+        # with a double-checked lock + bounded page semaphore — zero-zombie on
+        # shutdown_global_browser().
+        from core.playwright_manager import get_global_browser
+
+        browser = await get_global_browser()
         from tools.security_tools.proxy_manager import ProxyManager
 
         proxy_mgr = ProxyManager()
