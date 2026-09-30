@@ -22,11 +22,8 @@ from api.routes.auth import create_access_token
 _IMPERSONATION_TTL = timedelta(minutes=30)
 
 
-def _mint_impersonation_token(
-    *, uid: str, role: str, impersonator: str
-) -> str:
+def _mint_impersonation_token(*, uid: str, role: str, impersonator: str) -> str:
     """বাংলা: impersonation token — canonical auth pipeline (exp/iat/jti সহ) দিয়ে।"""
-    now = datetime.now(UTC)
     return create_access_token(
         {
             "uid": uid,
