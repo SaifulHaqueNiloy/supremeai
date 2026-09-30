@@ -233,10 +233,32 @@ async def verify_idempotency(request: Request) -> None:
     try:
         from core.cache.redis_manager import acquire_idempotency_lock, redis_manager
     except ImportError:
+        # D-3 fix (#2733): কিন্তু critical path-এ fail-open নিষিদ্ধ — 503 fail-closed।
+        from core.config import settings as _settings
+
+        if any(p in request.url.path for p in _settings.idempotency_critical_paths):
+            logger.error(
+                f"[Idempotency Dep] Redis import failed on critical path {request.url.path} — 503"
+            )
+            raise HTTPException(
+                status_code=503,
+                detail="Idempotency store unavailable for critical path — retry shortly.",
+            )
         logger.warning("[Idempotency Dep] Redis import failed — skipping (fail-open)")
         return
 
     if redis_manager.client is None:
+        # D-3 fix (#2733): একই নিয়ম — critical path ও Redis ডাউন মানে 503।
+        from core.config import settings as _settings
+
+        if any(p in request.url.path for p in _settings.idempotency_critical_paths):
+            logger.error(
+                f"[Idempotency Dep] Redis unavailable on critical path {request.url.path} — 503"
+            )
+            raise HTTPException(
+                status_code=503,
+                detail="Idempotency store unavailable for critical path — retry shortly.",
+            )
         return
 
     # বাংলা মন্তব্য: ক্যাশে আগের রেসপন্স আছে কিনা চেক করা হচ্ছে

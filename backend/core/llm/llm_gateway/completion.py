@@ -55,6 +55,44 @@ def get_firestore_db(*args: Any, **kwargs: Any):
     return _package.get_firestore_db(*args, **kwargs)
 
 
+# বাংলা মন্তব্য: অ্যাট্রিবিউট-হীন (tenant-বিহীন) inference-এর বাজেট নেমস্পেস (#2732)।
+# "anonymous" alias-টি ঐতিহাসিক — কিছু caller স্পষ্টভাবে এটি পাঠায়; দুটোই
+# unattributed লেনে গণ্য হবে।
+UNATTRIBUTED_TENANT = "unattributed"
+_ANONYMOUS_TENANT = "anonymous"
+
+
+async def enforce_preflight_budget(tenant_id: str | None, prompt_text: str) -> None:
+    """Pre-flight cost guard — fail-closed (সংবিধান Invariant-৪, #2732)।
+
+    বাংলা মন্তব্য: নাম-জানা tenant → আগের মতো Firestore budget-doc গেট (আচরণ
+    অপরিবর্তিত); tenant-হীন/anonymous কল → "unattributed" namespace-এ Redis
+    দৈনিক ক্যাপ (ডিফল্ট $১/দিন, kill-switch: COSTGUARD_UNATTRIBUTED_DAILY_CAP<=0)।
+    ফলে অভ্যন্তরীণ ইঞ্জিন (debate/ToT/RAG — ~২০ tenant-হীন caller) ভাঙে না,
+    কিন্তু বাজেট-ছাড়া অসীম অ্যাননিমাস spend-এর ফাঁক আর থাকে না।
+    """
+    try:
+        from core.prompt_handler import estimate_tokens
+
+        tokens = estimate_tokens(prompt_text)
+        estimated_cost = tokens * getattr(settings, "llm_cost_per_token", 0.00001)
+    except Exception:  # Safe fallback cost on token estimate failure
+        estimated_cost = 0.01
+
+    if not tenant_id or tenant_id in (UNATTRIBUTED_TENANT, _ANONYMOUS_TENANT):
+        # বাংলা মন্তব্য: অ্যাট্রিবিউট-হীন লেন — Firestore tenant-doc নেই এমন কল;
+        # Redis-ভিত্তিক fail-closed ক্যাপ (global CostGuard singleton)।
+        from core.cost_guard import cost_guard as _global_guard
+
+        await _global_guard.check_unattributed_budget(estimated_cost)
+        return
+
+    db = get_firestore_db()
+    if db:
+        cost_guard = CostGuard(db)
+        await cost_guard.check_budget(tenant_id, estimated_cost)
+
+
 class CompletionMixin:
     """Main completion method for LLMGateway (verbatim move)."""
 
@@ -127,7 +165,7 @@ class CompletionMixin:
         prompt_text = normalize_prompt(prompt)
 
         # বাংলা মন্তব্ব: Semantic cache check — API call আগে cost-zero response
-        if prompt_text and not stream:
+        if prompt_text:  # ROOT-CAUSE FIX (#2729): cache check for BOTH stream + non-stream
             cached = await self.cache.query_similar(prompt_text, task_type=task_type)
             if cached:
                 # Sprint 3 (learning loop): durable cache-hit observation — evidence
@@ -154,19 +192,9 @@ class CompletionMixin:
                     "cached": True,
                 }
 
-        # বাংলা মন্তব্ব: Pre-flight cost guard
-        if tenant_id:
-            db = get_firestore_db()
-            if db:
-                cost_guard = CostGuard(db)
-                try:
-                    from core.prompt_handler import estimate_tokens
-
-                    tokens = estimate_tokens(prompt_text)
-                    estimated_cost = tokens * getattr(settings, "llm_cost_per_token", 0.00001)
-                except Exception:  # Safe fallback cost on token estimate failure
-                    estimated_cost = 0.01
-                await cost_guard.check_budget(tenant_id, estimated_cost)
+        # বাংলা মন্তব্য: Pre-flight cost guard — fail-closed (#2732, Invariant-৪):
+        # tenant-হীন কল এখন "unattributed" Redis ক্যাপে বাঁধা; tenanted পথ অপরিবর্তিত।
+        await enforce_preflight_budget(tenant_id, prompt_text)
 
         # বাংলা মন্তব্জ: Tier 0 Fast-Path — deterministic tasks bypass ALL LLM calls (Needle 2-inspired).
         # ConfidenceGatedDispatcher (reusing AdvancedModelRouter) evaluates prompt confidence;
@@ -508,6 +536,23 @@ class CompletionMixin:
                     if _is_leader and _coalescer is not None and _dedup_k:
                         with contextlib.suppress(Exception):
                             _coalescer.publish_success(_dedup_k, _result)
+
+                    # ROOT-CAUSE FIX (#2729): gateway-level cache write — previously
+                    # the gateway only READ from cache (query_similar) but never WROTE.
+                    # Only some callers (task.py, chat.py) manually called cache.set,
+                    # so cache-hit rate was low. Now: every successful non-stream
+                    # completion is cached centrally — all callers benefit.
+                    if prompt_text and not stream:
+                        try:
+                            await self.cache.set(
+                                prompt=prompt_text,
+                                response=_result.get("text", ""),
+                                task_type=task_type,
+                                user_id=tenant_id,
+                            )
+                        except Exception as cache_exc:
+                            logger.debug(f"[LLMGateway] cache.set failed (non-fatal): {cache_exc}")
+
                     return _result
             except asyncio.CancelledError:
                 # বাংলা মন্তব্ব: CancelledError re-raise — কখনো suppress করা যাবে না

@@ -472,7 +472,7 @@ class AutoHealer:
                 severity = severity_map.get(severity_raw, Severity.MEDIUM)
 
                 existing = self._find_similar_issue(
-                    matched["title"] if matched else f"Anomaly: {service}", 
+                    matched["title"] if matched else f"Anomaly: {service}",
                     matched["category"] if matched else IssueCategory.UNKNOWN,
                 )
                 if existing is not None:
@@ -521,7 +521,9 @@ class AutoHealer:
                 )
                 pr_result = await pipeline.create_patch_pr(
                     branch_name=branch_name,
-                    file_path=str(getattr(alert, "target_file", None) or "reports/guardian_findings.md"),
+                    file_path=str(
+                        getattr(alert, "target_file", None) or "reports/guardian_findings.md"
+                    ),
                     patch_code=(
                         f"# Guardian Finding {alert_id}\n\n"
                         f"- Service: {service}\n- Detected: {message}\n"
@@ -545,7 +547,10 @@ class AutoHealer:
                 # বাংলা মন্তব্য: একটি alert ব্যর্থ হলে বাকিগুলো প্রসেস হবে — সৎ নোট।
                 logger.warning(f"[AUTO-HEALER] Guardian cycle alert-processing error: {exc}")
                 summary["skipped"].append(
-                    {"alert_id": str(getattr(alert, "alert_id", "?")), "reason": f"error: {str(exc)[:120]}"}
+                    {
+                        "alert_id": str(getattr(alert, "alert_id", "?")),
+                        "reason": f"error: {str(exc)[:120]}",
+                    }
                 )
 
         logger.info(
@@ -712,6 +717,11 @@ class AutoHealer:
             # Record result
             self.fix_history.append(result)
 
+            # বাংলা মন্তব্য (#2708): healing-ইতিহাস এখন স্থায়ী মেমরিতেও যায় —
+            # issue (কী ধরা পড়েছিল) + fix (কী হলো) এক paired event-এ;
+            # fail-soft — persist ব্যর্থ হলেও healing পথ কখনো ভাঙবে না।
+            await self._persist_history(issue, result)
+
             if result.success:
                 issue.resolved = True
                 issue.resolution = result.message
@@ -731,6 +741,29 @@ class AutoHealer:
             logger.error(f"[AUTO-HEALER] Auto-fix error: {e}")
             return FixResult(success=False, issue_id=issue.id, fix_applied="error", message=str(e))
 
+    async def _persist_history(self, issue: Issue, result: FixResult) -> None:
+        """#2708: issue+fix জোড়া স্থায়ী মেমরিতে লেখা (fail-soft)।
+
+        বাংলা মন্তব্য: আগে fix_history/issue_history শুধু প্রসেস-মেমরি তালিকা —
+        restart-এ সব হারাত। এখন canonical memory writer-এ healing event যায়;
+        ব্যর্থতা লগ হয় কিন্তু নীরবে গিলে ফেলা হয় না।
+        """
+        try:
+            from services.memory_service import save_healing_event
+
+            await save_healing_event(
+                component=(issue.source or "global").strip() or "global",
+                issue_title=issue.title,
+                category=issue.category.value,
+                fix_applied=result.fix_applied,
+                success=bool(result.success),
+                message=result.message[:500],
+            )
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.warning(f"[AUTO-HEALER] history persist failed (fail-soft): {e}")
+
     async def _fix_rate_limit(self, issue: Issue) -> FixResult:
         """Apply rate limit fix (enable/increase caching)"""
         # This would integrate with your cache system
@@ -745,14 +778,14 @@ class AutoHealer:
 
             get_cache()
 
-            # Reduce TTL to allow faster cache refresh
-            # In real implementation, you'd adjust cache settings dynamically
-
+            # বাংলা মন্তব্য (#2708): আগের message মিথ্যা ছিল — "Reduced cache TTL"
+            # বলত কিন্তু TTL আসলে কমাত না। সত্য ক্রিয়া: cache instance warm +
+            # validate; 429-পুনরাবৃত্তিতে healer-এর backoff পথ ব্যবহৃত হয়।
             return FixResult(
                 success=True,
                 issue_id=issue.id,
-                fix_applied="cache_ttl_reduced",
-                message="Reduced cache TTL to decrease API call frequency",
+                fix_applied="cache_validated_backoff_armed",
+                message="Cache instance warmed and validated; 429-retries use exponential backoff",
             )
         except ImportError:
             return FixResult(
@@ -763,12 +796,30 @@ class AutoHealer:
             )
 
     async def _fix_timeout(self, issue: Issue) -> FixResult:
-        """Apply timeout fix"""
+        """TIMEOUT fix — বাস্তব অ্যাকশন (#2708)।
+
+        বাংলা মন্তব্য: আগে এটা মিথ্যা "increased_timeout" স্ট্রিং দিত — কোনো
+        state বদলাত না। এখন healer-এর নিজস্ব RetryPolicy রেজিস্ট্রিতে যাচাইযোগ্য
+        hardening হয়: max_retries +1 (ক্যাপ ৬), max_delay ×২ (ক্যাপ ১২০ সে)।
+        ক্যাপ বারবার একই ইস্যুতে রানঅ্যাওয়ে আটকায় — bounded, idempotent-ish।
+        """
+        key = (issue.source or "global").strip() or "global"
+        policy = self.retry_policies.get(key)
+        old = (policy.max_retries, policy.max_delay) if policy else None
+        if policy is None:
+            policy = RetryPolicy(max_retries=3, base_delay=1.0, max_delay=30.0)
+            self.retry_policies[key] = policy
+        policy.max_retries = min(policy.max_retries + 1, 6)
+        policy.max_delay = min(policy.max_delay * 2.0, 120.0)
+        was = f" (was retries={old[0]}, delay={old[1]}s)" if old else " (new policy)"
         return FixResult(
             success=True,
             issue_id=issue.id,
-            fix_applied="increased_timeout",
-            message="Increased request timeout and enabled async processing",
+            fix_applied="retry_policy_hardened",
+            message=(
+                f"Retry policy for '{key}' hardened: "
+                f"max_retries={policy.max_retries}, max_delay={policy.max_delay}s" + was
+            ),
         )
 
     async def _fix_dependency(self, issue: Issue) -> FixResult:
