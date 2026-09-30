@@ -112,6 +112,58 @@ class CostGuard:
                 logging.getLogger(__name__).exception(f"Silenced error: {e}")
             raise RuntimeError(f"CostGuard failed to verify budget: {e}") from e
 
+    # বাংলা মন্তব্য: অ্যাট্রিবিউট-হীন খরচের Redis কাউন্টার-কী (২৪-ঘণ্টা স্লাইডিং উইন্ডো)।
+    UNATTRIBUTED_SPEND_KEY = "cost_guard:unattributed:daily_spent"
+
+    async def check_unattributed_budget(self, estimated_cost: float) -> bool:
+        """#2732: অ্যাট্রিবিউট-হীন (tenant-বিহীন) inference-এর fail-closed বাজেট গেট।
+
+        বাংলা মন্তব্য: Firestore tenant-doc নেই এমন কলগুলো (অভ্যন্তরীণ ইঞ্জিন,
+        অ্যাডমিন টুল) এখন Redis-ভিত্তিক দৈনিক ক্যাপে বাঁধা — ক্যাপ ছাড়ালে 402,
+        Redis ডাউন হলেও 402 (fail-closed)। অসীম অ্যাননিমাস spend আর সম্ভব নয়।
+        Admin kill-switch: settings.costguard_unattributed_daily_cap <= 0।
+        Conservative দিক: প্রি-ফ্লাইট estimate-ই জমা হয় — over-count নিরাপদ দিকে।
+        """
+        from core.config import settings
+
+        cap = float(getattr(settings, "costguard_unattributed_daily_cap", 1.0))
+        if cap <= 0.0:
+            # বাংলা মন্তব্য: admin-স্পষ্ট নিষ্ক্রিয়করণ (kill-switch) — তবু লগ থাকবে।
+            logger.warning("[CostGuard] Unattributed budget guard DISABLED via settings (cap<=0)")
+            return True
+
+        from core.cache.redis_manager import redis_manager
+
+        try:
+            spent_raw = await redis_manager.get_cache(self.UNATTRIBUTED_SPEND_KEY)
+            spent = float(spent_raw) if spent_raw else 0.0
+        except Exception as e:
+            logger.error(f"[CostGuard] Unattributed guard Redis unavailable — fail-closed 402: {e}")
+            raise HTTPException(
+                status_code=402,
+                detail="Unattributed spend guard unavailable — attach tenant_id or retry later",
+            ) from e
+
+        if spent + estimated_cost > cap:
+            logger.warning(
+                f"[CostGuard] Unattributed daily cap exceeded: spent={spent:.4f}, "
+                f"est={estimated_cost:.4f}, cap={cap:.2f}"
+            )
+            raise HTTPException(
+                status_code=402,
+                detail="Unattributed daily spend cap exceeded — attach tenant_id for budgeted access",
+            )
+
+        # বাংলা মন্তব্য: estimate আগেই জমা — ঝড়-ঝাপটা (thundering-herd) কলেও ক্যাপ
+        # তাৎক্ষণিক কাজ করে; actual settle-এর অপেক্ষা করলে ক্যাপ পেছনে পড়ত।
+        try:
+            await redis_manager.incrbyfloat(
+                self.UNATTRIBUTED_SPEND_KEY, estimated_cost, ex_seconds=86400
+            )
+        except Exception as e:
+            logger.error(f"[CostGuard] Unattributed spend accumulate failed (allowed, logged): {e}")
+        return True
+
     async def validate_budget(self, tenant_id: str, tier: str) -> bool:
         """
         নতুন মেthod: টাস্ক রাউটারের ৮০/১৫/৫ মাল্টি-টিয়ার ফলব্যাক চেইনের বাজেট ভ্যালিডেশনের জন্য।

@@ -116,8 +116,22 @@ class UpstashRedisQueue:
             "cache_hits": 0,
             "quota_cooldowns": 0,
             "quota_refusals": 0,
+            "softcap_shifts": 0,
             "failovers": 0,
         }
+        # ── #2710 (R2.5): প্রতিদিনের সক্রিয় soft-cap বাজেট ──
+        # বাংলা মন্তব্য: R2-এর cooldown প্রতিক্রিয়াশীল — HTTP 400 আসার পরেই কাজ করে,
+        # ফলে primary প্রতিদিন ১০০% পর্যন্ত ভরে যেত। এখানে প্রতিটি account-এর
+        # দৈনিক command গণনা রাখা হয়; soft-cap (default 400k = 500k-এর ৮০%)
+        # ছুঁলে সেই account-কে UTC রিসেট পর্যন্ত সক্রিয়ভাবে skip করা হয় —
+        # ফলে কোনো account কখনোই 500k স্পর্শ করে না এবং HTTP 400-নয়েজ বন্ধ হয়।
+        try:
+            self._daily_soft_cap = max(0, int(os.getenv("UPSTASH_DAILY_SOFT_CAP", "400000")))
+        except ValueError:
+            self._daily_soft_cap = 400_000
+        self._daily_counts: dict[str, int] = {}
+        self._softcap_until: dict[str, float] = {}
+        self._day_bucket_until: float = _next_utc_reset_epoch()
         try:
             self._read_cache_ttl = max(0.0, float(os.getenv("UPSTASH_READ_CACHE_TTL", "10")))
             self._negative_cache_ttl = max(0.0, float(os.getenv("UPSTASH_NEGATIVE_CACHE_TTL", "3")))
@@ -149,6 +163,40 @@ class UpstashRedisQueue:
             until = self._cooldown_until.get(url, 0.0)
             return time.time() < until
 
+    # ── #2710 (R2.5): দৈনিক soft-cap helpers ──────────────────────────────────
+    def _rollover_day_bucket_locked(self, now: float) -> None:
+        """বাংলা মন্তব্য: UTC দিন বদলালে গণনা শূন্য করা হয় — lock ধরা অবস্থায় ডাকতে হয়।"""
+        if now >= self._day_bucket_until:
+            self._daily_counts.clear()
+            self._softcap_until.clear()
+            self._day_bucket_until = _next_utc_reset_epoch()
+
+    def _soft_capped(self, url: str) -> bool:
+        # বাংলা মন্তব্য: soft-cap সক্রিয় হলে ওই account-এ আর একটিও command না গিয়ে
+        # চেইনের পরের account ব্যবহৃত হয় — 500k-স্পর্শ নিশ্চিতভাবে অসম্ভব।
+        with self._cooldown_lock:
+            self._rollover_day_bucket_locked(time.time())
+            until = self._softcap_until.get(url, 0.0)
+            return time.time() < until
+
+    def _bump_daily(self, url: str) -> None:
+        """সফল command-এর পরে দৈনিক গণনা বাড়াই; soft-cap ছুঁলে সক্রিয় skip।"""
+        with self._cooldown_lock:
+            now = time.time()
+            self._rollover_day_bucket_locked(now)
+            self._daily_counts[url] = self._daily_counts.get(url, 0) + 1
+            if (
+                self._daily_soft_cap > 0
+                and url not in self._softcap_until
+                and self._daily_counts[url] >= self._daily_soft_cap
+            ):
+                self._softcap_until[url] = self._day_bucket_until
+                self._stats["softcap_shifts"] += 1
+                logger.warning(
+                    f"Upstash REST [{url}] দৈনিক soft-cap ({self._daily_soft_cap}) ছুঁয়েছে — "
+                    f"UTC রিসেট পর্যন্ত সক্রিয়ভাবে skip (#2710 R2.5); চেইনের পরের account দায়িত্ব নেবে।"
+                )
+
     def quota_status(self) -> dict[str, Any]:
         """কোন account কতক্ষণ cooldown-এ — পর্যবেক্ষণযোগ্য প্রমাণ (invariant #5)।"""
         with self._cooldown_lock:
@@ -157,6 +205,15 @@ class UpstashRedisQueue:
                 "cooldown_accounts": {
                     url: datetime.fromtimestamp(until, UTC).isoformat()
                     for url, until in self._cooldown_until.items()
+                    if now < until
+                },
+                # বাংলা মন্তব্য (#2710 R2.5): প্রতি-account দৈনিক বাজেট-দৃশ্যমালা —
+                # কোন consumer বেশি খাচ্ছে তা অডিটে শনাক্ত করা সহজ হয়।
+                "daily_counts": dict(self._daily_counts),
+                "daily_soft_cap": self._daily_soft_cap,
+                "softcap_accounts": {
+                    url: datetime.fromtimestamp(until, UTC).isoformat()
+                    for url, until in self._softcap_until.items()
                     if now < until
                 },
                 "stats": dict(self._stats),
@@ -179,21 +236,21 @@ class UpstashRedisQueue:
         if not endpoints:
             raise RuntimeError("No configured Upstash Redis REST endpoints available")
 
-        # বাংলা মন্তব্য (#2613 R2): কোটা-exhausted account-গুলো আগেই বাদ দিই —
-        # একটিও wasted request যাবে না; বাকিদের মধ্যে sticky-start (শেষ সফল
-        # account থেকে শুরু) থেকে failover চালাই।
+        # বাংলা মন্তব্য (#2613 R2 + #2710 R2.5): কোটা-exhausted বা soft-capped
+        # account-গুলো আগেই বাদ দিই — একটিও wasted request যাবে না; বাকিদের
+        # মধ্যে sticky-start (শেষ সফল account থেকে শুরু) থেকে failover চালাই।
         active: list[tuple[int, str, str]] = [
             (i, url, token)
             for i, (url, token) in enumerate(endpoints)
-            if not self._in_cooldown(url)
+            if not (self._in_cooldown(url) or self._soft_capped(url))
         ]
         if not active:
-            # R3: সব account কোটা cooldown-এ — সৎ, স্পষ্ট ত্রুটি (মিথ্যা "Redis down" নয়)।
+            # R3: সব account কোটা cooldown/soft-cap-এ — সৎ, স্পষ্ট ত্রুটি (মিথ্যা "Redis down" নয়)।
             with self._cooldown_lock:
                 self._stats["quota_refusals"] += 1
             raise QuotaExhaustedError(
-                "all Upstash REST accounts are in daily-quota cooldown until the next "
-                "UTC reset (free-tier federation fully consumed)"
+                "all Upstash REST accounts are in daily-quota cooldown or soft-cap "
+                "until the next UTC reset (free-tier federation fully consumed)"
             )
 
         last_err: Exception | None = None
@@ -219,6 +276,7 @@ class UpstashRedisQueue:
                         self._stats["failovers"] += 1
                 with self._cooldown_lock:
                     self._stats["commands_sent"] += 1
+                self._bump_daily(target_url)  # #2710 (R2.5): দৈনিক বাজেট ট্র্যাকিং
                 return response.json()
             except QuotaExhaustedError:
                 continue  # উপরে ইতিমধ্যে cooldown চিহ্নিত — পরের account

@@ -38,6 +38,12 @@ on:
       - "PR Gate (Unified Pipeline)"
       - "Main CI/CD"
     types: [completed]
+    # বাংলা মন্তব্য (#2806 conflict-resolution): main-এর আগের ভার্সন workflow_run
+    # সম্পূর্ণ বাদ দিয়েছিল — কিন্তু ci-failure-handler-এর `if:` শর্ত
+    # `event_name == 'workflow_run'` হওয়ায় সেই ট্রিগার বাদ গেলে job-টি
+    # চিরতরে unreachable dead-code হয়ে যেত (গ্যারান্টি #৩ নীরবে ভাঙত)।
+    # তাই PR #2801-এর নকশা জেতে: PR-ট্রিগার বাদ + স্কোপড workflow_run থাকে —
+    # ক্যাসকেডও কমে, handler-ও বেঁচে থাকে।
   schedule:
     - cron: "*/10 * * * *"  # Every 10 minutes
   workflow_dispatch:
