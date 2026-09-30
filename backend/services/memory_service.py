@@ -976,7 +976,10 @@ async def save_memory(
         # ── Legacy Supabase-REST path (fallback; হুবহু সংরক্ষিত) ──
         from datetime import datetime
 
-        embedding = get_embedding(summary)
+        # বাংলা মন্তব্য (Issue #2716): sync remote-embedding কল ইভেন্ট-লুপ ব্লক
+        # করত (provider chain outage-এ পুরো সার্ভিস ১৫s স্তব্ধ) — worker-thread-এ
+        # অফলোড (হাউজ-প্যাটেন্ট: auto_rag_injector.py:80)।
+        embedding = await asyncio.to_thread(get_embedding, summary)
         supabase = _get_supabase()
         now = datetime.now(UTC).isoformat()
         record = {
@@ -1038,7 +1041,11 @@ async def recall_memories(
 ) -> list[dict[str, Any]]:
     """Semantic-search ai_memory and return the top *limit* matches."""
     try:
-        embedding = get_embedding(task_description)
+        # বাংলা মন্তব্য (Issue #2716): প্রতি chat cache-miss-এ এই হট-পাথ — sync
+        # remote-embedding কল ইভেন্ট-লুপ ব্লক করত (১০০-৫০০ms স্বাভাবিকে,
+        # outage-এ ১৫s) — worker-thread-এ অফলোড (হাউজ-প্যাটেন্ট:
+        # auto_rag_injector.py:80)। DB RPC অফলোড আগেই ছিল, এখন embedding-ও।
+        embedding = await asyncio.to_thread(get_embedding, task_description)
         supabase = _get_supabase()
         if supabase:
             try:
