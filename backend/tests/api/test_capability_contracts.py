@@ -16,10 +16,19 @@ def test_control_plane_registry_declares_all_runtime_services():
 
 
 def test_worker_exposes_task_lifecycle_routes():
-    source = (_BACKEND_ROOT / "worker_service.py").read_text(encoding="utf-8")
-    assert '@app.post("/tasks"' in source
-    assert '@app.get("/tasks/{task_id}"' in source
-    assert '@app.post("/tasks/{task_id}/cancel"' in source
+    # বাংলা মন্তব্য: #2585 সংশোধন — পুরোনো contract মৃত ফাইল `worker_service.py` পড়ত
+    # (ফাইলটি #2480 dead-file cleanup-এ ডিলিট হয়েছিল, টেস্ট হালনাগাদ হয়নি)। বর্তমান
+    # সত্য: (১) task lifecycle surface `api/routes/ecosystem.py`-তে — create/read +
+    # transition/deliver; (২) async-worker এখন minimal standalone consumer — Core API
+    # থেকে আলাদা, CORE_API_URL fail-closed যাচাই সহ। চুক্তি বর্তমান সত্যের দিকে
+    # পুনঃনির্দেশিত — টেস্ট ডিলিট নয়, অর্থবহ চুক্তি বজায়।
+    ecosystem_source = (_BACKEND_ROOT / "api/routes/ecosystem.py").read_text(encoding="utf-8")
+    assert '@router.post("/tasks")' in ecosystem_source
+    assert '@router.get("/tasks/{task_id}")' in ecosystem_source
+    assert '@router.post("/tasks/{task_id}/transition")' in ecosystem_source
+
+    worker_source = (_BACKEND_ROOT / "services/worker/main.py").read_text(encoding="utf-8")
+    assert "CORE_API_URL" in worker_source  # worker কোথাও স্বাধীন দাবি করে না — Core ভিত্তিক
 
 
 def test_scraper_boundaries_apply_ssrf_validation():
