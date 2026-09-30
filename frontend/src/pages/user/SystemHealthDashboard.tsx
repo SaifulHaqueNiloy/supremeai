@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ShieldAlert, Activity, CheckCircle, Database } from 'lucide-react';
 import { OneClickPatch } from '../../components/admin/OneClickPatch';
-import { getApiBaseUrl } from '../../utils/api';
-import { getRawToken } from '../../services/apiClient';
+import { apiClient } from '../../services/apiClient';
 
 export const SystemHealthDashboard: React.FC = () => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -13,15 +12,8 @@ export const SystemHealthDashboard: React.FC = () => {
   const fetchFixes = async () => {
     setLoading(true);
     try {
-      const token = getRawToken();
-      // If no token in standard store, we might be using the dev/local fallback in the backend, but let's pass what we have
-      const res = await fetch(`${getApiBaseUrl()}/api/admin/fixes?tenant_id=supremeai-a`, {
-        headers: token ? {
-          'Authorization': `Bearer ${token}`
-        } : {}
-      });
-      if (!res.ok) throw new Error('Failed to fetch pending fixes');
-      const data = await res.json();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get — token থাকলে getAuthHeaders নিজেই পাঠায়
+      const data = await apiClient.get<{ fixes?: Array<Record<string, unknown>> }>('/api/admin/fixes?tenant_id=supremeai-a');
       setFixes(data.fixes || []);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {

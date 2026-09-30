@@ -26,6 +26,8 @@ export class GlobalErrorBoundary extends Component<Props, State> {
     console.error('Uncaught error:', error, errorInfo);
 
     try {
+      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: ক্র্যাশ-টাইম টেলিমেট্রি — ন্যূনতম নির্ভরতা (apiClient-এর auth/queue ক্র্যাশ-লুপে পড়তে পারে)
+      // eslint-disable-next-line no-restricted-syntax
       fetch(`${getApiBaseUrl()}/api/telemetry/frontend-error`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

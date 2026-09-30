@@ -24,6 +24,8 @@ export const pingServers = () => {
   targets.forEach(async (url) => {
     try {
       // বাংলা: /api/v1/live প্রোব ব্যাকেন্ডের নতুন Liveness Probe দিয়ে পিং করার জন্য মাইগ্রেটেড
+      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: লাইভনেস প্রোব — কিউ-বাইপাস ইচ্ছাকৃত
+      // eslint-disable-next-line no-restricted-syntax
       const response = await fetch(`${url}/api/v1/live`, {
         method: 'GET',
         headers: { 'Cache-Control': 'no-cache' }

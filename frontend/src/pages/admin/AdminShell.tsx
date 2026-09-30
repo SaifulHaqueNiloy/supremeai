@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAdminStore } from "../../store/adminStore";
 import { AdminConsole } from "../../components/admin/AdminConsole";
-import { apiClient, getAuthHeaders } from "../../services/apiClient";
-import { getApiBaseUrl } from "../../utils/api";
+import { apiClient } from "../../services/apiClient";
 import { Shield } from "lucide-react";
 import type { AdminSubTab, ChatMessage } from "../../types";
 import { useCostReport, useHealthMap, useSkills, useCheckpoints, useDeleteCheckpoint, useInstallSkill } from "../../hooks";
@@ -165,17 +164,13 @@ export function AdminShell() {
     abortRef.current = new AbortController();
     try {
       // Same real chat endpoint the user-facing chat uses.
-      const res = await fetch(`${getApiBaseUrl()}/api/chat/stream`, {
-        method: "POST",
-        headers: { ...(await getAuthHeaders()), "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: prompt,
-          project_id: "admin_sandbox",
-          idempotency_key: crypto.randomUUID(),
-        }),
-        signal: abortRef.current.signal,
-      });
-      if (!res.ok || !res.body) throw new Error(`Chat request failed: ${res.status}`);
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — auth কেন্দ্রীয়।
+      const res = await apiClient.postStream('/api/chat/stream', {
+        message: prompt,
+        project_id: "admin_sandbox",
+        idempotency_key: crypto.randomUUID(),
+      }, { signal: abortRef.current.signal });
+      if (!res.body) throw new Error('Chat request failed: no stream body');
       const reader = res.body.getReader();
       const decoder = new TextDecoder();
       let assistantContent = "";

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { adminTokenStore } from '../../../services/adminTokenStore';
+import { apiClient } from '../../../services/apiClient';
 import { useToast } from '../../../contexts/useToast';
 import { getApiBaseUrl } from '../../../utils/api';
 
@@ -56,16 +56,9 @@ export const RateLimitManager: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const resp = await fetch(`${API_BASE}/admin-api/tenant-limits`, {
-        headers: { 'Authorization': `Bearer ${adminTokenStore.getRawToken()}` }
-      });
-
-      // 🛡️ এপিআই স্ট্যাটাস হ্যান্ডশেক এবং সাইলেন্ট ফেইলর প্রোটেকশন
-      if (!resp.ok) {
-        throw new Error(`HTTP Error! Status: ${resp.status}`);
-      }
-
-      const data = await resp.json();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get — ApiError-এ status আসে,
+      // admin টোকেন apiClient-এর getAuthHeaders নিজেই জোগাড় করে
+      const data = await apiClient.get<{ tenants?: TenantLimit[]; usages?: TenantUsage[] }>(`${API_BASE}/admin-api/tenant-limits`);
       setTenants(data.tenants || []);
       const usageMap: Record<string, TenantUsage> = {};
       (data.usages || []).forEach((u: TenantUsage) => { usageMap[u.tenant_id] = u; });
@@ -99,21 +92,12 @@ export const RateLimitManager: React.FC = () => {
   const handleSave = async (tenant_id: string) => {
     setSaving(tenant_id);
     try {
-      const resp = await fetch(`${API_BASE}/admin-api/tenant-limits/${tenant_id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${adminTokenStore.getRawToken()}`,
-        },
-        body: JSON.stringify(editValues),
-      });
-      if (resp.ok) {
-        showToast('success', `✅ ${tenant_id} limits saved`);
-        setTenants(prev => prev.map(t => t.tenant_id === tenant_id ? { ...t, ...editValues } : t));
-        setEditingId(null);
-      } else {
-        showToast('error', `❌ Save failed: ${resp.status}`);
-      }
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.put — !ok হলে ApiError ফেলবে;
+      // চারপাশের try-catch স্ট্রাকচার অপরিবর্তিত
+      await apiClient.put(`${API_BASE}/admin-api/tenant-limits/${tenant_id}`, editValues);
+      showToast('success', `✅ ${tenant_id} limits saved`);
+      setTenants(prev => prev.map(t => t.tenant_id === tenant_id ? { ...t, ...editValues } : t));
+      setEditingId(null);
     } catch {
       showToast('error', `❌ Save failed - server unreachable`);
     }
@@ -127,15 +111,8 @@ export const RateLimitManager: React.FC = () => {
       ...TIER_LIMITS[newTenant.billing_tier],
     } as TenantLimit;
     try {
-      const resp = await fetch(`${API_BASE}/admin-api/tenant-limits`, {
-        method: 'POST',
-        // বাংলা মন্তব্য: getAdminToken এর পরিবর্তে প্রপার adminTokenStore.getRawToken() মেথড কল যোগ করা হলো
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminTokenStore.getRawToken()}` },
-        body: JSON.stringify(record),
-      });
-      if (!resp.ok) {
-        throw new Error(`Server returned ${resp.status}: ${resp.statusText}`);
-      }
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post
+      await apiClient.post(`${API_BASE}/admin-api/tenant-limits`, record);
       setTenants(prev => [...prev, record]);
       setNewTenant({ tenant_id: '', org_name: '', billing_tier: 'free' });
       setShowNewForm(false);

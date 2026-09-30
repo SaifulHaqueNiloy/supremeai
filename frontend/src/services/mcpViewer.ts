@@ -14,6 +14,8 @@ function normalizeUrl(value: string): string {
 }
 
 async function getJson(url: string, token: string): Promise<Record<string, unknown>> {
+  // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: এক্সটার্নাল MCP সার্ভার URL — আমাদের ব্যাকএন্ড নয়
+  // eslint-disable-next-line no-restricted-syntax
   const response = await fetch(url, {
     headers: {
       Accept: 'application/json',
