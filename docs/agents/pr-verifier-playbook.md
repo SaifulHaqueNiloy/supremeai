@@ -728,3 +728,13 @@ fix নয়, reproducibility issue।
 - **ENGINE (06:07Z)**: কিউ PASS×3-অটুট, main 10ok/0fail; baseline re-anchor **06:08:38Z** (open 3)।
 - **রোলব্যাক-৭-শিক্ষা**: lane-push-first (remote-অটুট) + transcript-সংরক্ষণ + tower-রেসিপি-নথিভুক্তি — তিনটির সম্মিলিত-ফলে পুনর্নির্মাণ-ব্যয় ~৩ মিনিটে নেমেছে (T132-যুগে যা পূর্ণ-চক্র-খেত)।
 - **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T137 addendum; worklog backfill+T137; watch: agent-3-ফিক্স-PR-দ্বয়, কিউ-৩-মার্জ-স্রোত, #2617+2618-মীমাংসা-জোড়া (owner-manual), #2615-StaticPool, bypass-৪, AGENTS-৩য়-সংশোধন।**
+
+### Addendum — Task 138 (2026-09-30 ~06:30Z, 14:30+08 cron): স্থিরতা-চক্র + label-ফিক্স-প্রথম-পূর্ণ-প্রয়োগ
+
+- **HANDSHAKE (নো-রোলব্যাক)**: worklog 129-line last=137; তিন-পোর্ট UP; clone @`5218d941` = T137-পুশ (মেসেজ-লেবেল "Task 134" cosmetic — পুশ-মুহূর্তে পুরোনো-regex ছিল, ফিক্স তার-পরে; জানা-ঘটনা); SRC 730-লাইন T137-addendum-সহ।
+- **POLICY SYNC**: main @`7409ef81`-অপরিবর্তিত (৭ম-চক্র); অ্যাঙ্কর-অটুট (AGENTS `3db1a7cd`, rules.yml `e62d5f03`)।
+- **SWEEP (06:08→06:31Z)**: **১ ইভেন্ট** — #2618-labeled 06:09:43Z (owner-triage-লেবেল, ডুপ-ইস্যুতে; কোনো-নতুন-তথ্য-নেই); open-স্টেট-অপরিবর্তিত (agent-3-ফিক্স-PR এখনো-খোলেনি); main 10ok/0fail-অটুট।
+- **ENGINE (06:31Z)**: কিউ PASS×3-অটুট (#2614 @`2b8ba288`, #2607 @`ca173836`, #2605 @`434beedb`); baseline re-anchor **06:32:34Z** (open 3)।
+- **DEDUPE**: 40-open-অভিন্ন (#2617+#2618 জোড়া owner-manual-অপেক্ষমাণ); 0 issue/0 কমেন্ট।
+- **যাচাই-নোট**: এই-পুশ = T137-পুনঃপ্রয়োগকৃত-দ্বি-ফরম্যাট-label-regex-এর **প্রথম-পূর্ণ-প্রয়োগ** — কমিট-লেবেল "Task 138 addendum" প্রত্যাশিত (রোলব্যাক-পরে-পুনর্বাসন-প্রমাণ)।
+- **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T138 addendum; worklog T138; watch: agent-3-ফিক্স-PR-দ্বয় (#2613/#2601-ব্রাঞ্চ), কিউ-৩-মার্জ-স্রোত, #2617+#2618-জোড়া-ক্লোজ, #2615-StaticPool, #2606-ক্লোজ, bypass-৪, AGENTS-৩য়-সংশোধন।**
