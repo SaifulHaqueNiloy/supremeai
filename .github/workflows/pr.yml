@@ -298,7 +298,7 @@ jobs:
           # বাংলা মন্তব্য: -x = প্রথম ফেইলে থামো (দ্রুত ফিডব্যাক), --no-cov = coverage
           # মাপা হয় না (PR Gate ফাস্ট; coverage গেট ci.yml dispatch ম্যাট্রিক্সে)।
           # #2526 shell-hardening: test_targets আর markers দুটোই env-var মাধ্যমে
-          # pass করা হয়েছে — direct ${{ }} interpolation নয়, যা shell metacharacter
+          # pass করা হয়েছে — direct expression interpolation নয়, যা shell metacharacter
           # injection (গ্যাপ-স্পেস-সেমিকলন) এড়ায়। Word-splitting ইচ্ছাকৃত (file list)।
           TEST_TARGETS="${{ steps.select.outputs.test_targets }}"
           TEST_MARKERS="${{ steps.select.outputs.test_markers }}"
