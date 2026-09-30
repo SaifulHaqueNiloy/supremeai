@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import importlib
 from functools import lru_cache
 from pathlib import Path
@@ -116,8 +117,14 @@ async def research_search(payload: ResearchRequest):
     upstream failure → 502 with the verbatim reason."""
     try:
         assistant = ResearchAssistant()
-        results = assistant.search(
-            payload.query, source=payload.source, max_results=payload.max_results
+        # বাংলা মন্তব্য (Issue #2716): sync urlopen (timeout 15s) ইভেন্ট-লুপ
+        # ফ্রিজ করত — worker-thread-এ অফলোড (হাউজ-প্যাটেন্ট: mcp_center.py:124)।
+        # to_thread thread-exception re-raise করে — 400/502 চুক্তি অপরিবর্তিত।
+        results = await asyncio.to_thread(
+            assistant.search,
+            payload.query,
+            source=payload.source,
+            max_results=payload.max_results,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
