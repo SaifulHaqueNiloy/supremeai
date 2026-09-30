@@ -207,21 +207,25 @@ async def test_cache_hit_survives_telemetry_failure(monkeypatch):
 async def test_stream_returns_stream_gen_and_forwards_context():
     """Streaming returns the stream generator and forwards tenant/tier context.
 
-    Cache consultation is intentionally NOT pinned to ``assert_not_awaited``
-    here: PR #2772 (root-cause #2729) makes the streaming path consult the
-    semantic cache so identical concurrent prompts dedup (read + later write).
-    The old ``assert_not_awaited()`` encoded the pre-fix contract and blocked
-    #2772 — see issue #2780. Whether the stream branch awaits
-    ``cache.query_similar`` (0 times pre-fix / 1 time post-fix) is now an
-    implementation detail, not a streaming contract. We still cap it at 1 so
-    a runaway double-consult regression would fail loudly.
+    PR #2772 (root-cause #2729) makes the streaming path consult the semantic
+    cache so identical concurrent prompts dedup (read + later write). The old
+    ``assert_not_awaited()`` encoded the pre-fix contract and blocked #2772 —
+    see issue #2780.
+
+    বাংলা মন্তব্য (#2780 strengthening review): stream-path cache-consult এখন
+    ইচ্ছাকৃত চুক্তি — completion.py-এর নিজস্ব কমেন্ট প্রমাণ: ``cache check for
+    BOTH stream + non-stream``। তাই ``await_count <= 1``-এর শিথিলতা প্রি-ফিক্স
+    বাগআচরণ (0 consult = #2729 regression) পাস করাত; সঠিক পিন হলো exactly-once
+    — ভবিষ্যৎ regression-এ stream-path থেকে consult সরে গেলে টেস্ট জোরে ব্যর্থ
+    হবে। স্টাব `query_similar` None রিটার্ন করে — cache-miss ধরে স্ট্রিম
+    জেনারেটর-চুক্তি অক্ষত থাকে।
     """
     gw = make_gateway()
     result = await gw.acompletion(prompt="hi", stream=True)
     assert result == "STREAM-SENTINEL"
-    # PR #2772 / issue #2729: streaming may now consult the semantic cache
-    # (read + later write) for dedup. Accept pre-fix (0) and post-fix (1).
-    assert gw.cache.query_similar.await_count <= 1
+    # PR #2772 / issue #2729: streaming MUST consult the semantic cache exactly
+    # once (read-path dedup contract). 0 consults = #2729 regression returns.
+    gw.cache.query_similar.assert_awaited_once_with("hi", task_type="general")
     messages, chain, timeout, spend_context = gw.stream_calls[0]
     # M16 P-A: streaming generator-এ tenant/tier context পৌঁছায় কিনা চুক্তি-পিন।
     assert spend_context == {"tenant_id": None, "tier": None, "task_type": "general"}
