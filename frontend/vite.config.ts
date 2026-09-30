@@ -130,7 +130,12 @@ export default defineConfig({
   ],
   esbuild: {
     jsx: 'automatic',
-    drop: process.env.NODE_ENV === 'production' ? ['console', 'debugger'] : [],
+    // #2736: আগে drop:['console'] প্রোডাকশনে সব console.* মুছে দিত —
+    // console.error-ও (SSE failure path useServerStream.ts:62,92 prod-এ
+    // অদৃশ্য ছিল)। এখন শুধু debugger drop + চ্যাটি-লেভেল (log/info/debug)
+    // pure-marked — warn/error বেঁচে থাকে (নীতি: prod-এ ব্যর্থতা দৃশ্যমান)।
+    drop: process.env.NODE_ENV === 'production' ? ['debugger'] : [],
+    pure: process.env.NODE_ENV === 'production' ? ['console.log', 'console.info', 'console.debug'] : [],
   },
   resolve: {
     dedupe: ['react', 'react-dom', '@tanstack/react-query']

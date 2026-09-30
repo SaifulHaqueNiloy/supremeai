@@ -34,6 +34,7 @@ import { ApprovalQueue } from '../../../commandcenter/modules/secure/ApprovalQue
 import { AuditExplorer } from '../../../commandcenter/modules/secure/AuditExplorer';
 import { GuardrailsPage } from '../../dashboard/GuardrailsPage';
 import { HealingLogPanel } from '../../dashboard/HealingLogPanel';
+import { MeshAgentsPanel } from '../MeshAgentsPanel'; // #2736: wired (near-ready, doctrine: wire-or-delete)
 import { SiteActionsPage } from '../../dashboard/SiteActionsPage';
 import { LibrarianQueue } from '../LibrarianQueue';
 import { TelemetryCockpitPage } from '../../../pages/user/TelemetryCockpitPage';
@@ -85,6 +86,7 @@ const MODULE_MAP: Record<string, React.FC<any>> = {
   'topology': CommandCenter, // Topology map
   'service-explorer': CloudOrchestrator,
   'agents-swarm': EnhancedSkillMarketplace, // Or ModelRouter depending on context
+  'mesh-agents': MeshAgentsPanel, // #2736: wire-or-delete doctrine — near-ready admin mesh panel
   'security': SecurityDashboard,
   'audit': AuditExplorer,
   'incidents': AdminAlertsTab,
