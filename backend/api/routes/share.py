@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import secrets
 import time
+from collections import OrderedDict
 from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 
@@ -22,8 +23,14 @@ from database.supabase_client import SupabaseDB
 router = APIRouter(prefix="/api/share", tags=["Sharing"])
 
 # In-memory cache with 30-minute TTL for public share lookups
-_share_cache: dict[str, dict[str, Any]] = {}
+# বাংলা মন্তব্য (#2718): আগে এটি ছিল unbounded dict — একবার-জেনারেট-হওয়া শেয়ার
+# (সাধারণ কেস) পুরো conversation payload (KB–100KB) চিরকাল রেসিডেন্ট থেকে
+# 512MB free tier-এ slow exhaustion-এর পথ খুলে দিত। এখন OrderedDict-LRU
+# (maxsize 500): নতুন insert-এ সবচেয়ে পুরনো (least-recently-used) এন্ট্রি evict।
+# TTL আগের মতোই read-পাথে চেক হয়; revoke এখনও সরাসরি pop করে (নিচে)।
+_share_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
 _CACHE_TTL_SECONDS = 30 * 60  # 30 minutes
+_SHARE_CACHE_MAX_SIZE = 500
 
 
 def _cache_get(share_id: str) -> dict[str, Any] | None:
@@ -34,13 +41,17 @@ def _cache_get(share_id: str) -> dict[str, Any] | None:
     if time.monotonic() - entry["_cached_at"] > _CACHE_TTL_SECONDS:
         del _share_cache[share_id]
         return None
+    _share_cache.move_to_end(share_id)  # LRU touch
     return entry
 
 
 def _cache_set(share_id: str, data: dict[str, Any]) -> None:
-    """Store a share entry in the in-memory cache."""
+    """Store a share entry in the bounded LRU in-memory cache."""
     data["_cached_at"] = time.monotonic()
     _share_cache[share_id] = data
+    _share_cache.move_to_end(share_id)
+    while len(_share_cache) > _SHARE_CACHE_MAX_SIZE:
+        _share_cache.popitem(last=False)  # evict least-recently-used
 
 
 def _generate_share_id(length: int = 12) -> str:
