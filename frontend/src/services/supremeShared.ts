@@ -22,7 +22,7 @@ import {
   type PlatformPrompt,
 } from '@supremeai/shared-services';
 import { getApiBaseUrl } from '../utils/api';
-import { getAuthHeaders } from './apiClient';
+import { apiClient } from './apiClient';
 import { getAdminToken, getUserToken } from './tokenStorage';
 
 // ---------- Platform ----------
@@ -97,13 +97,13 @@ export function apiCall(options: {
   if (typeof window !== 'undefined' && window.supremeDesktopAPI) {
     return window.supremeDesktopAPI.apiCall(options);
   }
-  // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: ডেস্কটপ (Electron) প্ল্যাটফর্ম-ইন্টিগ্রেশন র‍্যাপার — নিজস্ব ট্রান্সপোর্ট প্রযোজন
-  // eslint-disable-next-line no-restricted-syntax
-  return getAuthHeaders().then((authHeaders) => fetch(`${getApiBaseUrl()}${options.endpoint}`, {
+  // Issue #2522: raw fetch -> apiClient.stream — timeout/queue/cold-start retry
+  // পাওয়া যায়, আর {status, ok, data} কনট্র্যাক্ট অটুট থাকে (raw Response দরকার)।
+  return apiClient.stream(options.endpoint, {
     method: options.method || 'GET',
-    headers: { 'Content-Type': 'application/json', ...authHeaders, ...(options.headers || {}) },
+    headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
     body: options.body ? JSON.stringify(options.body) : undefined,
-  })).then(async (res) => {
+  }).then(async (res) => {
     let data;
     try {
       data = await res.json();

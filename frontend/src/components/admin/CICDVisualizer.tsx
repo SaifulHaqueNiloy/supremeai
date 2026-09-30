@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Card, Badge } from '../ui';
 import { Play, RotateCcw, FlaskConical } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -59,16 +58,11 @@ export function CICDVisualizer() {
 
   const handleDeploy = async () => {
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — admin token getAuthHeaders থেকে
-      try {
-        const data = await apiClient.post<{ message?: string }>('/admin-api/deploy');
-        alert(`✅ ${data.message || 'Deployment triggered successfully!'}`);
-      } catch (deployErr) {
-        alert(`❌ Deployment failed: ${deployErr instanceof Error ? deployErr.message : 'unauthorized or server error'}.`);
-        throw deployErr;
-      }
-    } catch (e: any) {
-      alert(`❌ Deployment failed: ${e.message}`);
+      // Issue #2522: raw fetch -> apiClient.post — admin auth/timeout/queue অটোমেটিক।
+      const data = await apiClient.post<{ message?: string }>('/admin-api/deploy');
+      alert(`✅ ${data.message || 'Deployment triggered successfully!'}`);
+    } catch (e: unknown) {
+      alert(`❌ Deployment failed: ${e instanceof Error ? e.message : 'unauthorized or server error'}`);
     }
   };
 

@@ -97,11 +97,13 @@ const EvolutionForgeCanvas = () => {
 
     const connectSSE = async () => {
       try {
-        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.getStream — SSE GET স্ট্রিম;
-        // endpoint optional, তাই catch-এ নীরব থাকা যায়।
-        const response = await apiClient.getStream('/api/v1/swarm/stream', { signal: abortController.signal })
-          .catch(() => null);
-        if (!response?.body) return; // Endpoint optional — fail silently
+        // Issue #2522: raw fetch -> apiClient.stream — token ক্লায়েন্ট বসায়,
+        // timeout/queue/cold-start retry + abort passthrough অটোমেটিক।
+        const response = await apiClient.stream('/api/v1/swarm/stream', {
+          signal: abortController.signal,
+        });
+
+        if (!response.ok || !response.body) return; // Endpoint optional — fail silently
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();

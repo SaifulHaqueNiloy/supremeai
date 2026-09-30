@@ -158,20 +158,25 @@ export default function DeepResearchPanel() {
     abortRef.current = new AbortController();
 
     try {
-      // Issue #521: tokenStorage (sessionStorage-first, legacy localStorage swept).
       // Issue #452 fix: window.location.origin breaks whenever the API lives on
       // a different origin than the frontend — use the canonical base URL
       // helper like every other panel.
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — SSE POST;
-      // Accept-header ও signal options-এ যায়, auth কেন্দ্রীয়।
-      const response = await apiClient.postStream('/api/research/deep/stream',
-        { query: query.trim() },
-        {
-          headers: { Accept: 'text/event-stream' },
-          signal: abortRef.current.signal,
-        });
+      // Issue #2522: raw fetch -> apiClient.stream — token ক্লায়েন্ট বসায়,
+      // timeout/queue/cold-start retry + abort passthrough অটোমেটিক।
+      const response = await apiClient.stream('/api/research/deep/stream', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'text/event-stream',
+        },
+        body: JSON.stringify({ query: query.trim() }),
+        signal: abortRef.current.signal,
+      });
 
-      // postStream !ok হলে নিজেই ApiError ফেলে — শুধু body চেক
+      if (!response.ok) {
+        throw new Error(`Research request failed: ${response.status}`);
+      }
+
       const reader = response.body?.getReader();
       if (!reader) throw new Error('No response body');
 

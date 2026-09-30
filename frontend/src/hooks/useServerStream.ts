@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useStore } from '../store/useStore';
 import { getApiBaseUrl } from '../utils/api';
-import { getRawToken, AUTH_CHANGED_EVENT } from '../services/apiClient';
+import { apiClient, getRawToken, AUTH_CHANGED_EVENT } from '../services/apiClient';
 
 import { createSecureEventSource } from '../lib/secureSse';
 
@@ -27,25 +27,22 @@ export const useServerStream = () => {
     const probeHealth = async () => {
       if (!isMounted) return;
       try {
-        // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: হেলথ-প্রোব — নিজস্ব টাইমআউট, কিউ-বাইপাস ইচ্ছাকৃত
-        // eslint-disable-next-line no-restricted-syntax
-        const res = await fetch(`${API_BASE_URL}/api/v1/health`, {
-          method: 'GET',
-          headers: { Accept: 'application/json' },
-          credentials: 'include',
-        });
+        // Issue #2522: raw fetch → apiClient.get — timeout/retry/queue + নিজের
+        // status-based verdict অটুট (throttledFetch 50x রিট্রাই করে বলে 5xx পাওয়া
+        // কঠিন হলেও সব রিটার্ন শেষে এখানেই সিদ্ধান্ত হয়)।
+        await apiClient.get('/api/v1/health', { headers: { Accept: 'application/json' } });
         // বাংলা মন্তব্য: 2xx মানে ব্যাকএন্ড জাগ্রত; SSE নিজেই পরে onopen করে অনলাইন সেট করবে।
-        if (res.ok || res.status < 500) {
+        setServerStatus(true);
+      } catch (e) {
+        // বাংলা: non-ok কিন্তু <500 (যেমন 404) মানে ব্যাকএন্ড রিচেবল — অনলাইন ধরা হয়।
+        // বাকি সব (৫xx বা নেটওয়ার্ক ব্যর্থতা) = ব্যাকএন্ড ডাউন/কোল্ড স্টার্ট → OFFLINE ব্যানার।
+        const status = e && typeof e === 'object' && 'status' in e ? (e as { status?: number }).status : undefined;
+        if (typeof status === 'number' && status < 500) {
           setServerStatus(true);
-        } else if (res.status >= 500) {
-          // বাংলা মন্তব্য: 503/502/504 = সার্ভার ডাউন বা কোল্ড স্টার্ট — স্পষ্ট OFFLINE দেখাও।
+        } else {
           setServerStatus(false);
           setStreamStatus('disconnected');
         }
-      } catch {
-        // বাংলা মন্তব্য: নেটওয়ার্ক ব্যর্থতা = ব্যাকএন্ড অপ্রাপ্ত।
-        setServerStatus(false);
-        setStreamStatus('disconnected');
       }
     };
 

@@ -32,23 +32,40 @@ export default tseslint.config({ ignores: ['dist', 'dist-admin', 'dist-user', 's
     '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
     'react-hooks/set-state-in-effect': 'off',
     'no-console': ['warn', { allow: ['warn', 'error', 'debug'] }],
+    // Issue #2522: bare fetch() regression guard — সব API কল apiClient দিয়ে যাবে
+    // (timeout, concurrency queue, auth header, cold-start retry, error mapping)।
+    // Justified raw users নিচের override block-এ allowlisted।
+    'no-restricted-syntax': ['error', {
+      selector: "CallExpression[callee.name='fetch']",
+      message: "bare fetch() is forbidden (Issue #2522) — use apiClient from src/services/apiClient.ts (timeout/queue/auth/retry). For justified raw usage see the allowlist in eslint.config.js.",
+    }],
   },
 }, {
-  // #2522: raw fetch() নিষেধ — সব API কল apiClient হয়ে যাবে (timeout/auth/error-normalization)।
-  // Allowlist-এ শুধু বৈধ কাঁচা fetch: স্ট্যাটিক কনফিগ, এক্সটার্নাল সার্ভিস, ব্লব-রেসপন্স,
-  // হেলথ-প্রোব (কিউ-বাইপাস ইচ্ছাকৃত), ক্র্যাশ-টাইম টেলিমেট্রি, এবং ক্লায়েন্ট নিজে।
-  files: ['src/**/*.{ts,tsx}'],
+  // Issue #2522: justified bare-fetch allowlist — এই ফাইলগুলোতে raw fetch সচেতনভাবে রাখা হয়েছে:
+  //  - apiClient.ts: ক্লায়েন্ট নিজেই প্রিমিটিভ লেয়ার
+  //  - utils/api.ts: fetchWithRetry foundation (apiClient এই মডিউল import করে — circular এড়াতে)
+  //  - firebase.ts: Firebase Hosting-এর নিজস্ব init endpoint (backend API নয়)
+  //  - mcpViewer.ts: ইউজার-কনফিগার করা external MCP সার্ভার URL
+  //  - storageApi.ts: Cloudflare R2 pre-signed PUT (external storage, backend বাইপাস)
+  //  - GlobalErrorBoundary/RouteBoundary: keepalive unload-beacon (queue-তে গেলে unload-এ হারায়)
+  files: [
+    'src/services/apiClient.ts',
+    'src/utils/api.ts',
+    'src/firebase.ts',
+    'src/services/mcpViewer.ts',
+    'src/services/storageApi.ts',
+    'src/components/GlobalErrorBoundary.tsx',
+    'src/router/RouteBoundary.tsx',
+  ],
   rules: {
-    'no-restricted-syntax': ['warn', {
-      selector: "CallExpression[callee.name='fetch']",
-      message: '#2522: raw fetch() নিষিদ্ধ — services/apiClient ব্যবহার করুন (timeout/auth/error-handling কেন্দ্রীয়)। বৈধ ব্যতিক্রম হলে লাইনে // eslint-disable-next-line no-restricted-syntax + কারণ কমেন্ট দিন।',
-    }],
+    'no-restricted-syntax': 'off',
   },
 }, {
   // Test files: Allow any in tests (mocks, stubs, test fixtures)
   files: ['**/*.{test,spec}.{ts,tsx}', '**/test/**/*.{ts,tsx}'],
   rules: {
     '@typescript-eslint/no-explicit-any': 'off',
+    'no-restricted-syntax': 'off',
   },
 }, {
   // Routes and config files export route objects, not React components

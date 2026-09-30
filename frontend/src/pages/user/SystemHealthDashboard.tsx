@@ -12,8 +12,8 @@ export const SystemHealthDashboard: React.FC = () => {
   const fetchFixes = async () => {
     setLoading(true);
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get — token থাকলে getAuthHeaders নিজেই পাঠায়
-      const data = await apiClient.get<{ fixes?: Array<Record<string, unknown>> }>('/api/admin/fixes?tenant_id=supremeai-a');
+      // Issue #2522: raw fetch -> apiClient.get — token ক্লায়েন্ট নিজেই বসায়।
+      const data = await apiClient.get<{ fixes?: unknown[] }>('/api/admin/fixes?tenant_id=supremeai-a');
       setFixes(data.fixes || []);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (err: any) {

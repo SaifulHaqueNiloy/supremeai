@@ -4,7 +4,6 @@ import { Terminal, Globe, Send, RefreshCw, TerminalSquare, Compass } from 'lucid
 import { useDashboardStore } from '../../store/dashboardStore';
 import { useStore } from '../../store/useStore';
 import { UnifiedChatBubble, TypingIndicator } from '../chat';
-import { apiClient } from '../../services/apiClient';
 
 // বাংলা মন্তব্য: চ্যাট মেসেজ ইন্টারফেস — Prompt-to-Action আর্কিটেকচার সাপোর্ট সহ
 interface Message {
@@ -35,6 +34,7 @@ interface InteractiveChatTabProps {
 }
 
 import { getApiBaseUrl } from '../../utils/api';
+import { apiClient } from '../../services/apiClient';
 
 
 export function InteractiveChatTab({
@@ -95,9 +95,9 @@ export function InteractiveChatTab({
   // --- বোনাস API কল (Prompt Action metadata) ---
   const fetchActionMetadata = useCallback(async (prompt: string): Promise<Message['action']> => {
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — ব্যর্থ হলে undefined (মেটাডেটা optional)
-      const data = await apiClient.post<{ action?: Message['action'] }>('/api/chat/prompt-action', { message: prompt }).catch(() => null);
-      return data?.action;
+      // Issue #2522: raw fetch -> apiClient.post।
+      const data = await apiClient.post<{ action?: Message['action'] }>('/api/chat/prompt-action', { message: prompt });
+      return data.action;
     } catch {
       return undefined;
     }
@@ -116,11 +116,15 @@ export function InteractiveChatTab({
     ]);
 
     try {
-      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — auth কেন্দ্রীয়,
-      // !ok হলে ApiError ফেলে; reader-loop অপরিবর্তিত।
-      const res = await apiClient.postStream('/api/chat/stream',
-        { message: userPrompt, idempotency_key: crypto.randomUUID() },
-        { signal: (abortControllerRef.current = new AbortController()).signal });
+      // Issue #2522: raw fetch -> apiClient.stream — auth/timeout/queue + abort passthrough।
+      const res = await apiClient.stream('/api/chat/stream', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: userPrompt, idempotency_key: crypto.randomUUID() }),
+        signal: (abortControllerRef.current = new AbortController()).signal,
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
       const reader = res.body?.getReader();
       if (!reader) throw new Error('No stream body');
