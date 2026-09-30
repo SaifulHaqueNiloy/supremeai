@@ -106,8 +106,10 @@ class TestRedisTaskQueueEnqueue:
         queue.redis = mock_redis
 
         # Mock redis_configured to return True (skip the env check)
-        with patch("core.queue.task_queue.redis_configured", return_value=True), \
-             patch.object(queue, "ensure_worker_started"):
+        with (
+            patch("core.queue.task_queue.redis_configured", return_value=True),
+            patch.object(queue, "ensure_worker_started"),
+        ):
             # When
             task_id = await queue.enqueue("email_send", {"to": "u@x.com"}, "user-1")
 
@@ -136,8 +138,10 @@ class TestRedisTaskQueueEnqueue:
         queue = RedisTaskQueue()
         queue.redis = mock_redis
 
-        with patch("core.queue.task_queue.redis_configured", return_value=True), \
-             patch.object(queue, "ensure_worker_started"):
+        with (
+            patch("core.queue.task_queue.redis_configured", return_value=True),
+            patch.object(queue, "ensure_worker_started"),
+        ):
             # When: two enqueues with same payload
             id1 = await queue.enqueue("t", {}, "u")
             id2 = await queue.enqueue("t", {}, "u")
@@ -402,9 +406,11 @@ class TestTaskQueueSingleton:
     def test_singleton_exists(self):
         # Given/When: import the singleton
         from core.queue.task_queue import task_queue
+
         # Then: it's a RedisTaskQueue instance
         assert isinstance(task_queue, RedisTaskQueue)
 
     def test_singleton_uses_default_queue_name(self):
         from core.queue.task_queue import task_queue
+
         assert task_queue.queue_name == "supreme_task_queue"

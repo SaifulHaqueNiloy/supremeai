@@ -476,6 +476,13 @@ def create_app(title: str = settings.PROJECT_NAME) -> FastAPI:
 
     app.include_router(browser_public_router)
 
+    # বাংলা মন্তব্ব্য: Zero-Cost Web AI Session Proxy (/v1/chat/completions, /v1/models)
+    # askalf + auth2api + g4f inspired reverse-proxy for local agents and IDEs
+    from api.routes.web_ai_proxy import router as web_ai_proxy_router
+
+    app.include_router(web_ai_proxy_router)
+    app.include_router(web_ai_proxy_router, prefix="/api")
+
     # বাংলা মন্তব্ব্য: মেট্রিক্স এন্ডপয়েন্ট যোগ করা
     if settings.MONITORING_DETAILED:
         from fastapi.responses import PlainTextResponse

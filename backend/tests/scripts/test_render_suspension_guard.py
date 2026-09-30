@@ -24,9 +24,7 @@ from typing import Any
 GUARD_PY_PATH = (
     Path(__file__).resolve().parents[3] / "scripts" / "deploy" / "render_suspension_guard.py"
 )
-ROLLBACK_PY_PATH = (
-    Path(__file__).resolve().parents[3] / "scripts" / "deploy" / "render_rollback.py"
-)
+ROLLBACK_PY_PATH = Path(__file__).resolve().parents[3] / "scripts" / "deploy" / "render_rollback.py"
 
 
 def _load_suspension_reason_fn() -> Callable[[dict[str, Any] | None], str | None]:
@@ -109,6 +107,4 @@ def test_rollback_keeps_suspension_precheck() -> None:
         "রোলব্যাকের সার্ভিস-স্টেট প্রি-চেক অনুপস্থিত — সাসপেন্ডেড সার্ভিসে "
         "জেনেরিক 'no live predecessor' বিভ্রান্তি ফিরে আসবে"
     )
-    assert "suspended_reason" in source, (
-        "সাসপেনশন কারণের অ্যাকশনেবল বার্তা অনুপস্থিত"
-    )
+    assert "suspended_reason" in source, "সাসপেনশন কারণের অ্যাকশনেবল বার্তা অনুপস্থিত"

@@ -85,11 +85,7 @@ def _today_key() -> str:
 
 def _github_token() -> str | None:
     """Token সংগ্রহ — vault/Infisical pull-এর পরে env-এ থাকে।"""
-    return (
-        os.getenv("GITHUB_TOKEN")
-        or os.getenv("GH_TOKEN")
-        or os.getenv("SUPREMEAI_GITHUB_TOKEN")
-    )
+    return os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN") or os.getenv("SUPREMEAI_GITHUB_TOKEN")
 
 
 def _should_file(event: ErrorEvent, now: float = time.monotonic()) -> bool:
@@ -197,7 +193,9 @@ async def _file_issue(event: ErrorEvent, sig: str) -> int | None:
     async with httpx.AsyncClient(timeout=15.0) as http:
         existing = await _find_open_issue_with_marker(http, token, sig)
         if existing is not None:
-            logger.info(f"[issue-filer] signature {sig} already tracked in #{existing} — নতুন ইস্যু নয়")
+            logger.info(
+                f"[issue-filer] signature {sig} already tracked in #{existing} — নতুন ইস্যু নয়"
+            )
             _last_filed_at[sig] = time.time()  # কুলডাউন রিসেট — বার্স্ট মেটে না
             return None
         resp = await http.post(
@@ -207,7 +205,9 @@ async def _file_issue(event: ErrorEvent, sig: str) -> int | None:
         )
         if resp.status_code == 201:
             number = resp.json().get("number")
-            logger.info(f"[issue-filer] ✅ ইস্যু #{number} self-filed ({event.module}:{event.error_type}, sig {sig})")
+            logger.info(
+                f"[issue-filer] ✅ ইস্যু #{number} self-filed ({event.module}:{event.error_type}, sig {sig})"
+            )
             return int(number) if number is not None else None
         logger.warning(
             f"[issue-filer] GitHub create failed HTTP {resp.status_code}: {resp.text[:200]} — ইভেন্ট স্টোরে থাকলো, পরের ইভেন্টে আবার চেষ্টা"

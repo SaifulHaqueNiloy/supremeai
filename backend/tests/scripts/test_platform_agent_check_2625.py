@@ -54,43 +54,77 @@ class TestModelsClassification:
     """#2625 চুক্তি ১ — 403 ≠ প্রোভাইডার আউটেজ; 401/5xx/নেটওয়ার্ক-ই আসল ফেইল।"""
 
     def test_403_cf1010_is_environment_skip(self, pac, monkeypatch):
-        monkeypatch.setattr(pac, "http", _fake_http_factory({
-            "https://api.cerebras.ai/v1/models": (403, CF_PAGE, {}),
-        }))
+        monkeypatch.setattr(
+            pac,
+            "http",
+            _fake_http_factory(
+                {
+                    "https://api.cerebras.ai/v1/models": (403, CF_PAGE, {}),
+                }
+            ),
+        )
         pac.probe_ai_providers({"CEREBRAS_API_KEY": "k"})
         r = [x for x in pac.results if x["platform"] == "cerebras"][0]
         assert r["ok"] is None, "403 CF-1010 এখন SKIP হওয়ার কথা (environment-skip)"
         assert "CF-1010" in r["detail"] or "WAF" in r["detail"]
 
     def test_403_json_is_environment_skip(self, pac, monkeypatch):
-        monkeypatch.setattr(pac, "http", _fake_http_factory({
-            "https://api.groq.com/openai/v1/models": (403, '{"error":{"message":"Forbidden"}}', {}),
-        }))
+        monkeypatch.setattr(
+            pac,
+            "http",
+            _fake_http_factory(
+                {
+                    "https://api.groq.com/openai/v1/models": (
+                        403,
+                        '{"error":{"message":"Forbidden"}}',
+                        {},
+                    ),
+                }
+            ),
+        )
         pac.probe_ai_providers({"GROQ_API_KEY": "k"})
         r = [x for x in pac.results if x["platform"] == "groq"][0]
         assert r["ok"] is None
         assert "provider-side 403" in r["detail"]
 
     def test_401_is_fail(self, pac, monkeypatch):
-        monkeypatch.setattr(pac, "http", _fake_http_factory({
-            "https://api.openai.com/v1/models": (401, '{"error":"invalid key"}', {}),
-        }))
+        monkeypatch.setattr(
+            pac,
+            "http",
+            _fake_http_factory(
+                {
+                    "https://api.openai.com/v1/models": (401, '{"error":"invalid key"}', {}),
+                }
+            ),
+        )
         pac.probe_ai_providers({"OPENAI_API_KEY": "k"})
         r = [x for x in pac.results if x["platform"] == "openai"][0]
         assert r["ok"] is False, "401 = credential-ফেইল — FAIL-ই থাকবে"
 
     def test_5xx_is_fail(self, pac, monkeypatch):
-        monkeypatch.setattr(pac, "http", _fake_http_factory({
-            "https://api.mistral.ai/v1/models": (503, "upstream overloaded", {}),
-        }))
+        monkeypatch.setattr(
+            pac,
+            "http",
+            _fake_http_factory(
+                {
+                    "https://api.mistral.ai/v1/models": (503, "upstream overloaded", {}),
+                }
+            ),
+        )
         pac.probe_ai_providers({"MISTRAL_API_KEY": "k"})
         r = [x for x in pac.results if x["platform"] == "mistral"][0]
         assert r["ok"] is False
 
     def test_200_pass_unchanged(self, pac, monkeypatch):
-        monkeypatch.setattr(pac, "http", _fake_http_factory({
-            "https://api.groq.com/openai/v1/models": (200, '{"data": []}', {}),
-        }))
+        monkeypatch.setattr(
+            pac,
+            "http",
+            _fake_http_factory(
+                {
+                    "https://api.groq.com/openai/v1/models": (200, '{"data": []}', {}),
+                }
+            ),
+        )
         pac.probe_ai_providers({"GROQ_API_KEY": "k"})
         r = [x for x in pac.results if x["platform"] == "groq"][0]
         assert r["ok"] is True
@@ -112,20 +146,26 @@ class TestMirrorWarnAlert:
     def test_target_12h_is_alert_not_fail(self, pac, monkeypatch):
         monkeypatch.setattr(pac, "http", self._mirror_http(12.0))
         pac.probe_mirror({})  # no gitlab token → gitlab SKIP
-        tgt = [x for x in pac.results if x["platform"] == "mirror" and x["check"] == "target freshness"][0]
+        tgt = [
+            x for x in pac.results if x["platform"] == "mirror" and x["check"] == "target freshness"
+        ][0]
         assert tgt["ok"] is None
         assert tgt.get("alert") is True, "WARN ব্যান্ডের alert=True হওয়ার কথা (#2625)"
 
     def test_target_2h_is_pass_no_alert(self, pac, monkeypatch):
         monkeypatch.setattr(pac, "http", self._mirror_http(2.0))
         pac.probe_mirror({})
-        tgt = [x for x in pac.results if x["platform"] == "mirror" and x["check"] == "target freshness"][0]
+        tgt = [
+            x for x in pac.results if x["platform"] == "mirror" and x["check"] == "target freshness"
+        ][0]
         assert tgt["ok"] is True and not tgt.get("alert")
 
     def test_target_30h_is_fail(self, pac, monkeypatch):
         monkeypatch.setattr(pac, "http", self._mirror_http(30.0))
         pac.probe_mirror({})
-        tgt = [x for x in pac.results if x["platform"] == "mirror" and x["check"] == "target freshness"][0]
+        tgt = [
+            x for x in pac.results if x["platform"] == "mirror" and x["check"] == "target freshness"
+        ][0]
         assert tgt["ok"] is False and not tgt.get("alert")
 
 
@@ -143,7 +183,11 @@ class TestUpsertAlertSection:
             return 201, {"number": 4242}
 
         monkeypatch.setattr(pac, "gh_api", fake_gh_api)
-        alert = {"platform": "mirror", "check": "target freshness", "detail": "target 12.0h behind — WARN"}
+        alert = {
+            "platform": "mirror",
+            "check": "target freshness",
+            "detail": "target 12.0h behind — WARN",
+        }
         pac.upsert_issue([], "https://run", alerts=[alert])
         assert "payload" in captured, "alerts-only কলেও issue তৈরি/আপডেট হওয়ার কথা"
         assert "⚠️ Alerts" in captured["payload"]["body"]

@@ -33,9 +33,7 @@ class QuotaExhaustedError(RuntimeError):
 def _next_utc_reset_epoch() -> float:
     """পরবর্তী UTC মধ্যরাত + ৬০s grace — Upstash দৈনিক কোটা রিসেটের আনুমানিক সময়।"""
     now = datetime.now(UTC)
-    tomorrow = (now + timedelta(days=1)).replace(
-        hour=0, minute=0, second=0, microsecond=0
-    )
+    tomorrow = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
     return tomorrow.timestamp() + 60.0
 
 

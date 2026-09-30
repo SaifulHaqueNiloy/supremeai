@@ -119,7 +119,7 @@ def _normalize_sync_driver_url(url: str) -> str:
     """
     for legacy_scheme in ("postgresql+psycopg://", "postgresql+asyncpg://"):
         if url.startswith(legacy_scheme):
-            return "postgresql+psycopg2://" + url[len(legacy_scheme):]
+            return "postgresql+psycopg2://" + url[len(legacy_scheme) :]
     # বাংলা মন্তব্য: bare `postgresql://` ও লিগ্যাসি `postgres://` — SQLAlchemy
     # 2.1+ এসবকে psycopg (v3) ডিফল্ট dialect-এ ম্যাপ করে (`postgres://` নিজেই
     # 2.x-এ NoSuchModuleError)। রিপোর ঘোষিত sync ড্রাইভার শুধু psycopg2
@@ -127,9 +127,9 @@ def _normalize_sync_driver_url(url: str) -> str:
     # `postgresql+psycopg2://` ইনপুট এই ব্রাঞ্চে ঢোকে না ("postgresql+..." ≠
     # "postgresql://") — ডাবল-রিরাইট অসম্ভব।
     if url.startswith("postgresql://"):
-        return "postgresql+psycopg2://" + url[len("postgresql://"):]
+        return "postgresql+psycopg2://" + url[len("postgresql://") :]
     if url.startswith("postgres://"):
-        return "postgresql+psycopg2://" + url[len("postgres://"):]
+        return "postgresql+psycopg2://" + url[len("postgres://") :]
     return url
 
 

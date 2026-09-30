@@ -75,9 +75,11 @@ class TestModelProviderProtocol:
         from typing import Protocol, get_type_hints
 
         # Protocol check: should have __protocol_attrs__ or be subclass of Protocol
-        assert hasattr(ModelProvider, "_is_protocol") or issubclass(
-            type(ModelProvider), type(Protocol)
-        ) or Protocol in ModelProvider.__mro__
+        assert (
+            hasattr(ModelProvider, "_is_protocol")
+            or issubclass(type(ModelProvider), type(Protocol))
+            or Protocol in ModelProvider.__mro__
+        )
 
     def test_model_provider_has_generate_method(self):
         # Given: ModelProvider Protocol

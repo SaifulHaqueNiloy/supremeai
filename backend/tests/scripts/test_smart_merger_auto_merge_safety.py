@@ -17,9 +17,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-MERGER_PATH = (
-    Path(__file__).resolve().parents[3] / "scripts" / "ci" / "smart_priority_merger.py"
-)
+MERGER_PATH = Path(__file__).resolve().parents[3] / "scripts" / "ci" / "smart_priority_merger.py"
 
 _EVIDENCE_BODY = (
     "## Test Evidence\n\n"
@@ -31,9 +29,7 @@ _EVIDENCE_BODY = (
 
 
 def _load_merger_module() -> Any:
-    spec = importlib.util.spec_from_file_location(
-        "smart_priority_merger_under_test", MERGER_PATH
-    )
+    spec = importlib.util.spec_from_file_location("smart_priority_merger_under_test", MERGER_PATH)
     assert spec and spec.loader, "merger module spec লোড ব্যর্থ"
     module = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = module
@@ -53,10 +49,7 @@ def _pr(
 ) -> dict[str, Any]:
     """সব-সবুজ ডিফল্টসহ ন্যূনতম PR fixture।"""
     if rollup is None:
-        rollup = [
-            {"name": name, "conclusion": "SUCCESS"}
-            for name in mod._DEFAULT_REQUIRED_CHECKS
-        ]
+        rollup = [{"name": name, "conclusion": "SUCCESS"} for name in mod._DEFAULT_REQUIRED_CHECKS]
     return {
         "number": 1,
         "title": "fix(backend): t",
@@ -102,9 +95,7 @@ def test_normal_code_paths_are_not_protected() -> None:
 
 
 def test_matching_is_case_insensitive() -> None:
-    hits = mod.find_protected_path_hits(
-        [".GitHub/Workflows/ci.yml"], [".github/workflows/*"]
-    )
+    hits = mod.find_protected_path_hits([".GitHub/Workflows/ci.yml"], [".github/workflows/*"])
     assert hits == [".GitHub/Workflows/ci.yml"]
 
 
@@ -171,10 +162,7 @@ def test_held_pr_still_blocked_without_allow_holds() -> None:
 
 
 def test_failing_gate_still_blocks() -> None:
-    rollup = [
-        {"name": name, "conclusion": "SUCCESS"}
-        for name in mod._DEFAULT_REQUIRED_CHECKS
-    ]
+    rollup = [{"name": name, "conclusion": "SUCCESS"} for name in mod._DEFAULT_REQUIRED_CHECKS]
     rollup[0]["conclusion"] = "FAILURE"
     _summary, is_ready, _held, _evidence, reasons = mod.evaluate_pr_checks(
         _pr(["backend/app.py"], rollup=rollup), allow_holds=True

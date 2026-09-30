@@ -16,12 +16,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
-MERGER_PATH = (
-    Path(__file__).resolve().parents[3] / "scripts" / "ci" / "smart_priority_merger.py"
-)
-ROLLUP_PATH = (
-    Path(__file__).resolve().parents[3] / "scripts" / "ci" / "merge_train_rollup.py"
-)
+MERGER_PATH = Path(__file__).resolve().parents[3] / "scripts" / "ci" / "smart_priority_merger.py"
+ROLLUP_PATH = Path(__file__).resolve().parents[3] / "scripts" / "ci" / "merge_train_rollup.py"
 
 
 def _load_module(path: Path, name: str) -> Any:
@@ -55,9 +51,7 @@ def _pr(
         "body": "## Test Evidence\npytest passed (exit=0)",
         "additions": additions,
         "deletions": deletions,
-        "files": [
-            {"path": p, "patch": (patches or {}).get(p, "")} for p in files
-        ],
+        "files": [{"path": p, "patch": (patches or {}).get(p, "")} for p in files],
     }
 
 
@@ -190,9 +184,7 @@ class TestAISentinelReviewer:
     def test_parse_verdict_garbage_is_unknown(self):
         assert mod.AISentinelReviewer.parse_verdict("no json at all")["verdict"] == "UNKNOWN"
         assert mod.AISentinelReviewer.parse_verdict("")["verdict"] == "UNKNOWN"
-        assert mod.AISentinelReviewer.parse_verdict(
-            '{"verdict": "MAYBE"}'
-        )["verdict"] == "UNKNOWN"
+        assert mod.AISentinelReviewer.parse_verdict('{"verdict": "MAYBE"}')["verdict"] == "UNKNOWN"
 
     def test_kill_switch_disables_review(self, monkeypatch):
         monkeypatch.setenv("MERGE_TRAIN_SENTINEL", "off")
@@ -215,7 +207,8 @@ class TestAISentinelReviewer:
         monkeypatch.delenv("GEMINI_API_KEY", raising=False)
         monkeypatch.delenv("GOOGLE_API_KEY", raising=False)
         monkeypatch.setattr(
-            mod.AISentinelReviewer, "_call_provider",
+            mod.AISentinelReviewer,
+            "_call_provider",
             staticmethod(lambda p, prompt: '{"verdict": "LGTM", "risk": "low", "issues": []}'),
         )
         v = mod.AISentinelReviewer.review("t", "diff", high_risk=True)
@@ -225,12 +218,15 @@ class TestAISentinelReviewer:
     def test_high_risk_consensus_passes_with_two_lgtms(self, monkeypatch):
         monkeypatch.setenv("GROQ_API_KEY", "k1")
         monkeypatch.setenv("GEMINI_API_KEY", "k2")
-        responses = iter([
-            '{"verdict": "LGTM", "risk": "low", "issues": []}',
-            '{"verdict": "LGTM", "risk": "low", "issues": []}',
-        ])
+        responses = iter(
+            [
+                '{"verdict": "LGTM", "risk": "low", "issues": []}',
+                '{"verdict": "LGTM", "risk": "low", "issues": []}',
+            ]
+        )
         monkeypatch.setattr(
-            mod.AISentinelReviewer, "_call_provider",
+            mod.AISentinelReviewer,
+            "_call_provider",
             staticmethod(lambda p, prompt: next(responses)),
         )
         v = mod.AISentinelReviewer.review("t", "diff", high_risk=True)
@@ -240,12 +236,15 @@ class TestAISentinelReviewer:
     def test_any_block_wins_immediately(self, monkeypatch):
         monkeypatch.setenv("GROQ_API_KEY", "k1")
         monkeypatch.setenv("GEMINI_API_KEY", "k2")
-        responses = iter([
-            '{"verdict": "LGTM", "risk": "low", "issues": []}',
-            '{"verdict": "BLOCK", "risk": "high", "issues": ["eval() found"], "note": "x"}',
-        ])
+        responses = iter(
+            [
+                '{"verdict": "LGTM", "risk": "low", "issues": []}',
+                '{"verdict": "BLOCK", "risk": "high", "issues": ["eval() found"], "note": "x"}',
+            ]
+        )
         monkeypatch.setattr(
-            mod.AISentinelReviewer, "_call_provider",
+            mod.AISentinelReviewer,
+            "_call_provider",
             staticmethod(lambda p, prompt: next(responses)),
         )
         v = mod.AISentinelReviewer.review("t", "diff", high_risk=False)
@@ -351,9 +350,7 @@ class TestFlakyTriageEngine:
         assert all("test_three" not in i for i in ids)
 
     def test_flaky_comment_has_pass_k_evidence(self):
-        comment = mod.FlakyTriageEngine.build_flaky_comment(
-            ["tests/test_net.py::test_call"], k=2
-        )
+        comment = mod.FlakyTriageEngine.build_flaky_comment(["tests/test_net.py::test_call"], k=2)
         assert "pass^2" in comment and "tests/test_net.py::test_call" in comment
 
     def test_kill_switch(self, monkeypatch):

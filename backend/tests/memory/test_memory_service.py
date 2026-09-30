@@ -60,8 +60,7 @@ class TestCascadeMemoryService:
         # blind-INSERT এখন ``query_dicts(... RETURNING id)`` পথে — চুক্তি-টেস্ট
         # দুই পথই দেখবে (execute + query_dicts)।
         write_calls = (
-            mock_pooled_pg.execute.call_args_list
-            + mock_pooled_pg.query_dicts.call_args_list
+            mock_pooled_pg.execute.call_args_list + mock_pooled_pg.query_dicts.call_args_list
         )
         insert_called = False
         for call in write_calls:

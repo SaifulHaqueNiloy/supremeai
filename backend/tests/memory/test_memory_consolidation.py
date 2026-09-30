@@ -68,9 +68,7 @@ class FakePg:
         বাংলা: probe-SELECT (consolidation) ও লেখা একই query_dicts পথে আসে;
         চুক্তি-টেস্ট শুধু লেখাই দেখবে — এই সংস্করণটি #2597 triage-এ যোগ হলো।"""
         return [
-            e
-            for e in self.executed
-            if not e[0].lstrip().upper().startswith(("SELECT", "WITH"))
+            e for e in self.executed if not e[0].lstrip().upper().startswith(("SELECT", "WITH"))
         ]
 
 

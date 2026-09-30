@@ -18,7 +18,9 @@ from core.messaging.event_bus import ErrorEvent
 httpx = pytest.importorskip("httpx")
 
 
-def _event(severity: str = "ERROR", module: str = "payments", error_type: str = "TIMEOUT") -> ErrorEvent:
+def _event(
+    severity: str = "ERROR", module: str = "payments", error_type: str = "TIMEOUT"
+) -> ErrorEvent:
     return ErrorEvent(
         module=module,
         error_type=error_type,
@@ -38,6 +40,7 @@ def _clean_state(monkeypatch):
 
 # ── ১. Signature: module+error_type শ্রেণি-ভিত্তিক, message-নিরপেক্ষ ──────
 
+
 def test_signature_stable_across_messages():
     a = filer._signature(_event(message=None) if False else _event())  # noqa: F841
     b = filer._signature(_event())
@@ -55,6 +58,7 @@ def test_marker_embeds_signature():
 
 # ── ২. Severity gate ───────────────────────────────────────────────────────
 
+
 def test_should_file_severity_gate():
     assert filer._should_file(_event(severity="CRITICAL")) is True
     assert filer._should_file(_event(severity="ERROR")) is True
@@ -65,12 +69,14 @@ def test_should_file_severity_gate():
 
 # ── ৩. Startup-quiet window (restart-storm রোধ) ───────────────────────────
 
+
 def test_should_file_startup_quiet():
     filer.reset_filer_state_for_tests(boot_offset_s=0.0)  # এখনই বুট
     assert filer._should_file(_event()) is False  # quiet-window চলমান
 
 
 # ── ৪. Per-signature cooldown (২৪ঘণ্টা) + daily cap ───────────────────────
+
 
 def test_per_signature_cooldown():
     ev = _event()
@@ -86,6 +92,7 @@ def test_daily_cap():
 
 # ── ৫. Issue payload স্কিমা (labels/marker/শিরোনাম) ─────────────────────────
 
+
 def test_build_issue_payload_schema():
     ev = _event(module="billing", error_type="STRIPE_500", severity="CRITICAL")
     sig = filer._signature(ev)
@@ -98,6 +105,7 @@ def test_build_issue_payload_schema():
 
 
 # ── ৬. GitHub-side dedup: marker-ম্যাচ হলে নতুন ইস্যু নয় ────────────────────
+
 
 @pytest.mark.asyncio
 async def test_dedup_skips_when_marker_exists(monkeypatch):
@@ -137,6 +145,7 @@ async def test_dedup_skips_when_marker_exists(monkeypatch):
 
 # ── ৭. Token না থাকলে graceful skip (Rule ৩) ───────────────────────────────
 
+
 @pytest.mark.asyncio
 async def test_no_token_graceful(monkeypatch):
     for var in ("GITHUB_TOKEN", "GH_TOKEN", "SUPREMEAI_GITHUB_TOKEN"):
@@ -147,6 +156,7 @@ async def test_no_token_graceful(monkeypatch):
 
 
 # ── ৮. Listener boundary: filing ব্যর্থ হলেও raise নয় ─────────────────────
+
 
 @pytest.mark.asyncio
 async def test_listener_never_raises(monkeypatch):
@@ -159,6 +169,7 @@ async def test_listener_never_raises(monkeypatch):
 
 
 # ── ৯. Happy path: marker না থাকলে create + state আপডেট ───────────────────
+
 
 @pytest.mark.asyncio
 async def test_happy_path_creates_issue(monkeypatch):
