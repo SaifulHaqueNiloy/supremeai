@@ -198,7 +198,9 @@ async def test_session_pool_429_auto_rotation():
     pool.register_account("claude", "token-rate-limited", "acc-1")
     pool.register_account("claude", "token-healthy", "acc-2")
 
-    async def mock_complete(service, prompt, system_prompt=None, model=None, session_token=None):
+    async def mock_complete(
+        service, prompt, system_prompt=None, model=None, session_token=None, **kwargs
+    ):
         if session_token == "token-rate-limited":
             raise WebAISessionError("HTTP 429: Too Many Requests, slow down")
         if session_token == "token-healthy":
@@ -249,7 +251,9 @@ async def test_session_pool_cross_provider_cascade():
     pool.register_account("claude", "token-claude", "claude-1")
     pool.register_account("chatgpt", "token-chatgpt", "chatgpt-1")
 
-    async def mock_complete(service, prompt, system_prompt=None, model=None, session_token=None):
+    async def mock_complete(
+        service, prompt, system_prompt=None, model=None, session_token=None, **kwargs
+    ):
         if service == "claude":
             raise WebAISessionError("Claude WAF Block 403 Forbidden")
         if service == "chatgpt":
