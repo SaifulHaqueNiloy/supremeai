@@ -484,6 +484,16 @@ async def start_background_services(app):
     except Exception as exc:
         logger.warning(f"⚠️ SelfHealer listener registration failed: {exc}")
 
+    # বাংলা মন্তব্য (#2527): error-event → GitHub issue self-filing bridge —
+    # production error এখন fleet-এর work queue-তেও পৌঁছাবে (heal/log-এর পাশাপাশি)।
+    try:
+        from core.health.issue_filer import register_issue_filer_listener
+
+        register_issue_filer_listener()
+        logger.info("✅ Issue-filer listener registered in lifespan (#2527).")
+    except Exception as exc:
+        logger.warning(f"⚠️ Issue-filer listener registration failed (#2527): {exc}")
+
     # ── SupremeAI 2.0 Infrastructure Agents ──────────────────────────────────
     # বাংলা: ৪টা futuristic infrastructure agent — autonomous/self-healing/free-tier
     # vision-এর কোর। সব default "false" যাতে user opt-in করে enable করে (prior pattern:
