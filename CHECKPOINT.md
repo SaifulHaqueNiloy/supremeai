@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-30 17:50 UTC
+- **Date:** 2026-09-30 17:54 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,42 +10,9 @@
   - (see git log for details)
 
 ## Files Changed
-  - `frontend/src/router/RouteBoundary.tsx`
-  - `frontend/src/pages/user/SystemHealthDashboard.tsx`
-  - `frontend/src/components/chat/ChatInterface.tsx`
-  - `frontend/src/services/storageApi.ts`
-  - `frontend/src/components/chat/UnifiedChatBubble.tsx`
-  - `frontend/src/components/admin/MeshAgentsPanel.tsx`
-  - `frontend/src/hooks/usePlugins.ts`
-  - `frontend/src/components/admin/CICDVisualizer.tsx`
-  - `frontend/src/firebase.ts`
-  - `frontend/src/services/heartbeat.ts`
-  - `frontend/src/components/admin/ci/CIDashboard.tsx`
-  - `frontend/src/services/mcpViewer.ts`
-  - `frontend/src/services/apiClient.ts`
-  - `frontend/src/hooks/useSwarmGraph.ts`
-  - `frontend/src/components/admin/InteractiveChatTab.tsx`
-  - `frontend/src/components/admin/admin-browser/CrownJewelBrowser.tsx`
-  - `frontend/src/services/chatService.ts`
-  - `frontend/src/services/supremeShared.ts`
-  - `frontend/src/components/admin/LibrarianQueue.tsx`
-  - `frontend/src/services/skillsService.ts`
-  - `frontend/src/components/customer/MobileSimulator.tsx`
-  - `frontend/src/utils/api.ts`
+  - `CHECKPOINT.md`
   - `.github/constitution/rules.yml`
-  - `frontend/src/hooks/useServerStream.ts`
-  - `frontend/src/components/auth/ServiceHealthBar.tsx`
-  - `frontend/src/components/admin/admin-browser/useBrowserActions.ts`
-  - `frontend/src/components/graph/SkillGraph.tsx`
-  - `frontend/src/components/GlobalErrorBoundary.tsx`
-  - `frontend/src/pages/auth/LoginPage.tsx`
-  - `frontend/src/pages/user/EvolutionForge/EvolutionForge.tsx`
-  - `frontend/src/hooks/useChat.ts`
-  - `frontend/src/pages/admin/AdminShell.tsx`
-  - `frontend/src/components/research/DeepResearchPanel.tsx`
-  - `frontend/eslint.config.js`
-  - `frontend/src/components/admin/security/RateLimitManager.tsx`
-  - `frontend/src/components/export/ExportMenu.tsx`
+  - `.github/ISSUE_TEMPLATE/agent_task.yml`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
