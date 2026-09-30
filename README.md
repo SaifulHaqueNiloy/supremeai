@@ -94,6 +94,89 @@ This is why SupremeAI's capability coverage can be much larger than the number o
 
 ---
 
+## 🏛️ Comprehensive System Architecture (End-to-End Topology)
+
+SupremeAI operates as a governed, resilient multi-layered system designed for zero-cost operation and autonomous execution:
+
+```mermaid
+flowchart TD
+    subgraph CLIENTS["👥 Access & Client Surfaces"]
+        User["👤 End User / Web Portal"]
+        Admin["👑 Admin / Fleet Commander (God Mode / CLI)"]
+        ExternalClients["🔌 External Systems & Agents (MCP Clients)"]
+    end
+
+    subgraph EDGE_GATEWAY["🌐 Edge, Routing & Control Tower"]
+        CF["⚡ Cloudflare Edge (WAF & Proxy)"]
+        MCP["🗼 MCP Control Tower (infrastructure/mcp-control-plane)"]
+        FastAPI["🚀 FastAPI Gateway (backend/main.py)"]
+        EventBus["📡 Event Bus (backend/core/messaging/event_bus.py)"]
+    end
+
+    subgraph AGENT_FLEET["🤖 Autonomous Agent Fleet & Governance"]
+        AgentLoop["🔄 Autonomous Agent Loop (scripts/agents/continuous_agent_loop.py)"]
+        Constitution["📜 Universal Operating Constitution (AGENTS.md)"]
+        PolicyEngine["🛡️ Policy Engine & AutonoGuard (policy_engine.py)"]
+        PRGate["🚦 Unified PR Gate & Merge Train (scripts/ci/)"]
+    end
+
+    subgraph PLANNING_EXEC["⚙️ Planning & Execution Engine"]
+        TaskEngine["🔄 Task State Machine (backend/adaptive_engine/task_engine.py)"]
+        DebateEngine["⚖️ Multi-Agent Debate Engine (debate_engine.py)"]
+        CapSurface["🔍 Capability Surface & Tool Dispatcher"]
+        Recipes["📜 Dynamic Pipeline Recipes"]
+    end
+
+    subgraph MODELS_CONTEXT["🧠 Models & Context Engine"]
+        ModelRouter["🔀 Multi-LLM Router (backend/brain/model_router.py)"]
+        LLMs["🌐 LLM Providers (Gemini / Anthropic / OpenAI / Groq)"]
+        RAG["📚 RAG Pipeline (backend/memory/rag_pipeline.py)"]
+        TokenBudget["💰 Token Budget Guard (backend/core/llm/token_budget.py)"]
+    end
+
+    subgraph DATA_STORAGE["💾 Storage, Memory & Infrastructure"]
+        Redis[("⚡ Redis Cache & Lock (backend/core/cache/redis_manager.py)")]
+        Postgres[("🗄️ PostgreSQL + pgvector / Supabase")]
+        MemorySidecar["🧠 Memory Service (backend/services/memory_service.py)"]
+        Infisical["🔐 Secrets Vault (Infisical)"]
+    end
+
+    User --> CF
+    CF --> FastAPI
+    Admin --> MCP
+    Admin --> AgentLoop
+    ExternalClients --> MCP
+
+    MCP <-->|Federated MCP / Tools| FastAPI
+
+    AgentLoop --> Constitution
+    AgentLoop --> PRGate
+    AgentLoop --> PolicyEngine
+
+    FastAPI --> EventBus
+    FastAPI --> PLANNING_EXEC
+    MCP --> CapSurface
+
+    PLANNING_EXEC --> DebateEngine
+    PLANNING_EXEC --> TaskEngine
+    TaskEngine --> PolicyEngine
+
+    PLANNING_EXEC --> MODELS_CONTEXT
+    ModelRouter --> TokenBudget
+    TokenBudget --> LLMs
+    RAG --> MODELS_CONTEXT
+
+    FastAPI --> Redis
+    FastAPI --> Postgres
+    FastAPI --> MemorySidecar
+    MCP --> MemorySidecar
+    FastAPI --> Infisical
+```
+
+> 🔍 **Interactive Graph Explorer:** You can also explore the live interactive code-graph at [GitDiagram: SupremeAI](https://gitdiagram.com/saifulhaqueniIoy/supremeai).
+
+---
+
 # The Road to Production — One-Man-Army Master Plan
 
 The full strategy lives in [`docs/plans/architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md`](docs/plans/architecture/SUPREMEAI_MASTER_PLAN_CANONICAL.md). Its shape in one table:

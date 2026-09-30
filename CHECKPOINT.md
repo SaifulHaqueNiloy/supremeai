@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-30 16:10 UTC
+- **Date:** 2026-09-30 16:19 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,15 +10,12 @@
   - (see git log for details)
 
 ## Files Changed
-  - `.github/scripts/constitution/tests/test_gates.py`
-  - `.github/ISSUE_TEMPLATE/config.yml`
-  - `.github/ISSUE_TEMPLATE/agent_task.yml`
-  - `Dockerfile`
-  - `.github/scripts/constitution/gates.py`
   - `.github/ISSUE_TEMPLATE/feature_request.yml`
   - `.github/workflows/dependabot-auto-merge.yml`
-  - `infrastructure/mcp-control-plane/src/adapters/memory/index.ts`
-  - `infrastructure/mcp-control-plane/test_memory_sidecar.ts`
+  - `README.md`
+  - `.github/ISSUE_TEMPLATE/agent_task.yml`
+  - `.github/ISSUE_TEMPLATE/config.yml`
+  - `CHECKPOINT.md`
   - `.github/ISSUE_TEMPLATE/bug_report.yml`
 
 ## Pending (Carry Forward)
