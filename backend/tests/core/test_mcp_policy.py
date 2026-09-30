@@ -161,3 +161,94 @@ def test_singleton_engine():
     engine1 = mod.get_policy_engine()
     engine2 = mod.get_policy_engine()
     assert engine1 is engine2
+
+
+# ── Schema-Driven SSoT Tests (#2429) ──────────────────────────────────
+
+
+def test_schema_snapshot_matches_canonical_schema():
+    """Embedded Python snapshot অবশ্যই canonical config/mcp_policy_schema.json-এর হুবহু প্রতিচ্ছবি।
+
+    বাংলা মন্তব্য: এটি scripts/ci/check_mcp_policy_parity.py-র ধাপ-১ (generator
+    --check) এর ইন-টেস্ট সংস্করণ — টেস্ট চালানোর সময়েও snapshot drift ধরা পড়বে।
+    """
+    import json
+
+    snapshot_mod = _load_policy_module()
+    schema_path = PROJECT_ROOT / "config" / "mcp_policy_schema.json"
+    canonical = json.loads(schema_path.read_text(encoding="utf-8"))
+    generated = snapshot_mod.schema_info()
+    assert generated["schema_version"] == canonical["schema_version"]
+    assert sorted(generated["providers"]) == sorted(canonical["providers"].keys())
+    assert generated["tools"] == len(canonical["tool_provider_action"])
+
+
+def test_provider_default_risk_semantics():
+    """Per-provider default risk — schema-র `_default` কী উভয় ইঞ্জিনে একই আচরণ দেয়।
+
+    বাংলা মন্তব্য: আগে Python-এ memory/mesh-এর unknown action R0 হতো কিন্তু
+    TS-এ R3 (গ্লোবাল default) — এই drift-ই #2429 দূর করেছে।
+    """
+    mod = _load_policy_module()
+    engine = mod.RiskEngine()
+    # memory/mesh/mcp_tools-এর provider-default R0 (platform-safe operations)।
+    assert engine.evaluate("memory", "brand_new_memory_action") == "R0"
+    assert engine.evaluate("mesh", "brand_new_mesh_op") == "R0"
+    assert engine.evaluate("mcp_tools", "brand_new_tool_query") == "R0"
+    # agent_tools-এর provider-default R3 (fail-closed — privileged category)।
+    assert engine.evaluate("agent_tools", "brand_new_agent_action") == "R3"
+    # Unknown provider → গ্লোবাল default R3।
+    assert engine.evaluate("mystery_provider", "mystery_action") == "R3"
+
+
+def test_read_only_keyword_semantics():
+    """Read-only keyword সেট (verify, search, get, query, fetch, open সহ) উভয় ইঞ্জিনে অভিন্ন।"""
+    mod = _load_policy_module()
+    engine = mod.RiskEngine()
+    for keyword in (
+        "verify",
+        "search",
+        "get",
+        "query",
+        "fetch",
+        "open",
+        "read",
+        "list",
+        "summary",
+        "status",
+    ):
+        risk = engine.evaluate("any_provider", f"prefix_{keyword}_suffix")
+        assert risk == "R0", f"keyword '{keyword}' action should be R0, got {risk}"
+    # system/health provider সর্বদা R0।
+    assert engine.evaluate("system", "arbitrary_write") == "R0"
+    assert engine.evaluate("health", "full_sweep") == "R0"
+
+
+def test_new_python_providers_in_schema():
+    """#2429-র মূল পয়েন্ট: Python-এর ৪টি নতুন provider এখন TS টাওয়ারসহ সব ইঞ্জিনে আছে।"""
+    mod = _load_policy_module()
+    engine = mod.RiskEngine()
+    assert engine.evaluate("agent_tools", "execute") == "R5"
+    assert engine.evaluate("agent_tools", "execute_code") == "R5"
+    assert engine.evaluate("agent_tools", "verify") == "R0"
+    assert engine.evaluate("memory", "delete") == "R2"
+    assert engine.evaluate("mesh", "dispatch") == "R1"
+    assert engine.evaluate("mesh", "send") == "R1"
+    assert engine.evaluate("mcp_tools", "refresh") == "R2"
+
+
+def test_decision_matrix_fail_closed():
+    """Unknown risk level → fail-closed REQUIRE_APPROVAL (কখনো auto-allow নয়)।"""
+    mod = _load_policy_module()
+    engine = mod.PolicyEngine()
+    assert engine.decide("R9") == "REQUIRE_APPROVAL"  # type: ignore[arg-type]
+    assert engine.decide("") == "REQUIRE_APPROVAL"  # type: ignore[arg-type]
+
+
+def test_schema_info_observability():
+    """Law #19: চলমান schema সংস্করণ শনাক্তযোগ্য (version + hash + provider তালিকা)।"""
+    mod = _load_policy_module()
+    info = mod.schema_info()
+    assert "schema_version" in info and "schema_hash" in info
+    assert "render" in info["providers"] and "mesh" in info["providers"]
+    assert info["tools"] > 0
