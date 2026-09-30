@@ -254,3 +254,50 @@ def test_dual_ai_conductor_with_coding_context():
     assert "ENVIRONMENT DIRECTIVE (Coding Agent):" in result.enhanced_prompt
     assert "run unit tests or syntax checks after every edit" in result.enhanced_prompt
     assert "coding_agent_env_directive" in result.applied_tricks
+
+
+def test_is_banglish_or_bengali_detection():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    বাংলিশ ও বাংলা ল্যাঙ্গুয়েজ ডিটেকশন যাচাই:
+    - ইংলিশ অ্যালফাবেটে বাংলা (Banglish): "bhai eta koro", "ami ekta cache middleware banate chai"
+    - খাঁটি বাংলা ইউনিকোড: "এই কোডটি ঠিক করুন"
+    """
+    assert PromptEnhancementEngine.is_banglish_or_bengali("bhai eta koro and check error") is True
+    assert (
+        PromptEnhancementEngine.is_banglish_or_bengali(
+            "ami ekta fast redis pool implement korte chai"
+        )
+        is True
+    )
+    assert PromptEnhancementEngine.is_banglish_or_bengali("এই কোডটি ঠিক করুন") is True
+    assert PromptEnhancementEngine.is_banglish_or_bengali("pure textbook english prompt") is False
+
+
+def test_banglish_prompt_regional_stealth():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    বাংলিশ প্রম্পটে regional_banglish_human_stealth ট্রিক যুক্ত হওয়া এবং মূল ভাষা সংরক্ষিত থাকা।
+    """
+    engine = PromptEnhancementEngine()
+    prompt = "fastapi te memory leak hocche, bhai eta fix koro"
+    res = engine.enhance(prompt, mode=EnhancementMode.STEALTH_CHAT)
+
+    assert "regional_banglish_human_stealth" in res.applied_tricks
+    assert "fastapi te memory leak hocche, bhai eta fix koro" in res.enhanced_prompt
+
+
+def test_regional_geo_locale_headers():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    বাংলাদেশ আইপির সাথে সামঞ্জস্যপূর্ণ ব্রাউজার হেডার ও টাইমজোন যাচাই।
+    """
+    from backend.core.web_ai_session_bridge import WebAISessionBridge
+
+    bridge = WebAISessionBridge()
+    headers = bridge._get_headers("claude")
+    assert "bn-BD" in headers["Accept-Language"]
+    assert "en-US" in headers["Accept-Language"]

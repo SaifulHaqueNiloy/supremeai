@@ -114,10 +114,13 @@ class WebAISessionBridge:
     ) -> dict[str, str]:
         """বাংলা মন্তব্য: প্রতিটি সার্ভিসের জন্য বাস্তবসম্মত ব্রাউজার হেডার তৈরি করা।"""
         ua = random.choice(DEFAULT_USER_AGENTS)
+        # বাংলা মন্তব্য: জিও-লোকাল কোহেরেন্স (Geo-Locale Coherence)
+        # বাংলাদেশ বা রিজিওনাল আইপি থেকে এলে Accept-Language এ bn-BD ও en-US স্বাভাবিকভাবে থাকে
+        accept_lang = os.getenv("SESSION_ACCEPT_LANGUAGE", "en-US,en;q=0.9,bn-BD;q=0.8,bn;q=0.7")
         headers = {
             "User-Agent": ua,
             "Accept": "application/json, text/event-stream, */*",
-            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Language": accept_lang,
             "Cache-Control": "no-cache",
             "Pragma": "no-cache",
         }
@@ -522,12 +525,13 @@ class WebAISessionBridge:
                     f"Claude conversation creation failed (HTTP {status}): {conv_res}"
                 )
 
-        # ৩. প্রম্পট পাঠানো ও রেসপন্স সংগ্রহ
+        # ৩. প্রম্পট পাঠানো ও রেসপন্স সংগ্রহ (বাংলাদেশ বা রিজিওনাল টাইমজোন ম্যাচিং)
+        tz = os.getenv("SESSION_TIMEZONE", "Asia/Dhaka")
         prompt_payload = {
             "attachments": [],
             "files": [],
             "prompt": f"{system_prompt}\n\n{prompt}" if system_prompt else prompt,
-            "timezone": "UTC",
+            "timezone": tz,
         }
         status, completion_res = await self.execute_http_request(
             service="claude",

@@ -72,6 +72,26 @@ class PromptEnhancementEngine:
         r"^\s*please execute the following steps:?\s*",
     ]
 
+    # বাংলা মন্তব্য: বাংলিশ / রোমানাইজড বাংলা শনাক্তকারী সাধারণ কীওয়ার্ড প্যাটার্ন (Regional Human Stealth)
+    BANGLISH_INDICATORS = [
+        r"\b(?:ami|amr|amra|tumi|tomar|apni|apnar|tahole|tahola|jeno|kintu|karon|koro|korco|kortece|korci|hocche|hoy|hobe|ache|nai|ki|kivabe|jevabe|dekho|dekhen|bhai|bhalo|ektu|ekta|shob|kaj|vul|thik|bujhe|jodi|shathe)\b",
+    ]
+
+    @classmethod
+    def is_banglish_or_bengali(cls, text: str) -> bool:
+        """
+        বাংলা মন্তব্য:
+        প্রম্পট বা টেক্সটে বাংলা বর্ণমালা (Unicode U+0980-U+09FF)
+        অথবা ইংলিশ অ্যালফাবেটে লেখা বাংলা (বাংলিশ/Banglish) শব্দ আছে কিনা শনাক্ত করে।
+        কোনো অটোমেটেড বট স্ক্রিপ্ট কখনো বাংলিশ ভাষায় প্রম্পট দেয় না — এটি ১০০% খাঁটি মানবীয় প্রমাণ।
+        """
+        if not text:
+            return False
+        if re.search(r"[\u0980-\u09ff]", text):
+            return True
+        text_lower = text.lower()
+        return any(re.search(pat, text_lower) for pat in cls.BANGLISH_INDICATORS)
+
     def __init__(self, rng_seed: int | None = None):
         self._rng = random.Random(rng_seed)
 
@@ -95,6 +115,11 @@ class PromptEnhancementEngine:
 
         clean_prompt = prompt.strip()
         tricks: list[str] = []
+
+        # বাংলা মন্তব্য: বাংলিশ / বাংলা ডিটেকশন — এটি নিশ্চিত করে যে প্রম্পটটি বাংলাদেশ আইপি থেকে
+        # একজন সত্যিকারের মানুষের স্বাভাবিক কথোপকথন (Ultimate Anti-Bot Proof)
+        if self.is_banglish_or_bengali(clean_prompt):
+            tricks.append("regional_banglish_human_stealth")
 
         # বাংলা মন্তব্য: যদি DUAL_AI_CONDUCTOR মোড হয় বা প্রম্পটে অলরেডি অটোনোমাস ব্লুপ্রিন্ট থাকে, তা পূর্ণ শক্তিতে অক্ষুণ্ণ রাখা
         if mode != EnhancementMode.DUAL_AI_CONDUCTOR and not (
@@ -217,6 +242,14 @@ class PromptEnhancementEngine:
         "\n\nAppreciate the thorough execution!",
     ]
 
+    # বাংলা মন্তব্য: বাংলিশ প্রম্পটের জন্য স্বাভাবিক ও মার্জিত লোকাল সাইন-অফ ভ্যারিয়েন্ট
+    BANGLISH_CLOSERS = [
+        "",
+        "",
+        "\n\nThanks bhai, edge cases gulo check kore solution diyo.",
+        "\n\nMake sure code ta properly run kore and shob tests pass kore.",
+    ]
+
     def _apply_dual_ai_conductor(
         self, prompt: str, context: EnhancementContext | None, tricks: list[str]
     ) -> str:
@@ -233,7 +266,16 @@ class PromptEnhancementEngine:
 
         header = self._rng.choice(self.CONDUCTOR_HEADER_VARIANTS)
         template = self._rng.choice(self.CONDUCTOR_STYLE_TEMPLATES)
-        closer = self._rng.choice(self.CONDUCTOR_CLOSERS)
+
+        # বাংলা মন্তব্য: বাংলিশ ডিটেক্ট হলে লোকাল ক্লোজার পুল থেকে নির্বাচন
+        if self.is_banglish_or_bengali(prompt):
+            closer = self._rng.choice(self.BANGLISH_CLOSERS)
+            if closer:
+                tricks.append("banglish_closer_jitter")
+        else:
+            closer = self._rng.choice(self.CONDUCTOR_CLOSERS)
+            if closer:
+                tricks.append("natural_closer_jitter")
 
         if header:
             result = template.format(header=header, task=prompt)
@@ -243,7 +285,6 @@ class PromptEnhancementEngine:
 
         if closer:
             result += closer
-            tricks.append("natural_closer_jitter")
 
         # এনভায়রনমেন্ট অ্যাডিশন (কোডিং বা টুল স্পেসিফিক রুলস)
         if context:
