@@ -789,3 +789,20 @@ fix নয়, reproducibility issue।
 - **ISSUE-সেট-যাচাই**: 31-open; 30→31-ব্যাখ্যা = নিজের-ই #2619 (T141-স্ন্যাপশট-ছিল-তৈরির-আগে — comm-diff-প্রমাণ); কোনো-reopen/নতুন-নেই → 0 issue/0 কমেন্ট (#2619-ক্লোজ agent-8-এর-এখতিয়ারে-নেই)।
 - **ENGINE (09:02Z)**: কিউ **EMPTY**; main `d7fc8dd` **GREEN**; baseline re-anchor (নোট: baseline-last 08:24Z-কিন্তু-চেক 08:53Z-পর্যন্ত-দেখেছে — R28-পরিচিত-ফিল্টার-পুনরাবৃত্তি-সামলাবে)।
 - **এই চক্রে: 0 merge-আমার-পক্ষে/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T143 addendum; watch: #2619-owner-ক্লোজ-সংকেত, নতুন-কিউ-গঠন, main-সবুজ-ধারাবাহিকতা, bypass-৪, AGENTS-৩য়-সংশোধন, #2453-realtime-ট্র্যাকার-অগ্রগতি।**
+
+### Addendum — Task 144 (2026-09-30 ~09:36Z, 17:30+08 cron): #2622-মার্জের-পরে-প্রথম-বাস্তব-ডিপ্লয়-রান → দুই-নতুন-ইস্যু (#2624/#2625)
+
+- **HANDSHAKE (09:31Z)**: worklog last=143; তিন-পোর্ট UP; lane @`9333f12c`-অটুট (791)।
+- **POLICY SYNC**: main সরেছে `d7fc8dd2`→**`12c44a7c`** (Merge #2622, 09:19:40Z — Deploy-Train-explicit-result-checks-ফিক্স, সূত্র-ইস্যু #2621; PR-খোলা→মার্জ **২-মিনিটে**); অ্যাঙ্কর-অটুট blob-direct (AGENTS `3db1a7cd`, rules.yml `e62d5f03`)।
+- **SWEEP (09:03→09:31Z, ২২-ইভেন্ট)**: #2621-লেবেল-ঝড় (github-actions+coder-bot); #2622-opened 09:17Z→merged 09:19Z; **🆕 #2623** (planner-bot: stashed-security-override-batch — dompurify×14, qs×2, sharp×2 — deps-ব্যাচ); #2619-তে owner-"opened"-ইভেন্ট 09:23:13Z (বর্তমান-স্টেট: **open**, upd-টাইমস্ট্যাম্প-অপরিবর্তিত — ঘটনাটি-রহস্যময়-কিন্তু-স্টেট-ই-গুরুত্বপূর্ণ)।
+- **POST-MERGE AUDIT — নতুন-ব্যর্থতা-ক্লাস্টার @`12c44a7c` (11ok/2fail→3fail)**:
+  - 🚉 **Station 3: Post-Deploy Smoke Canary failure** — `Backend health probe did not report healthy` + curl-50x (job 109824077886; নোট: smoke-শুরু Deploy-Core-সমাপ্তির-মাত্র ~৩-সেকেন্ড-পরে — warmup-race-সম্ভাবনা); Deploy Core/Worker **success** — #2622-ফিক্সের-পরে-স্টেশনরা-সত্যিই-চলছে
+  - 🚨 **Station 4: Automated Rollback failure** — `রোলব্যাক টার্গেট নেই...অন্ধ auto-revert নিষিদ্ধ; অ্যাডমিন সিদ্ধান্ত প্রয়োজন` (job 109824291666) — fail-safe-সঠিক, কিন্তু-নিরাপদ-রোলব্যাক-পথ-নেই
+  - **platform-sweep 3 fails** — groq/cerebras `HTTP 403 CF-1010` (bot-block) + mirror **66.2h**-stale (job 109826273427)
+  - Migration Gate **success** ধরে-রেখেছে (#2620-ফিক্স-টেকসই)
+- **ISSUE (২টি, কঠোর-dedupe-পরে: probe exit=0, 33-open, keyword-scan → smoke/rollback/platform-sweep-ট্র্যাকার-শূন্য; #2621 = পুরোনো-skip-সমস্যা)**:
+  - **#2624** (P1): smoke-canary-50x + rollback-no-target — প্রমাণ-টেবিল+warmup-race-অনুমান+rollback-বেসলাইন-প্রস্তাব
+  - **#2625** (P2): platform-sweep-403×2 + mirror-stale — CI-egress-বনাম-provider-WAF-বিচ্ছেদ-প্রস্তাব
+- **ENGINE (09:36Z)**: কিউ EMPTY; main `12c44a7` **RED** (3-redGates); baseline re-anchor 09:35Z-জানালা।
+- **শিক্ষা**: dead-green-ফিক্স (#2622)-এর-সরাসরি-ফল — লুকানো-ব্যর্থতা-এখন-দৃশ্যমান; এটি-অবনতি-নয়, পর্যবেক্ষণ-ক্ষমতা-বৃদ্ধি (নন-ব্লেম-ফ্রেমিং-ইস্যুতে-লেখা)।
+- **এই চক্রে: 0 merge-আমার-পক্ষে/0 force-push/0 main-push; ২ issue (#2624 P1 + #2625 P2)/0 কমেন্ট; playbook T144 addendum; watch: #2624-admin-সিদ্ধান্ত (backend-50x+rollback-বেসলাইন), smoke-warmup-ফিক্স-PR, #2625-provider-অ্যাক্সেস, #2619/#2621-owner-ক্লোজ, #2623-deps-ব্যাচ-প্রবাহ, AGENTS-৩য়-সংশোধন।**
