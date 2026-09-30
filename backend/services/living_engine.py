@@ -13,8 +13,6 @@ The unified master orchestrator coordinating:
 
 from __future__ import annotations
 
-import asyncio
-import json
 import time
 from dataclasses import dataclass, field
 from typing import Any
@@ -25,6 +23,10 @@ from adapters.ux_adapter import UXAdapter
 from core.advanced_reasoning import AdvancedReasoningEngine, ReasoningChain
 from core.evolution_module import EvolutionModule, EvolutionResult
 from core.logging_config import logger
+
+# বাংলা মন্তব্য (#2705): SelfReflectionLoop আগে dormant ছিল (production caller ছিল না)।
+# এখন living_engine-এর post-task path থেকে self-critique চালানো হয়।
+from engine.self_reflection import SelfReflectionLoop
 from evolution.auto_evolution_controller import AutoEvolutionController
 from learning.pattern_recognizer import PatternMatch, PatternRecognizer
 from services.dynamic_planner import DynamicPlanningEngine, TaskDAG, TaskNode
@@ -48,6 +50,8 @@ class SolutionResult:
     reasoning: dict[str, Any] = field(default_factory=dict)
     patterns: list[dict[str, Any]] = field(default_factory=list)
     evolution: dict[str, Any] = field(default_factory=dict)
+    # বাংলা মন্তব্য (#2705): post-task self-critique (System-2) ফলাফল।
+    reflection: dict[str, Any] = field(default_factory=dict)
     error: str | None = None
 
     def to_dict(self) -> dict[str, Any]:
@@ -63,6 +67,7 @@ class SolutionResult:
             "reasoning": self.reasoning,
             "patterns": self.patterns,
             "evolution": self.evolution,
+            "reflection": self.reflection,
             "error": self.error,
         }
 
@@ -241,6 +246,7 @@ class LivingEngineOrchestrator:
         pattern_recognizer: PatternRecognizer | None = None,
         evolution_module: EvolutionModule | None = None,
         evolution_controller: AutoEvolutionController | None = None,
+        self_reflection: SelfReflectionLoop | None = None,
     ) -> None:
         self.memory_service = memory_service or global_memory_service
         self.intent_service = intent_service or IntentDecipheringService(
@@ -255,6 +261,8 @@ class LivingEngineOrchestrator:
         self.pattern_recognizer = pattern_recognizer or PatternRecognizer()
         self.evolution_module = evolution_module or EvolutionModule()
         self.evolution_controller = evolution_controller or AutoEvolutionController()
+        # বাংলা মন্তব্য (#2705): Self-Critique ইঞ্জিন — প্রতিটি সমাধান-পরবর্তী আত্ম-পর্যালোচনা।
+        self.self_reflection = self_reflection or SelfReflectionLoop()
 
         # Domain Adapters
         self.adapters: dict[str, BaseDomainAdapter] = {
@@ -265,69 +273,6 @@ class LivingEngineOrchestrator:
             "bengali": DevDomainAdapter(),
             "general": BaseDomainAdapter(),
         }
-
-        # বাংলা মন্তব্য (Issue #2705): fire-and-forget reflection টাস্কের রেফারেন্স-সেট —
-        # GC-তে গিলে যাওয়া আটকায়; সম্পন্ন হলে স্বয়ংক্রিয়ভাবে বাদ পড়ে।
-        self._pending_reflections: set[asyncio.Task] = set()
-
-    async def _reflect_on_solution(
-        self,
-        prompt: str,
-        execution_output: str,
-        is_success: bool,
-        error_details: str = "",
-        duration_ms: float = 0.0,
-    ) -> None:
-        """বাংলা মন্তব্য (Issue #2705 Gap-F): post-task SelfReflectionLoop production hook.
-
-        ``SelfReflectionLoop.reflect()``-এর একমাত্র প্রোডাকশন কলার — প্রতিটি
-        solve_unpredictable_demand-এর পর (সফল বা ব্যর্থ) ৩টি ক্যানোনিকাল
-        আত্ম-সমালোচনা প্রশ্নের episodic রেকর্ড তৈরি করে। Graceful
-        degradation অপরিহার্য: reflection ব্যর্থ হলে মূল পাইপলাইন কখনো
-        ব্লক/ক্র্যাশ করবে না (সংবিধান অনুচ্ছেদ ৩)।
-        """
-        try:
-            from engine.self_reflection import SelfReflectionLoop
-
-            loop = SelfReflectionLoop()
-            await loop.reflect(
-                task_prompt=str(prompt)[:500],
-                execution_output=str(execution_output)[:1000],
-                is_success=is_success,
-                error_details=str(error_details)[:300],
-            )
-            logger.debug(
-                f"SelfReflection hook completed (success={is_success}, duration_ms={duration_ms:.1f})"
-            )
-        except Exception as exc:
-            # বাংলা মন্তব্য: সৎ ব্যর্থতা-লগ, কোনো নীরব ভান নয় — তবে main পথ অক্ষত।
-            logger.debug(f"SelfReflection hook bypassed: {type(exc).__name__}: {exc}")
-
-    def _schedule_reflection(
-        self,
-        prompt: str,
-        execution_output: str,
-        is_success: bool,
-        error_details: str = "",
-        duration_ms: float = 0.0,
-    ) -> None:
-        """বাংলা মন্তব্য: fire-and-forget reflection — চ্যাট-লেটেন্সি সুরক্ষার জন্য
-        await নয়; রেফারেন্স-সেটে ধরে রাখা হয় (GC-সুরক্ষা)।"""
-        try:
-            task = asyncio.create_task(
-                self._reflect_on_solution(
-                    prompt=prompt,
-                    execution_output=execution_output,
-                    is_success=is_success,
-                    error_details=error_details,
-                    duration_ms=duration_ms,
-                )
-            )
-            self._pending_reflections.add(task)
-            task.add_done_callback(self._pending_reflections.discard)
-        except RuntimeError as exc:
-            # বাংলা মন্তব্য: চলমান event-loop না থাকলে (sync context) সৎ bypass।
-            logger.debug(f"Reflection scheduling bypassed (no event loop): {exc}")
 
     async def solve_unpredictable_demand(
         self,
@@ -460,31 +405,30 @@ class LivingEngineOrchestrator:
                 },
             )
 
-            logger.info(
-                f"LivingEngine: Task completed in {duration_ms:.1f}ms with fitness {fitness}"
+            # ── 8. Self-Critique Reflection (#2705: SelfReflectionLoop-এর production hook) ──
+            # বাংলা মন্তব্য: প্রতিটি সমাপ্ত কাজের পর ৩-প্রশ্নের আত্ম-পর্যালোচনা —
+            # LLM key থাকলে deep analysis, না থাকলে deterministic reflection।
+            # কখনোই pipeline ভাঙবে না (graceful degradation, Rule #3)।
+            solution.reflection = await self._run_self_critique(
+                prompt=prompt,
+                exec_output=exec_output,
+                is_success=solution.success,
             )
 
-            # বাংলা মন্তব্য (Issue #2705 Gap-F): post-task self-reflection —
-            # fire-and-forget (চ্যাট-লেটেন্সি অক্ষত); ব্যর্থ হলেও main return বাধাপ্রাপ্ত হবে না।
-            self._schedule_reflection(
-                prompt=prompt,
-                execution_output=json.dumps(solution.to_dict(), default=str),
-                is_success=solution.success,
-                duration_ms=duration_ms,
+            logger.info(
+                f"LivingEngine: Task completed in {duration_ms:.1f}ms with fitness {fitness}"
             )
             return solution
 
         except Exception as exc:
             duration_ms = (time.perf_counter() - start_time) * 1000.0
             logger.error(f"LivingEngine: Pipeline execution failed: {exc}")
-            # বাংলা মন্তব্য (Issue #2705): ব্যর্থ নির্বাহেও self-reflection চলবে —
-            # bottleneck-analysis ইতিহাসই পরবর্তী প্রচেষ্টার উন্নতির উৎস।
-            self._schedule_reflection(
+            # বাংলা মন্তব্য (#2705): ব্যর্থতার ক্ষেত্রেও self-critique চলবে — সেটাই
+            # learning-এর সবচেয়ে দামি উপাদান (bottleneck কোথায় ছিল)।
+            failure_reflection = await self._run_self_critique(
                 prompt=prompt,
-                execution_output=f"pipeline error: {exc}",
+                exec_output={"error": str(exc)},
                 is_success=False,
-                error_details=str(exc),
-                duration_ms=duration_ms,
             )
             return SolutionResult(
                 success=False,
@@ -493,4 +437,34 @@ class LivingEngineOrchestrator:
                 execution_order=[],
                 error=str(exc),
                 execution_time_ms=round(duration_ms, 2),
+                reflection=failure_reflection,
             )
+
+    async def _run_self_critique(
+        self,
+        prompt: str,
+        exec_output: dict[str, Any],
+        is_success: bool,
+    ) -> dict[str, Any]:
+        """বাংলা মন্তব্য: SelfReflectionLoop.reflect() র‍্যাপার — fail-safe post-task critique।"""
+        try:
+            output_summary = str(exec_output.get("results", exec_output))[:2000]
+            reflection = await self.self_reflection.reflect(
+                task_prompt=prompt,
+                execution_output=output_summary,
+                is_success=is_success,
+                error_details=str(exec_output.get("error", ""))[:500],
+            )
+            return {
+                "is_correct": reflection.get("is_correct", is_success),
+                "success_factor": reflection.get("success_factor", ""),
+                "bottleneck_analysis": reflection.get("bottleneck_analysis", "None"),
+                "future_prevention_strategy": reflection.get(
+                    "future_prevention_strategy", "Maintain optimal pattern."
+                ),
+                "deep_analysis_used": bool(reflection.get("deep_analysis")),
+            }
+        except Exception as refl_err:
+            # বাংলা মন্তব্য: সৎ নীরব-স্কিপ নয় — স্পষ্ট recorded অবস্থা (#1743)।
+            logger.debug(f"Self-critique reflection bypassed: {refl_err}")
+            return {"status": "bypassed", "detail": str(refl_err)[:200]}
