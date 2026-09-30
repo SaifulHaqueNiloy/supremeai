@@ -135,4 +135,40 @@ async def register_pool_account(body: AccountRegisterRequest):
     }
 
 
+class ParallelTaskItem(BaseModel):
+    task_id: str = Field(default_factory=lambda: str(uuid.uuid4())[:8])
+    prompt: str
+    service: Literal["claude", "chatgpt", "v0", "auto"] = "auto"
+    model: str | None = None
+    system_prompt: str | None = None
+
+
+class ParallelTasksRequest(BaseModel):
+    tasks: list[ParallelTaskItem] = Field(..., min_length=1, max_length=20)
+    concurrency_limit: int = Field(default=5, ge=1, le=20)
+
+
+@router.post("/tasks/parallel")
+async def parallel_chat_completions(payload: ParallelTasksRequest):
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    একই সাথে একাধিক সেশনে ভিন্ন ভিন্ন AI-কে ভিন্ন ভিন্ন কাজের দায়িত্ব সমান্তরালে (Parallel) সম্পাদন।
+    যেমন:
+      - Task 1: Claude (Frontend Design)
+      - Task 2: ChatGPT (Backend API & Database)
+      - Task 3: v0 (React UI Components)
+    """
+    task_dicts = [t.model_dump() for t in payload.tasks]
+    try:
+        results = await global_session_pool.execute_parallel_tasks(
+            tasks=task_dicts,
+            concurrency_limit=payload.concurrency_limit,
+        )
+        return results
+    except Exception as exc:
+        logger.error(f"[WebAIProxy] Parallel execution error: {exc}")
+        raise HTTPException(status_code=500, detail=str(exc))
+
+
 __all__ = ["router"]

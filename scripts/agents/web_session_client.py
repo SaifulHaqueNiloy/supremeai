@@ -74,6 +74,11 @@ async def main_async() -> int:
         default=8765,
         help="Port for local relay server (default: 8765)",
     )
+    parser.add_argument(
+        "--parallel-tasks",
+        type=str,
+        help="JSON string or file path containing multiple tasks to execute simultaneously across multiple AIs",
+    )
 
     args = parser.parse_args()
 
@@ -104,6 +109,24 @@ async def main_async() -> int:
     # বাংলা মন্তব্য: লোকাল পিসি অন হলে বা --refresh/--boot-sync দিলে সাইলেন্ট রিফ্রেশ এক্সিকিউট করা
     if (args.refresh or args.boot_sync) and not args.relay_server:
         await _execute_silent_refresh(delay_sec)
+        return 0
+
+    # বাংলা মন্তব্য: একই সাথে একাধিক AI সেশনে মাল্টি-টাস্ক সমান্তরালে (Parallel) এক্সিকিউট করা
+    if args.parallel_tasks:
+        raw_val = args.parallel_tasks.strip()
+        tasks_list = []
+        if os.path.isfile(raw_val):
+            tasks_list = json.loads(Path(raw_val).read_text(encoding="utf-8"))
+        else:
+            tasks_list = json.loads(raw_val)
+
+        if not isinstance(tasks_list, list):
+            print("Error: --parallel-tasks must be a JSON array of task objects.", file=sys.stderr)
+            return 1
+
+        print(f"🚀 [Multi-Session Parallel AI] Dispatching {len(tasks_list)} tasks simultaneously across multiple AIs...")
+        batch_outcomes = await pool.execute_parallel_tasks(tasks_list)
+        print(json.dumps(batch_outcomes, indent=2, ensure_ascii=False))
         return 0
 
     # বাংলা মন্তব্য: রিলে সার্ভার ডেমন মোড (Cloud vs Local IP গ্যাপ বাইপাস)

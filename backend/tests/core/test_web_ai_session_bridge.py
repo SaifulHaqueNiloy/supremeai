@@ -434,3 +434,96 @@ async def test_refresh_pool_sessions_batch():
         results = await pool.refresh_pool_sessions(custom_ua="Sniffed-Local-UA")
         assert "chatgpt" in results
         assert results["chatgpt"][0]["refreshed"] is True
+
+
+@pytest.mark.asyncio
+async def test_parallel_multi_task_execution():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    একই সাথে সমান্তরালে (Parallel) মাল্টিপল AI সেশন দিয়ে ভিন্ন ভিন্ন টাস্ক সম্পন্ন করার টেস্ট।
+    - Task 1 (Frontend): v0
+    - Task 2 (Backend): Claude
+    - Task 3 (Audit): ChatGPT
+    """
+    from core.web_ai_session_bridge import WebAISessionPool
+
+    bridge = WebAISessionBridge()
+    pool = WebAISessionPool(bridge=bridge)
+
+    async def mock_cascade(
+        prompt, system_prompt=None, preferred_service="claude", fallback_chain=(), model=None
+    ):
+        return {
+            "choices": [
+                {
+                    "message": {
+                        "role": "assistant",
+                        "content": f"Completed by {preferred_service}: {prompt[:15]}",
+                    }
+                }
+            ],
+            "metadata": {"service_used": preferred_service, "account_used": "mock-acc"},
+        }
+
+    with patch.object(pool, "complete_with_cascade", side_effect=mock_cascade):
+        tasks = [
+            {"task_id": "task_frontend", "prompt": "Design React button", "service": "v0"},
+            {"task_id": "task_backend", "prompt": "Build auth router", "service": "claude"},
+            {"task_id": "task_audit", "prompt": "Audit SQL injection", "service": "chatgpt"},
+        ]
+
+        batch_result = await pool.execute_parallel_tasks(tasks=tasks, concurrency_limit=3)
+
+        assert batch_result["total_tasks"] == 3
+        assert batch_result["succeeded"] == 3
+        assert batch_result["failed"] == 0
+        assert "task_frontend" in batch_result["tasks"]
+        assert batch_result["tasks"]["task_frontend"]["service"] == "v0"
+        assert "Completed by v0" in batch_result["tasks"]["task_frontend"]["content"]
+        assert batch_result["tasks"]["task_backend"]["service"] == "claude"
+        assert batch_result["tasks"]["task_audit"]["service"] == "chatgpt"
+
+
+@pytest.mark.asyncio
+async def test_fastapi_parallel_tasks_route():
+    """বাংলা মন্তব্য: FastAPI /v1/tasks/parallel এন্ডপয়েন্ট সমান্তরাল টাস্ক সম্পাদন টেস্ট।"""
+    from fastapi import FastAPI
+    from httpx import ASGITransport, AsyncClient
+
+    from api.routes.web_ai_proxy import router as proxy_router
+    from core.web_ai_session_bridge import global_session_pool
+
+    app = FastAPI()
+    app.include_router(proxy_router)
+
+    async def mock_parallel(tasks, concurrency_limit=5):
+        return {
+            "total_tasks": len(tasks),
+            "succeeded": len(tasks),
+            "failed": 0,
+            "total_duration_ms": 150.0,
+            "tasks": {
+                t["task_id"]: {"status": "success", "service": t.get("service", "claude")}
+                for t in tasks
+            },
+        }
+
+    with patch.object(global_session_pool, "execute_parallel_tasks", side_effect=mock_parallel):
+        transport = ASGITransport(app=app)
+        async with AsyncClient(transport=transport, base_url="http://test") as ac:
+            res = await ac.post(
+                "/v1/tasks/parallel",
+                json={
+                    "tasks": [
+                        {"task_id": "ui_task", "prompt": "Build UI", "service": "v0"},
+                        {"task_id": "api_task", "prompt": "Build API", "service": "claude"},
+                    ],
+                    "concurrency_limit": 2,
+                },
+            )
+            assert res.status_code == 200
+            data = res.json()
+            assert data["total_tasks"] == 2
+            assert data["succeeded"] == 2
+            assert "ui_task" in data["tasks"]

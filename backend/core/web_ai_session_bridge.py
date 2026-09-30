@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import json
 import os
@@ -838,6 +839,87 @@ class WebAISessionPool:
                 ],
             }
         return status
+
+    async def execute_parallel_tasks(
+        self,
+        tasks: list[dict[str, Any]],
+        concurrency_limit: int = 5,
+    ) -> dict[str, Any]:
+        """
+        বাংলা সারসংক্ষেপ:
+        ------------------
+        একই সাথে একাধিক সেশনে ভিন্ন ভিন্ন AI-কে ভিন্ন ভিন্ন কাজের দায়িত্ব সমান্তরালে (Parallel) প্রদান।
+        যেমন:
+          - Task A (Frontend UI): v0 / claude
+          - Task B (Backend API): chatgpt / claude
+          - Task C (Security Audit): claude / chatgpt
+
+        সুরক্ষা বৈশিষ্ট্য:
+        ১. প্রতিটি টাস্কের সম্পূর্ণ আইসোলেটেড Conversation UUID থাকবে (কোনো হিস্ট্রি ওভাররাইট নেই)।
+        ২. asyncio.Semaphore দিয়ে ফ্রি-টিয়ার মেমোরি সীমার মধ্যে থ্রোটলিং নিশ্চিতকরণ।
+        ৩. একই সার্ভিসের মাল্টিপল অ্যাকাউন্ট থাকলে স্বয়ংক্রিয় লোড-ব্যালান্সিং।
+        """
+        semaphore = asyncio.Semaphore(concurrency_limit)
+        batch_start = time.time()
+
+        async def _run_single_task(t: dict[str, Any]) -> dict[str, Any]:
+            async with semaphore:
+                t_id = t.get("task_id", str(uuid.uuid4())[:8])
+                prompt = t.get("prompt", "")
+                system = t.get("system_prompt")
+                service = t.get("service", "auto")
+                model = t.get("model")
+                t_start = time.time()
+
+                try:
+                    if service == "auto":
+                        pref_service = "claude"
+                        chain = ("claude", "chatgpt", "v0")
+                    else:
+                        pref_service = service
+                        chain = (service, "claude", "chatgpt", "v0")
+
+                    res = await self.complete_with_cascade(
+                        prompt=prompt,
+                        system_prompt=system,
+                        preferred_service=pref_service,
+                        fallback_chain=chain,
+                        model=model,
+                    )
+                    content = res.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    return {
+                        "task_id": t_id,
+                        "status": "success",
+                        "service": res.get("metadata", {}).get("service_used", pref_service),
+                        "account": res.get("metadata", {}).get("account_used", "default"),
+                        "content": content,
+                        "raw": res,
+                        "duration_ms": round((time.time() - t_start) * 1000, 2),
+                    }
+                except Exception as exc:
+                    logger.error(f"[WebAISessionPool] Parallel task {t_id} failed: {exc}")
+                    return {
+                        "task_id": t_id,
+                        "status": "failed",
+                        "error": str(exc),
+                        "duration_ms": round((time.time() - t_start) * 1000, 2),
+                    }
+
+        outcomes = await asyncio.gather(
+            *[_run_single_task(t) for t in tasks], return_exceptions=False
+        )
+        total_duration_ms = round((time.time() - batch_start) * 1000, 2)
+
+        succeeded = sum(1 for o in outcomes if o.get("status") == "success")
+        failed = sum(1 for o in outcomes if o.get("status") == "failed")
+
+        return {
+            "total_tasks": len(tasks),
+            "succeeded": succeeded,
+            "failed": failed,
+            "total_duration_ms": total_duration_ms,
+            "tasks": {o["task_id"]: o for o in outcomes},
+        }
 
 
 # গ্লোবাল পুল ইনস্ট্যান্স
