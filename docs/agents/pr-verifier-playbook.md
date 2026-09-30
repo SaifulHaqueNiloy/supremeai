@@ -681,3 +681,20 @@ fix নয়, reproducibility issue।
 - **DEDUPE**: open issues 40 (১ম-পৃষ্ঠা), newest #2615/#2613/#2612/#2608/#2606/#2603 — সব-ট্র্যাকড → 0 issue/0 কমেন্ট; #2606 এখনো open (owner-রিদমে ক্লোজ-হবে — আর-কমেন্ট-নয়)।
 - **ENGINE (03:41Z GET refresh)**: open 5, GATE-FAIL×5, bypass 3 স্থিতিশীল, mainHealth ok।
 - **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; ledger M32/R35-পুনঃস্থাপিত + M28 count→4; playbook এই addendum; baseline re-anchor 03:43Z @`dbf2313e`; watch: #2598/#2614-মার্জ (ক্যাসকেড-শ্রেণির T&B-গতিপথ), #2615-ফিক্স-PR, #2606-ক্লোজ, bypass-৪, AGENTS-৩য়-সংশোধন, tower-স্বাস্থ্য।**
+
+### Task 133 addendum (verifier cron, 2026-09-30 12:00 +08 / 04:00–04:05Z — আংশিক-চক্র: টুল-সেশন-বিভ্রাটে lane-অ্যাকশন বন্ধ; সুইপ-ডেটা রিপোর্টে সংরক্ষিত; lane-অ্যাকশন T134-এ সম্পন্ন)
+- SWEEP (04:01Z check, baseline 03:43Z): #2598-নতুন-হেড 50577fac→145ef490 (3/6, Gate+T&B লাল); 🆕 **#2616 (planner, 03:44Z — pytest-asyncio 1.4.0 loop-scope, #2615-মূল-কারণ-ট্র্যাকার)** — ট্র্যাকড → 0 issue/0 কমেন্ট; main @`dbf2313e` 5ok/0fail অপরিবর্তিত; #1565 CLOSED-অটুট।
+- POLICY: অ্যাঙ্কর-অপরিবর্তিত (3db1a7cd/e62d5f03)।
+- 🟠 **টুল-বিভ্রাট**: Bash/Read টানা-৪ ব্যর্থ (broken session 403) → re-anchor/addendum-push/worklog অসম্পূর্ণ; হ্যান্ডঅফ: পরের-চক্র T133-রেকর্ড লিখবে + সুইপ T134 করবে।
+- এই চক্রে: 0 issue/0 কমেন্ট/0 push; tower node_modules-প্রস্তুত কিন্তু start চলেনি।
+
+### Task 134 addendum (verifier cron, 2026-09-30 12:30 +08 / 04:33–04:40Z — 🟠 রোলব্যাক-৬ (M28 count→5, অসামঞ্জস্য-স্ন্যাপশট): T132-সেকশন/clone/baseline হারানো কিন্তু backfill+M32 অটুট; 🟢 #2598 GREEN-AT-MERGE → main @`7409ef81` 8ok/0fail + #2616-ক্লোজ; কিউ 3×PASS; #2609-ও মার্জ)
+- **HANDSHAKE**: worklog 123-line, last=131 (T132-সেকশন-শুধু গায়েব — backfill T122–T131 অটুট = অসামঞ্জস্য-স্ন্যাপশট); ledger compile-1 M28count=3 → settle-পরে T128-যুগের M32/R35-সহ; `/home/z/supremeai` ENOENT → fresh clone; baseline 03:02Z (T131-যুগ)।
+- **R31-পুনর্নির্মাণ**: ① SRC-playbook resync origin/agent-8 (683 লাইন — **T132 addendum remote-এ অটুট — lane-push-first-এর পুনঃপ্রমাণ**); ② ledger M28 count 3→5 + ঘটনা-রেজিস্টার (MultiEdit-আংশিক-প্রয়োগ: M32/R35 ইতোমধ্যে-উপস্থিত বলে edit-3 অপ্রয়োজনীয় প্রমাণিত); compile ✓ M=31 (M25-স্থায়ী-গ্যাপ — M28-নথিভুক্ত)/R=32/lastM=M32/lastR=R35/dup=0; ③ t134-recon READ-ONLY-প্রোব (R35-ট্যাগ); ④ tower bg-rebuild।
+- **POLICY SYNC**: নতুন main @`7409ef81`-এও অ্যাঙ্কর-অপরিবর্তিত (AGENTS `3db1a7cd`, rules.yml `e62d5f03`) — ৩য়-সংশোধন-নেই।
+- **SWEEP (03:02→04:33Z, ৩১-ইভেন্ট)**: **দ্বি-মার্জ** — **#2598 merge 04:13:10Z = GREEN-AT-MERGE** (চূড়ান্ত-হেড `6c38f89b`: 10-checks সব-সবুজ — Unified-Gate 04:07:05Z success + T&B 04:07:00Z success + Constitutional success; **bypass-৪-হয়নি**) + **#2609** (atomic_claim ফিক্স) — post-merge main-অক্ষত; **main @`7409ef81` 8ok/0fail** (5ok→8ok — ক্যাসকেড-শ্রেণি-উত্তরে প্রথম পূর্ণ-সবুজ main); 🆕 **#2617** (vault-doctor, P0-critical — Upstash Redis token invalid, manual-action) — ট্র্যাকড → 0 issue।
+- **#2598-মার্জ-ট্রেন**: ব্রাঞ্চ #2597→#2616-মোড় — `75116113` (pytest-asyncio 1.4.0 session loop-scope — missions-চির-হ্যাং-সমাধান) + `145ef490` (full-tier-৩-ব্লকার) + `6c38f89b` (ruff UP035); **T133-এর 145ef490 3/6-লাল → চূড়ান্ত-হেড 10/10-সবুজ — coder-ধারাবাহিক-সবুজায়ন, red-at-merge-প্যাটার্ন ভাঙল**; #2616 [closed/completed] — মার্জে-স্বয়ংক্রিয়-ক্লোজ।
+- **কিউ-বিবর্তন**: 5→3 — #2614 @`2b8ba288`, #2607 @`ca173836`, #2605 @`434beedb` — **ইঞ্জিন-ভারডিক্ট PASS×3** (pytest-asyncio-ফিক্স পূর্ণ-T&B-আনলক); check-সংখ্যা 32/38→6-সংকোচন = ঐতিহাসিক-রান-জমা-পরিষ্কার (shrunk-suite-নয়)।
+- **TRACKERS**: #2606 open (hitl — owner-রিদম); #2615 open (StaticPool-অংশ বাকি); #2616 ক্লোজ; #2617 নতুন-P0।
+- **ENGINE (04:34Z GET refresh)**: open 3 PASS×3, bypass 3, mainHealth ok; baseline re-anchor 04:35Z @`7409ef81` (8ok/0fail, open 3)।
+- **এই চক্রে: 0 merge-আমার-পক্ষে/0 force-push/0 main-push/0 issue/0 কমেন্ট; ledger M28→5+রেজিস্টার; playbook T133+T134 addenda; worklog T132-পুনঃস্থাপন+T133+T134; watch: #2614/#2607/#2605-মার্জ-স্রোত (সব-সবুজ — দ্রুত-মার্জ-সম্ভাবনা), #2615-StaticPool-অবশিষ্ট, #2617-P0-upstash-token, #2606-ক্লোজ, bypass-৪, AGENTS-৩য়-সংশোধন, tower-স্বাস্থ্য।**
