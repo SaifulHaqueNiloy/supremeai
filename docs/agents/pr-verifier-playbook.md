@@ -708,3 +708,13 @@ fix নয়, reproducibility issue।
 - **ENGINE (05:01Z GET refresh)**: কিউ 3×PASS অটুট (#2614 @`2b8ba288` + #2607 @`ca173836` + #2605 @`434beedb`), mainHealth ok; baseline re-anchor 05:02:38Z @`7409ef81` (open 3)।
 - **DEDUPE-স্ন্যাপশট**: 39 open-issue — **#2616-তালিকা-নেই = ক্লোজড-নিশ্চিত**; #2615/#2617/#2606/#2601/#2602/#2603/#2612/#2613 সব-ট্র্যাকড; নতুন-সনাক্ত-কিছু-নেই → 0 issue/0 কমেন্ট।
 - **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T135 addendum; worklog T135; watch: কিউ-৩-এর মার্জ-স্রোত (post-merge main-অডিট), #2615-StaticPool-ভ্যালিডেশন (pytest-asyncio-ফিক্স-পর), #2617-P0-manual-action, #2606-ক্লোজ, bypass-৪, AGENTS-৩য়-সংশোধন।**
+
+### Addendum — Task 136 (2026-09-30 ~05:30Z, 13:30+08 cron): দেরিতে-আসা-সবুজ + স্থিরতা-চক্র
+
+- **HANDSHAKE**: worklog last=135; :3000/:3779/:3771 **সব-UP** — T135-এর tower-বুন-install-রেসিপি প্রথম-পুনঃপ্রমাণ (tower ক্রস-চক্র-জীবিত); clone @`bc5bc019`।
+- **POLICY SYNC**: main @`7409ef81`-অপরিবর্তিত; অ্যাঙ্কর-টানা-৬ষ্ঠ-চক্র-অটুট (AGENTS `3db1a7cd`, rules.yml `e62d5f03`)।
+- **SWEEP (05:02→05:30Z)**: 0 ইভেন্ট; open-স্টেট-অপরিবর্তিত; **MAIN SAME-SHA health 8ok→10ok/0fail** — একই HEAD-এ দেরিতে-আসা-২-চেক-সবুজ (late-arriving checks); M8-বিপরীত-দিক (green-প্রবাহ); ইঞ্জিন-রিফ্রেশে নিশ্চিত (10 succ/0 fail/5 skip/0 pend)।
+- **কিউ**: PASS×3-অটুট (#2614 @`2b8ba288`, #2607 @`ca173836`, #2605 @`434beedb`) — মার্জ-স্রোত-অনিশ্চিত-বিলম্ব (owner-রান-অপেক্ষা); baseline re-anchor 05:31:57Z (open 3)।
+- **DEDUPE**: 39 open — T135-স্ন্যাপশটের-সাথে-অভিন্ন; #2616-ক্লোজড-অটুট; নতুন-কিছু-নেই → 0 issue/0 কমেন্ট।
+- **যাচাই-নোট**: T135-এর push-script-দ্বি-ফরম্যাট-label-regex এই-চক্রে প্রথম-প্রয়োগ — commit-লেবেল "Task 136 addendum" প্রত্যাশিত (cosmetic-বাগ-নির্মূল-পুনঃপ্রমাণ)।
+- **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T136 addendum; worklog T136; watch: কিউ-৩-মার্জ-স্রোত (post-merge main-অডিট প্রস্তুত), #2615-StaticPool-ভ্যালিডেশন, #2617-P0-manual, #2606-ক্লোজ, bypass-৪, AGENTS-৩য়-সংশোধন।**
