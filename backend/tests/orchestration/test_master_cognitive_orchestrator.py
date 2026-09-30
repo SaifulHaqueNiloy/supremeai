@@ -80,3 +80,101 @@ async def test_governed_evolution_pipeline_success_and_rejection():
     )
     assert blocked_res.status == "REJECTED"
     assert "blocked by governance policy" in blocked_res.summary
+
+
+# ═══════════════════════════════════════════════════════════════════════
+# #2705 — no-stub assertions: প্রতিটি artifact এখন সত্যিকারের উৎস থেকে।
+# ═══════════════════════════════════════════════════════════════════════
+
+
+@pytest.mark.asyncio
+async def test_self_healing_wires_real_decide_and_execute():
+    """Discovery stage এখন আসল governed ReAct (decide_and_execute) ফল বহন করে।"""
+    orchestrator = get_master_orchestrator()
+    payload = {
+        "error": "TimeoutError in step execution",
+        "target_file": "adapters/task_executor.py",
+    }
+    result = await orchestrator.dispatch(CognitiveIntent.REPAIR, payload)
+
+    assert result.status == "SUCCESS"
+    # আসল decide_and_execute wire-এর প্রমাণ: decision + outcome artifact উভয়ই আছে
+    assert "discovery_decision" in result.artifacts
+    assert "discovery_outcome" in result.artifacts
+    assert "source" in result.artifacts["discovery_decision"]
+    assert "executed" in result.artifacts["discovery_outcome"]
+    # পুরনো স্টাব ফিরে আসা নিষিদ্ধ
+    assert "candidate_solutions" not in result.artifacts
+    patch = result.artifacts["patch_candidate"]
+    # sandbox-verified দাবি এখন কেবল টুল সত্যিই চললেই True
+    assert patch["verified_in_sandbox"] == result.artifacts["discovery_outcome"]["executed"]
+    assert "diff" not in patch  # fake diff আর নেই
+
+
+@pytest.mark.asyncio
+async def test_deep_synthesis_no_stub_memory_or_dna():
+    """memory_id এখন আসল EpisodicMemory episode-id; project_dna আসল স্ক্যান-ফল।"""
+    orchestrator = get_master_orchestrator()
+    result = await orchestrator.dispatch(
+        CognitiveIntent.FEATURE_SYNTHESIS,
+        {"demand": "Design a token bucket rate limiter"},
+    )
+
+    assert result.status == "SUCCESS"
+    assert result.confidence >= 0.90
+
+    memory_id = result.artifacts["memory_id"]
+    assert memory_id != "mem_vector_9f83a"  # পুরনো hardcoded স্টাব
+    assert memory_id.startswith("ep_")  # আসল episode id চুক্তি
+
+    dna = result.artifacts["project_dna"]
+    assert "scan_status" in dna  # আসল স্ক্যান ক্ষেত্র, hardcoded 48 নয়
+    assert "services_count" not in dna
+
+    consensus = result.artifacts["multi_model_consensus"]
+    assert consensus["source"] in ("llm_consensus", "deterministic_summary")
+    assert "distilled_principles" not in consensus  # fake principles সরানো
+
+    truth = result.artifacts["truth_validation"]
+    assert "basis" in truth  # সত্যতার ভিত্তি লিপিবদ্ধ
+    skill = result.artifacts["generated_skill"]
+    assert skill["name"].startswith("capability_")
+    assert skill["derived_from_demand"] is True
+
+
+@pytest.mark.asyncio
+async def test_autonomous_audit_real_bus_and_drift_metrics():
+    """gap_metrics এখন error_event_bus.stats() থেকে; drift-এ আসল গণনা।"""
+    orchestrator = get_master_orchestrator()
+    result = await orchestrator.dispatch(CognitiveIntent.AUDIT_RADAR, {})
+
+    assert result.status == "SUCCESS"
+    metrics = result.artifacts["gap_metrics"]
+    assert metrics["source"] == "error_event_bus.stats()"
+    assert set(metrics.keys()) >= {"critical", "total_emitted", "registered_listeners", "status"}
+    assert metrics["status"] in ("HEALTHY", "DEGRADED")
+    # ডামি হার্ডকোডেড ১২-এর বদলে আসল episode-গণনা
+    assert isinstance(result.artifacts["memory_revalued_count"], int)
+    drift = result.artifacts["documentation_drift"]
+    assert drift["sync_status"] in ("ALIGNED", "DRIFTED", "UNAVAILABLE")
+    if drift["sync_status"] != "UNAVAILABLE":
+        assert "listed_scripts" in drift and "actual_scripts" in drift
+
+
+@pytest.mark.asyncio
+async def test_governed_evolution_honest_stage_names():
+    """প্রতারণামূলক stage-নাম নয় — টুল-গেট বন্ধ থাকলে pending-অবস্থা সৎভাবে লেখা।"""
+    orchestrator = get_master_orchestrator()
+    result = await orchestrator.dispatch(
+        CognitiveIntent.EVOLUTION,
+        {"target_module": "skills/custom_math.py"},
+    )
+    assert result.status == "SUCCESS"
+    bench = result.artifacts["sandbox_benchmark"]
+    assert bench in ("executed", "pending_tool_gate")
+    # stage-নাম artifact-অবস্থার সাথে সংগতিপূর্ণ
+    if bench == "pending_tool_gate":
+        assert "03_sandbox_benchmark_pending" in result.stages_completed
+        assert "04_canary_promotion_pending" in result.stages_completed
+    else:
+        assert "03_sandbox_benchmarked" in result.stages_completed
