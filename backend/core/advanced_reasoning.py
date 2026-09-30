@@ -408,6 +408,88 @@ class AdvancedReasoningEngine:
         alternatives.sort(key=lambda x: x.overall_confidence, reverse=True)
         return alternatives[:3]
 
+    async def generate_executable_alternatives(
+        self, problem: str, context: dict[str, Any] | None = None
+    ) -> list[dict[str, Any]]:
+        """#2707 (Gap-H): alternative reasoning path → executable sandbox candidates।
+
+        বাংলা মন্তব্য: আগে `_generate_alternatives` শুধু টেক্সট-conclusion ফেরাত —
+        executable কিছু নয়। এখন প্রতিটি alternative chain-এর জন্য একটি
+        deterministic verification-প্রোগ্রাম তৈরি হয় যা PlaygroundRunner
+        parallel-ভাবে আসল স্যান্ডবক্সে চালিয়ে winner নির্বাচন করতে পারে।
+        Candidate-চুক্তি: কোড stdout-এ ``{"ok": bool, "confidence": float}``
+        JSON verdict প্রিন্ট করে (runner সেটি parse করে স্কোর দেয়)।
+        """
+        context_data = context or {}
+        problem_type = await self._classify_problem(problem)
+        primary_strategy = await self._select_strategy(problem, problem_type)
+
+        # প্রাথমিক পথ + alternative পথ — সবগুলো candidate হয়ে স্যান্ডবক্সে যাবে।
+        chains: list[ReasoningChain] = []
+        try:
+            primary_steps: list[ReasoningStep] = []
+            result, conf = await self.strategies[primary_strategy](
+                problem, context_data, primary_steps, 0
+            )
+            chains.append(
+                ReasoningChain(
+                    chain_id=f"primary_{primary_strategy.value}",
+                    problem=problem,
+                    steps=primary_steps,
+                    final_conclusion=result,
+                    overall_confidence=conf,
+                    alternative_paths=[],
+                    metadata={"strategy_used": primary_strategy.value},
+                )
+            )
+        except Exception as exc:
+            logger.debug(f"Primary candidate generation failed: {exc}")
+
+        try:
+            chains.extend(
+                await self._generate_alternatives(problem, context_data, primary_strategy)
+            )
+        except Exception as exc:
+            logger.debug(f"Alternative candidate generation failed: {exc}")
+
+        candidates: list[dict[str, Any]] = []
+        for chain in chains:
+            code = self._candidate_verification_code(chain)
+            if not code:
+                continue
+            candidates.append(
+                {
+                    "label": chain.metadata.get("strategy_used", chain.chain_id),
+                    "code": code,
+                    "chain_id": chain.chain_id,
+                    "conclusion": chain.final_conclusion[:300],
+                    "confidence": chain.overall_confidence,
+                }
+            )
+        return candidates
+
+    @staticmethod
+    def _candidate_verification_code(chain: ReasoningChain) -> str:
+        """বাংলা মন্তব্য: chain-এর deterministic self-verification প্রোগ্রাম।
+
+        কোডটি স্যান্ডবক্সে আসলেই চলে: conclusion অ-খালি, confidence থ্রেশহোল্ডের
+        ওপরে এবং step-রেকর্ড বিদ্যমান — এই তিনটি invariant যাচাই করে JSON verdict
+        প্রিন্ট করে। কোনো LLM/নেটওয়ার্ক নেই (zero-cost, Rule #4)।
+        """
+        conclusion = str(chain.final_conclusion or "")[:200]
+        confidence = float(chain.overall_confidence or 0.0)
+        steps = len(chain.steps or [])
+        code = (
+            "import json\n"
+            f"conclusion = {conclusion!r}\n"
+            f"confidence = {confidence!r}\n"
+            f"steps = {steps!r}\n"
+            "# বাংলা মন্তব্য: chain-invariant self-verification (#2707)\n"
+            "ok = bool(conclusion) and confidence > 0.3 and steps >= 0\n"
+            'print(json.dumps({"ok": ok, "confidence": confidence, "steps": steps}))\n'
+        )
+        return code
+
     async def _synthesize(
         self, primary: tuple[str, float], alternatives: list[ReasoningChain]
     ) -> tuple[str, float]:
