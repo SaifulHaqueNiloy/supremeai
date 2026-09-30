@@ -703,8 +703,33 @@ async function startHttpServer(serverFactory: () => Promise<McpServer>): Promise
 
 
     if (url === "/health" || url === "/") {
-      res.writeHead(200, { "Content-Type": "application/json" });
-      res.end(JSON.stringify(withTimestamp({ status: "ok", server: SERVER_NAME, version: SERVER_VERSION })));
+      // ROOT-CAUSE FIX (#2724): /health was hardcoded `status: "ok"` regardless
+      // of actual service health. This violated AGENTS.md Rule #3 (Graceful
+      // Degradation: "Honesty over polish"). Now: /health queries the same
+      // globalHealthCache that /health/summary uses, and returns an honest
+      // aggregate status. Uptime monitors probing /health will now correctly
+      // alert when services are degraded.
+      try {
+        const { globalHealthCache } = await import("./health/snapshot.js");
+        const snapshots = globalHealthCache.getAllSnapshots();
+        const services = Object.entries(snapshots).map(([provider, snapshot]) => ({
+          provider,
+          status: snapshot.status,
+        }));
+        const unhealthy = services.filter((s) => s.status !== "healthy").length;
+        const status: string = unhealthy === 0 ? "ok" : unhealthy < services.length ? "degraded" : "outage";
+        const httpStatus = status === "outage" ? 503 : 200;
+        res.writeHead(httpStatus, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+        res.end(JSON.stringify(withTimestamp({
+          status,
+          server: SERVER_NAME,
+          version: SERVER_VERSION,
+          services: { healthy: services.length - unhealthy, degraded: unhealthy, total: services.length },
+        })));
+      } catch {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify(withTimestamp({ status: "ok", server: SERVER_NAME, version: SERVER_VERSION, note: "health cache not yet loaded" })));
+      }
       return;
     }
 
