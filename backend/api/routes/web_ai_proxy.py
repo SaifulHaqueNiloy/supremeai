@@ -263,4 +263,53 @@ async def enhance_prompt_endpoint(payload: PromptEnhanceRequest):
     }
 
 
+class OrchestratePlanRequest(BaseModel):
+    raw_ai_output: str
+    repo_name: str = "SaifulHaqueNiloy/supremeai"
+    branch: str = "main"
+    source_platform: str = "generic_ai"
+
+
+class OrchestrateApplyRequest(BaseModel):
+    file_actions: list[dict[str, Any]]
+    verification_commands: list[str] = Field(default_factory=list)
+    workspace_root: str | None = None
+
+
+@router.post("/orchestrator/parse-and-plan")
+async def parse_orchestration_plan(payload: OrchestratePlanRequest):
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    Genkit, ChatGPT, Claude বা Gemini-এর কাঁচা টেক্সট আউটপুট থেকে
+    স্বয়ংক্রিয়ভাবে ফাইল এডিট এবং ১-ক্লিক Codespaces/Gitpod ডিপ-লিঙ্ক তৈরি করে।
+    """
+    from core.multi_platform_orchestrator import default_orchestrator
+
+    plan = default_orchestrator.parse_ai_output(
+        raw_output=payload.raw_ai_output,
+        repo_name=payload.repo_name,
+        branch=payload.branch,
+        source_platform=payload.source_platform,
+    )
+
+    return {
+        "source_platform": plan.source_platform,
+        "file_actions": [
+            {
+                "file_path": a.file_path,
+                "action_type": a.action_type.value,
+                "content_preview": a.content[:200] + "..." if len(a.content) > 200 else a.content,
+                "language": a.language,
+            }
+            for a in plan.file_actions
+        ],
+        "verification_commands": plan.verification_commands,
+        "codespaces_url": plan.codespaces_url,
+        "gitpod_url": plan.gitpod_url,
+        "jules_url": plan.jules_url,
+        "explanation": plan.explanation,
+    }
+
+
 __all__ = ["router"]
