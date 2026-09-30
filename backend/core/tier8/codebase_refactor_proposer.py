@@ -12,6 +12,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import logging
 import os
 import time
 from dataclasses import dataclass, field
@@ -19,6 +20,8 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 # বাংলা মন্তব্য: `backend.core.*` → `core.*` fix — Docker WORKDIR=/app/backend
+logger = logging.getLogger(__name__)
+
 from core.base import BaseSkill
 from core.config import settings
 from core.errors.error_pattern_db import ErrorPatternDB
@@ -344,17 +347,77 @@ class CodebaseRefactorProposer(BaseSkill):
                     logging.getLogger(__name__).debug(f"Failed to unlink temp artifact: {e}")
 
     async def _apply_approved(self) -> None:
-        """Apply proposals that passed dry-run and have high confidence."""
+        """Route dry-run-passed, high-confidence proposals into the human approval queue (#2529).
+
+        বাংলা মন্তব্য (#2529): আগে প্রস্তাবগুলো শুধু feedback-log-এ গিয়ে মুছে যেত —
+        কোনো মানুষের সামনে আসতো না। এখন প্রতিটি প্রস্তাব `ApprovalWorkflow.propose()`
+        (ROADMAP §26 human-gate) দিয়ে যায় — admin approve করলেই `EXECUTED` mark হয়;
+        cooldown/dedup workflow-নিজেই সামলায় (ProposalCooldownError নীরবে উপেক্ষা —
+        একই প্রস্তাব বারবার queue-তে জমবে না)।
+        """
         approved = [
             p for p in self._proposals if p.dry_run_passed and p.confidence >= self._min_confidence
         ]
         for proposal in approved:
-            # Log only — never auto-apply without human review
-            await self._feedback.record_suggestion_feedback(  # type: ignore
-                agent="self_improvement",
-                suggestion=proposal.suggested_patch,
-                accepted=False,  # pending human approval
-            )
+            routed = False
+            try:
+                from adaptive_engine.approval_workflow import (
+                    ApprovalProposal,
+                    ProposalCooldownError,
+                    ProposalKind,
+                    ProposalPriority,
+                    get_approval_workflow,
+                )
+
+                await get_approval_workflow().propose(
+                    ApprovalProposal(
+                        kind=ProposalKind.LEARNING_PROPOSAL,
+                        title=(
+                            f"tier8 refactor: {proposal.weakness_type} in {proposal.target_file}"[:200]
+                        ),
+                        description=(
+                            f"Self-improvement refactor proposal (dry-run passed, confidence "
+                            f"{proposal.confidence:.2f}). #2529 staged rollout — human gate required. "
+                            f"Rationale: {proposal.rationale[:400]}"
+                        ),
+                        priority=(
+                            ProposalPriority.HIGH
+                            if proposal.confidence >= 0.95
+                            else ProposalPriority.MEDIUM
+                        ),
+                        risk_level="medium",
+                        dedup_key=f"tier8-refactor:{proposal.weakness_type}:{proposal.target_file}",
+                        payload={
+                            "suggested_patch": proposal.suggested_patch,
+                            "target_file": proposal.target_file,
+                            "confidence": proposal.confidence,
+                            "source": "tier8.codebase_refactor_proposer",
+                        },
+                        proposed_by="tier8-self-improvement",
+                    )
+                )
+                routed = True
+                logger.info(
+                    f"[tier8] refactor proposal routed to approval queue: "
+                    f"{proposal.weakness_type} in {proposal.target_file} "
+                    f"(confidence {proposal.confidence:.2f})"
+                )
+            except ImportError:
+                # বাংলা: approval module না থাকলে (ন্যূনতম ডিপ্লয়মেন্ট) আগের log-only আচরণ।
+                logger.debug("[tier8] approval_workflow unavailable — falling back to feedback log")
+            except ProposalCooldownError:
+                # একই প্রস্তাব cooldown-এ — নতুন queue-entry নয়, এটাই প্রত্যাশিত।
+                routed = True
+                logger.debug(f"[tier8] proposal in cooldown (already pending): {proposal.weakness_type} in {proposal.target_file}")
+            except Exception as exc:  # noqa: BLE001 — routing ব্যর্থ হলে feedback-পাথ থাকবেই
+                logger.warning(f"[tier8] approval routing failed ({exc}) — feedback log fallback")
+            if not routed:
+                # Log fallback — never auto-apply without human review
+                await self._feedback.record_suggestion_feedback(  # type: ignore
+                    agent="self_improvement",
+                    suggestion=proposal.suggested_patch,
+                    accepted=False,  # pending human approval
+                )
         # Clear processed proposals
         self._proposals = [
             p
