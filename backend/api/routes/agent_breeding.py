@@ -17,7 +17,6 @@ Endpoints:
 
 from __future__ import annotations
 
-import secrets
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -58,10 +57,10 @@ def _require_admin(credentials: HTTPAuthorizationCredentials) -> dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        # Fallback: check supremeai token
-        expected = getattr(settings, "supremeai_api_token", None) or ""
-        if expected and secrets.compare_digest(token.encode(), expected.encode()):
-            return {"uid": "admin", "role": "admin"}
+        # বাংলা মন্তব্য: #2514 ফিক্স (DEEP-007-এর সমতুল্য) — API-key→admin fallback সরানো
+        # হলো। আগে JWT ভেঙে গেলে SUPREMEAI_API_KEY মিললেই পূর্ণ admin মিলত — একটি লিক
+        # হওয়া key-ই সমস্ত breeding endpoint দখলের যথেষ্ট ছিল। এখন fail-closed: সবসময় 401।
+        logger.warning("Agent breeding admin token validation failed", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=f"Invalid admin auth: {e}",

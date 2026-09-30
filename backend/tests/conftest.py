@@ -299,10 +299,29 @@ def _resolve_test_database_url() -> str:
         "DATABASE_URL",
         "postgresql+asyncpg://postgres:postgres@localhost:5432/supremeai_test",
     )
-    if url.startswith("postgresql://"):
-        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    elif url.startswith("postgres://"):
-        url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+    # বাংলা মন্তব্য: #2585 — হোস্ট-নির্দিষ্ট ambient env (যেমন `DATABASE_URL=file:/...`)
+    # SQLAlchemy পার্সই করতে পারে না ফলে mission suite-এ ৮১টি ERROR হতো। নীতি:
+    # টেস্ট কখনো ambient অজানা/বিদেশি store-এ লিখবে না — পরিষ্কার sqlite fallback +
+    # দৃশ্যমান warning (নীরব mask নয়)। পরিচিত scheme (postgres/sqlite) আগের মতোই
+    # সম্মানিত; TEST_DATABASE_URL সবসময় সর্বোচ্চ অগ্রাধিকার (explicit override)।
+    if url.startswith(("sqlite://", "sqlite+aiosqlite://", "sqlite+aiosqlite:////")):
+        pass  # sqlite পরিবার — টেস্টে নিরাপদ, যেমন আছে তেমন ব্যবহারযোগ্য
+    elif url.startswith(("postgresql://", "postgres://", "postgresql+asyncpg://")):
+        if url.startswith("postgresql://"):
+            url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+        elif url.startswith("postgres://"):
+            url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+    else:
+        # বাংলা মন্তব্য: file:/অজানা scheme — অন্য কোনো সিস্টেমের লাইভ ডেটাবেস হতে
+        # পারে; টেস্ট-নিরোধক (test isolation) নীতিতে সেখানে স্পর্শ নিষিদ্ধ।
+        fallback = "sqlite+aiosqlite:///./supremeai_test.db"
+        logger.warning(
+            "TEST DB: DATABASE_URL %r is not a recognizable test target "
+            "(file:/unknown scheme?) — using isolated %s instead (#2585)",
+            url,
+            fallback,
+        )
+        url = fallback
     return url
 
 

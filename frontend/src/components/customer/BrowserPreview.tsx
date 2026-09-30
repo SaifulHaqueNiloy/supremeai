@@ -14,6 +14,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Monitor, Tablet, Smartphone, RotateCcw, ExternalLink, RefreshCw, Pause, Play, ImageOff } from 'lucide-react';
 import { browserService } from '../../services/browserService';
+import { safeUrl } from '../../lib/safeUrl';
 
 type DevicePreset = 'desktop' | 'tablet' | 'mobile';
 
@@ -267,7 +268,8 @@ export function BrowserPreview({
         </p>
         <div className="flex items-center gap-2">
           <a
-            href={currentUrl || undefined}
+            // বাংলা মন্তব্য: safeUrl allowlist (#2520) — ব্লকড প্রোটোকলে href বাদ; বৈধ হলে আসল URL অক্ষত (existing test contract)
+            href={currentUrl && safeUrl(currentUrl) !== '#' ? currentUrl : undefined}
             target="_blank"
             rel="noreferrer noopener"
             className="rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 transition-colors hover:border-cyan-500/60 hover:text-cyan-300"

@@ -57,10 +57,14 @@ def require_admin_token(credentials: HTTPAuthorizationCredentials = Depends(secu
         if decoded.get("role") != "admin":
             raise HTTPException(status_code=403, detail="Forbidden: User does not have admin role.")
         return decoded
+    except HTTPException:
+        # বাংলা মন্তব্য: #2514 — 403 (role নেই) কে generic except-এ গিলে fallback দেওয়া
+        # ছিল আরও বিপজ্জনক: non-admin JWT + লিক হওয়া API key = admin। তাই আগে re-raise।
+        raise
     except Exception as e:
-        expected = getattr(settings, "supremeai_api_token", None) or ""
-        if expected and secrets.compare_digest(token, expected):
-            return {"uid": "admin", "role": "admin"}
+        # বাংলা মন্তব্য: #2514 ফিক্স (DEEP-007-এর সমতুল্য) — API-key→admin fallback সরানো
+        # হলো; admin_auth.py-এর মতোই fail-closed: সবসময় 401, কোনো key-based bypass নেই।
+        logger.warning("Evolution admin token validation failed", exc_info=True)
         raise HTTPException(
             status_code=401, detail=f"Invalid Admin Authorization Token: {e!s}"
         ) from e
