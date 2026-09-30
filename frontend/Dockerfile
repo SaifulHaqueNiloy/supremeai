@@ -47,7 +47,7 @@ ENV VITE_API_URL=$VITE_API_URL \
 RUN pnpm run build
 
 # Stage 2: Serve with lightweight Nginx
-FROM nginx:alpine AS runtime
+FROM nginx:1.27-alpine AS runtime
 COPY --from=builder /app/frontend/dist /usr/share/nginx/html
 COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
 
