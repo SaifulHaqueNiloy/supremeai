@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "last_updated": "2026-09-30T23:09:00+06:00",
+  "title": "SupremeAI Root-Cause Architecture & Learning Invariants",
+  "core_philosophy": {
+    "bangla": "সমস্যার সমাধান শুরু থেকে রুট (Root) থেকে করতে পারলেই কেবল তা স্থায়ী, নিরাপদ ও কার্যকর হয়। ৯৯.৯৯% অটোনমির জন্য ইস্যু থেকেই সর্বোচ্চ বুদ্ধিমত্তা নিশ্চিত করা বাধ্যতামূলক।",
+    "english": "Solving problems from the root cause at the architectural foundation is the only truly effective path. 99.99% autonomy requires maximum intelligence from the issue inception itself."
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "name": "Root-Cause First (সমস্যার মূলে আঘাত)",
+      "axiom": "Never treat symptoms with superficial band-aids; trace to the underlying schema, contract, or worker first.",
+      "why": "ব্যান্ড-এইড বা জোড়াতালি দেওয়া ফিক্স সাময়িকভাবে পাস করলেও পরবর্তীতে বড় রিগ্রেশন ও টেকনিক্যাল ডেট তৈরি করে। রুটে ফিক্স করলে ভবিষ্যৎ বাগ নির্মূল হয়।",
+      "alternatives_rejected": [
+        "সিম্পটমে ট্রাই-ক্যাচ বা ডামি ফলব্যাক বসানো (রিজেক্টেড: রুট কজ গোপন রাখে)",
+        "এজেন্ট লেভেলে অন্ধ প্রম্পট টিউনিং (রিজেক্টেড: সিস্টেম আর্কিটেকচার ঠিক করে না)"
+      ]
+    },
+    {
+      "id": "INV-002",
+      "name": "Intelligence-In, Intelligence-Out (ইস্যু গঠনের সর্বোচ্চ বুদ্ধিমত্তা)",
+      "axiom": "A PR cannot be genuinely intelligent if the seed issue lacks architectural depth and multiple perspectives.",
+      "why": "অ্যাডমিনের ৯৯.৯৯% অটোনমির আসল তৃপ্তি ও প্রশান্তি তখনই আসে যখন ইস্যুতেই সব ট্রেড-অফ স্পষ্ট থাকে এবং কোডার চিন্তিতভাবে কাজ করে।",
+      "enforcement": "১ম এজেন্টকে বাধ্যতামূলকভাবে কমপক্ষে ২টি বাস্তব বিকল্প সমাধান (Option A বনাম Option B) এবং তাদের সুবিধা-অসুবিধা সাজিয়ে দিতে হবে।"
+    },
+    {
+      "id": "INV-003",
+      "name": "Tools & Worker First (টপোলজিক্যাল স্তরবিন্যাস)",
+      "axiom": "Layer 1 (Contracts) -> Layer 2 (Tools/Workers/Sidecars) must exist and be verified before Layer 4/5 (API/UI) can be built.",
+      "hierarchy": [
+        "Layer 1: Schemas & Type Contracts",
+        "Layer 2: Tools, Workers, Sidecars, and Adapters (MANDATORY FIRST)",
+        "Layer 3: Core Task State Machine & Execution Engine",
+        "Layer 4: API Endpoints & Gateway Routes",
+        "Layer 5: Frontend UI & Client Cockpit"
+      ],
+      "why": "টুল বা ওয়ার্কার না থাকলে আগে বানানো UI বা API সবসময় ডামি বা মক কোড তৈরি করে, যা প্রোডাকশনে অকার্যকর।"
+    },
+    {
+      "id": "INV-004",
+      "name": "Dynamic Queue Re-ordering (ডায়নামিক কিউ পুনর্বিন্যাস)",
+      "axiom": "New issues must never blindly append to queue tail; if an issue is a prerequisite, it must dynamically preempt and reorder the flow.",
+      "flow_format": "[This Root Fix] -> [Unblocks Issue #XYZ] -> [Next Planned Task]",
+      "why": "SQL ছাড়া গিটহাব ডিপেন্ডেন্সি গ্রাফের মাধ্যমেই ১ না গিয়ে ২ যাবে না নীতি নিশ্চিত করা।"
+    },
+    {
+      "id": "INV-005",
+      "name": "Pre-Coding Deliberation & Memory Harvest (কোডিং-পূর্ব গভীর প্রতিফলন)",
+      "axiom": "Coder agent must evaluate proposed options, choose the optimal path, and push 'why' and 'alternatives_rejected' to Tower Memory.",
+      "required_memory_payload": {
+        "task_id": "string",
+        "agent": "string",
+        "why": "chosen option rationale with architectural justification",
+        "alternatives_rejected": [
+          "rejected option with specific technical reason"
+        ]
+      }
+    }
+  ],
+  "agent_execution_rules": {
+    "on_issue_creation": "Check if this issue solves a root cause or symptom. Present Option A and Option B with trade-offs. Declare queue placement.",
+    "on_task_claim": "Verify Layer 2 Tools/Workers exist before accepting Layer 4/5 API/UI tasks.",
+    "before_first_commit": "Perform 10-times mental dry-run: check capability reuse, free-tier RAM limits, and document why this solution is chosen.",
+    "on_task_completion": "Push why and alternatives_rejected directly to MCP Control Tower memory via memory_record_task or POST /knowledge."
+  }
+}
