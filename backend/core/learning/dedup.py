@@ -41,7 +41,7 @@ DEFAULT_MAX_INFLIGHT = 100
 
 
 def request_dedup_enabled() -> bool:
-    return (os.getenv("ENABLE_REQUEST_DEDUP", "") or "").strip().lower() == "true"
+    return (os.getenv("ENABLE_REQUEST_DEDUP", "true") or "").strip().lower() == "true"
 
 
 def dedup_key(model: str, task_type: str, messages_payload: Any) -> str:

@@ -165,7 +165,7 @@ class CompletionMixin:
         prompt_text = normalize_prompt(prompt)
 
         # বাংলা মন্তব্ব: Semantic cache check — API call আগে cost-zero response
-        if prompt_text and not stream:
+        if prompt_text:  # ROOT-CAUSE FIX (#2729): cache check for BOTH stream + non-stream
             cached = await self.cache.query_similar(prompt_text, task_type=task_type)
             if cached:
                 # Sprint 3 (learning loop): durable cache-hit observation — evidence
@@ -536,6 +536,23 @@ class CompletionMixin:
                     if _is_leader and _coalescer is not None and _dedup_k:
                         with contextlib.suppress(Exception):
                             _coalescer.publish_success(_dedup_k, _result)
+
+                    # ROOT-CAUSE FIX (#2729): gateway-level cache write — previously
+                    # the gateway only READ from cache (query_similar) but never WROTE.
+                    # Only some callers (task.py, chat.py) manually called cache.set,
+                    # so cache-hit rate was low. Now: every successful non-stream
+                    # completion is cached centrally — all callers benefit.
+                    if prompt_text and not stream:
+                        try:
+                            await self.cache.set(
+                                prompt=prompt_text,
+                                response=_result.get("text", ""),
+                                task_type=task_type,
+                                user_id=tenant_id,
+                            )
+                        except Exception as cache_exc:
+                            logger.debug(f"[LLMGateway] cache.set failed (non-fatal): {cache_exc}")
+
                     return _result
             except asyncio.CancelledError:
                 # বাংলা মন্তব্ব: CancelledError re-raise — কখনো suppress করা যাবে না
