@@ -17,7 +17,7 @@ Features:
 
 import asyncio
 import time
-from collections import defaultdict
+from collections import defaultdict, deque  # ROOT-CAUSE FIX (#2718): deque for bounded histograms
 from enum import Enum
 from typing import Any
 
@@ -38,11 +38,18 @@ class MetricsCollector:
         self._start_times: dict[str, float] = {}
         self._request_counts = defaultdict(int)
         self._error_counts = defaultdict(int)
-        self._db_query_times = []
+        # ROOT-CAUSE FIX (#2718): _db_query_times was unbounded list — every
+        # DB query appended a float, ~10 obs/sec → ~864k floats/day per key.
+        # On 512MB Render free tier, this caused slow OOM + recycle. Now: bounded
+        # deque(maxlen=512) — keeps recent window, drops oldest automatically.
+        self._db_query_times: deque = deque(maxlen=512)
         self._cache_stats = {"hits": 0, "misses": 0}
         self._ai_costs = defaultdict(float)
         self._security_events = defaultdict(int)
         self._active_connections = 0
+        # ROOT-CAUSE FIX (#2718): per-key maxlen for histogram lists in _metrics.
+        # observe_histogram() now uses _hist_factory instead of raw list.
+        self._hist_maxlen = 512  # per-key observation window
 
     async def increment_counter(
         self, metric_name: str, value: int = 1, labels: dict[str, str] | None = None
@@ -67,13 +74,21 @@ class MetricsCollector:
     async def observe_histogram(
         self, metric_name: str, value: float, labels: dict[str, str] | None = None
     ):
-        """Record a histogram observation."""
+        """Record a histogram observation.
+
+        ROOT-CAUSE FIX (#2718): previously used unbounded `list.append()` —
+        every observation grew the list forever (~864k floats/day per key on
+        the chat hot path). Now: bounded `deque(maxlen=512)` per key — keeps
+        the recent observation window, drops oldest automatically. Prevents
+        slow OOM on 512MB Render free tier.
+        """
         labels = labels or {}
         key = f"{metric_name}:{sorted(labels.items())!s}"
 
         async with self._lock:
             if key not in self._metrics:
-                self._metrics[key] = []
+                # ROOT-CAUSE FIX (#2718): bounded deque, not unbounded list
+                self._metrics[key] = deque(maxlen=self._hist_maxlen)
             self._metrics[key].append(value)
 
     async def start_timer(self, timer_id: str):

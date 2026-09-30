@@ -21,8 +21,14 @@ from database.supabase_client import SupabaseDB
 
 router = APIRouter(prefix="/api/share", tags=["Sharing"])
 
-# In-memory cache with 30-minute TTL for public share lookups
-_share_cache: dict[str, dict[str, Any]] = {}
+# ROOT-CAUSE FIX (#2718): _share_cache was an unbounded dict — expired entries
+# only deleted when the share_id was visited again, and revoke didn't invalidate.
+# Now: OrderedDict LRU with maxsize=500 — evicts oldest when full, preventing
+# slow memory exhaustion on 512MB Render free tier.
+from collections import OrderedDict  # ROOT-CAUSE FIX (#2718)
+
+_SHARE_CACHE_MAXSIZE = 500  # ROOT-CAUSE FIX (#2718): LRU cap
+_share_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
 _CACHE_TTL_SECONDS = 30 * 60  # 30 minutes
 
 
@@ -32,15 +38,31 @@ def _cache_get(share_id: str) -> dict[str, Any] | None:
     if entry is None:
         return None
     if time.monotonic() - entry["_cached_at"] > _CACHE_TTL_SECONDS:
-        del _share_cache[share_id]
+        # ROOT-CAUSE FIX (#2718): expired entry — evict + return None
+        _share_cache.pop(share_id, None)
         return None
+    # ROOT-CAUSE FIX (#2718): move to end (most recently used) for LRU
+    _share_cache.move_to_end(share_id)
     return entry
 
 
 def _cache_set(share_id: str, data: dict[str, Any]) -> None:
-    """Store a share entry in the in-memory cache."""
+    """Store a share entry in the in-memory cache.
+
+    ROOT-CAUSE FIX (#2718): LRU eviction — if cache exceeds _SHARE_CACHE_MAXSIZE,
+    the oldest entry is evicted automatically. Prevents unbounded growth from
+    once-generated-but-never-revisited shares (each KB-100KB).
+    """
     data["_cached_at"] = time.monotonic()
-    _share_cache[share_id] = data
+    # If key already exists, update in place (move_to_end happens in _cache_get)
+    if share_id in _share_cache:
+        _share_cache[share_id] = data
+        _share_cache.move_to_end(share_id)
+    else:
+        _share_cache[share_id] = data
+        # ROOT-CAUSE FIX (#2718): evict oldest if over capacity
+        while len(_share_cache) > _SHARE_CACHE_MAXSIZE:
+            _share_cache.popitem(last=False)  # pop oldest (FIFO end)
 
 
 def _generate_share_id(length: int = 12) -> str:

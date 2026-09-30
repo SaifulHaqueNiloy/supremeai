@@ -148,9 +148,22 @@ def render_proxy(url: str, ticket: str = ""):
         req = urllib.request.Request(url, headers={"User-Agent": "SupremeAI-Browser/1.0"})
         with urllib.request.urlopen(req, timeout=20) as resp:
             ctype = resp.headers.get("Content-Type", "") or ""
-            data = resp.read()
-        if len(data) > 5 * 1024 * 1024:
-            raise HTTPException(status_code=502, detail="Response too large to proxy.")
+            # ROOT-CAUSE FIX (#2718): chunked read — previously `resp.read()` loaded
+            # the ENTIRE response body into RAM before checking `len(data) > 5MB`.
+            # A large/malicious upstream page would OOM the 512MB container before
+            # the size check could fire. Now: read in 64KB chunks, abort at 5MB+1.
+            max_bytes = 5 * 1024 * 1024  # 5MB cap
+            chunks: list[bytes] = []
+            total = 0
+            while True:
+                chunk = resp.read(64 * 1024)  # 64KB chunks
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > max_bytes:
+                    raise HTTPException(status_code=502, detail="Response too large to proxy.")
+                chunks.append(chunk)
+            data = b"".join(chunks)
         proxy_headers = {
             "Cache-Control": "no-store",
             # SEC-HARDEN P6: never ALLOWALL / frame-ancestors * — only the app's
