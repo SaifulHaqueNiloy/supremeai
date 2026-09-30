@@ -70,7 +70,7 @@ def _signature(event: ErrorEvent) -> str:
     বাংলা: একই ত্রুটির ভিন্ন বার্তা (যেমন ভিন্ন timeout মান) একই ইস্যুতে জমা
     হোক — signature শুধু ত্রুটির *শ্রেণি* ধরে, নির্দিষ্ট বার্তা নয়।
     """
-    raw = f"{event.module}:{event.error_type}".encode("utf-8")
+    raw = f"{event.module}:{event.error_type}".encode()
     return hashlib.sha256(raw).hexdigest()[:12]
 
 
