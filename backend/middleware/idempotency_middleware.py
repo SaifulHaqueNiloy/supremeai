@@ -76,6 +76,22 @@ class IdempotencyMiddleware:
 
         redis = await self._get_redis()
         if not redis:
+            # D-3 fix (#2733): ক্যাশ-সমালোচ্চ পথে Redis ডাউন = fail-closed 503 —
+            # ঠিক যেখানে retry সবচেয়ে সম্ভাব্য, সেখানেই ডুপ্লিকেট-সুরক্ষা না থাকা
+            # ছিল সবচেয়ে বিপজ্জনক। অন্য পথে availability বজায় (graceful)।
+            if any(p in path for p in settings.idempotency_critical_paths):
+                logger.error(
+                    f"Rejected request to '{path}': idempotency store unavailable "
+                    "for critical path (fail-closed 503)."
+                )
+                response = JSONResponse(
+                    status_code=503,
+                    content={
+                        "detail": "Idempotency store unavailable for critical path — retry shortly."
+                    },
+                )
+                await response(scope, receive, send)
+                return
             await self.app(scope, receive, send)
             return
 
