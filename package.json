@@ -35,13 +35,13 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@playwright/test": "^1.62.1",
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5",
+    "@playwright/test": "^1.63.0",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
     "eslint-visitor-keys": "^5.0.1",
     "miniflare": "^2.14.4",
-    "prettier": "^3.9.8",
-    "turbo": "^2.10.12",
+    "prettier": "^3.9.9",
+    "turbo": "^2.11.4",
     "typescript": "^5.9.3",
     "vitest": "^3.2.7",
     "wait-on": "^7.2.0",
@@ -70,6 +70,6 @@
     "@webcontainer/api": "^1.6.4",
     "dotenv": "^17.4.2",
     "ioredis": "^5.11.1",
-    "rollup": "^4.63.0"
+    "rollup": "^4.63.5"
   }
 }
