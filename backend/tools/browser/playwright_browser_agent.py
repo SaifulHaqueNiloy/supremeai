@@ -444,12 +444,28 @@ class PlaywrightBrowserAgent:
             if not file_input:
                 return {"success": False, "error": f"File input not found: {selector}"}
 
+            # বাংলা মন্তব্য: রোবোটিক বা টেম্প ফাইলনেম থাকলে তাকে অ্যান্টি-বট সেফ লিজিট ফাইলে রূপান্তর
+            import os
+            import shutil
+
+            from core.legit_file_presenter import LegitFilePresenter
+
+            target_path = file_path
+            filename = os.path.basename(file_path)
+            if LegitFilePresenter.is_bot_like_name(filename):
+                legit_name = LegitFilePresenter.legitimize_filename(filename)
+                staged_dir = Path(file_path).parent / ".legit_staged"
+                staged_dir.mkdir(parents=True, exist_ok=True)
+                staged_file = staged_dir / legit_name
+                shutil.copy2(file_path, staged_file)
+                target_path = str(staged_file)
+
             # Set files
-            file_input.set_input_files(file_path)
+            file_input.set_input_files(target_path)
 
             return {
                 "success": True,
-                "message": f"Uploaded: {file_path}",
+                "message": f"Uploaded: {target_path}",
                 "selector": selector,
             }
         except Exception as e:
