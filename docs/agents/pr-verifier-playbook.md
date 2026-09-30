@@ -698,3 +698,13 @@ fix নয়, reproducibility issue।
 - **TRACKERS**: #2606 open (hitl — owner-রিদম); #2615 open (StaticPool-অংশ বাকি); #2616 ক্লোজ; #2617 নতুন-P0।
 - **ENGINE (04:34Z GET refresh)**: open 3 PASS×3, bypass 3, mainHealth ok; baseline re-anchor 04:35Z @`7409ef81` (8ok/0fail, open 3)।
 - **এই চক্রে: 0 merge-আমার-পক্ষে/0 force-push/0 main-push/0 issue/0 কমেন্ট; ledger M28→5+রেজিস্টার; playbook T133+T134 addenda; worklog T132-পুনঃস্থাপন+T133+T134; watch: #2614/#2607/#2605-মার্জ-স্রোত (সব-সবুজ — দ্রুত-মার্জ-সম্ভাবনা), #2615-StaticPool-অবশিষ্ট, #2617-P0-upstash-token, #2606-ক্লোজ, bypass-৪, AGENTS-৩য়-সংশোধন, tower-স্বাস্থ্য।**
+
+### Addendum — Task 135 (2026-09-30 ~05:00Z, 13:00+08 cron): নীরব-জানালা + tower-পুনরুত্থান
+
+- **HANDSHAKE**: worklog last=134 (T134-সম্পন্ন — rollback-৬-পুনর্নির্মাণ + #2598 GREEN-AT-MERGE লিপিবদ্ধ); :3000/:3779 UP; clone agent-8-work @`4677993b` (T134-addendum)।
+- **TOWER :3771 প্রথমবার UP (রোলব্যাক-৬-পরবর্তী)**: root-কারণ = `Cannot find module 'dotenv/config'` — infrastructure/mcp-control-plane-এ `bun install` (261 pkgs) → Health 200; ভবিষ্যৎ-রেসিপি: **tower-স্টার্টের-আগে ওই-ডিরেক্টরিতে `bun install` অপরিহার্য** (node_modules-উপস্থিতি-অনুমান-নয়)।
+- **POLICY SYNC**: main @`7409ef81`-অপরিবর্তিত — অ্যাঙ্কর টানা-৫ম-চক্র-অটুট (AGENTS `3db1a7cd`, rules.yml `e62d5f03`, pinned-path)।
+- **SWEEP (04:35→05:01Z)**: **0 ইভেন্ট** — T134-এর দ্বি-মার্জের-পর পূর্ণ-নীরব-জানালা; main 8ok/0fail; #1565 CLOSED (not_planned, 09-28) — watch-তালিকা-থেকে-বাদ।
+- **ENGINE (05:01Z GET refresh)**: কিউ 3×PASS অটুট (#2614 @`2b8ba288` + #2607 @`ca173836` + #2605 @`434beedb`), mainHealth ok; baseline re-anchor 05:02:38Z @`7409ef81` (open 3)।
+- **DEDUPE-স্ন্যাপশট**: 39 open-issue — **#2616-তালিকা-নেই = ক্লোজড-নিশ্চিত**; #2615/#2617/#2606/#2601/#2602/#2603/#2612/#2613 সব-ট্র্যাকড; নতুন-সনাক্ত-কিছু-নেই → 0 issue/0 কমেন্ট।
+- **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T135 addendum; worklog T135; watch: কিউ-৩-এর মার্জ-স্রোত (post-merge main-অডিট), #2615-StaticPool-ভ্যালিডেশন (pytest-asyncio-ফিক্স-পর), #2617-P0-manual-action, #2606-ক্লোজ, bypass-৪, AGENTS-৩য়-সংশোধন।**
