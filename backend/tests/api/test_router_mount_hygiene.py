@@ -25,36 +25,49 @@ from collections import Counter
 
 from fastapi.routing import APIRoute
 
+from tests.api._route_introspection import (
+    app_effective_routes,
+    route_endpoint,
+    route_methods,
+    route_module_name,
+    route_path,
+)
 
-def _app_routes() -> list[APIRoute]:
+
+def _app_routes():
+    """Effective (mount-time) routes — FastAPI ≥0.141 lazy-include tolerant.
+
+    বাংলা মন্তব্য: fastapi 0.141+ এ include_router lazy (_IncludedRouter) —
+    app.routes-এ expanded APIRoute থাকে না; helper দুই আচরণকেই একরূপ করে
+    (CI triage #2597)।"""
     from core.app import app
 
-    return [r for r in app.routes if isinstance(r, APIRoute)]
+    return app_effective_routes(app)
 
 
 def test_missions_router_mounted_exactly_once() -> None:
     import api.routes.missions as missions_module
 
-    routes = [r for r in _app_routes() if r.endpoint.__module__ == missions_module.__name__]
+    routes = [r for r in _app_routes() if route_module_name(r) == missions_module.__name__]
     # 11 endpoint registrations in api/routes/missions.py (create, list, get,
     # approve, start, advance, fail, repair, cancel, trace, trace/stream).
     # Counting registrations (not unique paths): POST+GET share "" — a second
     # full mount would double this to 22.
     assert len(routes) == 11, (
         f"missions router should contribute 11 route registrations, got "
-        f"{len(routes)}: {sorted((r.path, tuple(r.methods or ())) for r in routes)}"
+        f"{len(routes)}: {sorted((route_path(r), tuple(route_methods(r))) for r in routes)}"
     )
 
 
 def test_mcp_hub_router_mounted_exactly_once() -> None:
     import api.routes.mcp_hub as hub_module
 
-    routes = [r for r in _app_routes() if r.endpoint.__module__ == hub_module.__name__]
+    routes = [r for r in _app_routes() if route_module_name(r) == hub_module.__name__]
     # 7 endpoint registrations: gateway, slug/claim, clients list+create (same
     # path, two methods), patch, rotate, delete. A second full mount → 14.
     assert len(routes) == 7, (
         f"mcp_hub router should contribute 7 route registrations, got "
-        f"{len(routes)}: {sorted((r.path, tuple(r.methods or ())) for r in routes)}"
+        f"{len(routes)}: {sorted((route_path(r), tuple(route_methods(r))) for r in routes)}"
     )
 
 
@@ -81,12 +94,17 @@ def test_no_route_registered_more_than_once() -> None:
     """
     seen = Counter()
     for r in _app_routes():
-        if r.endpoint.__module__.startswith("api.routes.browser"):
+        endpoint_module = getattr(route_endpoint(r), "__module__", "")
+        if endpoint_module.startswith("api.routes.browser"):
             continue  # documented owner-decision exception, see docstring
-        if r.endpoint.__module__.startswith("backend."):
+        if endpoint_module.startswith("backend."):
             continue  # legacy-alias copy pollution, see docstring item 2
-        for method in r.methods or set():
-            key = (r.path, method, f"{r.endpoint.__module__}.{r.endpoint.__qualname__}")
+        for method in route_methods(r):
+            key = (
+                route_path(r),
+                method,
+                f"{getattr(route_endpoint(r), '__module__', '')}.{getattr(route_endpoint(r), '__qualname__', '')}",
+            )
             seen[key] += 1
     dupes = {k: v for k, v in seen.items() if v > 1}
     assert not dupes, f"duplicate route registrations found: {sorted(dupes)[:10]}"
@@ -97,7 +115,7 @@ def test_registry_paths_all_reachable_on_app() -> None:
     (guards against a future regression to 'defined but never mounted')."""
     from api.routers import ALL_ROUTERS
 
-    app_paths = {r.path for r in _app_routes()}
+    app_paths = {route_path(r) for r in _app_routes()}
     missing = []
     for router_def in ALL_ROUTERS:
         path = router_def["path"]

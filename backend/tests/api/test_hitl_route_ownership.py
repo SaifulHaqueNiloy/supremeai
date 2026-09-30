@@ -19,13 +19,23 @@ from __future__ import annotations
 
 from collections import defaultdict
 
-from fastapi.routing import APIRoute
+from tests.api._route_introspection import (
+    app_effective_routes,
+    route_methods,
+    route_module_name,
+    route_path,
+)
 
 
-def _app_routes() -> list[APIRoute]:
+def _app_routes():
+    """Effective (mount-time) routes — FastAPI ≥0.141 lazy-include tolerant.
+
+    বাংলা মন্তব্য: fastapi 0.141+ এ include_router এখন lazy (_IncludedRouter)
+    — app.routes-এ expanded APIRoute আর থাকে না; helper দুই আচরণকেই একরূপ করে
+    (CI triage #2597 — ১০টা route-contract টেস্টের সাইলেন্ট empty-surface ফিক্স)।"""
     from core.app import app
 
-    return [r for r in app.routes if isinstance(r, APIRoute)]
+    return app_effective_routes(app)
 
 
 def _norm_module(module: str) -> str:
@@ -38,17 +48,24 @@ def _norm_module(module: str) -> str:
 def _winner(path: str, method: str) -> tuple[str, str]:
     """Return (endpoint-module, endpoint-name) of the FIRST route registered."""
     for r in _app_routes():
-        if r.path == path and method in (r.methods or ()):
-            return _norm_module(r.endpoint.__module__), r.endpoint.__name__
+        if route_path(r) == path and method in route_methods(r):
+            return route_module_name(r), route_endpoint_module_name(r)
     raise AssertionError(f"no route registered for {method} {path}")
+
+
+def route_endpoint_module_name(route) -> str:
+    endpoint = getattr(route, "endpoint", None)
+    return getattr(endpoint, "__name__", "")
 
 
 def _collisions() -> dict[tuple[str, str], set[str]]:
     """All (path, method) pairs answered by >1 distinct endpoint."""
     seen: dict[tuple[str, str], set[str]] = defaultdict(set)
     for r in _app_routes():
-        for m in r.methods or ():
-            seen[(r.path, m)].add(f"{_norm_module(r.endpoint.__module__)}.{r.endpoint.__name__}")
+        for m in route_methods(r):
+            seen[(route_path(r), m)].add(
+                f"{route_module_name(r)}.{getattr(getattr(r, 'endpoint', None), '__name__', '')}"
+            )
     return {k: v for k, v in seen.items() if len(v) > 1}
 
 
