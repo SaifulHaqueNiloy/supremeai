@@ -413,7 +413,7 @@ CLAIM_COMMENT="### 🔒 Atomic Claim Established (GAP-01)
 - **Issue:** #$ISSUE_NUMBER
 - **Claimed at:** $CLAIM_TIME
 - **Branch:** \`${BRANCH_NAME:-not-yet-created}\`
-- **Touching files:** ${FILES_DECLARATION:-_(declared in a follow-up comment before PR — Rule 2)}_
+- **Touching files:** ${FILES_DECLARATION:-_(declared in a follow-up comment before PR — Rule 2)_}
 - **Method:** Claim-then-Verify (Compare-And-Swap) + has-pr guard (GAP-DUPLICATE-01)
 - **Verifier:** \`scripts/ci/atomic_claim.sh\`
 
