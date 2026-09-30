@@ -13,8 +13,9 @@ from __future__ import annotations
 
 import ast
 import importlib.util
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 ENV_PY_PATH = (
     Path(__file__).resolve().parents[2] / "alembic_migrations" / "env.py"
