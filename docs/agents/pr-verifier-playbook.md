@@ -718,3 +718,13 @@ fix নয়, reproducibility issue।
 - **DEDUPE**: 39 open — T135-স্ন্যাপশটের-সাথে-অভিন্ন; #2616-ক্লোজড-অটুট; নতুন-কিছু-নেই → 0 issue/0 কমেন্ট।
 - **যাচাই-নোট**: T135-এর push-script-দ্বি-ফরম্যাট-label-regex এই-চক্রে প্রথম-প্রয়োগ — commit-লেবেল "Task 136 addendum" প্রত্যাশিত (cosmetic-বাগ-নির্মূল-পুনঃপ্রমাণ)।
 - **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T136 addendum; worklog T136; watch: কিউ-৩-মার্জ-স্রোত (post-merge main-অডিট প্রস্তুত), #2615-StaticPool-ভ্যালিডেশন, #2617-P0-manual, #2606-ক্লোজ, bypass-৪, AGENTS-৩য়-সংশোধন।**
+
+### Addendum — Task 137 (2026-09-30 ~06:05Z, 14:00+08 cron): রোলব্যাক-৭ এক-চক্রে-পুনর্নির্মাণ
+
+- **রোলব্যাক-৭ (M28-রেজিস্টার #৬, count→6)**: হ্যান্ডশেকে ধরা — worklog 128→124 (last=132-যুগে ফেরত) + clone ENOENT + tower DOWN। **অখণ্ডতা-অবস্থা**: ledger M32/R35-সম্পূর্ণ-অটুট (T134-যুগের ফাইল), remote lane @`9ff397a3`-অটুট (T136 addendum সঠিক-লেবেলে) — লোকাল-ক্ষতি = worklog T133–T136 + SRC-playbook (683-পুরোনো) + baseline-অ্যাঙ্কর (03:43Z)।
+- **এক-চক্রে-পুনর্নির্মাণ (T134-রেসিপি, R31)**: ① fresh clone → ② SRC resync remote-থেকে (683→**720**) → ③ worklog T133–T136 BACKFILL-T137-লেবেলে transcript+addendum-থেকে → ④ ledger M28-রেজিস্টার #৬ + count 4→6 (compile ✓, dup 0) → ⑤ tower: **bun-install-রেসিপি ২য়-প্রয়োগে ২ মিনিটে UP** (271 pkgs → Health 200) → ⑥ t137-issues-প্রোব পুনঃসৃষ্টি (t135-issues-গায়েব)।
+- **POLICY SYNC**: main @`7409ef81`-অপরিবর্তিত; অ্যাঙ্কর-অটুট (AGENTS `3db1a7cd`, rules.yml `e62d5f03`)।
+- **SWEEP (03:43→06:07Z বড়-জানালা, ৩৬-ইভেন্ট — R28-পরিচিত-সচেতন)**: পরিচিত-প্রবাহ পুনঃনিশ্চিত (#2598 GREEN-AT-MERGE 04:13Z, #2609, #2616-ক্লোজ, #2617, main 8→10ok); **নতুন**: 🆕 **#2618 = vault-doctor-সেলফ-ডুপ** (#2617-এর হুবহু-টাইটেল, ৯০-মিনিট-ব্যবধানে — #2603-এর ডুপ-রেস-পরিবারের আরেক-প্রকাশ) → মূল-সমস্যা-ট্র্যাকড (#2617) + আচরণ-ট্র্যাকড (#2603) বলে **0 issue/0 কমেন্ট**; agent-3-এর ২-ব্রাঞ্চ-পুশ 04:23Z (`agent-3-2613-upstash-free-tier-permanent`, `agent-3-2601-restore-worker-entrypoint`) — ট্র্যাকড-সমস্যায় ফিক্স-কাজ-চলছে (watch: PR হলে sweep-এ আসবে); #2608/#2597-ক্লোজ = owner-পরিষ্কার-প্রবাহ।
+- **ENGINE (06:07Z)**: কিউ PASS×3-অটুট, main 10ok/0fail; baseline re-anchor **06:08:38Z** (open 3)।
+- **রোলব্যাক-৭-শিক্ষা**: lane-push-first (remote-অটুট) + transcript-সংরক্ষণ + tower-রেসিপি-নথিভুক্তি — তিনটির সম্মিলিত-ফলে পুনর্নির্মাণ-ব্যয় ~৩ মিনিটে নেমেছে (T132-যুগে যা পূর্ণ-চক্র-খেত)।
+- **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T137 addendum; worklog backfill+T137; watch: agent-3-ফিক্স-PR-দ্বয়, কিউ-৩-মার্জ-স্রোত, #2617+2618-মীমাংসা-জোড়া (owner-manual), #2615-StaticPool, bypass-৪, AGENTS-৩য়-সংশোধন।**
