@@ -135,6 +135,9 @@ def test_orchestrator_api_endpoint():
     data = response.json()
 
     assert data["source_platform"] == "genkit"
+    assert data["engine_brand"] == "SupremeAI Autonomous Core"
+    assert "Supreme Solution:" in data["platform_agnostic_summary"]
+    assert data["supreme_workspace_url"] is not None
     assert len(data["file_actions"]) == 1
     assert data["file_actions"][0]["file_path"] == "config/app.py"
     assert "codespaces/new" in data["codespaces_url"]

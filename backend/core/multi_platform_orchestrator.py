@@ -45,15 +45,21 @@ class FileAction:
 
 @dataclass
 class OrchestrationPlan:
-    """মাল্টি-প্ল্যাটফর্ম এআই থেকে এক্সট্র্যাক্ট করা বাস্তবায়ন পরিকল্পনা"""
+    """
+    মাল্টি-প্ল্যাটফর্ম এআই থেকে এক্সট্র্যাক্ট করা বাস্তবায়ন পরিকল্পনা।
+    "কইয়ের তেলেই কই ভাজা, কিন্তু নিজের নামে মাছ বেচা" — ব্যবহারকারীর কাছে এটি SupremeAI সলিউশন হিসেবে উপস্থাপিত হয়।
+    """
 
     source_platform: str
     file_actions: list[FileAction] = field(default_factory=list)
     verification_commands: list[str] = field(default_factory=list)
+    supreme_workspace_url: str | None = None
     codespaces_url: str | None = None
     gitpod_url: str | None = None
     jules_url: str | None = None
     explanation: str = ""
+    platform_agnostic_summary: str = ""
+    engine_brand: str = "SupremeAI Autonomous Core"
     raw_ai_output: str = ""
 
 
@@ -93,19 +99,31 @@ class MultiPlatformOrchestrator:
         raw_output: str,
         repo_name: str = "SaifulHaqueNiloy/supremeai",
         branch: str = "main",
-        source_platform: str = "generic_ai",
+        source_platform: str = "SupremeAI Autonomous Core",
+        white_label: bool = True,
     ) -> OrchestrationPlan:
         """
         বাংলা সারসংক্ষেপ:
         ------------------
+        "কইয়ের তেলেই কই ভাজা, কিন্তু নিজের নামে মাছ বেচা":
         ChatGPT, Claude, Gemini বা Genkit-এর কাঁচা টেক্সট থেকে
-        ফাইল পাথ, কোড কনটেন্ট ও ভেরিফিকেশন কমান্ড এক্সট্র্যাক্ট করে অর্কেস্ট্রেশন প্ল্যান বানায়।
+        ফাইল পাথ, কোড কনটেন্ট ও ভেরিফিকেশন কমান্ড এক্সট্র্যাক্ট করে SupremeAI সলিউশন প্ল্যান বানায়।
+        কোড বা ফাইলে কোনো তৃতীয় পক্ষের ওয়াটারমার্ক বা নাম থাকলে তা স্বয়ংক্রিয়ভাবে স্ক্রাব করে মুছে ফেলা হয়।
         """
+        from core.natural_file_presenter import NaturalFilePresenter
+
+        clean_source = (
+            "SupremeAI Autonomous Core"
+            if source_platform in ("generic_ai", "", None)
+            else source_platform
+        )
+
         if not raw_output or not raw_output.strip():
             return OrchestrationPlan(
-                source_platform=source_platform,
+                source_platform=clean_source,
                 raw_ai_output=raw_output,
                 explanation="Empty output received.",
+                platform_agnostic_summary="No actions found in output.",
             )
 
         file_actions: list[FileAction] = []
@@ -133,11 +151,17 @@ class MultiPlatformOrchestrator:
 
                 if clean_path and clean_path not in seen_paths and "." in clean_path:
                     seen_paths.add(clean_path)
+                    # বাংলা মন্তব্য: কোডের ভেতর থেকে যেকোনো থার্ড পার্টি ওয়াটারমার্ক বা কমেন্ট ক্লিন করা
+                    clean_content = (
+                        NaturalFilePresenter.white_label_solution(content.strip())
+                        if white_label
+                        else content.strip()
+                    )
                     file_actions.append(
                         FileAction(
                             file_path=clean_path,
                             action_type=ActionType.MODIFY,
-                            content=content.strip(),
+                            content=clean_content,
                             language=lang or None,
                         )
                     )
@@ -149,19 +173,22 @@ class MultiPlatformOrchestrator:
                 if lang.lower() in ("bash", "sh", "terminal", "console", "json", ""):
                     continue
                 # কনটেন্ট দেখে নাম আন্দাজ করা (NaturalFilePresenter)
-                from core.natural_file_presenter import NaturalFilePresenter
-
                 ext = f".{lang.lower()}" if lang else ".py"
                 inferred_name = NaturalFilePresenter.naturalize_filename(
                     f"output_{idx}{ext}", content=code
                 )
                 if inferred_name not in seen_paths:
                     seen_paths.add(inferred_name)
+                    clean_content = (
+                        NaturalFilePresenter.white_label_solution(code.strip())
+                        if white_label
+                        else code.strip()
+                    )
                     file_actions.append(
                         FileAction(
                             file_path=inferred_name,
                             action_type=ActionType.CREATE,
-                            content=code.strip(),
+                            content=clean_content,
                             language=lang or None,
                         )
                     )
@@ -185,15 +212,22 @@ class MultiPlatformOrchestrator:
         codespaces_url = self.generate_codespaces_url(repo_name, branch, primary_file)
         gitpod_url = self.generate_gitpod_url(repo_name, branch, primary_file)
         jules_url = f"https://jules.google.com/?repo={repo_name}"
+        # বাংলা মন্তব্য: একক প্রিমিয়াম সুপ্রিম ক্লাউড লিঙ্ক (যা ডিফল্টভাবে ব্যাকএন্ডে কোডস্পেসকে ট্রিগার করবে)
+        supreme_workspace_url = codespaces_url or gitpod_url
+
+        summary = f"Supreme Solution: {len(file_actions)} files planned, {len(verification_commands)} verification tests ready."
 
         return OrchestrationPlan(
-            source_platform=source_platform,
+            source_platform=clean_source,
             file_actions=file_actions,
             verification_commands=verification_commands,
+            supreme_workspace_url=supreme_workspace_url,
             codespaces_url=codespaces_url,
             gitpod_url=gitpod_url,
             jules_url=jules_url,
             explanation=f"Extracted {len(file_actions)} file actions and {len(verification_commands)} verification steps.",
+            platform_agnostic_summary=summary,
+            engine_brand="SupremeAI Autonomous Core",
             raw_ai_output=raw_output,
         )
 

@@ -294,6 +294,9 @@ async def parse_orchestration_plan(payload: OrchestratePlanRequest):
     )
 
     return {
+        "engine_brand": plan.engine_brand,
+        "platform_agnostic_summary": plan.platform_agnostic_summary,
+        "supreme_workspace_url": plan.supreme_workspace_url,
         "source_platform": plan.source_platform,
         "file_actions": [
             {
