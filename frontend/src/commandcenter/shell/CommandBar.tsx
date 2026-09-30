@@ -30,7 +30,9 @@ export function CommandBar({
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const timer = setInterval(() => setNow(new Date()), 1000);
+    // ROOT-CAUSE FIX (#2736): was 1000ms (1s) — caused full panel re-render
+    // every second. 30s is sufficient for a clock display.
+    const timer = setInterval(() => setNow(new Date()), 30_000);
     return () => clearInterval(timer);
   }, []);
 
