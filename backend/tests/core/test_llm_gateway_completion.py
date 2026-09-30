@@ -204,11 +204,24 @@ async def test_cache_hit_survives_telemetry_failure(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_stream_bypasses_cache_and_returns_stream_gen():
+async def test_stream_returns_stream_gen_and_forwards_context():
+    """Streaming returns the stream generator and forwards tenant/tier context.
+
+    Cache consultation is intentionally NOT pinned to ``assert_not_awaited``
+    here: PR #2772 (root-cause #2729) makes the streaming path consult the
+    semantic cache so identical concurrent prompts dedup (read + later write).
+    The old ``assert_not_awaited()`` encoded the pre-fix contract and blocked
+    #2772 — see issue #2780. Whether the stream branch awaits
+    ``cache.query_similar`` (0 times pre-fix / 1 time post-fix) is now an
+    implementation detail, not a streaming contract. We still cap it at 1 so
+    a runaway double-consult regression would fail loudly.
+    """
     gw = make_gateway()
     result = await gw.acompletion(prompt="hi", stream=True)
     assert result == "STREAM-SENTINEL"
-    gw.cache.query_similar.assert_not_awaited()
+    # PR #2772 / issue #2729: streaming may now consult the semantic cache
+    # (read + later write) for dedup. Accept pre-fix (0) and post-fix (1).
+    assert gw.cache.query_similar.await_count <= 1
     messages, chain, timeout, spend_context = gw.stream_calls[0]
     # M16 P-A: streaming generator-এ tenant/tier context পৌঁছায় কিনা চুক্তি-পিন।
     assert spend_context == {"tenant_id": None, "tier": None, "task_type": "general"}
