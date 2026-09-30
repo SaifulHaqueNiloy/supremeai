@@ -779,3 +779,13 @@ fix নয়, reproducibility issue।
 - **ENGINE (08:32Z)**: কিউ **#2620 GATE-FAIL** (T&B-ফেল-সঠিক-শ্রেণিবিন্যাস); main RED @`8d2559d` (redGates=[Migration Gate]); baseline re-anchor **08:31Z-জানালা** (last 08:25:33Z)।
 - **DEDUPE**: কঠোর-স্ক্যানে unified-gate-ট্র্যাকার-শূন্য (open) — #2620-ফেল সেই-চেনা-ক্লাস্টারের-অংশ-হলেও-এখানে-কারণ-PR-নিজস্ব-lint → 0 issue/0 কমেন্ট।
 - **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T142 addendum; watch: #2620-র-ruff-fix-ইটারেশন → সবুজ → মার্জ → post-merge main-অডিট (Migration Gate সবুজ-প্রত্যাশা + #2619-ক্লোজ-সংকেত), নতুন-কিউ-গঠন, bypass-৪, AGENTS-৩য়-সংশোধন।**
+
+### Addendum — Task 143 (2026-09-30 ~09:01Z, 17:00+08 cron): **M8-ঘটনা-সম্পূর্ণ-বন্ধ** — #2620-মার্জ → Migration Gate সবুজ
+
+- **HANDSHAKE (09:00Z)**: worklog last=142; তিন-পোর্ট UP; lane @`17e8eb5c`-অটুট (781)।
+- **POLICY SYNC**: main সরেছে `8d2559d1`→**`d7fc8dd2`** (Merge #2620, 08:46:52Z); অ্যাঙ্কর-অটুট blob-direct (AGENTS `3db1a7cd`, rules.yml `e62d5f03`)।
+- **POST-MERGE AUDIT (M8-সমাপ্তি-প্রমাণ)**: নতুন-HEAD-এ 🛡️ Migration Gate **completed/success ×2** (08:48:15→08:50:57Z, দুই-ওয়ার্কফ্লো-পথ); main **7ok/0fail GREEN**; **ফুল-লুপ-টাইমলাইন**: 07:56Z-fail (psycopg-missing) → 08:05Z-#2619 (agent-8) → 08:24Z-#2620 (coder-1-bot) → 08:39Z-ruff-fix-পুশ → **08:46Z-মার্জ** → 08:50Z-গেট-সবুজ — **M8-ইনসিডেন্ট সনাক্তকরণ-থেকে-সমাধান ~৫৪-মিনিট**; প্রমাণ: ইস্যু-রিপোর্টের-রুট-কজ (psycopg-env-গ্যাপ) ফিক্স-PR-এর-ঠিকানার-সাথে-মিলেছে (sync-driver-চুক্তি-v2)।
+- **SWEEP (08:31→09:01Z, ৮-ইভেন্ট)**: coder-1-bot-ব্রাঞ্চ-পুশ 08:39Z + কমেন্ট×2; #2620-মার্জ 08:46:52Z; #2619-তে github-actions[bot]-লেবেল×2 (08:53Z — অটোমেশন, ইস্যু-এখনও-খোলা, owner-manual-ক্লোজ-অপেক্ষমাণ); self-push 08:35Z (T142)।
+- **ISSUE-সেট-যাচাই**: 31-open; 30→31-ব্যাখ্যা = নিজের-ই #2619 (T141-স্ন্যাপশট-ছিল-তৈরির-আগে — comm-diff-প্রমাণ); কোনো-reopen/নতুন-নেই → 0 issue/0 কমেন্ট (#2619-ক্লোজ agent-8-এর-এখতিয়ারে-নেই)।
+- **ENGINE (09:02Z)**: কিউ **EMPTY**; main `d7fc8dd` **GREEN**; baseline re-anchor (নোট: baseline-last 08:24Z-কিন্তু-চেক 08:53Z-পর্যন্ত-দেখেছে — R28-পরিচিত-ফিল্টার-পুনরাবৃত্তি-সামলাবে)।
+- **এই চক্রে: 0 merge-আমার-পক্ষে/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T143 addendum; watch: #2619-owner-ক্লোজ-সংকেত, নতুন-কিউ-গঠন, main-সবুজ-ধারাবাহিকতা, bypass-৪, AGENTS-৩য়-সংশোধন, #2453-realtime-ট্র্যাকার-অগ্রগতি।**
