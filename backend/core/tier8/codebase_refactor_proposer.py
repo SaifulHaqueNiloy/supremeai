@@ -363,9 +363,9 @@ class CodebaseRefactorProposer(BaseSkill):
             try:
                 from adaptive_engine.approval_workflow import (
                     ApprovalProposal,
+                    ProposalCooldownError,
                     ProposalKind,
                     ProposalPriority,
-                    ProposalCooldownError,
                     get_approval_workflow,
                 )
 
