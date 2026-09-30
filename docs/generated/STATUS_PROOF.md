@@ -9,7 +9,7 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 ## Machine-verified claims (STATUS.md `STATUS-PROOF:CHECK` block)
 
 - ✅ `frontend_e2e_specs=4` → tree reality: **4**
-- ✅ `frontend_test_files=112` → tree reality: **112**
+- ✅ `frontend_test_files=116` → tree reality: **116**
 - ✅ `missions_tests=62` → tree reality: **62**
 - ✅ `registered_routes=855` → tree reality: **855**
 
@@ -25,7 +25,7 @@ runtime/live প্রমাণ Actions run summary-তে (ইচ্ছাক�
 
 ## Cross-document consistency (skip-registry ↔ tree ↔ checkpoint)
 
-- ✅ `active_skip_markers=27` → tree reality: **27**
+- ✅ `active_skip_markers=28` → tree reality: **28**
 
 Live/runtime evidence: CI Pipeline summaries, `QA — Live Production Smoke` run summaries
 (fail-closed যতক্ষণ না `vars.PRODUCTION_URL` কনফিগার করা হয়)।
