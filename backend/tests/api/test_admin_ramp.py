@@ -270,7 +270,17 @@ class TestRules:
 
 class TestQuickActions:
     def test_cache_action_zero_keys_skips_delete(self, client, monkeypatch):
-        redis_client = SimpleNamespace(keys=AsyncMock(return_value=[]), delete=AsyncMock())
+        # ROOT-CAUSE FIX (#2833): production _purge_cache_patterns now uses
+        # scan_iter (not KEYS) per #2733/#2790 batch. Mock must include it.
+        async def _empty_scan_iter(pattern):
+            return
+            yield  # make it an async generator
+
+        redis_client = SimpleNamespace(
+            keys=AsyncMock(return_value=[]),
+            delete=AsyncMock(),
+            scan_iter=_empty_scan_iter,  # ROOT-CAUSE FIX (#2833)
+        )
         fake = FakeRedisManager(client=redis_client)
         monkeypatch.setattr(ar, "redis_manager", fake)
         resp = client.post("/api/admin/actions/cache")

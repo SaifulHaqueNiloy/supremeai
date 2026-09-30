@@ -88,7 +88,12 @@ async def test_get_completion_generates_response_and_saves_cache(monkeypatch):
     result = await get_completion(request, payload, db=SimpleNamespace(tenant_id="tenant-2"))
 
     assert result["cached"] is False
-    assert result["response"] == "generated:live-prompt"
+    # ROOT-CAUSE FIX (#2829): assertion was exact-match on "generated:live-prompt"
+    # but the enriched prompt now includes the system persona (from #2728 fix)
+    # assembled by ContextEngine. Use substring match instead — "live-prompt"
+    # is still in the final enriched prompt, just not the only content.
+    assert "live-prompt" in result["response"]
+    assert result["response"].startswith("generated:")
     assert fake_cache.saved is not None
     assert fake_cache.saved["model_name"] == "gemini-2.5-pro"
 
