@@ -769,3 +769,13 @@ fix নয়, reproducibility issue।
 - **ISSUE (১টি, কঠোর-dedupe-পরে)**: probe exit=0 + 30-open + keyword-scan (migration/alembic/psycopg) → বিদ্যমান-ট্র্যাকার-নেই (#2453-supabase-realtime-ভিন্ন) → **#2619** খোলা: `fix(ci): Migration Gate red on main after #2614/#2607 merge — psycopg missing in alembic job env (M8: PR-green→main-red)`, P1-প্রস্তাব, নন-ব্লেম, প্রমাণ-টেবিল+লিংকসহ।
 - **ENGINE (08:05Z)**: কিউ **empty** (৩-মার্জ-প্রতিফলন); mainHealth ok:false @`8d2559d` (7ok/1fail, redGates=[Migration Gate]); baseline re-anchor **08:06:15Z**।
 - **এই চক্রে: 0 merge-আমার-পক্ষে/0 force-push/0 main-push; ১ issue (#2619 — নতুন-প্রমাণে)/0 কমেন্ট; playbook T141 addendum; watch: #2619-owner-রেসপন্স, Migration-Gate-সবুজ-পুনঃপ্রমাণ (ফিক্স-মার্জ-পরে post-merge-অডিট), নতুন-কিউ-গঠন (কোডার/সিআই-লেন-নতুন-PR), #2615-ক্লোজ-যাচাই (StaticPool-সমাধান-কোথায়), bypass-৪, AGENTS-৩য়-সংশোধন (এখনও-আসেনি)।**
+
+### Addendum — Task 142 (2026-09-30 ~08:31Z, 16:30+08 cron): #2619-র-দ্রুত-ফিক্স-PR-#2620 + নিজস্ব-lint-ফেল-শ্রেণিবিন্যাস
+
+- **HANDSHAKE (08:30Z)**: worklog last=141; তিন-পোর্ট UP; lane @`64d01abd`-অটুট (771)।
+- **POLICY SYNC**: main @`8d2559d1`-অপরিবর্তিত (২য়-চক্র); অ্যাঙ্কর-অটুট blob-direct (AGENTS `3db1a7cd`, rules.yml `e62d5f03`)।
+- **SWEEP (08:06→08:31Z, ৫-ইভেন্ট)**: ① **#2619-তে-রেসপন্স**: labeled 08:17:53Z + labeled/unlabeled 08:25Z (owner+coder-1-bot-triage-চলমান); ② **🆕 PR #2620** (coder-1-bot, 08:24:26Z, head `27675c9a`): `fix(db): Migration Gate sync-driver চুক্তি v2 — bare postgresql:// স্কিমও psycopg2-তে পিন` — **#2619-ইস্যুর-সরাসরি-ফিক্স (~১৮-মিনিটে-রেসপন্স — ফ্লিট-ইস্যু-পাইপলাইনের-কার্যকারিতা-প্রমাণ)**; ③ main same-SHA 6ok→**8ok/1fail** (Migration Gate এখনও red — শুধু-লেট-গ্রিন, নতুন-ফেল-নেই)।
+- **#2620-যাচাই (M8-গোয়েন্দা-শৃঙ্খলা)**: 8/14 ok; **FAIL(2)**: 🧪 T&B = নিজস্ব-নতুন-টেস্ট-ফাইলে **ruff-lint-এরর** (`tests/database/test_alembic_sync_driver_contract.py:17` — `Callable` → `collections.abc`, `1 fixable --fix`, exit 123); 🚦 Unified PR Gate = **derived-BLOCK** (T&B-ফেল-থেকে, স্বাধীন-সমস্যা-নয়)। **শ্রেণিবিন্যাস-সিদ্ধান্ত: নতুন-issue-নয়** — ৬-মিনিট-বয়সী-PR-নিজেই-ট্র্যাকার, coder-লেন-ইটারেশন-চলছে; issue-খোলা = ডুপ-ট্র্যাকিং/spam।
+- **ENGINE (08:32Z)**: কিউ **#2620 GATE-FAIL** (T&B-ফেল-সঠিক-শ্রেণিবিন্যাস); main RED @`8d2559d` (redGates=[Migration Gate]); baseline re-anchor **08:31Z-জানালা** (last 08:25:33Z)।
+- **DEDUPE**: কঠোর-স্ক্যানে unified-gate-ট্র্যাকার-শূন্য (open) — #2620-ফেল সেই-চেনা-ক্লাস্টারের-অংশ-হলেও-এখানে-কারণ-PR-নিজস্ব-lint → 0 issue/0 কমেন্ট।
+- **এই চক্রে: 0 merge/0 force-push/0 main-push/0 issue/0 কমেন্ট; playbook T142 addendum; watch: #2620-র-ruff-fix-ইটারেশন → সবুজ → মার্জ → post-merge main-অডিট (Migration Gate সবুজ-প্রত্যাশা + #2619-ক্লোজ-সংকেত), নতুন-কিউ-গঠন, bypass-৪, AGENTS-৩য়-সংশোধন।**
