@@ -29,6 +29,14 @@ from unittest.mock import MagicMock
 import httpx
 import pytest
 import pytest_asyncio
+
+# বাংলা মন্তব্য: #2585 — SQLAlchemy asyncio ইঞ্জিনের (sqlite+aiosqlite) জন্য greenlet
+# আবশ্যক; CI poetry venv-এ অনুপস্থিত থাকলে রিপোর canonical প্যাটার্ন অনুযায়ী টেস্ট
+# স্কিপ হবে (তুলনা: test_mcp_hub.py:38, test_missions_boundaries.py:44) —
+# setup-এ ImportError-এর বদলে স্পষ্ট ও সৎ skip।
+pytest.importorskip(
+    "greenlet", reason="greenlet not installed — required for SQLAlchemy asyncio engine"
+)
 from fastapi import FastAPI
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
