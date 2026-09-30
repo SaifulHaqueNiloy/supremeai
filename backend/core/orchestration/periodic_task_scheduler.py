@@ -107,6 +107,38 @@ class Orchestrator:
         self._tasks.append(_run_budget_guardian)
         logger.info("Budget guardian task added to orchestrator")
 
+        # বাংলা মন্তব্য (#2706 Gap-G): Precognitive Watcher — এই টিক-লুপেই
+        # (supervisor-চালিত, প্রতি interval=300s) সেন্টিনেল সুইপ চলে। আগে
+        # watcher-টি production-এ কোনো scheduler ছাড়া dormant ছিল (শুধু
+        # টেস্ট থেকে ডাকা হতো)। সনাক্ত anomaly সরাসরি
+        # AutoHealer.proactive_guardian_cycle()-এ যায় → সত্যিকারের proactive PR।
+        self._tasks.append(self._run_precognitive_sweep)
+        logger.info("Precognitive watcher sweep task added to orchestrator (300s cadence)")
+
+    async def _run_precognitive_sweep(self) -> None:
+        """#2706: সেন্টিনেল সুইপ — ৬-মেট্রিক স্ক্যান → anomaly হলে healer-ব্রিজ।
+
+        Fail-safe চুক্তি: সুইপ-ব্যর্থতা কখনো orchestrator-টিক ভাঙবে না
+        (graceful degradation, Rule #3) — budget-guardian-এর বিপরীতে এই
+        টাস্ক আর্থিক-নিরাপত্তা সংকেত নয়, তাই halt-নয়।
+        """
+        try:
+            from workers.precognitive_watcher import precognitive_watcher
+
+            alerts = await precognitive_watcher.scan_system_health()
+            if alerts:
+                from services.auto_healer import get_healer
+
+                cycle = await get_healer().proactive_guardian_cycle(alerts)
+                logger.info(
+                    f"[Orchestrator] Precognitive sweep: {len(alerts)} alert(s) → "
+                    f"healer cycle (prs_attempted={cycle.get('prs_attempted', 0)}, "
+                    f"prs_opened={cycle.get('prs_opened', 0)})"
+                )
+        except Exception as exc:
+            # বাংলা মন্তব্য: সৎ লগ — ভান নয়, কিন্তু লুপও ভাঙবে না।
+            logger.error(f"[Orchestrator] Precognitive sweep failed (non-fatal): {exc}")
+
     def decompose_intent(
         self,
         prompt: str,
