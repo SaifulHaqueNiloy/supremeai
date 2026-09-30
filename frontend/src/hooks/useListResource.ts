@@ -60,6 +60,12 @@ export function useListResource<T>({
   // (render-এর মধ্যে ref লেখা React 19 concurrent রুলে unsafe — তাই effect।)
   const fetcherRef = useRef(fetcher);
   const itemsRef = useRef<T[]>(items);
+  // ROOT-CAUSE FIX (#2735): sequence guard — prevents stale responses from
+  // clobbering newer data. When a user types fast in search (triggering
+  // multiple reload() calls), older slower responses would overwrite newer
+  // faster ones. Now: each reload increments seqRef; if the response's seq
+  // doesn't match the latest, the result is silently dropped.
+  const seqRef = useRef(0);
   useEffect(() => {
     fetcherRef.current = fetcher;
     itemsRef.current = items;
@@ -67,22 +73,29 @@ export function useListResource<T>({
 
   const reload = useCallback(
     async (override?: (current: T[]) => Promise<T[]>): Promise<boolean> => {
+      const seq = ++seqRef.current;  // ROOT-CAUSE FIX (#2735): capture sequence
       setIsLoading(true);
       setLoadError(null);
       try {
-        // বাংলা: override থাকলে সেটি বর্তমান items পেয়ে merged list বানায়
-        // (MarketplacePage-এর server-search merge); নাহলে সর্বশেষ fetcher closure
-        // দিয়ে স্বাভাবিক replace-load হয়।
         const exec: () => Promise<T[]> = override
           ? () => override(itemsRef.current)
           : fetcherRef.current;
-        setItems(await exec());
+        const result = await exec();
+        // ROOT-CAUSE FIX (#2735): ignore stale responses — if a newer reload()
+        // was issued while we were awaiting, drop this result silently.
+        if (seq !== seqRef.current) return false;
+        setItems(result);
         return true;
       } catch (err) {
+        // ROOT-CAUSE FIX (#2735): ignore stale errors too
+        if (seq !== seqRef.current) return false;
         setLoadError(err instanceof Error ? err.message : 'Failed to load');
         return false;
       } finally {
-        setIsLoading(false);
+        // ROOT-CAUSE FIX (#2735): only clear loading if we're the latest request
+        if (seq === seqRef.current) {
+          setIsLoading(false);
+        }
       }
     },
     [],
