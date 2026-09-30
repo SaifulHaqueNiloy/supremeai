@@ -182,7 +182,14 @@ export default defineConfig({
           // (segment-exact regex: node_modules/react/ মেলে কিন্তু lucide-react/
           // @monaco-editor/react/ @xyflow/react/ মেলে না — ভুল bucket-এ react যেতে পারে না)
           if (/[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/.test(id)) return 'vendor-react'
-          if (/[\\/]node_modules[\\/](framer-motion|lucide-react|recharts)[\\/]/.test(id)) return 'vendor-ui'
+          // ROOT-CAUSE FIX (#2734): recharts (~100KB gz) was bucket-welded with
+          // framer-motion + lucide-react into 'vendor-ui'. Since framer-motion is
+          // eagerly imported by DashboardLayout/CommandBar (boot path), Rollup
+          // loaded the entire vendor-ui chunk (including recharts) on every page
+          // — even the guest `/` funnel which never charts. Now: recharts gets
+          // its own 'vendor-charts' chunk, loaded only by lazy admin chunks.
+          if (/[\\/]node_modules[\\/]recharts[\\/]/.test(id)) return 'vendor-charts'
+          if (/[\\/]node_modules[\\/](framer-motion|lucide-react)[\\/]/.test(id)) return 'vendor-ui'
           if (/[\\/]node_modules[\\/]@xyflow[\\/]/.test(id)) return 'vendor-flow'
           if (/[\\/]node_modules[\\/]@tanstack[\\/]react-query[\\/]/.test(id)) return 'vendor-query'
           return undefined
