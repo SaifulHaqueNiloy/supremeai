@@ -12,8 +12,6 @@ import httpx
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 
-from core.logging_config import logger
-
 from api.dependencies import get_current_admin
 from brain.model_registry import ModelRegistry
 from core.deployment_fallback_defaults import ADMIN_URL_DEFAULT, SCRAPER_URL_DEFAULT
@@ -22,6 +20,7 @@ from core.health.uptime_tracker import (
     get_uptime_summary,
     record_check,
 )
+from core.logging_config import logger
 
 router = APIRouter(prefix="/admin-api", tags=["health"], dependencies=[Depends(get_current_admin)])
 
