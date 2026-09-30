@@ -167,12 +167,22 @@ class TestExecutionRecord:
 
     def test_evidence_default_is_independent_per_instance(self):
         rec1 = ExecutionRecord(
-            execution_id="1", correlation_id="1", user_id="u", tenant_id="t",
-            project_id=None, conversation_id=None, capability="c",
+            execution_id="1",
+            correlation_id="1",
+            user_id="u",
+            tenant_id="t",
+            project_id=None,
+            conversation_id=None,
+            capability="c",
         )
         rec2 = ExecutionRecord(
-            execution_id="2", correlation_id="2", user_id="u", tenant_id="t",
-            project_id=None, conversation_id=None, capability="c",
+            execution_id="2",
+            correlation_id="2",
+            user_id="u",
+            tenant_id="t",
+            project_id=None,
+            conversation_id=None,
+            capability="c",
         )
         rec1.evidence.append({"step": 1})
         assert rec2.evidence == []
@@ -180,8 +190,13 @@ class TestExecutionRecord:
     def test_mutable_dataclass_can_be_modified(self):
         """বাংলা: ConversationCommand frozen কিন্তু ExecutionRecord mutable।"""
         rec = ExecutionRecord(
-            execution_id="exec", correlation_id="c", user_id="u", tenant_id="t",
-            project_id=None, conversation_id=None, capability="cap",
+            execution_id="exec",
+            correlation_id="c",
+            user_id="u",
+            tenant_id="t",
+            project_id=None,
+            conversation_id=None,
+            capability="cap",
         )
         rec.status = "completed"
         rec.evidence.append({"result": "ok"})
@@ -233,9 +248,7 @@ class TestOrchestrationResult:
         assert result.requires_confirmation is True
 
     def test_mutable_modification(self):
-        result = OrchestrationResult(
-            correlation_id="c", status="started", capability="chat"
-        )
+        result = OrchestrationResult(correlation_id="c", status="started", capability="chat")
         result.status = "completed"
         result.events.append({"event": "token", "value": "hi"})
         assert result.status == "completed"
@@ -273,14 +286,18 @@ class TestCapability:
     def test_is_available_false_when_disconnected(self):
         """বাংলা: availability != 'connected' হলে is_available False।"""
         cap = Capability(
-            name="x", risk="low", handler=self._dummy_handler,
+            name="x",
+            risk="low",
+            handler=self._dummy_handler,
             availability="disconnected",
         )
         assert cap.is_available is False
 
     def test_is_available_false_when_degraded(self):
         cap = Capability(
-            name="x", risk="low", handler=self._dummy_handler,
+            name="x",
+            risk="low",
+            handler=self._dummy_handler,
             availability="degraded",
         )
         assert cap.is_available is False
@@ -293,6 +310,7 @@ class TestCapability:
     @pytest.mark.asyncio
     async def test_handler_can_be_called(self):
         """বাংলা: registered handler সত্যিই await করা যায় ও সে একটি result return করে।"""
+
         # Given: a capability with a handler
         async def my_handler(cmd: ConversationCommand) -> dict[str, Any]:
             return {"echo": cmd.prompt}
@@ -309,14 +327,18 @@ class TestCapability:
     def test_destructive_capability_flag(self):
         """বাংলা: destructive capability flag সঠিকভাবে set হয়।"""
         cap = Capability(
-            name="delete_file", risk="high", handler=self._dummy_handler,
+            name="delete_file",
+            risk="high",
+            handler=self._dummy_handler,
             destructive=True,
         )
         assert cap.destructive is True
 
     def test_admin_only_flag(self):
         cap = Capability(
-            name="admin_op", risk="high", handler=self._dummy_handler,
+            name="admin_op",
+            risk="high",
+            handler=self._dummy_handler,
             admin_only=True,
         )
         assert cap.admin_only is True

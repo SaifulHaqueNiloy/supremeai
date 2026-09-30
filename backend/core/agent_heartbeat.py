@@ -74,9 +74,7 @@ def _next_utc_reset_epoch() -> float:
     now = time.gmtime()
     # বাংলা মন্তব্য: calendar.timegm = time.gmtime-এর সঠিক UTC inverse —
     # time.mktime ব্যবহার করলে সার্ভারের local timezone মেনে ভুল সময় আসতো।
-    tomorrow_epoch = calendar.timegm(
-        (now.tm_year, now.tm_mon, now.tm_mday + 1, 0, 0, 0, 0, 0, 0)
-    )
+    tomorrow_epoch = calendar.timegm((now.tm_year, now.tm_mon, now.tm_mday + 1, 0, 0, 0, 0, 0, 0))
     return tomorrow_epoch + 60.0
 
 

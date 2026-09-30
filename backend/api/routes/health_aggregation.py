@@ -298,7 +298,9 @@ def _emit_drift_event(status: dict) -> None:
             severity="WARNING",
             context={"remediation": "check DB connectivity + privileges for information_schema"},
         )
-    elif status["status"] == "ok" and str(_schema_state.get("alert_key") or "").startswith(("drift:", "error:")):
+    elif status["status"] == "ok" and str(_schema_state.get("alert_key") or "").startswith(
+        ("drift:", "error:")
+    ):
         # বাংলা মন্তব্য: drift/error থেকে সুস্থতায় ফেরা — resolved ইভেন্ট (নীরব স্কিপ নয়)।
         alert_key = "recovered"
         event = ErrorEvent(
@@ -329,7 +331,11 @@ async def probe_schema_drift(force: bool = False, session_factory=None) -> Schem
 
     async with _schema_probe_lock:
         now = _time.monotonic()
-        if not force and _schema_state["probed_at"] and (now - _schema_state["probed_at"]) < _SCHEMA_PROBE_TTL_S:
+        if (
+            not force
+            and _schema_state["probed_at"]
+            and (now - _schema_state["probed_at"]) < _SCHEMA_PROBE_TTL_S
+        ):
             return SchemaDriftStatus(
                 status=_schema_state["status"],
                 fingerprint=_schema_state["fingerprint"],

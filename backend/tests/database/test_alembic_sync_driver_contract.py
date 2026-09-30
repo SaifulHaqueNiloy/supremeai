@@ -17,9 +17,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-ENV_PY_PATH = (
-    Path(__file__).resolve().parents[2] / "alembic_migrations" / "env.py"
-)
+ENV_PY_PATH = Path(__file__).resolve().parents[2] / "alembic_migrations" / "env.py"
 
 
 def _load_normalize_fn() -> Callable[[str], str]:
@@ -35,8 +33,7 @@ def _load_normalize_fn() -> Callable[[str], str]:
     fn_defs = [
         node
         for node in tree.body
-        if isinstance(node, ast.FunctionDef)
-        and node.name == "_normalize_sync_driver_url"
+        if isinstance(node, ast.FunctionDef) and node.name == "_normalize_sync_driver_url"
     ]
     assert fn_defs, (
         "_normalize_sync_driver_url env.py থেকে মুছে ফেলা হয়েছে — "
@@ -56,40 +53,28 @@ def test_bare_postgresql_scheme_pinned_to_psycopg2() -> None:
     """
     normalize = _load_normalize_fn()
     result = normalize("postgresql://postgres:secret@db.ref.supabase.co:5432/postgres")
-    assert result == (
-        "postgresql+psycopg2://postgres:secret@db.ref.supabase.co:5432/postgres"
-    )
+    assert result == ("postgresql+psycopg2://postgres:secret@db.ref.supabase.co:5432/postgres")
 
 
 def test_legacy_postgres_scheme_pinned_to_psycopg2() -> None:
     """লিগ্যাসি `postgres://` → psycopg2 (SQLAlchemy 2.x এটাকে এমনিও reject করে)।"""
     normalize = _load_normalize_fn()
     result = normalize("postgres://postgres:secret@db.ref.supabase.co:5432/postgres")
-    assert result == (
-        "postgresql+psycopg2://postgres:secret@db.ref.supabase.co:5432/postgres"
-    )
+    assert result == ("postgresql+psycopg2://postgres:secret@db.ref.supabase.co:5432/postgres")
 
 
 def test_explicit_psycopg_v3_scheme_still_pinned() -> None:
     """`postgresql+psycopg://` (v3) → psycopg2 — #2597-র মূল চুক্তি অক্ষুণ্ণ।"""
     normalize = _load_normalize_fn()
-    result = normalize(
-        "postgresql+psycopg://postgres.ref:secret@pooler.supabase.com:5432/postgres"
-    )
-    assert result == (
-        "postgresql+psycopg2://postgres.ref:secret@pooler.supabase.com:5432/postgres"
-    )
+    result = normalize("postgresql+psycopg://postgres.ref:secret@pooler.supabase.com:5432/postgres")
+    assert result == ("postgresql+psycopg2://postgres.ref:secret@pooler.supabase.com:5432/postgres")
 
 
 def test_asyncpg_scheme_pinned_for_sync_engine() -> None:
     """`postgresql+asyncpg://` → psycopg2 — sync engine-এ asyncpg অবৈধ (#2597)।"""
     normalize = _load_normalize_fn()
-    result = normalize(
-        "postgresql+asyncpg://postgres.ref:secret@pooler.supabase.com:5432/postgres"
-    )
-    assert result == (
-        "postgresql+psycopg2://postgres.ref:secret@pooler.supabase.com:5432/postgres"
-    )
+    result = normalize("postgresql+asyncpg://postgres.ref:secret@pooler.supabase.com:5432/postgres")
+    assert result == ("postgresql+psycopg2://postgres.ref:secret@pooler.supabase.com:5432/postgres")
 
 
 def test_psycopg2_scheme_not_double_rewritten() -> None:

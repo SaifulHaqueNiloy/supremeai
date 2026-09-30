@@ -59,7 +59,9 @@ def _proposer_with_proposals(proposals: list[ImprovementProposal]) -> CodebaseRe
     return proposer
 
 
-def _patched_workflow(monkeypatch: pytest.MonkeyPatch, *, raise_cooldown: bool = False) -> MagicMock:
+def _patched_workflow(
+    monkeypatch: pytest.MonkeyPatch, *, raise_cooldown: bool = False
+) -> MagicMock:
     wf = MagicMock()
     wf.propose = AsyncMock(
         side_effect=ProposalCooldownError("cooldown") if raise_cooldown else None
@@ -150,7 +152,11 @@ async def test_batch_routes_each_proposal(monkeypatch):
     proposals = []
     for i in range(3):
         proposals.append(
-            _proposal(weakness_type=f"WEAKNESS_{i}", target_file=f"backend/file_{i}.py", dry_run_passed=True)
+            _proposal(
+                weakness_type=f"WEAKNESS_{i}",
+                target_file=f"backend/file_{i}.py",
+                dry_run_passed=True,
+            )
         )
     proposer = _proposer_with_proposals(proposals)
 

@@ -15,5 +15,11 @@ def _available(module: str) -> bool:
 
 
 PLAYWRIGHT_AVAILABLE = _available("playwright")
+CURL_CFFI_AVAILABLE = _available("curl_cffi")
+ROOKIEPY_AVAILABLE = _available("rookiepy")
 
-__all__ = ["PLAYWRIGHT_AVAILABLE"]
+__all__ = [
+    "PLAYWRIGHT_AVAILABLE",
+    "CURL_CFFI_AVAILABLE",
+    "ROOKIEPY_AVAILABLE",
+]
