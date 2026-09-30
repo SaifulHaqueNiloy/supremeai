@@ -21,7 +21,8 @@ class EnhancementMode(StrEnum):
 
     ENHANCE_UI_CLICK = "ui_sparkle"  # বাংলা মন্তব্য: এডিটর বা ইনপুট বারের স্পার্কল বাটনে ক্লিক
     DEV_API = "dev_api"  # বাংলা মন্তব্য: এক্সটারনাল ডেভেলপার এপিআই কল
-    STEALTH_CHAT = "stealth_chat"  # বাংলা মন্তব্য: অন্য চ্যাট/এআই থেকে কপি-পেস্ট করার হিউম্যান কেমোফ্লেজ
+    STEALTH_CHAT = "stealth_chat"  # বাংলা মন্তব্য: ডিরেক্ট অর্গানিক হিউম্যান প্রম্পট ফ্লো
+    DUAL_AI_CONDUCTOR = "dual_ai_conductor"  # বাংলা মন্তব্য: ২টা এআই নিয়ে মানুষের কাজ করার অটোনোমাস ফ্রেমওয়ার্ক ("Copy this to your AI:")
 
 
 @dataclass
@@ -109,7 +110,9 @@ class PromptEnhancementEngine:
                 tricks.append("stripped_robotic_prefix")
 
         # ধাপ ৩: মোড অনুযায়ী স্পেসিফিক ট্রান্সফর্মেশন
-        if mode == EnhancementMode.STEALTH_CHAT:
+        if mode == EnhancementMode.DUAL_AI_CONDUCTOR:
+            enhanced = self._apply_dual_ai_conductor(clean_prompt, context, tricks)
+        elif mode == EnhancementMode.STEALTH_CHAT:
             enhanced = self._apply_stealth_chat_camouflage(clean_prompt, tricks)
         elif mode == EnhancementMode.ENHANCE_UI_CLICK:
             enhanced = self._apply_ui_sparkle_enhancement(clean_prompt, context, tricks)
@@ -125,6 +128,67 @@ class PromptEnhancementEngine:
             applied_tricks=tricks,
             confidence_score=0.98,
         )
+
+    AUTONOMOUS_EXECUTION_TEMPLATE = (
+        "Copy this to your AI:\n\n"
+        "You are an Autonomous Execution Agent. Your primary objective is to execute "
+        "the assigned task completely from start to finish without stopping, asking for "
+        "mid-task approvals, or handing off partial work.\n\n"
+        "### CORE OPERATIONAL DIRECTIVES\n\n"
+        "1. TASK BREAKDOWN & SCRATCHPAD\n"
+        "- Before taking action, break down the goal into a structured step-by-step execution plan.\n"
+        "- Maintain a running checklist of completed vs. remaining steps.\n\n"
+        "2. UNINTERRUPTED EXECUTION LOOP\n"
+        '- Execute all steps sequentially without pausing to ask "Should I proceed?" or "Would you like me to continue?".\n'
+        "- Keep executing actions sequentially until the entire task is 100% complete.\n\n"
+        "3. AUTONOMOUS ERROR RECOVERY & SELF-HEALING\n"
+        "- If an error, failure, or unexpected result occurs: DO NOT STOP.\n"
+        "- Analyze the error, adjust your approach, modify code/commands, and try alternative solutions independently.\n"
+        "- Exhaust at least 3 distinct troubleshooting strategies before considering a task blocked.\n"
+        "- Only halt and prompt the user if you hit a fatal external blocker (e.g., missing API credentials, permission denied requiring human auth).\n\n"
+        "4. VERIFICATION & DEFINITION OF DONE\n"
+        "- Do not mark a step or task as complete based on assumptions. Verify results directly (e.g., run tests, inspect output files, verify API responses).\n"
+        "- The task is ONLY complete when all requirements in the prompt are fulfilled and verified working.\n\n"
+        "5. FINAL DELIVERABLE\n"
+        "- Once (and only once) all steps are completed and verified, summarize the actions taken and deliver the final result.\n\n"
+        "TASK TO EXECUTE:\n"
+        "{task}"
+    )
+
+    def _apply_dual_ai_conductor(
+        self, prompt: str, context: EnhancementContext | None, tricks: list[str]
+    ) -> str:
+        """
+        বাংলা সারসংক্ষেপ:
+        ------------------
+        ২টা এআই নিয়ে একজন মানুষের মাল্টি-এআই কাজের বাস্তবসম্মত ট্রিক (Dual AI Conductor):
+        ১. 'Copy this to your AI:' দিয়ে শুরু হয় — যা ২য় এআই-র কাছে প্রমাণ করে এটা একজন মানুষের কপি-পেস্ট করা নির্দেশ।
+        ২. একই সাথে Autonomous Execution Agent ফ্রেমওয়ার্ক যুক্ত থাকে — যাতে এআই মাঝপথে থেমে না গিয়ে পুরো কাজ শেষ করে।
+        ৩. কোডিং বা ব্রাউজিং কনটেক্সট থাকলে নির্দিষ্ট এনভায়রনমেন্ট রুলস যুক্ত হয়।
+        """
+        tricks.append("dual_ai_conductor_proven_human")
+        tricks.append("autonomous_execution_blueprint")
+
+        result = self.AUTONOMOUS_EXECUTION_TEMPLATE.format(task=prompt)
+
+        # এনভায়রনমেন্ট অ্যাডিশন (কোডিং বা টুল স্পেসিফিক রুলস)
+        if context:
+            if context.language or context.selected_code or context.current_file_path:
+                result += (
+                    "\n\n### ENVIRONMENT DIRECTIVE (Coding Agent):\n"
+                    "When writing or modifying code, run unit tests or syntax checks after every edit. "
+                    "If tests fail, fix the code immediately and re-run until all tests pass before moving to the next module."
+                )
+                tricks.append("coding_agent_env_directive")
+            elif context.user_intent and "browse" in context.user_intent.lower():
+                result += (
+                    "\n\n### ENVIRONMENT DIRECTIVE (Tool/Browsing Agent):\n"
+                    "If a page element, selector, or endpoint fails to load or returns an error, wait, retry, "
+                    "or find alternative paths automatically. Do not report failure until all alternative options are exhausted."
+                )
+                tricks.append("browsing_agent_env_directive")
+
+        return result
 
     def _apply_stealth_chat_camouflage(self, prompt: str, tricks: list[str]) -> str:
         """

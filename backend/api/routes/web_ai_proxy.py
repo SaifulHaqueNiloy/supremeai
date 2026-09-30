@@ -213,8 +213,8 @@ async def parallel_chat_completions(payload: ParallelTasksRequest):
 class PromptEnhanceRequest(BaseModel):
     prompt: str = Field(..., min_length=1, description="মূল প্রম্পট")
     mode: str = Field(
-        default="stealth_chat",
-        description="মোড: stealth_chat (অ্যান্টি-বট কেমোফ্লেজ), ui_sparkle (✨ বাটন ক্লিক), dev_api",
+        default="dual_ai_conductor",
+        description="মোড: dual_ai_conductor ('Copy this to your AI:' অটোনোমাস ব্লুপ্রিন্ট), stealth_chat, ui_sparkle, dev_api",
     )
     current_file_path: str | None = None
     selected_code: str | None = None

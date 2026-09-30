@@ -169,3 +169,44 @@ async def test_account_concurrency_lock():
         assert acc._lock.locked()
 
     assert not acc._lock.locked()
+
+
+def test_dual_ai_conductor_mode():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    DUAL_AI_CONDUCTOR মোড যাচাই:
+    ১. 'Copy this to your AI:' দিয়ে শুরু হবে (২টা এআই নিয়ে মানুষের কাজের প্রমাণ)।
+    ২. Autonomous Execution Agent ডিরেক্টিভ থাকবে (টাস্ক ব্রেকডাউন, আনইন্টারাপ্টেড এক্সিকিউশন, সেলফ-হিলিং)।
+    ৩. আসল টাস্কটি 'TASK TO EXECUTE:' সেকশনে বসবে।
+    """
+    engine = PromptEnhancementEngine()
+    task = "Build a zero-latency memory cache middleware in FastAPI."
+    result = engine.enhance(task, mode=EnhancementMode.DUAL_AI_CONDUCTOR)
+
+    assert "Copy this to your AI:" in result.enhanced_prompt
+    assert "You are an Autonomous Execution Agent." in result.enhanced_prompt
+    assert "TASK BREAKDOWN & SCRATCHPAD" in result.enhanced_prompt
+    assert "UNINTERRUPTED EXECUTION LOOP" in result.enhanced_prompt
+    assert "AUTONOMOUS ERROR RECOVERY & SELF-HEALING" in result.enhanced_prompt
+    assert "Build a zero-latency memory cache middleware in FastAPI." in result.enhanced_prompt
+    assert "dual_ai_conductor_proven_human" in result.applied_tricks
+    assert "autonomous_execution_blueprint" in result.applied_tricks
+
+
+def test_dual_ai_conductor_with_coding_context():
+    """
+    বাংলা সারসংক্ষেপ:
+    ------------------
+    কোডিং কনটেক্সট থাকলে নির্দিষ্ট এনভায়রনমেন্ট রুলস (ইউনিট টেস্ট চালানো) যুক্ত হওয়া যাচাই।
+    """
+    engine = PromptEnhancementEngine()
+    context = EnhancementContext(language="python", current_file_path="backend/core/cache.py")
+    result = engine.enhance(
+        "Refactor cache pool", mode=EnhancementMode.DUAL_AI_CONDUCTOR, context=context
+    )
+
+    assert "Copy this to your AI:" in result.enhanced_prompt
+    assert "ENVIRONMENT DIRECTIVE (Coding Agent):" in result.enhanced_prompt
+    assert "run unit tests or syntax checks after every edit" in result.enhanced_prompt
+    assert "coding_agent_env_directive" in result.applied_tricks
