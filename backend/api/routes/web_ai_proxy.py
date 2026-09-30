@@ -14,16 +14,25 @@ import time
 import uuid
 from typing import Any, Literal
 
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
+from api.deps import get_current_admin  # ROOT-CAUSE FIX (#2730): admin gate
 from core.logging_config import logger
 from core.web_ai_session_bridge import (
     WebAISessionError,
     global_session_pool,
 )
 
-router = APIRouter(prefix="/v1", tags=["web-ai-proxy"])
+# ROOT-CAUSE FIX (#2730): entire /v1/* surface now requires admin auth.
+# Previously: zero auth deps — any free-tier JWT holder could inject upstream
+# tokens via /pool/accounts, poisoning the cascade for other tenants +
+# bypassing CostGuard/tenant ledger. Constitution fail-closed-costguard violated.
+router = APIRouter(
+    prefix="/v1",
+    tags=["web-ai-proxy"],
+    dependencies=[Depends(get_current_admin)],  # admin-only — pool management is privileged
+)
 
 
 class ChatMessage(BaseModel):
@@ -107,8 +116,10 @@ async def chat_completions(payload: ChatCompletionRequest):
         logger.error(f"[WebAIProxy] All cascade providers failed: {exc}")
         raise HTTPException(status_code=502, detail=f"Web AI Session Proxy failure: {exc}")
     except Exception as exc:
-        logger.error(f"[WebAIProxy] Unexpected error in chat completion: {exc}")
-        raise HTTPException(status_code=500, detail=str(exc))
+        # ROOT-CAUSE FIX (#2730): don't leak internal exception text to client.
+        # Contrast with the correlation-id-only pattern in api/routes/admin.py:72-77.
+        logger.error(f"[WebAIProxy] Unexpected error in chat completion: {exc}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error — check server logs")
 
 
 @router.get("/models")
@@ -157,10 +168,27 @@ async def pool_status():
 
 @router.post("/pool/accounts")
 async def register_pool_account(body: AccountRegisterRequest):
-    """বাংলা মন্তব্য: পুলে ডায়নামিকালি নতুন অ্যাকাউন্ট/টোকেন ইনজেক্ট করা।"""
+    """বাংলা মন্তব্য: পুলে ডায়নামিকালি নতুন অ্যাকাউন্ট/টোকেন ইনজেক্ট করা।
+
+    ROOT-CAUSE FIX (#2730): previously accepted `token` from request body —
+    any admin could inject arbitrary upstream tokens, poisoning the cascade
+    for other tenants. Now: token must be None (pool derives from vault/env)
+    or match a vault-keyed reference. Request-body tokens are rejected.
+    """
+    # ROOT-CAUSE FIX (#2730): reject request-body tokens — pool accounts must
+    # be derived from vault/env, not client-supplied strings. This prevents
+    # pool poisoning + CostGuard bypass.
+    if body.token:
+        raise HTTPException(
+            status_code=422,
+            detail="Pool account tokens must be provisioned via vault/env, not request body. "
+                   "POST /pool/accounts with service+account_id only — the pool will resolve "
+                   "the token from the secret vault.",
+        )
+    # Token-less registration: pool will resolve from vault at first use
     acc = global_session_pool.register_account(
         service=body.service,
-        token=body.token,
+        token=None,  # ROOT-CAUSE FIX (#2730): never accept body token
         account_id=body.account_id,
     )
     return {
