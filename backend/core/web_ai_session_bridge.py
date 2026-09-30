@@ -423,11 +423,11 @@ class WebAISessionBridge:
         if not org_uuid:
             raise WebAISessionError(f"Invalid organization payload from Claude: {orgs}")
 
-        # ২. নতুন কনভারসেশন তৈরি (মানুষের মতো বিশ্বাসযোগ্য টাইটেল দিয়ে)
-        from core.legit_file_presenter import LegitFilePresenter
+        # ২. নতুন কনভারসেশন তৈরি (মানুষের মতো স্বাভাবিক অর্গানিক টাইটেল দিয়ে)
+        from core.natural_file_presenter import NaturalFilePresenter
 
         conv_uuid = str(uuid.uuid4())
-        human_title = LegitFilePresenter.humanize_conversation_title(prompt)
+        human_title = NaturalFilePresenter.humanize_conversation_title(prompt)
         create_payload = {"uuid": conv_uuid, "name": human_title}
         status, conv_res = await self.execute_http_request(
             service="claude",

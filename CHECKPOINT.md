@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-30 18:27 UTC
+- **Date:** 2026-09-30 18:33 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -11,13 +11,14 @@
 
 ## Files Changed
   - `backend/tests/core/test_legit_file_presenter.py`
-  - `backend/core/web_ai_session_bridge.py`
-  - `backend/tools/browser/playwright_browser_agent.py`
-  - `scripts/_INDEX.md`
+  - `scripts/agents/continuous_agent_loop.py`
   - `backend/core/legit_file_presenter.py`
+  - `backend/core/web_ai_session_bridge.py`
+  - `.github/ISSUE_TEMPLATE/agent_task.yml`
+  - `backend/tools/browser/playwright_browser_agent.py`
+  - `backend/core/natural_file_presenter.py`
   - `CHECKPOINT.md`
   - `.github/constitution/rules.yml`
-  - `.github/ISSUE_TEMPLATE/agent_task.yml`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
