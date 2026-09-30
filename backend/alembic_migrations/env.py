@@ -92,6 +92,30 @@ def _resolve_reachable_url(url: str) -> str:
 
 
 migration_url = _resolve_reachable_url(raw_migration_url)
+
+
+def _normalize_sync_driver_url(url: str) -> str:
+    """Alembic sync engine contract — মাইগ্রেশন সর্বদা psycopg2 দিয়ে চলবে (#2597)।
+
+    বাংলা মন্তব্য: Writer secret-এর scheme যা-ই হোক (`postgresql+psycopg://` v3
+    বা `postgresql+asyncpg://`), alembic সিঙ্ক-ইঞ্জিন — তাই ড্রাইভার চুক্তি
+    রিপো-স্বতন্ত্রভাবে psycopg2-তে নির্দিষ্ট করা হলো। এতে:
+      ১. সিক্রেট scheme `+psycopg://` (v3) হলেও রিপোতে নেই এমন psycopg v3
+         মডিউল খোঁজার ModuleNotFoundError আর হবে না (প্রমাণ: Deploy Train
+         run 36652606180 Migration Gate failure);
+      ২. `+asyncpg://` sync-engine-এ অবৈধ — sync পথেও psycopg2-ই একমাত্র
+         সামঞ্জস্যপূর্ণ ড্রাইভার;
+      ৩. নিচের `_sync_psycopg2_ssl_args()` file-based SSL চুক্তি সর্বদা
+         প্রযোজ্য থাকে; নতুন ড্রাইভার-নির্ভরতা যোগ করার দরকার নেই
+         (free-tier dependency minimalism বহাল)।
+    """
+    for legacy_scheme in ("postgresql+psycopg://", "postgresql+asyncpg://"):
+        if url.startswith(legacy_scheme):
+            return "postgresql+psycopg2://" + url[len(legacy_scheme):]
+    return url
+
+
+migration_url = _normalize_sync_driver_url(migration_url)
 config.set_main_option("sqlalchemy.url", migration_url)
 
 # Interpret the config file for Python logging.
