@@ -120,6 +120,8 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
   const timeoutId = setTimeout(() => controller.abort(), 8000); // 8s timeout for health check
 
   try {
+    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: হেলথ-প্রোব — নিজস্ব AbortSignal, কিউ-বাইপাস ইচ্ছাকৃত (probe ≠ ইউজার ট্রাফিক)
+    // eslint-disable-next-line no-restricted-syntax
     const res = await fetch(`${apiBaseUrl}/api/health-aggregation`, {
       method: 'GET',
       headers: {
@@ -157,6 +159,8 @@ const fetchPublicHealth = async (): Promise<HealthData> => {
     // endpoint is healthy. Keep the status chip truthful instead of reporting
     // individual services as down from a stale/degraded aggregate response.
     try {
+      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): হেলথ-প্রোব fallback — নিজস্ব timeout, কিউ-বাইপাস ইচ্ছাকৃত
+      // eslint-disable-next-line no-restricted-syntax
       const fallback = await fetch(`${apiBaseUrl}/api/v1/health`, {
         headers: { Accept: 'application/json' },
         signal: AbortSignal.timeout(4000),

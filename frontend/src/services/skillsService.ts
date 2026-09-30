@@ -56,6 +56,8 @@ export const fetchSkillCatalog = async (): Promise<CatalogResponse> => {
 export const checkLiveness = async (): Promise<boolean> => {
   const API_BASE = getApiBaseUrl();
   try {
+    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: হেলথ-প্রোব (live) — কিউ-বাইপাস ইচ্ছাকৃত
+    // eslint-disable-next-line no-restricted-syntax
     const response = await fetch(`${API_BASE}/api/v1/live`, {
       method: 'GET',
       headers: { 'Cache-Control': 'no-cache' },
@@ -70,6 +72,8 @@ export const checkLiveness = async (): Promise<boolean> => {
 export const checkReadiness = async (): Promise<{ ready: boolean; subsystems: Record<string, string> }> => {
   const API_BASE = getApiBaseUrl();
   try {
+    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: হেলথ-প্রোব (ready) — কিউ-বাইপাস ইচ্ছাকৃত
+    // eslint-disable-next-line no-restricted-syntax
     const response = await fetch(`${API_BASE}/api/v1/ready`, {
       method: 'GET',
       headers: { 'Cache-Control': 'no-cache' },

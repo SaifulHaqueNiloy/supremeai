@@ -46,6 +46,7 @@ import { convertToCSV } from './csv';
 // ══════════════════════════════════════════════════════════════════════════════
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { apiClient } from '../../../services/apiClient';
 
 import { getApiBaseUrl } from '../../../utils/api';  // roadmap 1.5 (#1180)
 import {
@@ -116,9 +117,8 @@ export function CIDashboard({
       const base = apiUrl
         ? apiUrl.replace(/\/api\/ci\/latest-summary$/, '')
         : getApiBaseUrl();  // roadmap 1.5 (#1180): canonical resolver
-      const response = await fetch(`${base}/api/ci/history?limit=12`);
-      if (!response.ok) return; // history is optional — never block the dashboard
-      const payload = await response.json();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get — history optional, তাই catch-এ নীরব
+      const payload = await apiClient.get<Array<Record<string, unknown>> | { history?: Array<Record<string, unknown>>; items?: Array<Record<string, unknown>>; runs?: Array<Record<string, unknown>> }>(`${base}/api/ci/history?limit=12`);
       const runs: Array<Record<string, unknown>> = Array.isArray(payload)
         ? payload
         : payload.history || payload.items || payload.runs || [];
@@ -146,12 +146,9 @@ export function CIDashboard({
   // Fetch data
   const fetchData = useCallback(async () => {
     try {
-      const url = apiUrl || `${getApiBaseUrl()}/api/ci/latest-summary`;  // roadmap 1.5 (#1180)
-      const response = await fetch(url);
-
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-      const result: CISummaryData = await response.json();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get — !ok হলে ApiError ফেলবে
+      const url = apiUrl || `/api/ci/latest-summary`;  // roadmap 1.5 (#1180)
+      const result = await apiClient.get<CISummaryData>(url);
       setData(result);
       setError(null);
       setLastUpdated(new Date());

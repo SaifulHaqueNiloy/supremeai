@@ -34,6 +34,17 @@ export default tseslint.config({ ignores: ['dist', 'dist-admin', 'dist-user', 's
     'no-console': ['warn', { allow: ['warn', 'error', 'debug'] }],
   },
 }, {
+  // #2522: raw fetch() নিষেধ — সব API কল apiClient হয়ে যাবে (timeout/auth/error-normalization)।
+  // Allowlist-এ শুধু বৈধ কাঁচা fetch: স্ট্যাটিক কনফিগ, এক্সটার্নাল সার্ভিস, ব্লব-রেসপন্স,
+  // হেলথ-প্রোব (কিউ-বাইপাস ইচ্ছাকৃত), ক্র্যাশ-টাইম টেলিমেট্রি, এবং ক্লায়েন্ট নিজে।
+  files: ['src/**/*.{ts,tsx}'],
+  rules: {
+    'no-restricted-syntax': ['warn', {
+      selector: "CallExpression[callee.name='fetch']",
+      message: '#2522: raw fetch() নিষিদ্ধ — services/apiClient ব্যবহার করুন (timeout/auth/error-handling কেন্দ্রীয়)। বৈধ ব্যতিক্রম হলে লাইনে // eslint-disable-next-line no-restricted-syntax + কারণ কমেন্ট দিন।',
+    }],
+  },
+}, {
   // Test files: Allow any in tests (mocks, stubs, test fixtures)
   files: ['**/*.{test,spec}.{ts,tsx}', '**/test/**/*.{ts,tsx}'],
   rules: {

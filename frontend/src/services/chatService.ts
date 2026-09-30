@@ -1,8 +1,7 @@
 // Chat API Service for SupremeAI 2.0
 // বাংলা মонтаব্য: চ্যাট ইন্টারফেস ও স্ট্রিমিং এপিআই এর সাথে যোগাযোগের জন্য ব্যবহৃত সার্ভিস। Prompt-to-Action সাপোর্ট সহ।
 
-import { apiClient, getAuthHeaders } from './apiClient';
-import { getApiBaseUrl } from '../utils/api';
+import { apiClient } from './apiClient';
 
 import type { UnifiedChatMessage } from '../types/chat';
 
@@ -32,8 +31,6 @@ export async function sendMessageStream(
   onError: (error: string) => void,
   abortSignal?: AbortSignal,
 ): Promise<void> {
-  const API_BASE = getApiBaseUrl();
-  const authHeaders = await getAuthHeaders();  // 🔒 Get JWT/CSRF/Fingerprint headers
 
   // Issue #1680 (streaming cold-start retry): the stream endpoint had no
   // retry — a single 502/503/504 (Render free-tier cold start) or transient
@@ -56,15 +53,9 @@ export async function sendMessageStream(
     for (let attempt = 1; attempt <= STREAM_MAX_ATTEMPTS; attempt++) {
       let attemptRes: Response;
       try {
-        attemptRes = await fetch(`${API_BASE}/api/v1/stream/chat`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders,  // Spread auth headers into request
-          },
-          body: JSON.stringify({ message }),
-          signal: abortSignal,
-        });
+        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.postStream — auth header
+        // কেন্দ্রীয়; নিচের নিজস্ব retry-loop (৫০২-৫০৪ backoff) অপরিবর্তিত রেখেছি।
+        attemptRes = await apiClient.postStream('/api/v1/stream/chat', { message }, { signal: abortSignal });
       } catch (err) {
         if (abortSignal?.aborted) throw err;  // user cancelled — not retryable
         if (attempt >= STREAM_MAX_ATTEMPTS) throw err;
@@ -133,17 +124,9 @@ export async function sendMessageStream(
     if (pending) consumeLine(pending);
     // Prompt-to-Action metadata fallback (legacy path only)
     try {
-      const actionHeaders = await getAuthHeaders();  // 🔒 Auth for action endpoint too
-      const actionRes = await fetch(`${API_BASE}/api/chat/prompt-action`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...actionHeaders,  // 🔒 Include auth headers
-        },
-        body: JSON.stringify({ message }),
-      });
-      if (actionRes.ok) {
-        const actionData = await actionRes.json();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — auth কেন্দ্রীয় ট্রান্সপোর্টে
+      const actionData = await apiClient.post<{ action?: ChatResponse['action'] }>('/api/chat/prompt-action', { message }).catch(() => null);
+      if (actionData) {
         onDone(actionData.action);
       } else {
         onDone(undefined);

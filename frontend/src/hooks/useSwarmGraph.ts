@@ -2,8 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useCallback, useState, useEffect } from 'react';
 import { applyNodeChanges, applyEdgeChanges } from '@xyflow/react';
 import type { Edge, EdgeChange, Node, NodeChange } from '@xyflow/react';
-import { getApiBaseUrl } from '../utils/api';
-import { getAuthHeaders } from '../services/apiClient';
+import { apiClient } from '../services/apiClient';
 
 interface SwarmGraphDelta {
   added: { nodes: Node[]; edges: Edge[] };
@@ -19,11 +18,8 @@ export const useSwarmGraph = () => {
   const { data: delta } = useQuery<SwarmGraphDelta>({
     queryKey: ['swarm-graph'],
     queryFn: async () => {
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/evolution/swarm-graph`, {
-        method: 'GET',
-        headers: await getAuthHeaders(),
-      });
-      return res.json(); // ব্যাকএন্ড থেকে {added: {nodes:[], edges:[]}, removed: {nodes:[], edges:[]}}
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get
+      return apiClient.get<SwarmGraphDelta>('/api/v1/evolution/swarm-graph'); // {added:{nodes,edges}, removed:{nodes,edges}}
     },
     refetchInterval: 2000, // ২ সেকেন্ড পর পর পোলিং
   });
@@ -53,11 +49,8 @@ export const useSwarmGraph = () => {
     queryKey: ['agent-health', agentIds],
     queryFn: async () => {
       if (agentIds.length === 0) return {};
-      const res = await fetch(`${getApiBaseUrl()}/api/v1/health/agents`, {
-        method: 'GET',
-        headers: await getAuthHeaders(),
-      });
-      return res.json();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.get
+      return apiClient.get<AgentHealthMap>('/api/v1/health/agents');
     },
     refetchInterval: 2000, // ২ সেকেন্ড পর পর হার্টবিট চেক
     enabled: agentIds.length > 0, // এজেন্ট থাকলেই কেবল পোলিং হবে

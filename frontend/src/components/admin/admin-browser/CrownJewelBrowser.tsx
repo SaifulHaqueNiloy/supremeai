@@ -1,3 +1,4 @@
+import { apiClient } from '../../../services/apiClient';
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 
 import { componentEventBus } from '../../../lib/componentEventBus';
@@ -182,13 +183,11 @@ export const CrownJewelBrowser: React.FC<CrownJewelBrowserProps> = ({
         tabId: targetTabId
       });
 
-      fetch('/api/browser/browse-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: normalizedUrl, timestamp: Date.now(), tabId: targetTabId })
-  }).catch((error) => {
-    console.warn('[browser] browse-session persistence failed', error);
-  });
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post (fire-and-forget, catch অক্ষত)
+      apiClient.post('/api/browser/browse-session', { url: normalizedUrl, timestamp: Date.now(), tabId: targetTabId })
+        .catch((error) => {
+          console.warn('[browser] browse-session persistence failed', error);
+        });
   }
 }, [activeTabId, historyIndex, onUrlChange, serviceHealthStatus, addAlert, updateTabUrl, enableMemorySave, userId, addBrowseSession]);
 

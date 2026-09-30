@@ -256,6 +256,8 @@ const fetchWithTimeout = async (url: string, options: RequestInit, timeoutMs = D
   }
 
   try {
+    // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: কেন্দ্রীয় ট্রান্সপোর্ট নিজেই — fetch-এর একমাত্র বৈধ বাসস্থান
+    // eslint-disable-next-line no-restricted-syntax
     return await fetch(url, fetchOptions);
   } catch (e) {
     if (controller.signal.aborted) {
@@ -379,6 +381,8 @@ const tryRefreshSession = async (): Promise<boolean> => {
   if (!refreshInFlight) {
     refreshInFlight = (async () => {
       try {
+        // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: কেন্দ্রীয় ট্রান্সপোর্ট নিজেই — fetch-এর একমাত্র বৈধ বাসস্থান
+        // eslint-disable-next-line no-restricted-syntax
         const res = await fetch(buildUrl(getApiBaseUrl(REFRESH_PATH), REFRESH_PATH), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -532,6 +536,68 @@ export const apiClient = {
     });
   },
 
+  // #2522 batch-1: raw fetch() sweep-এর জন্য দুটি বিশেষ ট্রান্সপোর্ট —
+  // postStream: SSE/chunk streaming (res.body.getReader() ভোক্তারা) — JSON
+  // envelope পার্স করে না, কাঁচা Response ফেরায় (auth+queue+buildUrl সুবিধা সহ)।
+  postStream: async (path: string, body?: unknown, options?: RequestInit): Promise<Response> => {
+    const authHeaders = await getAuthHeaders();
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
+        ...options,
+        method: 'POST',
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...authHeaders,
+        },
+        body: body ? JSON.stringify(body) : undefined,
+      });
+      if (!res.ok) throw new ApiError(`HTTP error! status: ${res.status}`, res.status);
+      return res;
+    });
+  },
+
+  // #2522 batch-1: SSE/chunk GET স্ট্রিম (EvolutionForge swarm stream-এর মতো) —
+  // কাঁচা Response ফেরায়, JSON envelope স্পর্শ করে না।
+  getStream: async (path: string, options?: RequestInit): Promise<Response> => {
+    const authHeaders = await getAuthHeaders();
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
+        ...options,
+        method: 'GET',
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...authHeaders,
+        },
+      });
+      if (!res.ok) throw new ApiError(`HTTP error! status: ${res.status}`, res.status);
+      return res;
+    });
+  },
+
+  // #2522 batch-1: ফাইল ডাউনলোড — Content-Disposition থেকে filename বের করে
+  // { blob, filename } ফেরায় (ExportMenu-র মতো ব্লব ভোক্তাদের জন্য)।
+  // options.method/body দিলে POST-blob ডাউনলোডও চলে (chat export)।
+  download: async (path: string, options?: RequestInit): Promise<{ blob: Blob; filename: string | null }> => {
+    const authHeaders = await getAuthHeaders();
+    delete authHeaders['Content-Type'];
+    const method = options?.method ?? 'GET';
+    return withAuthRetry(path, async () => {
+      const res = await throttledFetch(buildUrl(getApiBaseUrl(path), path), {
+        ...options,
+        method,
+        headers: {
+          ...(options?.headers as Record<string, string>),
+          ...authHeaders,
+        },
+      });
+      if (!res.ok) throw new ApiError(`HTTP error! status: ${res.status}`, res.status);
+      const disposition = res.headers.get('Content-Disposition') ?? '';
+      const match = /filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i.exec(disposition);
+      const filename = match ? decodeURIComponent(match[1] ?? match[2]) : null;
+      return { blob: await res.blob(), filename };
+    });
+  },
+
   delete: async <T>(path: string, options?: RequestInit): Promise<T> => {
     // FIX (P1, review 2026-09-12): options first — see get() above.
     return withAuthRetry(path, async () => {
@@ -567,6 +633,8 @@ export const apiClient = {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 seconds timeout
 
+      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: কেন্দ্রীয় ট্রান্সপোর্ট নিজেই — fetch-এর একমাত্র বৈধ বাসস্থান
+      // eslint-disable-next-line no-restricted-syntax
       const res = await fetch(buildUrl(getApiBaseUrl(path), path), {
         method,
         headers: await getAuthHeaders(),

@@ -1,3 +1,4 @@
+import { apiClient } from '../../../services/apiClient';
 import type { Dispatch, RefObject, SetStateAction } from 'react';
 
 import { componentEventBus } from '../../../lib/componentEventBus';
@@ -52,10 +53,14 @@ export function useBrowserActions({
     try {
       addConsoleMessage('info', `🤖 Running AI action: ${action.type}...`);
 
-      const response = await fetch('/api/browser/ai-action', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post — auth/timeout/error-normalization কেন্দ্রীয়
+      const data = await apiClient.post<{
+          response?: string; summary?: string; analysis?: string;
+          links?: Record<string, unknown>[]; issues?: Record<string, unknown>[];
+          criticalIssues?: string[]; dom?: unknown;
+        }>(
+        '/api/browser/ai-action',
+        {
           action: action.type,
           url: activeTab?.url,
           payload: action.payload,
@@ -64,14 +69,8 @@ export function useBrowserActions({
           // (cross-origin). Previously this was a stub returning '' and every
           // AI action ran with zero page context.
           context: await getPageContent(iframeRef)
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`AI service error: ${response.status}`);
-      }
-
-      const data = await response.json();
+        }
+      );
 
       switch (action.type) {
         case 'summarize':
@@ -81,14 +80,14 @@ export function useBrowserActions({
           setAiResponse(data.response || data.analysis || 'Analysis complete');
           break;
         case 'extract_links':
-          setAiResponse(formatLinksFromData(data.links));
+          setAiResponse(formatLinksFromData(data.links || []));
           break;
         case 'find_issues':
-          setAiResponse(formatIssuesFromData(data.issues));
+          setAiResponse(formatIssuesFromData(data.issues || []));
 
           // ✅ Auto-create alert for critical issues
-          if (data.criticalIssues?.length > 0) {
-            data.criticalIssues.forEach((issue: string) => {
+          if ((data.criticalIssues?.length ?? 0) > 0) {
+            (data.criticalIssues ?? []).forEach((issue: string) => {
               addAlert({ severity: 'error', source: 'Browser-AI', message: issue });
             });
           }
@@ -124,17 +123,10 @@ export function useBrowserActions({
       // ✅ REAL SECURITY SCAN VIA BACKEND
       addConsoleMessage('info', '🔒 Initiating security scan...');
 
-      const response = await fetch('/api/browser/security-scan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url: activeTab?.url })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Security scan service error: ${response.status}`);
-      }
-
-      const result = await response.json();
+      // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post
+      // বাংলা মন্তব্য: ব্যাকএন্ড ইস্যু-তালিকা স্ট্রিং-অ্যারে হিসেবে ফেরায়; unifiedStore-এর
+      // SecurityIssue[] স্লটে যাওয়ার সময় আগের (untyped-json) আচরণই বজায় রাখতে cast।
+      const result = await apiClient.post<{ score?: number; issues?: string[] }>('/api/browser/security-scan', { url: activeTab?.url });
 
       const scanResult = {
         score: result.score || 0,
@@ -147,7 +139,7 @@ export function useBrowserActions({
       setLastSecurityScan({
         url: activeTab?.url || '',
         score: scanResult.score,
-        issues: scanResult.issues,
+        issues: scanResult.issues as unknown as import('../../../store/unifiedStore').SecurityIssue[],
         timestamp: Date.now()
       });
 
@@ -191,6 +183,8 @@ export function useBrowserActions({
       addConsoleMessage('log', '📸 Capturing screenshot...');
       setIsLoading(true);
 
+      // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: screenshot ব্লব-রেসপন্স — apiClient JSON-envelope পার্স করে, ব্লব নয়
+      // eslint-disable-next-line no-restricted-syntax
       const response = await fetch('/api/browser/screenshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -215,13 +209,11 @@ export function useBrowserActions({
 
       // ✅ OPTIONAL: Save to gallery (non-blocking)
       if (userId) {
-        fetch('/api/browser/screenshots', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-body: JSON.stringify({ url: activeTab?.url, timestamp: Date.now() })
-  }).catch((error) => {
-    console.warn('[browser] screenshot persistence failed', error);
-  });
+        // বাংলা মন্তব্য (#2522): raw fetch() → apiClient.post (fire-and-forget, catch অক্ষত)
+        apiClient.post('/api/browser/screenshots', { url: activeTab?.url, timestamp: Date.now() })
+          .catch((error) => {
+            console.warn('[browser] screenshot persistence failed', error);
+          });
       }
     } catch (err) {
       addConsoleMessage('error', `Screenshot failed: ${err}`);

@@ -27,6 +27,8 @@ export const useServerStream = () => {
     const probeHealth = async () => {
       if (!isMounted) return;
       try {
+        // বাংলা মন্তব্য (#2522 ব্যতিক্রম): #2522: হেলথ-প্রোব — নিজস্ব টাইমআউট, কিউ-বাইপাস ইচ্ছাকৃত
+        // eslint-disable-next-line no-restricted-syntax
         const res = await fetch(`${API_BASE_URL}/api/v1/health`, {
           method: 'GET',
           headers: { Accept: 'application/json' },
