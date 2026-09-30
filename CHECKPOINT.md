@@ -2,7 +2,7 @@
 > Auto-updated by AI agents after each major session. Next agent must read this first.
 
 ## Last Session
-- **Date:** 2026-09-30 19:44 UTC
+- **Date:** 2026-09-30 19:47 UTC
 - **Agent:** Auto-updated (checkpoint_update.py)
 - **Summary:** Auto-updated via pre-commit hook
 
@@ -10,10 +10,48 @@
   - (see git log for details)
 
 ## Files Changed
-  - `backend/core/web_ai_session_bridge.py`
+  - `.agents/skills/developing-genkit-python/references/common-errors.md`
+  - `.agents/skills/developing-genkit-js/references/agents-human-in-the-loop.md`
+  - `.agents/skills/developing-genkit-python/references/agents-artifacts.md`
+  - `.agents/skills/developing-genkit-python/references/examples.md`
+  - `.agents/skills/developing-genkit-python/references/fastapi.md`
+  - `.agents/skills/developing-genkit-js/references/dotprompt.md`
   - `backend/tests/core/test_prompt_enhancement_engine.py`
-  - `.github/constitution/rules.yml`
+  - `.agents/skills/developing-genkit-js/references/middleware.md`
+  - `.agents/skills/developing-genkit-js/references/agents-background.md`
+  - `.agents/skills/developing-genkit-python/references/agents-state.md`
+  - `backend/core/web_ai_session_bridge.py`
+  - `.agents/skills/developing-genkit-python/SKILL.md`
   - `backend/core/prompt_enhancement_engine.py`
+  - `.agents/skills/developing-genkit-python/references/dotprompt.md`
+  - `skills-lock.json`
+  - `.agents/skills/developing-genkit-js/SKILL.md`
+  - `.agents/skills/developing-genkit-js/references/setup.md`
+  - `.agents/skills/developing-genkit-python/references/agents-background.md`
+  - `.agents/skills/developing-genkit-js/references/docs-and-cli.md`
+  - `.agents/skills/developing-genkit-js/references/common-errors.md`
+  - `.agents/skills/developing-genkit-js/references/agents.md`
+  - `.agents/skills/developing-genkit-js/references/agents-multi-agent.md`
+  - `.agents/skills/developing-genkit-js/references/agents-sessions.md`
+  - `.agents/skills/developing-genkit-python/references/setup.md`
+  - `.agents/skills/developing-genkit-python/references/agents-branching.md`
+  - `.agents/skills/developing-genkit-js/references/agents-branching.md`
+  - `.agents/skills/developing-genkit-js/references/agents-artifacts.md`
+  - `.agents/skills/developing-genkit-js/references/middleware-custom.md`
+  - `.agents/skills/developing-genkit-python/references/agents-http.md`
+  - `CHECKPOINT.md`
+  - `.agents/skills/developing-genkit-python/references/evals.md`
+  - `.agents/skills/developing-genkit-js/references/agents-deployment.md`
+  - `.agents/skills/developing-genkit-js/references/agents-custom.md`
+  - `.agents/skills/developing-genkit-js/references/best-practices.md`
+  - `.agents/skills/developing-genkit-python/references/dev-workflow.md`
+  - `.agents/skills/developing-genkit-js/references/a2ui.md`
+  - `.agents/skills/developing-genkit-js/references/examples.md`
+  - `.agents/skills/developing-genkit-python/references/agents.md`
+  - `.agents/skills/developing-genkit-python/references/agents-custom.md`
+  - `.agents/skills/developing-genkit-python/references/agents-human-in-the-loop.md`
+  - `.agents/skills/developing-genkit-js/references/agents-state.md`
+  - `.agents/skills/developing-genkit-python/references/agents-sessions.md`
 
 ## Pending (Carry Forward)
 - Skip budget trending: 26 active skip-marker sites / 24 files (machine-enforced in docs/SKIPPED_TESTS.md — was 103/53 at the 2026-09-14 audit; <30 target reached 2026-09-25, keep it there)
