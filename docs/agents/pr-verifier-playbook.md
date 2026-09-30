@@ -860,3 +860,12 @@ fix নয়, reproducibility issue।
 - **ISSUE/কমেন্ট: ০ + ০** — কঠোর-dedupe (OPEN-ISSUES-হেডার **২৮**, M33-নিয়ম-অনুসৃত); সব-নতুন-বস্তু-ই-ট্র্যাকড।
 - **শিক্ষা**: merged_by-এখন-bot-যুগ-সম্পূর্ণ — admin-ম্যানুয়াল-মার্জ-যুগ-সমাপ্ত (#2645-ইচ্ছার-প্রথম-ফল); ইঞ্জিনের-সূচনা-মুহূর্তে-success:0+ok:true-পাঠ = in-flight — রিপোর্টের-আগে-raw-API-পুনঃযাচাই-অপরিহার্য (M29-পুনঃপ্রয়োগ)।
 - **এই চক্রে: 0 merge/0 force-push/0 main-push/0 নতুন-ইস্যু/0 কমেন্ট; playbook T149 addendum; watch: auto-merge-চুক্তির-স্থায়িত্ব (পরবর্তী-PR-গুলো-স্বয়ং-মার্জ-হবে-কি-না), PR-প্লাবন-গেট-স্থিতি (#2643-পুনঃরান), #2633-অটো-ক্লোজ, #2644/#2645-স্থাপত্য-বিবর্তনে-agent-8-টোকেন/অডিট-পথ-হালনাগাদ, পরবর্তী-বাস্তব-train-রানে-Station-5-প্রমাণ, AGENTS-৩য়-সংশোধন।**
+
+### Addendum — Task 150 (2026-09-30 ~12:35Z, 20:30+08 cron): স্থাপত্য-প্রতিযোগিতা-শুরু (#2646+#2647) + সবুজ-স্থিতিশীল
+
+- **HANDSHAKE (12:30Z)**: worklog last=149; তিন-পোর্ট UP; remote playbook 862-অটুট।
+- **POLICY SYNC**: main @`0fb581c5`-অপরিবর্তিত; অ্যাঙ্কর-অটুট blob-direct (AGENTS `3db1a7cd`, rules.yml `e62d5f03`); branch-স্বচ্ছতা: #2631-branch-ডিলিট (post-merge-পরিচ্ছন্নতা), 🆕branch `coder-1-2645-*` + `fix/2644-*`।
+- **SWEEP (12:04→12:30Z, ৭-ঘটনা)**: 🆕**PR #2646** (planner-bot, 12:18Z): **claim-before-work Claim Gate + scoped JIT credential broker (#2644)** — head `f0b4d175` 4/6-ok; 🆕**PR #2647** (coder-1-bot, 12:30Z): **সম্পূর্ণ-বুদ্ধিমান-অটো-মার্জ-ইঞ্জিন (#2645)** — head `bf741cd1` 4/10-ok (checks-in-flight); admin-স্থাপত্য-দুই-ইস্যুই-মিনিটে-PR-যুগে; main same-SHA 7ok→6ok/0fail (benign-নাম-ড্রিফট, 0-fail)।
+- **ENGINE (12:33Z)**: কিউ 0; main `0fb581c` GREEN (6ok/0fail/6-skipped, redGates-[]); #2646/#2647-এখনো-verdict-বিহীন (checks-pending — ইঞ্জিন-কিউ-ও-শান্ত)।
+- **DEDUPE**: OPEN-ISSUES-হেডার **২৮** (M33-নিয়ম); নতুন-সমস্যা-শূন্য → 0-issue/0-comment।
+- **এই চক্রে: 0 merge/0 force-push/0 main-push/0 নতুন-ইস্যু/0 কমেন্ট; playbook T150 addendum; watch: #2647-১০-চেক-সম্পূর্ণতা (AI-sentinel/virtual-staging-জবগুলো-নতুন-ধরনের-চেক — গেট-স্যুট-বৃদ্ধি-লক্ষণ), #2646-গেট→মার্জ (JIT-ক্রেডেনশিয়াল-ল্যান্ড-হলে-agent-8-টোকেন-পথ-প্রশ্ন), পরবর্তী-PR-স্বয়ং-মার্জ-চুক্তির-স্থায়িত্ব, পরবর্তী-বাস্তব-train-রানে-Station-5-প্রমাণ, AGENTS-৩য়-সংশোধন।**
