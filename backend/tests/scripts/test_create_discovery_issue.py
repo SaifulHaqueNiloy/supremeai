@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 
 import pytest
 from scripts.agents.create_discovery_issue import (
+    check_duplicates,
     create_discovery_issue,
     format_discovery_body,
 )
@@ -74,3 +75,29 @@ def test_create_discovery_issue_label_fallback(monkeypatch):
     assert res.success is True
     assert res.new_issue_number == 9988
     assert res.labels == ["status:unclaimed", "medium"]
+
+
+def test_check_duplicates_gh_missing_no_unbound_local(monkeypatch):
+    """#2528 regression: gh-বাইনারি না থাকলে (FileNotFoundError) আগে
+    except-টাপলের json.JSONDecodeError এভালুয়েশনেই UnboundLocalError হতো —
+    import json try-ব্লকের ভেতরে ছিল। এখন module-top import; [] ফেরত দেয়।"""
+    import scripts.agents.create_discovery_issue as mod
+
+    def _raise(*a, **kw):
+        raise FileNotFoundError("gh: executable not found")
+
+    monkeypatch.setattr(mod.subprocess, "run", _raise)
+    result = check_duplicates("fix(db): vector store leaks across tenants")
+    assert result == []
+
+
+def test_check_duplicates_bad_json(monkeypatch):
+    """gh-র আউটপুট ভাঙা JSON হলেও [] — একই try-ব্লকের চুক্তি।"""
+    import scripts.agents.create_discovery_issue as mod
+
+    class FakeProc:
+        returncode = 0
+        stdout = "not-json["
+
+    monkeypatch.setattr(mod.subprocess, "run", lambda *a, **kw: FakeProc())
+    assert check_duplicates("some title with words") == []
