@@ -429,12 +429,20 @@ def test_pg_store_memory_inserts(pg_service, fake_pg, fake_embed):
     pg_service.store_memory(
         "sess1", "content", "summary", "struct", session_id="sess1", user_id="u1"
     )
-    assert len(fake_pg.execute_calls) == 1
-    sql, params = fake_pg.execute_calls[0]
-    assert "INSERT INTO ai_memory" in sql
+    # বাংলা মন্তব্য (#2616 triage): Single Writer Law (#2427 seq:2)-এর পর pg
+    # blind-INSERT এখন ``query_dicts(... RETURNING id)`` পথে — execute() নয়
+    # (coder-1 এর tests/memory/test_memory_service.py fix-এর যমজ চুক্তি;
+    # dedup-probe চালু থাকলে প্রথম query_dicts হয় probe হতে পারে, তাই
+    # INSERT-বিয়ারিং কলটিই খুঁজে নেওয়া হচ্ছে — অর্ডার-নিরপেক্ষ)।
+    write_calls = fake_pg.query_calls + fake_pg.execute_calls
+    insert_calls = [c for c in write_calls if "INSERT INTO ai_memory" in c[0]]
+    assert len(insert_calls) == 1
+    sql, params = insert_calls[0]
+    assert "RETURNING id" in sql
     # user_id, session_id, agent_type, task_type, summary, embedding, metadata
     assert params[0] == "u1"
     assert params[1] == "sess1"
+    assert params[2] == "unknown"
     assert params[3] == "general"
     assert params[4] == "summary"
     assert json.loads(params[5]) == ms.hash_vectorize("summary")

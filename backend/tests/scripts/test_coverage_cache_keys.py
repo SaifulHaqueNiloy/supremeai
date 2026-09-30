@@ -202,15 +202,13 @@ def test_missing_poetry_lock_hash_is_stable(tmp_path) -> None:
 # ── Contract locks against the live repo ─────────────────────────────────────
 
 
-def test_measured_packages_match_ci_cov_list() -> None:
-    """The pytest --cov list in ci.yml and MEASURED_PACKAGES must never
-    drift — a package measured by --cov but absent from the key means stale
-    cached numerators (silent gate corruption)."""
-    ci_text = (REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-    cov_pkgs = set(re.findall(r"--cov=([A-Za-z_][\w]*)", ci_text))
-    assert cov_pkgs == set(ckey.MEASURED_PACKAGES), (
-        f"ci.yml --cov={sorted(cov_pkgs)} vs MEASURED_PACKAGES={sorted(ckey.MEASURED_PACKAGES)}"
-    )
+# বাংলা মন্তব্য (#2616 triage): ci.yml --cov equivalence-lock টেস্ট মুছে ফেলা
+# হলো — .github/workflows/ci.yml (২,০৬৬ লাইন) DRY 3-Pipeline prune (37d6c126)
+# এ অবসর নিয়েছে; কোনো workflow আর --cov ম্যাট্রিক্স চালায় না (PR Gate
+# --no-cov, coverage-গেট dispatch ম্যাট্রিক্স অবসরপ্রাপ্ত), তাই lock-চুক্তির
+# বিষয়বস্তুই আর নেই — অনাথ টেস্ট FileNotFoundError ছুড়ছিল।
+# MEASURED_PACKAGES নিজে বহাল (coverage_cache_keys.compute_all_group_keys
+# এখনো গ্রুপ-স্কোপ হ্যাশে ব্যবহার করে)।
 
 
 def test_real_repo_group_scopes_resolve(tmp_path) -> None:

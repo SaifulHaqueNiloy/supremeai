@@ -96,41 +96,11 @@ class TestStructuredErrors:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.asyncio
-async def test_competitive_kit_call_llm_delegates_to_gateway(monkeypatch):
-    """বাংলা: _call_llm এখন প্রকৃত গেটওয়ে থেকে উত্তর আনে — বানানো টেক্সট নয়।"""
-    from core.competitive_kit import MultiLLMRouter
-
-    kit = MultiLLMRouter()
-
-    async def fake_acompletion(**kwargs):
-        assert kwargs["task_type"] == "competitive_route"
-        return {"text": "real gateway answer"}
-
-    import core.llm.llm_gateway as gw_mod
-
-    monkeypatch.setattr(gw_mod.llm_gateway, "acompletion", fake_acompletion)
-    text = await kit._call_llm("Groq", "llama-3.1-70b", "hello")
-    assert text == "real gateway answer"
-    assert "[Response from" not in text
-
-
-@pytest.mark.asyncio
-async def test_competitive_kit_call_llm_raises_structured_error_on_gateway_failure(monkeypatch):
-    from core.competitive_kit import MultiLLMRouter
-
-    from core.llm.llm_gateway.errors import GatewayUnavailableError
-
-    kit = MultiLLMRouter()
-
-    async def broken(**kwargs):
-        raise RuntimeError("network down")
-
-    import core.llm.llm_gateway as gw_mod
-
-    monkeypatch.setattr(gw_mod.llm_gateway, "acompletion", broken)
-    with pytest.raises(GatewayUnavailableError):
-        await kit._call_llm("Groq", "llama-3.1-70b", "hello")
+# বাংলা মন্তব্য (#2616 triage): competitive_kit-এর ২টি টেস্ট মুছে ফেলা হলো —
+# core/competitive_kit.py মৃত-কোড হিসেবে #2541 (batch 1, #2480) এ ডিলিট হয়েছে;
+# অনাথ টেস্টগুলো ModuleNotFoundError ছুড়ছিল (#2593 ধারার সমাপ্তি —
+# test_worker_service.py orphan-এর মতোই)। বাকি গেটওয়ে চুক্তি-টেস্টগুলো
+# (InferenceContext, StructuredErrors, Zero-Bypass ratchet) বহাল।
 
 
 # ---------------------------------------------------------------------------

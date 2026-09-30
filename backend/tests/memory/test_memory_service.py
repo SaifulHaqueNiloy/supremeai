@@ -56,10 +56,15 @@ class TestCascadeMemoryService:
             file_path="test.py", content="def test(): pass", summary="test summary", structure="{}"
         )
 
-        # Check if execute was called to insert
-        execute_calls = mock_pooled_pg.execute.call_args_list
+        # বাংলা মন্তব্য (#2597 triage): Single Writer Law (#2427 seq:2)-এর পর
+        # blind-INSERT এখন ``query_dicts(... RETURNING id)`` পথে — চুক্তি-টেস্ট
+        # দুই পথই দেখবে (execute + query_dicts)।
+        write_calls = (
+            mock_pooled_pg.execute.call_args_list
+            + mock_pooled_pg.query_dicts.call_args_list
+        )
         insert_called = False
-        for call in execute_calls:
+        for call in write_calls:
             query = call[0][0]
             if "INSERT INTO ai_memory" in query or "UPDATE ai_memory" in query:
                 insert_called = True

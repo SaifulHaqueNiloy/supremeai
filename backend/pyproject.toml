@@ -24,7 +24,12 @@ httpx = "^0.28.1"
 ddgs = "^9.16.0"
 uvicorn = {extras = ["standard"], version = ">=0.51,<0.55"}
 starlette-context = ">=0.3,<0.6"
-sqlalchemy = "^2.0.36"
+# বাংলা মন্তব্য (#2597/#2601): sqlalchemy[asyncio] = runtime হার্ড চুক্তি —
+# core/db.py-র async engine greenlet ছাড়া ImportError করে (প্রমাণ: PR Gate
+# Test & Build ১ failed + Worker deploy failure #2601/#2602, "No deploy log")।
+# greenlet আগে কেবল browser group-এ (playwright transitively) ছিল — ফলে
+# prod `poetry install --only main` ও PR gate দুটোতেই অনুপস্থিত।
+sqlalchemy = { extras = ["asyncio"], version = "^2.0.36" }
 alembic = "^1.14.0"
 pydantic = "^2.10.0"
 pydantic-settings = "^2.14.2"  # CVE fix floor (AUDIT-014, GHSA-4xgf-cpjx-pc3j)
@@ -251,6 +256,21 @@ filterwarnings = [
     "ignore:grpcio < 1.83:FutureWarning",
 ]
 asyncio_mode = "auto"
+# বাংলা মন্তব্য (#2616 loop-scope regression fix): lock-এ pytest-asyncio
+# 0.23.8 → 1.4.0 (#2462 bump) হওয়ায় conftest-এর session-scoped `event_loop`
+# fixture override অচল হয়ে গিয়েছিল (1.x-এ ওই mechanism সরানো) — ফলে প্রতিটা
+# test নিজের event loop পেত, আর database/session-এর module-global StaticPool
+# engine-এর aiosqlite connection (SQLAlchemy AdaptedConnection._execute_mutex
+# সহ) প্রথম test-এর loop-এ বাঁধা থেকে যেত → পরের test-এ
+# "Lock is bound to a different event loop" RuntimeError
+# (gather return_exceptions=True নীরবে গিলে ফেলত) + missions rendezvous
+# gate-এ চির-হ্যাং (CI Test & Build timeout — run 36660284506)। Suite-এর
+# ডকুমেন্টেড ডিজাইন (একটাই session loop + শেয়ার্ড StaticPool engine)
+# ফিরিয়ে আনতে 1.4.0-এর ক্যানোনিকাল কনফিগ — দুই স্কোপই session।
+# প্রমাণ (A/B, zero-regression): main 21F/14E ≡ fix 21F/14E (অভিন্ন set),
+# missions 62 passed (আগে hang), runs+database 144 passed।
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 # CI SPEED FIX: 312 test files were taking 30+ minutes. Key optimizations:
 # 1. Per-test timeout (30s) — kills hanging tests instead of blocking forever
 # 2. Timeout method=thread — works with both sync and async tests
