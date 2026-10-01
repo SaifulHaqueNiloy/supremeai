@@ -1,5 +1,5 @@
 import React from "react";
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, useNavigate } from "react-router-dom";
 // FINAL-TEST FIX: the QueryClientProvider that used to live here was removed —
 // main.tsx already wraps the whole tree in <SharedProviders> (packages/
 // ui-components), so this second provider created a *nested duplicate cache* and
@@ -52,6 +52,20 @@ const LlmGatewayPage = React.lazy(() => import("./components/dashboard/LlmGatewa
 // wire করে reachable করা হলো (RESTORE-AND-WIRE প্যাটার্নের মতোই)।
 const KnowledgePage = React.lazy(() => import("./components/dashboard/KnowledgePage").then(m => ({ default: m.KnowledgePage })));
 const SessionDetailRoute = React.lazy(() => import("./pages/user/SessionDetailRoute").then(m => ({ default: m.SessionDetailRoute })));
+// #2736 (wire-or-delete doctrine): SessionsPage — নতুন সেশন-কম্পোজার + সেশন-তালিকা
+// (backend /task/execute + sessionStore)। /sessions লিস্ট-রুট, বিস্তারিত এখনও
+// /sessions/:sessionId — onOpenSession দিয়ে সেতু।
+const SessionsListPage = React.lazy(() => import("./components/dashboard/SessionsPage").then(m => ({ default: m.SessionsPage })));
+// #2736: SessionsPage-চুক্তিতে onOpenSession callback লাগে — Router-প্রসঙ্গ থেকে
+// navigate দিয়ে সেতু-বাঁধা ছোট wrapper (লিস্ট → /sessions/:sessionId)।
+const SessionsListRoute: React.FC = () => {
+  const navigate = useNavigate();
+  return (
+    <SessionsListPage
+      onOpenSession={(id) => navigate(`/sessions/${encodeURIComponent(id)}`)}
+    />
+  );
+};
 const TelemetryCockpitPage = React.lazy(() => import("./pages/user/TelemetryCockpitPage"));
 // AETHEL Command Center shell (restored sub-app; backend routes + e2e spec exist)
 const CommandCenterApp = React.lazy(() => import("./commandcenter/shell/CommandCenterApp").then(m => ({ default: m.CommandCenterApp })));
@@ -254,6 +268,8 @@ const AppContent: React.FC = () => {
       /api/knowledge/seed (দুটিই আগে orphan) ব্যবহার করে; /sessions/:sessionId ককপিটটি
       ব্যাকএন্ডের প্রকৃত SSE স্ট্রিম GET /api/session/{id}/stream-এর সাথে wire করা। */}
   <Route path="/knowledge" element={<ProtectedRoute><WorkspaceLayout><RouteBoundary><KnowledgePage /></RouteBoundary></WorkspaceLayout></ProtectedRoute>} />
+  {/* #2736 (wire-or-delete): /sessions লিস্ট-পেজ — SessionDetailRoute-এর সহোদর */}
+  <Route path="/sessions" element={<ProtectedRoute><RouteBoundary><SessionsListRoute /></RouteBoundary></ProtectedRoute>} />
   <Route path="/sessions/:sessionId" element={<ProtectedRoute><RouteBoundary><SessionDetailRoute /></RouteBoundary></ProtectedRoute>} />
   <Route path="/commandcenter" element={<ProtectedRoute><React.Suspense fallback={null}><RouteBoundary><CommandCenterApp /></RouteBoundary></React.Suspense></ProtectedRoute>} />
   {/* বাংলা মন্তব্য: ড্যাশবোর্ড এবং লাইভ ওয়ার্কস্পেস রাউট সুরক্ষিত করার জন্য ProtectedRoute ব্যবহার করা হলো */}

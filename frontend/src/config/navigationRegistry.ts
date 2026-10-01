@@ -172,6 +172,7 @@ export const NAVIGATION_REGISTRY: NavGroup[] = [
       { id: 'admin-nav-telemetry', label: 'Telemetry Cockpit', icon: Activity, kind: 'action', actionId: 'telemetry', contexts: ['admin'], status: 'implemented', priority: 25 },
       { id: 'admin-nav-service-explorer', label: 'Service Explorer', icon: ServerCog, kind: 'action', actionId: 'service-explorer', contexts: ['admin'], status: 'implemented', priority: 30 },
       { id: 'admin-nav-agents-swarm', label: 'Agents / Swarm', icon: BrainCircuit, kind: 'action', actionId: 'agents-swarm', contexts: ['admin'], status: 'implemented', priority: 40 },
+      { id: 'admin-nav-mesh-agents', label: 'Mesh Agents', icon: Network, kind: 'action', actionId: 'mesh-agents', contexts: ['admin'], status: 'implemented', priority: 42 },
       { id: 'admin-nav-automation-queue', label: 'Automation Queue', icon: Clock, kind: 'action', actionId: 'automation-queue', contexts: ['admin'], status: 'implemented', priority: 45 },
       { id: 'admin-nav-deployments', label: 'Deployments', icon: GitMerge, kind: 'action', actionId: 'deployments', contexts: ['admin'], status: 'implemented', priority: 50 },
       { id: 'admin-nav-site-actions', label: 'Site Actions', icon: Terminal, kind: 'action', actionId: 'site-actions', contexts: ['admin'], status: 'implemented', priority: 60 },
