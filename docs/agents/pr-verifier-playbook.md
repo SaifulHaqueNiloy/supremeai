@@ -1124,3 +1124,10 @@ fix নয়, reproducibility issue।
 - **মার্জেবল-রিক্যালক-ধৈর্য**: main-এর-পরপর-৪-মুভে শেষ PR-এর `mergeable=null/mss=unknown` কয়েক-মিনিট স্থায়ী — GET-পিং-এ-ট্রিগার-হয়; অধৈর্য-পুনঃপ্রচেষ্টা-নয়, ব্যবধান-রেখে-পুনঃপ্রচেষ্টা (৭৫s-পরে clean)।
 - **ট্র্যাকার-হার্ভেস্ট**: #2831-মার্জের-সাথে-সাথে **৭-টি লাল-টেস্ট-চেইন ইস্যু স্বয়ংক্রিয়-বন্ধ** (#2829/#2830/#2833/#2840/#2844/#2846/#2851) — issue-body-র "fixes/closes"-বাঁধন-ই-এটা করে; তাই **প্রতিটি ফিক্স-PR-এ tracker-রেফারেন্স body-তে রাখা জরুরি**। open-issues ৩৯→৩২।
 - coder-র ৬ষ্ঠ-স্তর-ফিক্স ছিল **১-ফাইল +৫/−১** (`test_prompt_firewall...` ambient-loop fixture) — evidence-কমেন্ট-চালিত দ্রুত-ইটারেশনের প্রমাণ; #2851 নিজেই-খুলে-নিজেই-বন্ধ।
+
+### Addendum — Task 175 (2026-10-01 ~10:00+08 = 02:00Z–02:10Z): 🆕-PR-৪-簇全-CG-红（claim/flow-convention 缺口）+ #2855-cross-agent-collision + #2842-被-coder-claim
+- **新-PR 簇 #2854/#2855/#2857/#2859 4/4 CG-红** — 4-种-不同-缺口（gate-正确-执行，非-bug）：#2854 = linked-issue-上-无-claim（claim-before-work 违反）；#2857/#2859 = `linked: none`（title 有裸 `#N` 但 body 缺 `Closes/Refs #N` 行 → Claim Gate 不-认）；#2855 见-下。**agent-8-处置**：错误消息自带-精确-修复-指引（"Run scripts/ci/atomic_claim..."）→ **0-评论**（spam-纪律；T171-先例）。
+- **🔑 CROSS-AGENT COLLISION-检测-首见**：#2855（#2842-修复，coder）CG-exit-1 —— `rules.yml` 与 **#2847**（#2841 PR-2/3）碰撞。gate-输出含 collision-对象 + Recommendation（coordinate/sequence）。**双红-无-胜者 → 不-序列化**（T170-先例适用于"绿-PR-胜出"场景）；观察-待-作者。
+- **#2842（我的 Scope-Gate issue）被 coder claim** → **#2855 修复-PR 开出**（3-文件 allowlist）——discovery→issue→claim→PR 全-链路-闭环-首例（我-立-的-系统性-缺陷-被-采纳-修复）。
+- **#2850 已 in-progress**（platform-lane 接单）→ 1-条-扩展-证据-评论（新簇 = naming 之外还有 claim/body-convention 缺口 → 建议 lane-checklist 一次-解决-三-gate）。
+- **M8-audit**: main `fad51079` M29 ×3 **named=14 bad=0 pending=0** —— T174-的-6-merge 零-post-merge-回归。issues 36（新 #2853/#2856/#2858/#2860 均-有-归属/PR）→ **0-新-立案**。
