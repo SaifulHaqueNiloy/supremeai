@@ -68,9 +68,14 @@ async def test_get_completion_generates_response_and_saves_cache(monkeypatch):
     fake_cache = FakeCache(value=None)
     monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
 
+    captured: dict = {}
+
     async def mock_acompletion(
-        prompt, context=None
-    ):  # M03 P0-পূর্ণাংশ: context এখন একক-সত্য (tenant/task/stream এর ভেতরে)
+        prompt, context=None, model=None, **_kwargs
+    ):  # #2829: নতুন গেটওয়ে-চুক্তি — model-ওভাররাইড (#2726) + persona-enriched prompt (#2728)
+        captured["prompt"] = prompt
+        captured["model"] = model
+        captured["context"] = context
         if prompt == "raise-error":
             raise RuntimeError("boom")
         return {"text": f"generated:{prompt}"}
@@ -88,7 +93,18 @@ async def test_get_completion_generates_response_and_saves_cache(monkeypatch):
     result = await get_completion(request, payload, db=SimpleNamespace(tenant_id="tenant-2"))
 
     assert result["cached"] is False
-    assert result["response"] == "generated:live-prompt"
+    # #2828/#2829 পরিবার: enriched prompt-চুক্তি — persona ব্লক (#2728) + raw prompt দুটোই
+    # gateway-প্রম্পটে উপস্থিত; রেসপন্স আর বিশুদ্ধ "generated:live-prompt" নয়।
+    assert result["response"].startswith("generated:")
+    assert "[System Instructions]" in captured["prompt"]
+    assert "live-prompt" in captured["prompt"]
+    assert "live-prompt" in result["response"]
+    # #2726-চুক্তি: ডিফল্ট model_name ("gemini-2.5-pro") → কোনো ওভাররাইড নয়;
+    # context বাধ্যতামূলক InferenceContext, tenant-attribution সংরক্ষিত।
+    assert captured["model"] is None
+    assert captured["context"] is not None
+    assert captured["context"].tenant_id == "tenant-2"
+    # cache-চুক্তি অপরিবর্তিত: raw prompt + payload-এর model_name দিয়ে সেভ
     assert fake_cache.saved is not None
     assert fake_cache.saved["model_name"] == "gemini-2.5-pro"
 
@@ -99,8 +115,10 @@ async def test_get_completion_returns_graceful_fallback_on_model_failure(monkeyp
     monkeypatch.setattr("api.routes.chat.multi_layer_cache", fake_cache)
 
     async def mock_acompletion(
-        prompt, context=None
-    ):  # M03 P0-পূর্ণাংশ: context এখন একক-সত্য (tenant/task/stream এর ভেতরে)
+        prompt, context=None, model=None, **_kwargs
+    ):  # #2829: সিগনেচার-চুক্তি বর্তমান গেটওয়ে-কলের সাথে সঙ্গত — ফলব্যাক
+        # পথ এখন সত্যিকারের মডেল-ব্যর্থতা (RuntimeError) থেকেই অনুশীলিত হয়,
+        # স্টেল-সিগনেচার TypeError থেকে নয়।
         raise RuntimeError("boom")
 
     async def mock_recall_memories(*args, **kwargs):
@@ -124,8 +142,9 @@ async def test_get_completion_returns_graceful_fallback_on_model_failure(monkeyp
 @pytest.mark.asyncio
 async def test_stream_chat_yields_sse_chunks(monkeypatch):
     async def mock_acompletion(
-        prompt, context=None
-    ):  # M03 P0-পূর্ণাংশ: context এখন একক-সত্য (tenant/task/stream এর ভেতরে)
+        prompt, context=None, model=None, **_kwargs
+    ):  # #2829: streaming পথেও একই চুক্তি — model-ওভাররাইড (#2726) +
+        # persona-enriched prompt (#2728) + InferenceContext(stream=True)
         class Response:
             async def __aiter__(self):
                 yield "chunk-one"

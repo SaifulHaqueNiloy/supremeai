@@ -270,7 +270,16 @@ class TestRules:
 
 class TestQuickActions:
     def test_cache_action_zero_keys_skips_delete(self, client, monkeypatch):
-        redis_client = SimpleNamespace(keys=AsyncMock(return_value=[]), delete=AsyncMock())
+        # বাংলা মন্তব্য (#2830): প্রোডাকশন purge SCAN-চুক্তিতে — scan_iter-ই
+        # কী-সোর্স; খালি async-iterator = zero keys। পুরনো keys()-মক স্টেল।
+        def _empty_scan_iter(*args, **kwargs):
+            async def _gen():
+                return
+                yield  # noqa: B901 — async generator টাইপ নিশ্চিত করতে অপ্রাপ্য শাখা
+
+            return _gen()
+
+        redis_client = SimpleNamespace(scan_iter=_empty_scan_iter, delete=AsyncMock())
         fake = FakeRedisManager(client=redis_client)
         monkeypatch.setattr(ar, "redis_manager", fake)
         resp = client.post("/api/admin/actions/cache")
