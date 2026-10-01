@@ -261,6 +261,51 @@ def run_audit() -> None:
         print("✅ Audit complete. Issues should now be available.")
 
 
+# ROOT-CAUSE FIX (#2908): Smart Continuous Loop — when no issues are open,
+# the loop now intelligently picks the highest-value task:
+# 1. CI fixer (highest priority — main red = fleet blocked)
+# 2. Audit (find new issues)
+# 3. Proactive health check (degraded services)
+# 4. If all clear → log + idle
+def run_smart_fallback() -> bool:
+    """Smart fallback when no open issues. Returns True if new issues created."""
+    print("\n🧠 Smart Fallback: No open issues — selecting highest-value task...")
+
+    # Priority 1: CI failures on main (highest — main red blocks entire fleet)
+    print("  1️⃣  Checking CI failures on main...")
+    ci_res = run([sys.executable, "scripts/ci/check_ci_failures.py"])
+    if ci_res.returncode != 0:
+        print("  ✅ CI issues created! Re-entering normal flow.")
+        return True
+    print("  ✅ No CI failures on main.")
+
+    # Priority 2: Full audit (find new issues from codebase scan)
+    print("  2️⃣  Running full audit...")
+    run_audit()
+    auto_escalate_priorities()
+    if has_open_issues():
+        print("  ✅ Audit found issues! Re-entering normal flow.")
+        return True
+    print("  ✅ No audit findings.")
+
+    # Priority 3: Proactive health check (degraded services)
+    print("  3️⃣  Checking system health...")
+    health_res = run([sys.executable, "scripts/ci/project_health_check.py", "--quiet"],
+                     check=False)
+    if health_res.returncode != 0:
+        print("  ✅ Health issues detected! Issues should be created.")
+        return True
+    print("  ✅ All services healthy.")
+
+    # All clear — fleet is in perfect shape
+    print("\n🎉 All clear!")
+    print("   ✅ CI green on main")
+    print("   ✅ No audit findings")
+    print("   ✅ All services healthy")
+    print("   ℹ️  Fleet is idle — waiting for new issues or schedule trigger.")
+    return False
+
+
 def auto_escalate_priorities() -> None:
     print("🔄 Running priority auto-escalation...")
     res = run([sys.executable, "scripts/ci/auto_escalate_priority.py"])
@@ -562,10 +607,15 @@ def run_continuous_loop(role: str, agent_name: str, max_iterations: int = 10,
         release_orphan_claims(agent_name)
 
         if not has_open_issues():
-            run_audit()
-            auto_escalate_priorities()
-            if not has_open_issues():
-                print("ℹ️ No issues to process after audit. Waiting...")
+            # ROOT-CAUSE FIX (#2908): Smart Continuous Loop — instead of just
+            # running audit + waiting, intelligently pick the highest-value task:
+            # 1. CI fixer (main red → P1 issue auto-created)
+            # 2. Audit (find new issues)
+            # 3. Proactive health check (degraded services)
+            # 4. All clear → idle
+            created = run_smart_fallback()
+            if not created:
+                print("ℹ️ Fleet healthy — no work available. Waiting for next trigger...")
                 break
 
         auto_escalate_priorities()
