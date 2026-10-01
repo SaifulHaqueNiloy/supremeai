@@ -10,6 +10,9 @@ interface LogEntry {
     level: string;
     message: string;
     source?: string;
+    /** #2736: ঐচ্ছিক stable-কী — প্রোডিউসার দিলে ফিল্টার/রি-অর্ডারে row-identity
+     * অক্ষত থাকে; না দিলে content+position fallback। */
+    seq?: number;
 }
 
 interface LogStreamProps {
@@ -95,8 +98,11 @@ export function LogStream({ entries, logs, autoScroll: autoScrollProp, maxHeight
                 className="overflow-y-auto font-mono text-[10px] leading-relaxed p-2 rounded-lg bg-black/40 border border-[var(--sa-line)]"
                 style={{ maxHeight }}
             >
-                {filtered.map((entry, i) => (
-                    <div key={i} className="flex gap-2 hover:bg-[var(--sa-bg-hover)] rounded px-1 py-0.5 transition-colors">
+                {filtered.map((entry) => (
+                    // #2736: stable keys — seq > content-composite > position।
+                    // ফিল্টার-চালু/বন্ধে row-identity অক্ষত (আগে key={i} পুরো
+                    // লিস্ট-নিচু পুনঃ-ম্যাপ করত — visual swap + অতিরিক্ত re-render)।
+                    <div key={entry.seq ?? `${entry.timestamp}|${entry.level}|${entry.message}`} className="flex gap-2 hover:bg-[var(--sa-bg-hover)] rounded px-1 py-0.5 transition-colors">
                         <span className="text-[var(--sa-text-3)] shrink-0">
                             [{entry.timestamp}]
                         </span>

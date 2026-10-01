@@ -122,27 +122,32 @@ def _dedup_key(normalized: dict[str, Any], delivery_id: str) -> str:
     return f"supremeai:orchestrate:{issue_ref}:{normalized['event']}:{delivery_id}"
 
 
-async def _claim_delivery(key: str) -> bool:
+async def _claim_delivery(key: str) -> bool | None:
     """SETNX-style claim — True = first time seeing this delivery.
 
-    Upstash unavailable → dedup degrades (logged, fail-open for availability);
-    replay protection is best-effort, unlike signature verification which is
-    strictly fail-closed.
+    D-2 fix (#2733): dedup store unavailable → None (fail-closed).
+    Caller responds 503 so GitHub at-least-once redelivery retries later
+    instead of the old fail-open behavior (process without replay guard),
+    which duplicated the orchestration chain during Redis outages.
+    Signature verification remains strictly fail-closed; this brings
+    exactly-once semantics to the same standard.
     """
     client = await redis_manager.get_client_async()
     if client is None:
+        # বাংলা মন্তব্য: ডিডাপ-স্টোর ডাউন = রিপ্লে-গার্ড ছাড়া প্রসেস নিষিদ্ধ —
+        # 503 দিলে GitHub নিজেই পরে আবার ডেলিভার করবে (দুর্যোগে ইভেন্ট হারায় না)।
         logger.warning(
-            "[webhook-audit] dedup store unavailable — delivery processed without replay guard"
+            "[webhook-audit] dedup store unavailable — failing closed (503) for replay safety"
         )
-        return True
+        return None
     try:
         was_set = await client.set(key, "1", nx=True, ex=DEDUP_TTL_SECONDS)
         return bool(was_set)
     except Exception as exc:
         logger.warning(
-            f"[webhook-audit] dedup store error ({exc}) — processing without replay guard"
+            f"[webhook-audit] dedup store error ({exc}) — failing closed (503) for replay safety"
         )
-        return True
+        return None
 
 
 @router.post("/github")
@@ -183,7 +188,14 @@ async def github_webhook(request: Request) -> JSONResponse:
         )
 
     key = _dedup_key(normalized, delivery_id or "missing-delivery-id")
-    if not await _claim_delivery(key):
+    claimed = await _claim_delivery(key)
+    if claimed is None:
+        # D-2 (#2733): রিপ্লে-গার্ড ছাড়া প্রসেস করা যাবে না — GitHub retry করবে।
+        return JSONResponse(
+            status_code=503,
+            content={"detail": "dedup store unavailable — delivery will be retried"},
+        )
+    if not claimed:
         logger.info(f"[webhook-audit] replay suppressed delivery={delivery_id} key={key}")
         return JSONResponse(status_code=200, content={"status": "duplicate", "dedup_key": key})
 

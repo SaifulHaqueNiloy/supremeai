@@ -270,7 +270,9 @@ export function CIDashboard({
 
         <div className="space-y-2">
           {visibleJobs.map((job, idx) => (
-            <JobRow key={idx} job={job} onClick={() => handleJobClick(job)} compact />
+            // #2736: stable keys — id > started_at > name-composite (আগে key={idx}
+            // ছিল: স্ট্যাটাস-সর্টে সারি পুনঃ-সাজালে ভিজ্যুয়াল সোয়াপ হত)।
+            <JobRow key={job.id ?? job.started_at ?? `${job.name}-${idx}`} job={job} onClick={() => handleJobClick(job)} compact />
           ))}
         </div>
 
