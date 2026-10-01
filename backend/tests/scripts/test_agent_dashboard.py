@@ -39,12 +39,17 @@ class TestRoster:
         roster = ad.build_roster(registry)
         names = [s.name for s in roster]
         # Legacy slots from the registry (issue #1635 mock uses these).
-        assert "agent-3" in names and "agent-1" in names
+        assert "agent-3" in names
         agent3 = next(s for s in roster if s.name == "agent-3")
         assert agent3.role == "coder-1"
         # Branch tokens must cover both legacy + post-migration naming.
         assert agent3.matches_branch("coder-1-issue-1635")
         assert agent3.matches_branch("agent-3-coder-1")
+        # ROOT-CAUSE #2723-চুক্তি-পিন: agent-1/agent-2 live-tower থেকে
+        # decommissioned (active: false, registry: "absent from live tower as
+        # of 2026-09-30") — roster শুধু active slot-ই বহন করে।
+        assert "agent-1" not in names
+        assert "agent-2" not in names
 
     def test_dynamic_slot_merges_into_legacy(self):
         registry = {
@@ -184,11 +189,13 @@ class TestBuildRows:
         assert rows[0]["status"] == "ACTIVE" and not warnings
 
     def test_idle_slot_and_unknown_claimant(self):
-        agent1 = next(s for s in _roster() if s.name == "agent-1")
+        # ROOT-CAUSE #2723: agent-1 decommissioned — roster-এ নেই; যেকোনো
+        # active slot দিয়ে idle+unknown-claimant চুক্তি অনুশীলন যায়।
+        agent4 = next(s for s in _roster() if s.name == "agent-4")
         claims = [
             {"issue": 500, "title": "t", "created_at": _iso(NOW), "agent": None, "claimed_at": None}
         ]
-        rows, warnings = ad.build_rows([agent1], claims, [], NOW, 4.0)
+        rows, warnings = ad.build_rows([agent4], claims, [], NOW, 4.0)
         assert rows[0]["status"] == "IDLE"
         assert any("no roster-matched claimant" in w for w in warnings)
 

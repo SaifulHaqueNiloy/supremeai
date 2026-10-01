@@ -129,7 +129,7 @@ export interface UnifiedState {
   clearAcknowledgedAlerts: () => void;
   getUnresolvedCount: () => number;
   
-  // ── DEPLOYMENT STATE (shared by CICDVisualizer + DeploymentModal + CloudOrchestrator) ──
+  // ── DEPLOYMENT STATE (shared by CICDVisualizer + CloudOrchestrator) ──
   deployments: DeploymentItem[];
   setDeployments: (deployments: DeploymentItem[]) => void;
   updateDeploymentStatus: (id: string, status: DeploymentItem['status'], updates?: Partial<DeploymentItem>) => void;
@@ -155,8 +155,6 @@ export interface UnifiedState {
   setUserPreference: (key: string, value: unknown) => void;
   
   // ── DASHBOARD UI (migrated from dashboardStore — Wave 3.7, issue #1263) ──
-  isDeploymentModalOpen: boolean;
-  setDeploymentModal: (isOpen: boolean) => void;
   systemStatus: 'healthy' | 'degraded' | 'critical';
   updateSystemStatus: (status: 'healthy' | 'degraded' | 'critical') => void;
   activePanel: string | null;
@@ -198,7 +196,6 @@ const initialState = {
   sidebarCollapsed: false,
   activeModule: null as string | null,
   // ── DASHBOARD UI (dashboardStore migration) ──
-  isDeploymentModalOpen: false,
   systemStatus: 'healthy' as 'healthy' | 'degraded' | 'critical',
   activePanel: null as string | null,
   dashboardMode: 'simple' as 'simple' | 'advanced',
@@ -420,7 +417,6 @@ export const useUnifiedStore = create<UnifiedState>()(
     // DASHBOARD UI METHODS (migrated from dashboardStore — issue #1263)
     // ════════════════════════════════════════════════════════════════════
 
-    setDeploymentModal: (isOpen) => set({ isDeploymentModalOpen: isOpen }),
     updateSystemStatus: (status) => set({ systemStatus: status }),
     setActivePanel: (panel) => set({ activePanel: panel }),
     toggleDashboardMode: () =>

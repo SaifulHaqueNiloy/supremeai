@@ -33,6 +33,25 @@ from core.llm.llm_gateway.completion import CompletionMixin
 
 
 # --------------------------------------------------------------------------- #
+# Test isolation (#2840)
+# --------------------------------------------------------------------------- #
+@pytest.fixture(autouse=True)
+def reset_request_coalescer():
+    """Clear the module-level request-coalescer singleton between tests.
+
+    বাংলা মন্তব্য (#2840): coalescer প্রসেস-লেভেল singleton — এক টেস্টের leader
+    flight অন্য টেস্টের identical কলকে follower বানিয়ে follower_timeout (৬০s)
+    ধরে ব্লক করতে পারে (TBV hang-এর আসল কারণ)। প্রতিটি টেস্টের আগে in-flight
+    map ফাঁকা করা হয় যেন টেস্টগুলো পরস্পরের ওপর নির্ভর না করে।
+    """
+    from core.learning.dedup import get_request_coalescer
+
+    get_request_coalescer()._inflight.clear()
+    yield
+    get_request_coalescer()._inflight.clear()
+
+
+# --------------------------------------------------------------------------- #
 # Stub collaborators
 # --------------------------------------------------------------------------- #
 def make_response(text: str = "hello world", cost: float = 0.0123, usage=None) -> dict:
@@ -204,11 +223,28 @@ async def test_cache_hit_survives_telemetry_failure(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_stream_bypasses_cache_and_returns_stream_gen():
+async def test_stream_returns_stream_gen_and_forwards_context():
+    """Streaming returns the stream generator and forwards tenant/tier context.
+
+    PR #2772 (root-cause #2729) makes the streaming path consult the semantic
+    cache so identical concurrent prompts dedup (read + later write). The old
+    ``assert_not_awaited()`` encoded the pre-fix contract and blocked #2772 —
+    see issue #2780.
+
+    বাংলা মন্তব্য (#2780 strengthening review): stream-path cache-consult এখন
+    ইচ্ছাকৃত চুক্তি — completion.py-এর নিজস্ব কমেন্ট প্রমাণ: ``cache check for
+    BOTH stream + non-stream``। তাই ``await_count <= 1``-এর শিথিলতা প্রি-ফিক্স
+    বাগআচরণ (0 consult = #2729 regression) পাস করাত; সঠিক পিন হলো exactly-once
+    — ভবিষ্যৎ regression-এ stream-path থেকে consult সরে গেলে টেস্ট জোরে ব্যর্থ
+    হবে। স্টাব `query_similar` None রিটার্ন করে — cache-miss ধরে স্ট্রিম
+    জেনারেটর-চুক্তি অক্ষত থাকে।
+    """
     gw = make_gateway()
     result = await gw.acompletion(prompt="hi", stream=True)
     assert result == "STREAM-SENTINEL"
-    gw.cache.query_similar.assert_not_awaited()
+    # PR #2772 / issue #2729: streaming MUST consult the semantic cache exactly
+    # once (read-path dedup contract). 0 consults = #2729 regression returns.
+    gw.cache.query_similar.assert_awaited_once_with("hi", task_type="general")
     messages, chain, timeout, spend_context = gw.stream_calls[0]
     # M16 P-A: streaming generator-এ tenant/tier context পৌঁছায় কিনা চুক্তি-পিন।
     assert spend_context == {"tenant_id": None, "tier": None, "task_type": "general"}
@@ -659,6 +695,64 @@ async def test_local_mode_without_adapter_raises_runtime_error():
 
     with pytest.raises(RuntimeError, match="Ollama is not healthy"):
         await gw.acompletion(prompt="hi")
+
+
+# --------------------------------------------------------------------------- #
+# Coalescer leader-failure contract (#2840)
+# --------------------------------------------------------------------------- #
+@pytest.mark.asyncio
+async def test_local_failure_leader_publishes_failure_no_stale_entry():
+    """A failed LOCAL-mode leader must publish_failure — no stale in-flight entry.
+
+    বাংলা মন্তব্য (#2840): regression প্রমাণ — leader ব্যর্থ হলে entry সঙ্গে সঙ্গে
+    মুছে যাবে; নইলে identical follow-up কল follower_timeout (৬০s) ব্লক হয়ে
+    pytest-timeout-এ suite kill করে (TBV hang)।
+    """
+    from core.learning.dedup import get_request_coalescer
+
+    gw = make_gateway(mode=ExecutionMode.LOCAL)
+    gw.local_adapter = make_local_adapter(
+        generate=AsyncMock(side_effect=RuntimeError("ollama down"))
+    )
+
+    with pytest.raises(RuntimeError, match="ollama down"):
+        await gw.acompletion(prompt="dedup-fail-probe")
+
+    # বাংলা মন্তব্য: leader-flight publish হয়েছে — in-flight map ফাঁকা।
+    assert get_request_coalescer().get_stats()["in_flight"] == 0
+
+    # বাংলা মন্তব্য: identical follow-up এখন fresh leader — সঙ্গে সঙ্গে ব্যর্থ,
+    # কোনো ৬০s অপেক্ষা নেই (fixture-ছাড়া এই দাবি production-fix ছাড়া ভাঙত)।
+    with pytest.raises(RuntimeError, match="ollama down"):
+        await gw.acompletion(prompt="dedup-fail-probe")
+    assert get_request_coalescer().get_stats()["in_flight"] == 0
+
+
+@pytest.mark.asyncio
+async def test_no_adapter_raise_publishes_failure_and_followup_unblocked():
+    """The no-adapter LOCAL raise must also release the leader flight.
+
+    বাংলা মন্তব্য (#2840): no-adapter শাখার raise-ও leader-flight-এর মৃত্যু —
+    publish হলে follow-up identical কল সঙ্গে সঙ্গে নিজেই চলে (≤৫s), ব্লক হয় না।
+    """
+    import time
+
+    from core.learning.dedup import get_request_coalescer
+
+    gw = make_gateway(mode=ExecutionMode.LOCAL)
+    gw.local_adapter = None
+
+    with pytest.raises(RuntimeError, match="Ollama is not healthy"):
+        await gw.acompletion(prompt="dedup-noadapter-probe")
+    assert get_request_coalescer().get_stats()["in_flight"] == 0
+
+    t0 = time.monotonic()
+    with pytest.raises(RuntimeError, match="Ollama is not healthy"):
+        await gw.acompletion(prompt="dedup-noadapter-probe")
+    elapsed = time.monotonic() - t0
+    assert elapsed < 5.0, (
+        f"identical follow-up blocked {elapsed:.1f}s — stale leader entry (#2840)"
+    )
 
 
 @pytest.mark.asyncio

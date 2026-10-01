@@ -52,7 +52,12 @@ class AccountRegisterRequest(BaseModel):
         ...,
         description="সার্ভিস বা নিউট্রাল নাম (core-architect, core-logic, core-design, core-speed, claude, chatgpt, v0)",
     )
-    token: str
+    # ROOT-CAUSE FIX (#2828-পরিবার audit): #2730-এর সিকিউরিটি ফিক্স হ্যান্ডলারে
+    # body-টোকেন প্রত্যাখ্যান করে, কিন্তু মডেলে `token: str` required থেকে গিয়েছিল —
+    # ফলে token-সহ পাঠালে সিকিউরিটি-422, না পাঠালে validation-422: এন্ডপয়েন্ট
+    # সম্পূর্ণ অব্যবহারযোগ্য (dead endpoint)। চুক্তি: token ঐচ্ছিক — দিলে প্রত্যাখ্যাত,
+    # না দিলে vault/env থেকে resolve।
+    token: str | None = None
     account_id: str | None = None
 
 
