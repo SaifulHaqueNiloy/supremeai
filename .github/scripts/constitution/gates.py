@@ -963,6 +963,15 @@ def author_identities(author: str) -> set:
     # দুই পাশকেই একই normalization দিয়ে identity-set বানিয়ে intersection
     # মেলানো হয় — exact-match only (substring নয়, যাতে planner-2-কে
     # planner সাবস্ট্রিং দিয়ে ফাঁকি দেওয়া না যায়)।
+    #
+    # ROOT-CAUSE FIX (#2891): GitHub App bots have the form ``supremeai-X[bot]``
+    # where X can be multi-word (``supremeai-planner``, ``supremeai-coder-1-bot``,
+    # ``supremeai-pr-helper``, ``supremeai-ci-action``, ``supremeai-platform-agent``).
+    # The old regex ``r"^supremeai-([a-z0-9]+)-(\d+)(?:-bot)?$"`` only matched
+    # single-word + numeric (e.g. coder-1). Multi-word bots like ``supremeai-planner``
+    # (no number) or ``supremeai-pr-helper`` (hyphenated, no number) were NOT matched.
+    # Now: also match non-numeric multi-hyphen names (``supremeai-planner``,
+    # ``supremeai-pr-helper``, ``supremeai-ci-action``, ``supremeai-platform-agent``).
     """
     ident: set = set()
     a = (author or "").strip()
@@ -975,9 +984,18 @@ def author_identities(author: str) -> set:
         bare = a[len("app/"):]
         ident.add(bare)
         ident.add(bare.removesuffix("[bot]"))
+    # ROOT-CAUSE FIX (#2891): match numeric agents (coder-1, coder-2)
     m = re.match(r"^supremeai-([a-z0-9]+)-(\d+)(?:-bot)?$", no_bot.removeprefix("app/"))
     if m:
         ident.add(f"{m.group(1)}-{m.group(2)}")
+    # ROOT-CAUSE FIX (#2891): match non-numeric multi-word agents
+    # (supremeai-planner, supremeai-pr-helper, supremeai-ci-action,
+    #  supremeai-platform-agent, supremeai-3rd-party-platform)
+    m2 = re.match(r"^supremeai-([a-z][a-z0-9-]*?)(?:-bot)?$", no_bot.removeprefix("app/"))
+    if m2:
+        ident.add(m2.group(1))
+        # Also add without trailing "-bot" if present in the match
+        ident.add(m2.group(1).removesuffix("-bot"))
     return {x for x in ident if x}
 
 
