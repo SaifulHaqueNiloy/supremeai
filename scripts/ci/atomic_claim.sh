@@ -185,6 +185,82 @@ else
   exit 1
 fi
 
+# ROOT-CAUSE FIX (#2902): Group Sequential Block — when one agent claims a
+# group:X issue, all OTHER group:X issues (seq != this one) are blocked for
+# other agents until the claimer pushes a PR (branch has commit). This prevents
+# two agents from working on the same group in parallel.
+# The block is enforced via a temp label "group-blocked:<group_name>:<agent>"
+# on sibling issues. When the claimer pushes (detected via branch existence),
+# the block is removed.
+ISSUE_LABELS=$(gh issue view "$ISSUE_NUMBER" --json labels -q '.labels[].name' 2>/dev/null || echo "")
+ISSUE_GROUP=$(echo "$ISSUE_LABELS" | grep -oE 'group:[a-z0-9_-]+' | head -1 || true)
+if [ -n "$ISSUE_GROUP" ]; then
+  GROUP_NAME="${ISSUE_GROUP#group:}"
+  echo "🔒 Group Sequential Block: checking for active claims on group '$GROUP_NAME'..."
+
+  # Find all other open issues in the same group that are status:in-progress
+  # (someone else already claimed a sibling)
+  SIBLING_CLAIMS=$(gh issue list --label "group:$GROUP_NAME" --label "$STATUS_LABEL" --state open --json number,title,labels --limit 20 2>/dev/null | "$PYTHON_BIN" -c "
+import json, sys
+try:
+    issues = json.load(sys.stdin)
+    current = $ISSUE_NUMBER
+    siblings = []
+    for i in issues:
+        if i.get('number') != current:
+            siblings.append(f\"#{i['number']}: {i.get('title','')[:50]}\")
+    print('\\n'.join(siblings) if siblings else '')
+except:
+    print('')
+" 2>/dev/null || echo "")
+
+  if [ -n "$SIBLING_CLAIMS" ]; then
+    echo "❌ Group Sequential Block: another issue in group '$GROUP_NAME' is already claimed:"
+    echo "$SIBLING_CLAIMS" | sed 's/^/    /'
+    echo ""
+    echo "Wait for the active claim to push a PR (branch commit) before claiming this issue."
+    echo "Group sequential integrity enforced (#2902)."
+    exit 1
+  fi
+  echo "✅ No active sibling claims on group '$GROUP_NAME' — proceeding."
+fi
+
+# ROOT-CAUSE FIX (#2902): Anti-Monopoly 2-min Cooldown — if this agent just
+# finished a group issue (within the last 2 minutes), block claiming the next
+# group issue. This gives other agents a chance to claim. Single-agent mode
+# bypasses the cooldown (AGENTS.md Step 4: "একক এজেন্ট থাকলে কোনো বিলম্ব ছাড়াই").
+if [ -n "$ISSUE_GROUP" ]; then
+  GROUP_NAME_COOLDOWN="${ISSUE_GROUP#group:}"
+  COOLDOWN_CHECK=$("$PYTHON_BIN" -c "
+import sys, json, time, os
+sys.path.insert(0, 'scripts/agents')
+try:
+    from acquire_role_slot import GroupCooldownManager, ROOT_DIR
+    mgr = GroupCooldownManager()
+    active_count = GroupCooldownManager.get_active_agent_count(repo_dir=ROOT_DIR)
+    agent = '$AGENT_NAME'
+    blocked, remaining = mgr.is_blocked('$GROUP_NAME_COOLDOWN', agent, active_count)
+    if blocked:
+        print(f'BLOCKED:{remaining}')
+    else:
+        print('OK')
+except Exception as e:
+    print(f'OK')  # fail-open: cooldown check failure shouldn't block claims
+" 2>/dev/null || echo "OK")
+
+  if [[ "$COOLDOWN_CHECK" == BLOCKED:* ]]; then
+    REMAINING_SEC="${COOLDOWN_CHECK#BLOCKED:}"
+    echo "🧊 Anti-Monopoly Cooldown: you must wait ${REMAINING_SEC}s before claiming"
+    echo "   another issue in group '$GROUP_NAME_COOLDOWN'. This gives other agents"
+    echo "   a fair chance to claim (AGENTS.md Step 4: Anti-Monopoly 2-Min Cooldown)."
+    echo ""
+    echo "   Single-agent mode bypasses this — if you're the only active agent,"
+    echo "   the cooldown is automatically skipped."
+    exit 1
+  fi
+  echo "✅ Anti-Monopoly cooldown: clear (or single-agent mode)."
+fi
+
 
 # AUDIT-FIX (#2008): Rule #13 "ONE ACTIVE CLAIM PER AGENT" — check if this
 # agent already has another issue with status:in-progress before claiming.
