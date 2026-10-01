@@ -270,9 +270,17 @@ class TestSpeculativeStagingRunner:
         assert plan[1][:3] == ["git", "worktree", "add"]
         assert "--detach" in plan[1]
         merge_cmd = plan[2]
-        # বাংলা মন্তব্য: ["git", "-C", wt, "merge", "--no-ff", ...] — সূচি ৩ ও ৪
-        assert merge_cmd[3:5] == ["merge", "--no-ff"]
+        # ROOT-CAUSE FIX (#2888): পুরনো আকৃতি-অ্যাসারশন merge_cmd[3:5] == ["merge", "--no-ff"]
+        # ভেঙে গেছিল কারণ #2874 identity flags যোগ করেছে:
+        # ["git", "-C", wt, "-c", "user.name=...", "-c", "user.email=...", "merge", "--no-ff", ...]
+        # এখন: dynamic index দিয়ে "merge" খুঁজে বের করা হয়, তারপর পরের উপাদান --no-ff কিনা যাচাই।
+        # identity flags-এর উপস্থিতিও যাচাই করা হয় (root চুক্তি-টেস্টের সাথে সামঞ্জস্য)।
+        merge_idx = merge_cmd.index("merge")
+        assert merge_cmd[merge_idx + 1] == "--no-ff"
         assert merge_cmd[-1] == "origin/feature-x"
+        # identity flags আছে কিনা যাচাই (#2874 চুক্তি)
+        assert any("user.name" in str(arg) for arg in merge_cmd)
+        assert any("user.email" in str(arg) for arg in merge_cmd)
 
     def test_kill_switch(self, monkeypatch):
         monkeypatch.setenv("MERGE_TRAIN_SPECULATIVE", "off")
