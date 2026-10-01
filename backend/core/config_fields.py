@@ -481,6 +481,12 @@ class SettingsFieldsMixin:
     # এখন এই factor settings থেকে নিয়ন্ত্রিত হয় যা runtime-এ override করা যাবে।
     llm_cost_per_token: float = Field(default=0.00001, validation_alias="LLM_COST_PER_TOKEN")
 
+    # বাংলা মন্তব্য: #2732 — tenant-হীন (unattributed) inference-এর Redis দৈনিক
+    # খরচ-ক্যাপ (USD)। ডিফল্ট $১/দিন; 0 বা ঋণাত্মক = admin kill-switch (গেট বন্ধ)।
+    costguard_unattributed_daily_cap: float = Field(
+        default=1.0, validation_alias="COSTGUARD_UNATTRIBUTED_DAILY_CAP"
+    )
+
     # ── Task Queue Config — env-driven ──────────────────────────────────────
     # বাংলা মন্তব্য: task_queue_enhanced.py-এ TTL এবং backend priority এখন config-driven।
     task_result_ttl_seconds: int = Field(default=3600, validation_alias="TASK_RESULT_TTL_SECONDS")

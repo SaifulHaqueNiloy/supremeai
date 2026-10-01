@@ -930,6 +930,43 @@ def _get_supabase():
 # ---------------------------------------------------------------------------
 
 
+async def save_healing_event(
+    *,
+    component: str,
+    issue_title: str,
+    category: str,
+    fix_applied: str,
+    success: bool,
+    message: str = "",
+) -> dict[str, Any]:
+    """#2708: AutoHealer-এর issue/fix ইতিহাসের স্থায়ী লেখা।
+
+    বাংলা মন্তব্য: Single Writer Law রক্ষা — নতুন লেখা-পথ নয়; canonical
+    ``save_memory`` writer-ই ব্যবহৃত হয় (task_type="healing",
+    session_id="healer:<component>")। issue আর fix এক paired event-এ যায়
+    যাতে রিস্টার্টের পরেও healing-ইতিহাস পুনর্ব্যবহারযোগ্য থাকে।
+    """
+    safe_component = (component or "global").strip() or "global"
+    summary = (
+        f"[AutoHealer] {category} issue on {safe_component}: {issue_title} → "
+        f"fix={fix_applied} success={success}: {message}"
+    )
+    return await save_memory(
+        session_id=f"healer:{safe_component}",
+        summary=summary,
+        task_type="healing",
+        agent_type="auto_healer",
+        metadata={
+            "kind": "healing_event",
+            "component": safe_component,
+            "category": category,
+            "fix_applied": fix_applied,
+            "success": success,
+            "issue_title": (issue_title or "")[:200],
+        },
+    )
+
+
 async def save_memory(
     *,
     session_id: str,

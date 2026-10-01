@@ -128,9 +128,30 @@ def test_quick_actions_success(
                 "role": "admin",
             }
 
-            # Redis mock
+            # Redis mock — #2830: প্রোডাকশন D-4 fix (#2733)/#2790 থেকে SCAN-ভিত্তিক
+            # selective purge চুক্তিতে গেছে (blocking KEYS বাদ) — পুরনো keys()-মক
+            # স্টেল; scan_iter এখন প্যাটার্ন-প্রতি async-iterator ফেরত দেয়।
             mock_redis_client = AsyncMock()
-            mock_redis_client.keys = AsyncMock(return_value=["cache:test_key"])
+            _scan_plan = {
+                "bhasha_bot:*": ["bhasha_bot:k1"],
+                "user_profile:*": ["user_profile:u1"],
+                "semantic_cache:*": ["semantic_cache:s1"],
+                "cache:*": ["cache:test_key", "cache:test_key_2"],
+                "health:*": ["health:h1"],
+            }
+
+            def _fake_scan_iter(*args, **kwargs):
+                # বাংলা মন্তব্য: প্রোডাকশন `async for ... scan_iter(match=…)` চুক্তি —
+                # কলের ফলাফল অবশ্যই __aiter__ যুক্ত অবজেক্ট (async generator) হতে হবে।
+                matched = list(_scan_plan.get(kwargs.get("match"), []))
+
+                async def _gen():
+                    for key in matched:
+                        yield key
+
+                return _gen()
+
+            mock_redis_client.scan_iter = _fake_scan_iter
             mock_redis_client.delete = AsyncMock(return_value=1)
             mock_redis_manager.client = mock_redis_client
 

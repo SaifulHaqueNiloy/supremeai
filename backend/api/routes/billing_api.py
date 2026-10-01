@@ -377,8 +377,13 @@ async def stripe_webhook(request: Request, session: AsyncSession = Depends(get_d
                         "message": "Transaction already credited via Stripe.",
                     }
 
+                # D-1 fix (#2733): Stripe পথেও SSLCommerz-এর মতো wallet row lock —
+                # SELECT ... FOR UPDATE ছাড়া দুটি concurrent top-up-এ lost update
+                # হতো (balance += read-modify-write)। এখন দুই পথেই একই house pattern।
                 result = await session.execute(
-                    select(UserWallet).where(UserWallet.user_id == user_id)
+                    select(UserWallet)
+                    .where(UserWallet.user_id == user_id)
+                    .with_for_update(nowait=False)
                 )
                 wallet = result.scalars().first()
 

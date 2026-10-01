@@ -77,6 +77,39 @@ async def update_constitutional_rule(
         ) from e
 
 
+# D-4 fix (#2733): সাধারণ ক্যাশ প্যাটার্নের non-blocking SCAN স্যুইপ।
+# বাংলা মন্তব্য: blocking KEYS O(N) — শেয়ার্ড Upstash-এ latency spike; SCAN
+# ছোট ব্যাচে চলে। সেশন/OTP কী কখনো স্পর্শ হয় না; ক্যাপ ছাড়া unbounded নয়।
+_CACHE_PURGE_PATTERNS = [
+    "bhasha_bot:*",
+    "user_profile:*",
+    "semantic_cache:*",
+    "cache:*",
+    "health:*",
+]
+_CACHE_PURGE_KEY_CAP = 5000
+
+
+async def _purge_cache_patterns(redis_client) -> int:
+    """SCAN-ভিত্তিক selective cache purge — blocking KEYS নেই, সেশন স্পর্শ হয় না।"""
+    total_deleted = 0
+    for pattern in _CACHE_PURGE_PATTERNS:
+        batch: list[str] = []
+        # বাংলা মন্তব্য: scan_iter ছোট ব্যাচে কী ফেরত দেয় — Redis ব্লক হয় না।
+        async for key in redis_client.scan_iter(match=pattern, count=200):
+            batch.append(key if isinstance(key, str) else key.decode("utf-8", "replace"))
+            if len(batch) >= 500:
+                await redis_client.delete(*batch)
+                total_deleted += len(batch)
+                batch = []
+            if total_deleted >= _CACHE_PURGE_KEY_CAP:
+                break  # বাংলা মন্তব্য: সেফটি-ক্যাপ — এক ক্লিকে অসীম ডিলিট নয়
+        if batch:
+            await redis_client.delete(*batch)
+            total_deleted += len(batch)
+    return total_deleted
+
+
 @router.post("/actions/{action_type}")
 async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_current_admin)):
     """Trigger 1-click Quick Actions from Dashboard"""
@@ -103,21 +136,9 @@ async def trigger_quick_action(action_type: str, admin_user: dict = Depends(get_
     if action_type == "cache":
         redis_client = redis_manager.client
         if redis_client:
-            # সেশন ও ওটিপি কী সুরক্ষিত রাখতে শুধুমাত্র সাধারণ ক্যাশ প্যাটার্নগুলো স্ক্যান করে ডিলেট করা হচ্ছে
-            patterns = [
-                "bhasha_bot:*",
-                "user_profile:*",
-                "user_session:*",
-                "semantic_cache:*",
-                "cache:*",
-                "health:*",
-            ]
-            total_deleted = 0
-            for pattern in patterns:
-                keys = await redis_client.keys(pattern)
-                if keys:
-                    await redis_client.delete(*keys)
-                    total_deleted += len(keys)
+            # D-4 fix (#2733): blocking KEYS বাদ — SCAN-ভিত্তিক non-blocking স্যুইপ;
+            # user_session:* বাদ (লাইভ tenant state মুছে ফেলা নিষিদ্ধ) — বাকি pure cache।
+            total_deleted = await _purge_cache_patterns(redis_client)
             logger.info(f"Successfully cleared {total_deleted} cache keys from Redis.")
             _admin_action_audit("success")
             return {
