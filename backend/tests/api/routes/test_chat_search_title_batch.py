@@ -96,7 +96,7 @@ def _make_fake_db():
 @pytest.mark.asyncio
 async def test_message_search_titles_batched_single_query():
     db, queries = _make_fake_db()
-    with patch("api.routes.chat_search.SupabaseDB", return_value=db):
+    with patch("api.routes.chat_search.get_db", return_value=db):
         resp = await search_chats(q="alpha", limit=20, offset=0, user={"sub": "user-1"})
 
     conv_queries = [q for q in queries if q[0] == "conversations"]
@@ -147,7 +147,7 @@ async def test_message_search_preserves_title_phase_titles():
 
     _queries = []
     with patch(
-        "api.routes.chat_search.SupabaseDB",
+        "api.routes.chat_search.get_db",
         return_value=SimpleNamespace(client=SimpleNamespace(table=table)),
     ):
         resp = await search_chats(q="alpha", limit=20, offset=0, user={"sub": "user-1"})

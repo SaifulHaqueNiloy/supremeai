@@ -2,6 +2,7 @@ import asyncio
 import functools
 import inspect
 import os
+import threading
 import time
 import uuid
 from collections.abc import Callable
@@ -1723,6 +1724,38 @@ class SupabaseDB:
 
                 return async_wrapper
         raise AttributeError(f"'{self.__class__.__name__}' object has no attribute '{name}'")
+
+
+# ── #2719 slice-2: lazy process-wide singleton ──────────────────────────────
+# বাংলা মন্তব্য: আগে অনেক রাউট প্রতি রিকোয়েস্টে `SupabaseDB()` কল করত —
+# প্রতিবার ১-২টি নতুন supabase/httpx ক্লায়েন্ট তৈরি হতো (connection churn,
+# ২৪টি runtime সাইট)। lazy singleton: প্রথম কলে তৈরি হয়, পরের সব কলে
+# একই instance ফেরত যায় — ক্লাস নিজে অপরিবর্তিত (direct-construction টেস্ট
+# যেমন test_learning_store fresh instance পায়, আইসোলেশন অক্ষত)।
+_shared_db_instance: SupabaseDB | None = None
+_shared_db_lock = threading.Lock()
+
+
+def get_db() -> SupabaseDB:
+    """Process-wide shared SupabaseDB instance (issue #2719 slice-2).
+
+    সৎ-সীমাবদ্ধতা: env/settings প্রথম কলের সময়েই স্ন্যাপশট হয় — প্রসেস-জীবনে
+    env বদলালে প্রতিফলিত হয় না (উদ্দেশ্যপ্রণোদিত; প্রোডাকশনে env স্থির)।
+    Tests: reset_db_singleton() দিয়ে রিসেট করা যায়।
+    """
+    global _shared_db_instance
+    if _shared_db_instance is None:
+        with _shared_db_lock:
+            if _shared_db_instance is None:
+                _shared_db_instance = SupabaseDB()
+    return _shared_db_instance
+
+
+def reset_db_singleton() -> None:
+    """Test hook — singleton সাফ করে; পরের get_db() কলে নতুন instance তৈরি হয়।"""
+    global _shared_db_instance
+    with _shared_db_lock:
+        _shared_db_instance = None
 
 
 db = SupabaseDB()

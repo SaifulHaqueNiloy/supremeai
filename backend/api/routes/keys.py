@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 from core.logging_config import logger
 from core.security.authentication.rbac import get_current_user_token as verify_token_dependency
-from database.supabase_client import SupabaseDB
+from database.supabase_client import get_db
 
 router = APIRouter(prefix="/keys", tags=["User Keys"])
 
@@ -62,7 +62,7 @@ async def create_or_update_key(key_data: KeyCreate, user: dict = Depends(verify_
 
     encrypted_key = encrypt_key(key_data.api_key)
 
-    db = SupabaseDB()
+    db = get_db()
     # Assuming upsert via Supabase RPC or direct table access
     # We will use direct table access here
     try:
@@ -94,7 +94,7 @@ async def list_keys(user: dict = Depends(verify_token_dependency)):
     if not user_id:
         raise HTTPException(status_code=401, detail="Invalid token")
 
-    db = SupabaseDB()
+    db = get_db()
     try:
         response = (
             await db.client.table("user_keys")

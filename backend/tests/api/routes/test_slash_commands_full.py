@@ -3,7 +3,7 @@
 Strategy:
     - Minimal FastAPI app mounting ONLY slash_commands.router
       (prefix /api/commands, auth bypassed deterministically).
-    - ``database.supabase_client.SupabaseDB`` is replaced with a dict-backed
+    - ``database.supabase_client.get_db`` is replaced with a dict-backed
       fake at the source module (handlers import it lazily at call time).
     - LLM gateway, KnowledgeBaseIndexer and HFImageGenerator are patched.
 
@@ -66,7 +66,7 @@ class FakeTable:
 
 
 class FakeSupabaseDB:
-    """Replacement for database.supabase_client.SupabaseDB instances."""
+    """Replacement for database.supabase_client.get_db() results (SupabaseDB instances)."""
 
     def __init__(
         self,
@@ -119,7 +119,7 @@ async def commands_env(monkeypatch):
         ],
     }
     monkeypatch.setattr(
-        "database.supabase_client.SupabaseDB",
+        "database.supabase_client.get_db",
         lambda: FakeSupabaseDB(shared_tables),
     )
 
@@ -446,7 +446,7 @@ class TestClearCommand:
                 fail_on={"messages"},
             )
 
-        monkeypatch.setattr("database.supabase_client.SupabaseDB", broken_db)
+        monkeypatch.setattr("database.supabase_client.get_db", broken_db)
         body = await execute(http, "/clear", {"conversation_id": "conv-1"})
         assert "Failed to clear conversation" in body["result"]["error"]
 
