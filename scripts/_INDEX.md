@@ -101,8 +101,7 @@ at the bottom — the generator preserves them verbatim on every regeneration.
 | `agents/agent_solution_memory.py` | SupremeAI — Collective Agent Memory & Problem-Solving Layer CLI. |
 | `agents/check_slot_registry_drift.py` | check_slot_registry_drift.py — single-source-of-truth gate for slot governance. |
 | `agents/continuous_agent_loop.py` | Continuous Autonomous Agent Loop (#2573 — Simple Version). |
-| `agents/create_blocker_issue.py` | Prerequisite Blocker Discovery & Autonomous Issue Creator. |
-| `agents/create_discovery_issue.py` | Discovery-Driven Issue Creator. |
+| `agents/create_issue.py` | Unified Issue Creator — `--type blocker|discovery` (প্রাক্তন create_blocker_issue.py + create_discovery_issue.py, #2841 PR-6). |
 | `agents/credential_manager.py` | Scoped JIT Credential Manager for SupremeAI autonomous agents (Issue #2644). |
 | `agents/heartbeat_ping.py` | Universal agent-slot heartbeat pinger (issue #1402). |
 | `agents/heartbeat_ping.sh` | Universal shell heartbeat pinger for agent slots (issue #1402). |
