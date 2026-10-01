@@ -71,6 +71,13 @@ jobs:
           INPUT_PR: ${{ inputs.pr_number }}
         run: |
           set -euo pipefail
+          # বাংলা মন্তব্য: bootstrap-টলারেন্স — evaluator স্ক্রিপ্ট main-এ এখনো
+          # নেই (এই workflow-সহ যে PR-এ সে জন্মাচ্ছে) হলে লাল নয়, সৎ-স্কিপ;
+          # merge-এর পর থেকেই পূর্ণ মূল্যায়ন চলবে।
+          if [ ! -f scripts/ci/ai_pr_evaluator.py ]; then
+            echo "bootstrap: ai_pr_evaluator.py main-এ নেই এখনো — এই PR-এর merge-এর পর থেকে পূর্ণ মূল্যায়ন সক্রিয় হবে।"
+            exit 0
+          fi
           # বাংলা মন্তব্য: বুককিপিং-জব — রায় যা-ই হোক, নিবন্ধন-সফলতা = exit 0
           # (রায়-নির্দিষ্ট exit-code দরকার হলে --strict-exit, টেস্টে ব্যবহৃত)।
           TARGET="${EVENT_PR:-$INPUT_PR}"
