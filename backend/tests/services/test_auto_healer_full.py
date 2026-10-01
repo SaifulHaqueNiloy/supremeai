@@ -226,7 +226,8 @@ class TestAutoFix:
         issue = _issue(category=IssueCategory.RATE_LIMIT)
         result = await healer.auto_fix(issue)
         assert result.success is True
-        assert result.fix_applied in ("cache_ttl_reduced", "retry_with_backoff")
+        # #2708: সত্য ক্রিয়া-বর্ণনা — মিথ্যা "cache_ttl_reduced" স্টাব সরানো হয়েছে
+        assert result.fix_applied in ("cache_validated_backoff_armed", "retry_with_backoff")
         assert issue.resolved is True
         assert healer.stats["issues_auto_fixed"] == 1
 
@@ -235,7 +236,9 @@ class TestAutoFix:
         issue = _issue(category=IssueCategory.TIMEOUT)
         result = await healer.auto_fix(issue)
         assert result.success is True
-        assert result.fix_applied == "increased_timeout"
+        # #2708: স্টাব আর নেই — বাস্তব RetryPolicy hardening হয়
+        assert result.fix_applied == "retry_policy_hardened"
+        assert issue.source in healer.retry_policies
 
     async def test_database_lock_fix(self):
         healer = AutoHealer()

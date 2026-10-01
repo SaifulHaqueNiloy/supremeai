@@ -65,6 +65,10 @@ CONSUMED_KEY_HINTS = [
     r"^FIRECRAWL_API_KEY$", r"^GITHUB_TOKEN$", r"^KAGGLE_API_TOKENS?$",
     r"^GEMINI_API_KEY$", r"^MCP_URL$", r"^MCP_API_KEY$", r"^MCP_ADMIN_KEY$",
     r"^INFISICAL_", r"^RENDER_MCP_URL$",
+    # বাংলা মন্তব্য (#2713): নিচের প্ল্যাটফর্মগুলো এখন probe_known_keys গ্রাস করে —
+    # আর UNMONITORED-তে নয়েজ হিসেবে দেখাবে না।
+    r"^STRIPE_API_KEY$", r"^RESEND_API_KEY$", r"^NEON_API_KEY$",
+    r"^LAUNCHDARKLY_API_KEY$", r"^TELEGRAM_BOT_TOKEN$",
 ] + [f"^{k}$" for k in KNOWN_AI_HOSTS]
 
 
@@ -84,6 +88,7 @@ CATEGORY_META = {
     "CONFIG_MISSING":   ("P2", "প্রয়োজনীয় key/ID vault/Actions secrets-এ নেই — যোগ করুন অথবা প্রোব বাদ দিন।"),
     "DATA_STALE":       ("P2", "ডেটা/ডিপ্লয় স্টেল — সিঙ্ক/ডিপ্লয় পাইপলাইন পুনরায় চালু করুন।"),
     "SETTINGS_RISK":    ("P2", "কনফিগ-ঝুঁকি (free plan/health-path অনুপস্থিত/flexible SSL) — সেটিংস পরিবর্তনের প্রস্তাব দেখুন।"),
+    "SERVICE_DELETED":  ("P2", "vault-রেফারেন্সড সার্ভিস প্ল্যাটফর্মে নেই (#2711) — owner নিশ্চিত করুন: ডিকমিশন-ইনটেন্ট হলে একই PR-এ vault থেকে ID সরান; দুর্ঘটনা হলে রিস্টোর করুন।"),
     "UNMONITORED":      ("P3", "vault-এ সচল key আছে কিন্তু কোনো প্রোব নেই — কভারেজ যোগ করুন বা key রিটায়ার করুন।"),
     "UNCLASSIFIED":     ("P2", "অজানা ত্রুটি — raw detail দেখে ম্যানুয়াল ট্রায়াজ করুন।"),
 }
@@ -114,9 +119,20 @@ def classify(platform: str, check: str, status: int, body: str) -> tuple[str, st
     if status == 403 and ("error code: 1010" in low or "cloudflare" in low or "<!doctype html" in low):
         return "BOT_PROTECTION", ""
     if status in (403, 407):
-        return "AUTH_INVALID", ""
+        # বাংলা মন্তব্য (#2714): plain-JSON 403-ফ্যামিলি (groq `{"error":{"message":"Forbidden"}}`-স্টাইল)
+        # সাধারণত provider-পাশের WAF/bot-ব্লক (#2423/#2483 প্রমাণিত জ্ঞান) — সংজ্ঞাগত
+        # invalid-key বডি-ফিঙ্গারপ্রিন্ট না থাকলে BOT_PROTECTION (P2); AUTH_INVALID (P1)
+        # শুধু 401 অথবা স্পষ্ট key-ত্রুটি বডিতে — নলেজ-ড্রিফট বন্ধ।
+        if any(sig in low for sig in ("invalid api key", "incorrect api key", "api key expired",
+                                       "invalid_access_key", "authentication failed")):
+            return "AUTH_INVALID", ""
+        return "BOT_PROTECTION", ""
     if status >= 500:
         return "SERVER_ERROR", ""
+    if status == 404 and ("not found: service" in low or "service not found" in low):
+        # বাংলা মন্তব্য (#2711): Render `not found: service: srv-xxx` — সার্ভিস ডিলিটেড/স্টেল
+        # vault-ID; এটা UNCLASSIFIED নয় — সুনির্দিষ্ট প্রতিকার-পাথ আছে (vault hygiene)।
+        return "SERVICE_DELETED", ""
     if status in (404,) and "page not found" in low:
         return "UNCLASSIFIED", "endpoint-path পরিবর্তিত হতে পারে — API docs যাচাই করুন"
     return "UNCLASSIFIED", ""
@@ -353,8 +369,21 @@ def probe_vercel(kv: dict) -> list[dict]:
             else:
                 out.append(mk("vercel", "prod-deploy-freshness", True, f"{age:.1f}h আগে"))
     err = [d for d in ds if d.get("readyState") in ("ERROR", "CANCELED")]
-    if err:
-        out.append(mk("vercel", "deploy-states", False, f"{len(err)} ERROR/CANCELED", category="SERVER_ERROR"))
+    # বাংলা মন্তব্য (#2714): স্বাস্থ্য-নির্ধারণ = সর্বশেষ production ডিপ্লয়ের readyState —
+    # ঐতিহাসিক ERROR-গণনা নয়। প্রমাণ: ERROR→তৎক্ষণাৎ retry→READY প্যাটার্নে
+    # সুস্থ প্রোডাকশনেও পুরনো ERROR উইন্ডোতে থাকতে পারে (P1-নয়েজ, #2714 কেস-১)।
+    latest_prod = next((d for d in ds if d.get("target") == "production"), None)
+    if latest_prod is not None:
+        rs = latest_prod.get("readyState") or latest_prod.get("state") or "UNKNOWN"
+        if rs in ("ERROR", "CANCELED"):
+            out.append(mk("vercel", "deploy-states", False,
+                          f"সর্বশেষ production deploy {rs} — প্রোডাকশন ঝুঁকিতে", category="SERVER_ERROR"))
+        else:
+            out.append(mk("vercel", "deploy-states", True, f"সর্বশেষ production deploy {rs}"))
+        if err:
+            # বাংলা মন্তব্য: ঐতিহাসিক ERROR = build-ফ্লেক ট্রেন্ড মেট্রিক (WARN) — P1 নয় (#2714)।
+            out.append(mk("vercel", "deploy-states-flakiness", None,
+                          f"শেষ {len(ds)} ডিপ্লয়ে {len(err)}-টি ERROR/CANCELED — retry-ফ্লেক ট্রেন্ড"))
     elif ds:
         out.append(mk("vercel", "deploy-states", True, f"শেষ {len(ds)}-টি READY"))
     return out
@@ -462,6 +491,50 @@ def probe_firecrawl(kv: dict) -> list[dict]:
     return [mk("firecrawl", "credit-usage", False, f"HTTP {st}: {body[:140]}", category=cat, note=note)]
 
 
+def probe_known_keys(kv: dict) -> list[dict]:
+    """বাংলা মন্তব্য (#2713): পরিচিত পাবলিক API-সহ প্ল্যাটফর্মগুলোর সস্তা key-validity প্রোব।
+    নীরবে এক্সপায়ার/রিভোক হওয়া Stripe/Resend/Telegram-জাতীয় key ইউজার-ফেসিং
+    ফিচার-ব্যর্থতা হিসেবেই প্রকাশ পেত — শিফট-লেফট ধরা এখন প্রতিদিন সম্ভব।"""
+    out = []
+    # (vault-key, প্ল্যাটফর্ম, চেক-url) — সব GET, Bearer-অথ
+    probes = [
+        ("STRIPE_API_KEY",       "stripe",        "https://api.stripe.com/v1/balance"),
+        ("RESEND_API_KEY",       "resend",        "https://api.resend.com/domains"),
+        ("NEON_API_KEY",         "neon",          "https://console.neon.tech/api/v2/projects"),
+        ("LAUNCHDARKLY_API_KEY", "launchdarkly",  "https://app.launchdarkly.com/api/v2/projects"),
+    ]
+    for key_env, name, url in probes:
+        tok = kv.get(key_env, "")
+        if not tok:
+            continue  # বাংলা মন্তব্য: key-ই না থাকলে প্রোব নয় — CONFIG_MISSING-ও নয়েজ
+        H = {"Authorization": f"Bearer {tok}"}
+        st, body = retry(lambda: jget(url, H))
+        low = (body if isinstance(body, str) else json.dumps(body)).lower()
+        if st == 200:
+            out.append(mk(name, "key-validity", True, "HTTP 200 — সচল"))
+        elif st in (401,) or (st == 403 and any(s in low for s in ("invalid", "expired", "unauthorized"))):
+            out.append(mk(name, "key-validity", False, f"HTTP {st} — key নিষ্ক্রিয়/রিভোকড", category="AUTH_INVALID"))
+        elif st == 0:
+            out.append(mk(name, "key-validity", False, f"HTTP {st}", category="NETWORK"))
+        else:
+            out.append(mk(name, "key-validity", None, f"HTTP {st} — ম্যানুয়াল ট্রায়াজ ({str(body)[:120]})"))
+    # বাংলা মন্তব্য: টেলিগ্রাম — token URL-পাথে যায়; getMe সস্তা ও প্রমাণিত-স্কিম
+    ttok = kv.get("TELEGRAM_BOT_TOKEN", "")
+    if ttok:
+        st, body = retry(lambda: jget(f"https://api.telegram.org/bot{ttok}/getMe", {}))
+        if st == 200:
+            ok_flag = isinstance(body, dict) and body.get("ok") is True
+            out.append(mk("telegram", "getMe", ok_flag if ok_flag else None,
+                          "bot সচল" if ok_flag else f"অপ্রত্যাশিত বডি: {str(body)[:120]}"))
+        elif st in (401, 403):
+            out.append(mk("telegram", "getMe", False, f"HTTP {st} — token নিষ্ক্রিয়", category="AUTH_INVALID"))
+        elif st == 0:
+            out.append(mk("telegram", "getMe", False, f"HTTP {st}", category="NETWORK"))
+        else:
+            out.append(mk("telegram", "getMe", None, f"HTTP {st} — ম্যানুয়াল ট্রায়াজ"))
+    return out
+
+
 def probe_github_mirror(kv: dict) -> list[dict]:
     out = []
     tok = kv.get("GITHUB_TOKEN", "")
@@ -494,7 +567,7 @@ def probe_github_mirror(kv: dict) -> list[dict]:
 
 
 PROBES = [probe_upstash, probe_render, probe_supabase, probe_vercel, probe_cloudflare,
-          probe_kaggle, probe_ai_hosts, probe_firecrawl, probe_github_mirror]
+          probe_kaggle, probe_ai_hosts, probe_firecrawl, probe_github_mirror, probe_known_keys]
 
 
 def discover_unmonitored(kv: dict) -> list[dict]:

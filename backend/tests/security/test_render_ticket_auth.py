@@ -66,7 +66,7 @@ class TestRenderProxyAuth:
         with patch.object(_render_proxy.urllib.request, "urlopen") as urlopen_mock:
             ctx = urlopen_mock.return_value.__enter__.return_value
             ctx.headers = {"Content-Type": "text/html"}
-            ctx.read.return_value = b"<html><head></head><body>ok</body></html>"
+            ctx.read.side_effect = [b"<html><head></head><body>ok</body></html>", b""]
             resp = render_proxy(url="https://example.com", ticket=t)
             assert resp.status_code == 200
         # second use of the SAME ticket → 401 (single-use enforced)
@@ -79,7 +79,7 @@ class TestRenderProxyAuth:
         with patch.object(_render_proxy.urllib.request, "urlopen") as urlopen_mock:
             ctx = urlopen_mock.return_value.__enter__.return_value
             ctx.headers = {"Content-Type": "text/html; charset=utf-8"}
-            ctx.read.return_value = b"<html><head></head><body>hello</body></html>"
+            ctx.read.side_effect = [b"<html><head></head><body>hello</body></html>", b""]
             resp = render_proxy(url="https://example.com", ticket=t)
         assert resp.status_code == 200
         # framing contract (P6) preserved

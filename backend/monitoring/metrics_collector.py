@@ -17,9 +17,15 @@ Features:
 
 import asyncio
 import time
-from collections import defaultdict
+from collections import defaultdict, deque
 from enum import Enum
 from typing import Any
+
+# বাংলা মন্তব্য (#2718): unbounded list accumulator 512MB free-tier-এ slow OOM-এর
+# মূল কারণ — তাই histogram ও db-query window এখন bounded deque (শেষ 512টি
+# observation সংরক্ষিত; পুরনোগুলো অটো-evict)। মোট গণনা আলাদা counter-এ থাকে,
+# ফলে query_count সঠিক থাকে কিন্তু মেমরি O(1)-এ সীমাবদ্ধ।
+_HISTOGRAM_WINDOW = 512
 
 
 class MetricType(Enum):
@@ -38,7 +44,8 @@ class MetricsCollector:
         self._start_times: dict[str, float] = {}
         self._request_counts = defaultdict(int)
         self._error_counts = defaultdict(int)
-        self._db_query_times = []
+        self._db_query_times: deque[float] = deque(maxlen=_HISTOGRAM_WINDOW)
+        self._db_query_count = 0
         self._cache_stats = {"hits": 0, "misses": 0}
         self._ai_costs = defaultdict(float)
         self._security_events = defaultdict(int)
@@ -73,7 +80,7 @@ class MetricsCollector:
 
         async with self._lock:
             if key not in self._metrics:
-                self._metrics[key] = []
+                self._metrics[key] = deque(maxlen=_HISTOGRAM_WINDOW)
             self._metrics[key].append(value)
 
     async def start_timer(self, timer_id: str):
@@ -109,6 +116,7 @@ class MetricsCollector:
         labels = {"operation": operation, "success": str(success)}
         await self.observe_histogram("db_query_duration_seconds", duration, labels)
         self._db_query_times.append(duration)
+        self._db_query_count += 1
 
     async def record_cache_hit(self):
         """Record a cache hit."""
@@ -201,10 +209,12 @@ class MetricsCollector:
         if not self._db_query_times:
             return {"avg_query_time": 0.0, "query_count": 0}
 
+        # বাংলা মন্তব্য (#2718): avg/slow_queries শেষ 512-observation window-এর ওপর;
+        # query_count সর্বমোট পর্যবেক্ষিত সংখ্যা (bounded deque-এর len নয়)।
         avg_time = sum(self._db_query_times) / len(self._db_query_times)
         return {
             "avg_query_time": avg_time,
-            "query_count": len(self._db_query_times),
+            "query_count": self._db_query_count,
             "slow_queries": len([t for t in self._db_query_times if t > 1.0]),  # >1s is slow
         }
 

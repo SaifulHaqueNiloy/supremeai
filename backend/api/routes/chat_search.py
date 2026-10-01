@@ -166,6 +166,25 @@ async def search_chats(
             user_conv_ids = [r["id"] for r in conv_ids_resp.data]
 
             if user_conv_ids:
+                # SLICE-1 (#2719): বাংলা মন্তব্য — title batch-prefetch: এক `.in_`
+                # কোয়েরিতে সব user conversation-এর title। আগে প্রতি match-এ আলাদা
+                # title কোয়েরি ছিল (N+1 — limit×3 পর্যন্ত) → এখন মোট ১টি।
+                titles_by_id: dict[str, str | None] = {}
+                try:
+                    titles_resp = (
+                        await db.client.table("conversations")
+                        .select("id, title")
+                        .in_("id", user_conv_ids)
+                        .execute()
+                    )
+                    titles_by_id = {r["id"]: r.get("title") for r in titles_resp.data}
+                except asyncio.CancelledError:
+                    raise
+                except Exception as e:
+                    import logging
+
+                    logging.getLogger(__name__).exception(f"Silenced error: {e}")
+
                 # Search messages across all user conversations
                 # Supabase RPC or filter by conversation_id list
                 # Use ilike on content
@@ -190,25 +209,12 @@ async def search_chats(
 
                     # Only update if this match is better than existing
                     if conv_id not in results_map or score > results_map[conv_id].relevance_score:
-                        # Get conversation title
-                        title = None
+                        # Get conversation title — SLICE-1 (#2719): batch-prefetched
+                        # dict lookup; লুপে আর কোনো await নেই (N+1 বিলুপ্ত)।
                         if conv_id in results_map:
                             title = results_map[conv_id].title
                         else:
-                            try:
-                                conv_resp = (
-                                    await db.client.table("conversations")
-                                    .select("title")
-                                    .eq("id", conv_id)
-                                    .execute()
-                                )
-                                title = conv_resp.data[0]["title"] if conv_resp.data else None
-                            except asyncio.CancelledError:
-                                raise
-                            except Exception as e:
-                                import logging
-
-                                logging.getLogger(__name__).exception(f"Silenced error: {e}")
+                            title = titles_by_id.get(conv_id)
 
                         results_map[conv_id] = SearchResultItem(
                             conversation_id=conv_id,
