@@ -107,7 +107,7 @@ def _should_file(event: ErrorEvent, now: float = time.monotonic()) -> bool:
 
 
 def _build_issue_payload(event: ErrorEvent, sig: str) -> dict[str, Any]:
-    """ইস্যু টাইটেল/বডি/লেবেল — create_discovery_issue-র স্কিমা অনুসরণে।"""
+    """ইস্যু টাইটেল/বডি/লেবেল — create_issue.py --type discovery-র স্কিমা অনুসরণে।"""
     title = f"[self-filed] {event.module}: {event.error_type} — {event.severity} production error"
     # বাংলা মন্তব্য: context-section আগেই বানিয়ে রাখি — Python 3.11-এ f-string-এর
     # expression-part-এ backslash নিষিদ্ধ, তাই nested f-string এড়ানো হলো।
