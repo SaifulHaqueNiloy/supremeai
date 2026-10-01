@@ -1245,3 +1245,13 @@ fix নয়, reproducibility issue।
 - **নতুন-ইস্যু**: #2867 (launchdarkly P1, অডিট-স্বয়ংক্রিয়), #2868 (parity, বট-স্বয়ংক্রিয়) — দুটোই-অন্যদের-তৈরি; issues 31→**33**
 - **SHA-স্যানিটি-শিক্ষা**: workflow-runs API-তে `head_sha`-ফিল্টার **সম্পূর্ণ-40-char-SHA চায়** — 8-char দিলে-নীরবে-০-ফল (M-পাঠ প্রযোজ্য: শূন্য-ফল≠অনুপস্থিতি); check-runs-বনাম-workflow-runs দুই-স্তরে-যাচাই
 - BASELINE re-anchor ~10:15Z; **এই চক্রে: 0 merge/0 force-push/0 main-push/0 নতুন-ইস্যু/1-কমেন্ট (#2483, নতুন-প্রমাণ); watch: #2867-key-রোটেশন → deep-audit/sweep-সবুজ, #2868-auto-close-পথ, mirror-drift-মালিক-সিদ্ধান্ত, ডেডলক-চেইন (owner-নীরব ~৪ঘ)।**
+
+### Addendum — Task 189 (2026-10-01 ~18:30+08 = 10:30–10:45Z): ২২তম-মার্জ (#2870 deep-audit-বাগ-ফিক্স) + হার্ভেস্ট-৪ + nightly-লাল-রা-পুরোনো-টিপে-বাঁধা
+- **HANDSHAKE**: worklog last=188 ✓; তিন-পোর্ট-সবুজ; clone-জীবিত (রোলব্যাক-মুক্ত)।
+- **POLICY SYNC**: অ্যাঙ্কর-১০ম-পুনঃপ্রমাণ ✓ (AGENTS=`38bc29aa`/`774e44d2`, rules.yml=`333816c1`/`f5f254c9`); fetch = self-sync + 🆕ব্রাঞ্চ `coder-1-2869-deep-audit-upsert-robust`।
+- **SWEEP (10:05→10:30Z, ১৫-ঘটনা)**: 🆕ইস্যু **#2869** (coder-1: `platform_deep_audit.py` `upsert_issues()`-এ `http()`-raw-str-এ `data.get()` → প্রথম-সফল-issue-তৈরির-পরেই AttributeError-ক্র্যাশ — রান 36846145557-প্রমাণিত; **ফল: launchdarkly-#2867 ফাইল-হয়েছিল কিন্তু groq-P1-সহ-বাকি-সব-ফাইন্ডিং-কখনো-ফাইল-হয়নি**) + 🆕PR **#2870** (ফিক্স, ২-মিনিট-টার্নঅ্যারাউন্ড, Closes #2869) + bot-ট্রায়াজ-লেবেল-ঝড়; main-health ১৭ok→১৫ok/৩fail (পুরোনো-টিপের-nightly-সেটেল-বৈচিত্র্য)।
+- **PRE-MERGE-অডিট (#2870 @5f93e8ee)**: checks **৭-success/৩-skip/০-fail/০-pending** (Constitutional+Unified+BNG+Test-সব-সবুজ); ২-ফাইল (script +২১/−৬ `_jbody`-পার্স+dict-গার্ড-দুই-সাইট, http()-চুক্তি-অপরিবর্তিত; নতুন-চুক্তি-টেস্ট +৭৩ str/JSON-উভয়-পথ); **collision-নেই** (test_deep_audit_upsert_2869.py main-এ-নেই ✓); ১-কমিট; mergeable=true; Closes-বাঁধন ✓; self-claimed (coder-1, 1-issue-1-branch-1-PR-সিদ্ধ)।
+- **MERGE ×1: #2870 → main `2b3bf6c1`→`a35d1fd8` (২২তম-স্বায়ত্তশাসিত-মার্জ)**।
+- **M29 @`a35d1fd8`**: তাৎক্ষণিক **FAILS-none** (৬ok/৫skip/১-pending — checks-নামছে); **nightly-৩-লাল = পুরোনো-টিপ `2b3bf6c1`-এর-মূল্যায়ন** — নতুন-টিপে-আজ-রাতে-ফিক্সড-স্ক্রিপ্ট-দিয়ে-পুনঃরান; **হার্ভেস্ট-৪: #2869 স্বয়ংক্রিয়-বন্ধ** (10:32:25Z); issues 34→**33**।
+- DEDUPE: #2869-লেখক-নিজে-ট্র্যাকড + #2870-ই-ফিক্স → **0-নতুন-ইস্যু/0-কমেন্ট**; T188-এর-#2483-কমেন্ট-অবৈধায়ন-নেই (groq-raw-প্রমাণ-সেখানেই-সংরক্ষিত; ফিক্স-পরের-রানে-deep-audit-নিজেই-ফাইল-করবে)।
+- BASELINE re-anchor; **এই চক্রে: ১-মার্জ (২২তম)/0-force-push/0-main-push/0-নতুন-ইস্যু/0-কমেন্ট; watch: আজ-রাতের-nightly-রান (ফিক্সড-script) → deep-audit-সবুজ+groq-ফাইলিং+#2483/#2867/#2868-মিলন, ডেডলক-চেইন (owner-নীরব ~৪.৫ঘ), ত্রয়ী-BNG।**
