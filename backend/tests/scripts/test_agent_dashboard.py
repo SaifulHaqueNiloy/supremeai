@@ -38,8 +38,11 @@ class TestRoster:
         registry = ad.load_registry(REGISTRY)
         roster = ad.build_roster(registry)
         names = [s.name for s in roster]
-        # Legacy slots from the registry (issue #1635 mock uses these).
-        assert "agent-3" in names and "agent-1" in names
+        # #2723 decommission contract: agent-1/agent-2 rows carry `active: false`
+        # ("absent from live tower as of 2026-09-30"), so build_roster() must
+        # exclude them; agent-3 remains the canonical active legacy slot.
+        assert "agent-3" in names and "agent-1" not in names
+        assert "agent-2" not in names
         agent3 = next(s for s in roster if s.name == "agent-3")
         assert agent3.role == "coder-1"
         # Branch tokens must cover both legacy + post-migration naming.
@@ -184,11 +187,14 @@ class TestBuildRows:
         assert rows[0]["status"] == "ACTIVE" and not warnings
 
     def test_idle_slot_and_unknown_claimant(self):
-        agent1 = next(s for s in _roster() if s.name == "agent-1")
+        # #2723: agent-1 is decommissioned (active: false) — agent-3 is the
+        # canonical active legacy slot; the IDLE/unknown-claimant behavior
+        # under test is slot-agnostic.
+        agent3 = next(s for s in _roster() if s.name == "agent-3")
         claims = [
             {"issue": 500, "title": "t", "created_at": _iso(NOW), "agent": None, "claimed_at": None}
         ]
-        rows, warnings = ad.build_rows([agent1], claims, [], NOW, 4.0)
+        rows, warnings = ad.build_rows([agent3], claims, [], NOW, 4.0)
         assert rows[0]["status"] == "IDLE"
         assert any("no roster-matched claimant" in w for w in warnings)
 
