@@ -105,7 +105,6 @@ at the bottom — the generator preserves them verbatim on every regeneration.
 | `agents/create_discovery_issue.py` | Discovery-Driven Issue Creator. |
 | `agents/credential_manager.py` | Scoped JIT Credential Manager for SupremeAI autonomous agents (Issue #2644). |
 | `agents/heartbeat_ping.py` | Universal agent-slot heartbeat pinger (issue #1402). |
-| `agents/heartbeat_ping.sh` | Universal shell heartbeat pinger for agent slots (issue #1402). |
 | `agents/mcp_tower_client.py` | MCP Tower Client — connects to SupremeAI Control Tower. |
 | `agents/next_claimable.sh` | next_claimable.sh — the priority-ordered claim queue for your lane. |
 | `agents/priority_queue_ledger.py` | Priority Queue Ledger — the DYNAMIC auto-ranked claim order. |
