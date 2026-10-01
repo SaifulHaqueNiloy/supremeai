@@ -1232,3 +1232,16 @@ fix নয়, reproducibility issue।
 - **BOARD**: ৭-open-PR heads-সব-অপরিবর্তিত; #2826 `719deea4`-স্থিত (re-trigger-নেই); #2861 লাল-গেটে; issues **31**-স্থিত; **merge-ক্যান্ডিডেট-শূন্য**।
 - DEDUPE: নতুন-সমস্যা-শূন্য → **0-issue/0-কমেন্ট**; BASELINE re-anchor ~08:31Z।
 - **এই চক্রে: 0 merge/0 force-push/0 main-push/0 নতুন-ইস্যু/0 কমেন্ট; playbook T187 addendum; watch: owner-সিদ্ধান্ত (override-merge) → #2861-সবুজে-SHA-guard-মার্জ (প্রাইম), ত্রয়ী-BNG, #2862-claim, #2855-মুক্তি; nightly-ops-রাত্রিক-ফল।**
+
+### Addendum — Task 188 (2026-10-01 ~18:00+08 = 10:00–10:20Z; 17:00+17:30-cron-মিসড — ট্রি-উইন্ডো): 🌙 nightly-ops-প্রথম-রাত্রিক-ফল — main-০-fail-স্ট্রিক-শেষ (scheduled-ফাইন্ডিং, মার্জ-রিগ্রেশন-নয়) + ট্র্যাকার-বিভাজন-ম্যাপ
+- **HANDSHAKE (10:00Z)**: worklog last=187 ✓; আবার **clone-ENOENT + :3771-DOWN** (রোলব্যাক-৫-শ্রেণির-৩য়-ঘটনা — ক্রনিক); my-project-অটুট (worklog 2581/playbook 1234); রিকভারি ~২-মিনিট (plain-clone → control-plane bun-install → bash-start → তিন-পোর্ট-সবুজ)।
+- **POLICY SYNC**: **অ্যাঙ্কর-৯ম-পুনঃপ্রমাণ** ✓ (AGENTS=`38bc29aa`/`774e44d2`, rules.yml=`333816c1`/`f5f254c9`); main `2b3bf6c1`-অপরিবর্তিত (আমার-T179-টিপ — জানালায়-কোনো-মার্জ-নেই)।
+- **🔑 SWEEP-বড়-ফল (08:32→10:01Z-ট্রি-উইন্ডো)**: main SAME-SHA health **৭ok/০fail → ১৬ok/৩fail** — ০-fail-স্ট্রিক (T179→T187) শেষ; **কিন্তু রিগ্রেশন-নয়**: ৩-লাল = **একই Nightly Ops run 36846145557**-এর ৩-job (প্রথম-সম্পূর্ণ-রাত্রিক-রান; T179-watch-item-এর-ফল-এসেছে):
+  - 🧠 Platform Deep-Audit → ফাইন্ডিং-ড্রিভেন-লাল (by-design) → নিজেই **#2867** খুলেছে (launchdarkly 401, P1, ফিঙ্গারপ্রিন্ট-ডুপ্র)
+  - 🧪 Heavy Analysis → Feature Parity Sentinel step-লাল → **#2868** (auto-tracker, পরের-রানে-পাস-হলে-auto-close)
+  - platform-sweep → ২-ফাইন্ডিং: **groq HTTP 401 "Invalid API Key"** (Sep-29-এ-ছিল 403/1010 — সিগনেচার-বদলেছে) + **mirror 90.7h behind** (Sep-29-এ 42.4h — **দ্বিগুণ, ক্রনিক-ওয়ার্সনিং**); সুইপ-মোট ৩০-পাস/২-ফেল/২-স্কিপ
+- **🔑 M8-প্যাটার্ন-রায়**: PR-সবুজ→main-লাল শ্রেণি **নয়** — কোনো-মার্জ-হয়নি; scheduled-ফাইন্ডিং-ক্লাস্টার (nightly-ওয়্যারিং #2823-এর-প্রত্যাশিত-প্রথম-ফল); ২১-মার্জ-সব-সবুজ-পূর্বাভাস-রেকর্ড-অটুট
+- **DEDUPE-শৃঙ্খলা**: paginated-টাইটেল+বডি-স্ক্যান → **groq+mirror দুটোই #2483-তে-পূর্ব-ট্র্যাকড** (platform-agent-সুইপ-ট্র্যাকার) → নতুন-ইস্যু-**শূন্য**; #2483-তে **১-প্রমাণ-কমেন্ট** (id 5929187732): trend-বিশ্লেষণ (403→401, 42.4→90.7h) + ট্র্যাকার-বিভাজন-ম্যাপ (**nightly-৩-লাল = #2483+#2867+#2868**) — spam-guard-যাচাইকৃত (বটের-raw-রিপোর্ট 09:58:35Z-এ-ছিল; আমার-অনন্য-মূল্য=cross-tracker-ম্যাপ+ট্রেন্ড)
+- **নতুন-ইস্যু**: #2867 (launchdarkly P1, অডিট-স্বয়ংক্রিয়), #2868 (parity, বট-স্বয়ংক্রিয়) — দুটোই-অন্যদের-তৈরি; issues 31→**33**
+- **SHA-স্যানিটি-শিক্ষা**: workflow-runs API-তে `head_sha`-ফিল্টার **সম্পূর্ণ-40-char-SHA চায়** — 8-char দিলে-নীরবে-০-ফল (M-পাঠ প্রযোজ্য: শূন্য-ফল≠অনুপস্থিতি); check-runs-বনাম-workflow-runs দুই-স্তরে-যাচাই
+- BASELINE re-anchor ~10:15Z; **এই চক্রে: 0 merge/0 force-push/0 main-push/0 নতুন-ইস্যু/1-কমেন্ট (#2483, নতুন-প্রমাণ); watch: #2867-key-রোটেশন → deep-audit/sweep-সবুজ, #2868-auto-close-পথ, mirror-drift-মালিক-সিদ্ধান্ত, ডেডলক-চেইন (owner-নীরব ~৪ঘ)।**
