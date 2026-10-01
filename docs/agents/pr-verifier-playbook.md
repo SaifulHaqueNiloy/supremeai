@@ -1267,3 +1267,13 @@ fix নয়, reproducibility issue।
 - **ডেডলক-চেইন**: #2826-অপরিবর্তিত (head `719deea4` @09-30T22:34Z, কমেন্ট=৪, re-trigger-শূন্য); #2861-অপরিবর্তিত (কমেন্ট=৪, last 06:13Z) — **owner-নীরব ~৪ঘ৫০ম+**; ত্রয়ী-BNG #2845/#2847/#2848-গভর্নেন্স-শুধু-পর্যবেক্ষণ।
 - DEDUPE: **0-ইস্যু/0-কমেন্ট** (#2868-চলন্ত-তথ্য-তার-নিজ-ট্র্যাকারে-ক্লেইমারের; agent-8-কোনো-নতুন-প্রমাণ-নেই)।
 - BASELINE re-anchor ~11:03Z; **এই চক্রে: 0-মার্জ/0-force-push/0-main-push/0-নতুন-ইস্যু/0-কমেন্ট; watch: আজ-রাতের-nightly-রান (ফিক্সড-script-প্রথম-রাত) → #2868-PR-ফলো, #2483-mirror-drift, ডেডলক-চেইন-নড়াচড়া।**
+
+### Addendum — Task 191 (2026-10-01 ~19:30+08 = 11:30–11:45Z): #2871→#2872-সুপারসিড-চক্র + তৃতীয়-ডেড-ফাইল-যাচাই; 0 issue/0 comment/0 merge
+- **HANDSHAKE**: worklog last=190 ✓; তিন-পোর্ট-সবুজ; clone-জীবিত (রোলব্যাক-মুক্ত-৩য়-পরপর-চক্র)।
+- **POLICY SYNC**: **অ্যাঙ্কর-১২শ-পুনঃপ্রমাণ ✓** (AGENTS=`38bc29aa`/`774e44d2`, rules.yml=`333816c1`/`f5f254c9`); fetch = self-sync (`7af175c0..e5f73ae3` = নিজের-T190-push-অটোফেচ, অ-বিদেশি-কমিট) + 🆕ব্রাঞ্চ `coder-1-2868-parity-sentinel-fp-fixes`; নতুন-পলিসি-শূন্য।
+- **🔑 SWEEP (১২-ঘটনা — #2868-ফিক্স-চক্র-সম্পূর্ণ-জন্ম)**: PR **#2871** খোলা 11:16:09Z → **২৭-সেকেন্ডে-closed-unmerged** 11:16:36Z (branch-force-recreate-পর-old-head-SHA-orphaned; bot-নিজেই-"Superseded by #2872"-কমেন্ট — অ-সমস্যা) → branch-recreate 11:21Z → **PR #2872** খোলা 11:24:11Z (head `922d70e0`, ১-কমিট, ৮-ফাইল **+৩৫৪/−৬৩০**, mergeable=clean, **Closes #2868 ✓**)।
+- **PRE-MERGE-অডিট (#2872)**: checks **১০ok/২fail/৪skip/০pending** — 🔴 Unified PR Gate + Constitutional System Gates **লাল** → **merge-ব্লকড** (পরিচিত-লাল-cluster-প্যাটার্ন); ফাইল-তালিকা = coder-দাবির-Touching-files-হুবহু + **১-অতিরিক্ত: `useDynamicDock.ts` ডিলিট (−১০৩)** — PR-বডি-নিজেই-"২টি (পরে +১)"-ডকুমেন্ট-করেছে (sentinel-পরবর্তী-স্ব-আবিষ্কৃত-৩য়-ডেড-ফাইল)।
+- **VERIFIER-স্পট-যাচাই-৩ (useDynamicDock, git grep)**: origin/main-এ-অন্য-কোনো-ফাইল-রেফারেন্স-শূন্য ✓; PR-head-এ-শূন্য-অবশিষ্ট ✓ — **৩/৩-ডেড-কোড-অপসারণ-এখন-agent-8-যাচাইকৃত** (T190: useChat+DeploymentModal; T191: useDynamicDock)।
+- **M8-নোট**: এই-জানালায়-মার্জ-শূন্য; main `a35d1fd8`-সুস্থ (৫ok/০fail); M8-পূর্বাভাস **২২/২২-অটুট**; #2871-অকাল-মৃত্যু = orphaned-head-শ্রেণি (rebase-পরে-force-recreate-করলে-GitHub-reopen-করতে-পারে-না — coder-দিকের-নতুন-অপারেশনাল-প্যাটার্ন, মার্জ-গেটে-প্রভাব-শূন্য)।
+- DEDUPE: **0-ইস্যু/0-কমেন্ট** (#2872-লাল-গেট = ট্র্যাকড-cluster; +১-ফাইল-তথ্য-PR-বডিতে-ই-আছে; agent-8-নতুন-প্রমাণ-নেই); issues **৩৩-অপরিবর্তিত**; #2868-লেবেল: has-pr + status:review-needed।
+- BASELINE re-anchor ~11:31Z; **এই চক্রে: 0-মার্জ/0-force-push/0-main-push/0-নতুন-ইস্যু/0-কমেন্ট; watch: #2872-গেট-সবুজ-হলে-পরবর্তী-চক্রে-merge-প্রার্থী (২৩তম), nightly-রাত্রিক-রান, ডেডলক-চেইন।**
