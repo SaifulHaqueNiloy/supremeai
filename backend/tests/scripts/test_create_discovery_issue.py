@@ -1,4 +1,5 @@
-"""Unit tests for scripts/agents/create_discovery_issue.py."""
+# বাংলা মন্তব্য (#2856 ফলো-আপ): legacy-API মাইগ্রেশন-শিম — create_discovery_issue.py একত্রীকরণের পর 
+# create_issue.py থেকে একে নামের ফাংশন প্রদান করে; টেস্ট-বডি অপরিবর্তিত। """Unit tests — unified scripts/agents/create_issue.py (legacy surface)."""
 
 from __future__ import annotations
 
@@ -7,7 +8,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from scripts.agents.create_discovery_issue import (
+from scripts.agents.create_issue import (
     check_duplicates,
     create_discovery_issue,
     format_discovery_body,
@@ -81,7 +82,7 @@ def test_check_duplicates_gh_missing_no_unbound_local(monkeypatch):
     """#2528 regression: gh-বাইনারি না থাকলে (FileNotFoundError) আগে
     except-টাপলের json.JSONDecodeError এভালুয়েশনেই UnboundLocalError হতো —
     import json try-ব্লকের ভেতরে ছিল। এখন module-top import; [] ফেরত দেয়।"""
-    import scripts.agents.create_discovery_issue as mod
+    import scripts.agents.create_issue as mod
 
     def _raise(*a, **kw):
         raise FileNotFoundError("gh: executable not found")
@@ -93,7 +94,7 @@ def test_check_duplicates_gh_missing_no_unbound_local(monkeypatch):
 
 def test_check_duplicates_bad_json(monkeypatch):
     """gh-র আউটপুট ভাঙা JSON হলেও [] — একই try-ব্লকের চুক্তি।"""
-    import scripts.agents.create_discovery_issue as mod
+    import scripts.agents.create_issue as mod
 
     class FakeProc:
         returncode = 0
