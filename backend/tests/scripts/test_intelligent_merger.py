@@ -270,8 +270,12 @@ class TestSpeculativeStagingRunner:
         assert plan[1][:3] == ["git", "worktree", "add"]
         assert "--detach" in plan[1]
         merge_cmd = plan[2]
-        # বাংলা মন্তব্য: ["git", "-C", wt, "merge", "--no-ff", ...] — সূচি ৩ ও ৪
-        assert merge_cmd[3:5] == ["merge", "--no-ff"]
+        # বাংলা মন্তব্য (#2888): #2874-এর one-shot -c identity flags — dynamic সূচি:
+        mi = merge_cmd.index("merge")
+        assert merge_cmd[mi:mi + 2] == ["merge", "--no-ff"]
+        # identity flags অবশ্য merge-এর আগে (git global-opts আইন)
+        assert merge_cmd[mi - 4] == "-c" and "user.name=" in merge_cmd[mi - 3]
+        assert merge_cmd[mi - 2] == "-c" and "user.email=" in merge_cmd[mi - 1]
         assert merge_cmd[-1] == "origin/feature-x"
 
     def test_kill_switch(self, monkeypatch):

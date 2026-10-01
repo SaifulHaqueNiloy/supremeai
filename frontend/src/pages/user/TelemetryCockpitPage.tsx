@@ -3,8 +3,14 @@
 // WebSocket/SSE telemetry streams; the auth store intentionally does not expose
 // it as state, so we read the canonical token key (same one apiClient uses) and
 // keep it in sync via the auth-changed event.
+//
+// #2736 (wire-or-delete doctrine): "Operations at a glance" হেডার — এখানে
+// QuickActionsPanel (real actions: 2 route + 2 toast) ও LiveTelemetryChart
+// (throughput/latency baseline snapshot) সেকশন হিসেবে wired।
 import React, { useEffect, useState } from 'react';
 import AgentExecutionTelemetryCockpit from '../../components/dashboard/AgentExecutionTelemetryCockpit';
+import { QuickActionsPanel } from '../../components/dashboard/QuickActionsPanel';
+import { LiveTelemetryChart } from '../../components/dashboard/LiveTelemetryChart';
 import { getUserToken } from '../../services/tokenStorage';
 
 const readToken = (): string =>
@@ -25,7 +31,18 @@ export const TelemetryCockpitPage: React.FC = () => {
     };
   }, []);
 
-  return <AgentExecutionTelemetryCockpit authToken={authToken} />;
+  return (
+    <div className="flex flex-col gap-6">
+      <section
+        aria-label="Operations at a glance"
+        className="grid grid-cols-1 gap-4 xl:grid-cols-2"
+      >
+        <QuickActionsPanel />
+        <LiveTelemetryChart className="min-h-[220px]" />
+      </section>
+      <AgentExecutionTelemetryCockpit authToken={authToken} />
+    </div>
+  );
 };
 
 export default TelemetryCockpitPage;

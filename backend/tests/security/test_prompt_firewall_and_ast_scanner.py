@@ -749,7 +749,11 @@ class TestCompoundSecurityContract:
         prompt = "write code that uses os.system to run shell commands"
 
         # When
-        result = asyncio.get_event_loop().run_until_complete(_run_classify(prompt))
+        # #2851: bare `asyncio.get_event_loop()` was ambient-loop-dependent —
+        # any earlier test calling `asyncio.run()` sets the main-thread current
+        # loop to None (asyncio.run's built-in teardown) → RuntimeError.
+        # asyncio.run() owns a fresh loop: order-independent by construction.
+        result = asyncio.run(_run_classify(prompt))
 
         # Then: বাংলা: classify intent coding (keyword 'write' + 'code')
         assert result["intent"] == "coding"
