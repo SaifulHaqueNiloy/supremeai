@@ -317,9 +317,14 @@ class CompletionMixin:
             )
 
         # Sprint 5 (§13.3): single-flight request coalescing — identical
-        # in-flight requests share one upstream call. Flag-gated (default off);
-        # bounded map + bounded follower wait; any failure degrades to
-        # executing normally, so dedup can never reduce availability.
+        # in-flight requests share one upstream call. Flag-gated
+        # (ENABLE_REQUEST_DEDUP, ডিফল্ট ON — কোড-ডিফল্ট "true"); bounded map +
+        # bounded follower wait; any failure degrades to executing normally,
+        # so dedup can never reduce availability.
+        # বাংলা মন্তব্য (#2840): leader-এর অবিচ্ছেদ্য দায়িত্ব — সফলতা বা ব্যর্থতা
+        # যা-ই হোক, ফ্লাইট শেষে publish করা। publish-হীন raise-এ in-flight entry
+        # অনুত্তোর থেকে যায় এবং identical follow-up কল follower-timeout (৬০s)
+        # ধরে ব্লক হয় — graceful-degradation চুক্তির সরাসরি লঙ্ঘন।
         _coalescer = None
         _dedup_k = None
         _is_leader = False
@@ -336,6 +341,15 @@ class CompletionMixin:
                     logger.info("[LLMGateway] request coalesced onto in-flight duplicate")
                     return _shared
             _is_leader = _leader_entry is None
+
+        def _publish_leader_failure(exc: BaseException) -> None:
+            # বাংলা মন্তব্য (#2840): leader অবস্থায় acompletion থেকে exception-
+            # সহ বেরিয়ে যাওয়ার আগে অবশ্যই publish_failure — নইলে stale in-flight
+            # entry সব identical কলকে follower-timeout (৬০s) ধরে আটকে রাখে।
+            # suppress-guarded: coalescer-নিজে কখনো completion-path ভাঙবে না।
+            if _is_leader and _coalescer is not None and _dedup_k:
+                with contextlib.suppress(Exception):
+                    _coalescer.publish_failure(_dedup_k, exc)
 
         last_exception: Exception | None = None
         mode = kwargs.pop("mode", getattr(self, "mode", ExecutionMode.AUTO))
@@ -365,6 +379,9 @@ class CompletionMixin:
                 except Exception as e:
                     logger.warning(f"[LLMGateway] Local execution failed: {e}")
                     if mode == ExecutionMode.LOCAL:
+                        # বাংলা মন্তব্য (#2840): LOCAL-mode raise = এই কলের চূড়ান্ত
+                        # ব্যর্থতা — leader হিসেবে failure publish করেই বের হব।
+                        _publish_leader_failure(e)
                         raise e
                 else:
                     await self.observability.trace_generation(
@@ -375,7 +392,13 @@ class CompletionMixin:
                         privacy_mode=PrivacyMode.METADATA_ONLY,
                     )
             elif mode == ExecutionMode.LOCAL:
-                raise RuntimeError("Local execution requested but Ollama is not healthy.")
+                _no_adapter_err = RuntimeError(
+                    "Local execution requested but Ollama is not healthy."
+                )
+                # বাংলা মন্তব্য (#2840): no-adapter raise-ও leader-flight-এর মৃত্যু —
+                # publish না করলে identical পরবর্তী কল ৬০s অপেক্ষায় আটকাবে।
+                _publish_leader_failure(_no_adapter_err)
+                raise _no_adapter_err
 
         # Sprint 3: pre-call token estimate so actual-vs-estimated can be
         # calibrated per provider/model (bounded EMA, see core.learning.calibration).

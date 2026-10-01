@@ -139,7 +139,11 @@ jobs:
           BRANCH: ${{ needs.context.outputs.branch }}
         run: |
           set -euo pipefail
-          VALID_PATTERN='^((planner|coder|pr-helper|ci|platform|browser|super)-[0-9]+(-[a-zA-Z0-9_-]+)?|agent-[a-zA-Z0-9_-]+/issue-[0-9]+-.+|agent-[0-9]+(-[a-zA-Z0-9_-]+)?|feat/.+|fix/.+|hotfix/.+|perf/.+|chore/.+|test/.+|docs/.+|refactor/.+|ci/.+|group/[a-z0-9][a-z0-9._-]*|dependabot/.+|github-actions/.+|renovate/.+|pr-helper/.+|develop|main)$'
+          # বাংলা মন্তব্য (#2850): plan- লেন স্বীকৃত — #2841 সিরিজ (platform lane-এর
+          # constitution-slim কাজ) plan-<issue>-<desc> কনভেনশন ব্যবহার করে; গার্ড
+          # mechanical স্বীকৃতি দিচ্ছে (issue-number সাফিক্স বাধ্যতামূলক থাকছে)।
+          # লেন-ট্যাক্সোনমির আনুষ্ঠানিক ডকুমেন্টেশন owner-এর সিদ্ধান্তে যাবে।
+          VALID_PATTERN='^((planner|coder|pr-helper|ci|platform|browser|super|plan)-[0-9]+(-[a-zA-Z0-9_-]+)?|agent-[a-zA-Z0-9_-]+/issue-[0-9]+-.+|agent-[0-9]+(-[a-zA-Z0-9_-]+)?|feat/.+|fix/.+|hotfix/.+|perf/.+|chore/.+|test/.+|docs/.+|refactor/.+|ci/.+|group/[a-z0-9][a-z0-9._-]*|dependabot/.+|github-actions/.+|renovate/.+|pr-helper/.+|develop|main)$'
           if [[ "$BRANCH" =~ $VALID_PATTERN ]]; then
             echo "✅ Branch '$BRANCH' matches constitutional pattern."
           else
@@ -337,6 +341,18 @@ jobs:
         if: steps.paths.outputs.frontend == 'true'
         working-directory: ./frontend
         run: pnpm exec tsc -p tsconfig.app.json --noEmit
+
+      # ── #2736: dead-code CI assertion (knip ratchet) ──
+      # বাংলা মন্তব্য: knip.json-এ files/exports "error" নিয়ম (PR #2827) ছিল
+      # কিন্তু কোনো workflow তা চালাত না — মৃত কনফিগ। এখন ratchet-নীতিতে wired:
+      # main-এর জমা ঋণ বেসলাইন-আটকে, নতুন dead-file/export যোগ হলে PR লাল।
+      # (deletion-এ admin approval লাগে — wire-or-delete doctrine, App.tsx:42-44।)
+      - name: Frontend dead-code ratchet (knip)
+        if: steps.paths.outputs.frontend == 'true'
+        working-directory: ./frontend
+        run: |
+          pnpm exec knip --reporter json --no-exit-code > knip-report.json
+          python3 ../scripts/ci/knip_ratchet_gate.py knip-report.json --baseline knip-baseline.json
 
       - name: Frontend build guard (vite)
         if: steps.paths.outputs.frontend == 'true'

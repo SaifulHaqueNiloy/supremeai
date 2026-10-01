@@ -335,16 +335,31 @@ async def test_fastapi_web_ai_proxy_routes():
             assert "services" in s_resp.json()
 
             # ৩. /v1/pool/accounts ডায়নামিক রেজিস্ট্রেশন টেস্ট
+            # ROOT-CAUSE #2730-চুক্তি: request-body টোকেন এখন সচেতনভাবে প্রত্যাখ্যাত
+            # (pool-poisoning প্রতিরোধ) — vault/env-নির্ভর token-less রেজিস্ট্রেশনই
+            # সফল পথ; body-টোকেন 422।
             reg_resp = await client.post(
                 "/v1/pool/accounts",
                 json={
                     "service": "claude",
-                    "token": "dynamic-key-999",
                     "account_id": "test-dynamic-1",
                 },
             )
             assert reg_resp.status_code == 200
             assert reg_resp.json()["status"] == "success"
+            assert reg_resp.json()["account_id"] == "test-dynamic-1"
+
+            # ৩-খ. #2730 সিকিউরিটি-পিন: body-টোকেন পাঠালে 422 (pool poisoning ব্লকড)
+            token_resp = await client.post(
+                "/v1/pool/accounts",
+                json={
+                    "service": "claude",
+                    "token": "dynamic-key-999",
+                    "account_id": "test-dynamic-2",
+                },
+            )
+            assert token_resp.status_code == 422
+            assert "vault/env" in token_resp.json()["detail"]
 
             # ৪. /v1/chat/completions টেস্ট
             chat_resp = await client.post(
