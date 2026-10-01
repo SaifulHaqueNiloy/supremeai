@@ -21,6 +21,30 @@ from core.orchestration.conversation_orchestrator import (
 )
 from core.resilience.circuit_breaker import RedisCircuitBreaker
 
+
+# ROOT-CAUSE FIX (#2726): derive task_type from prompt complexity instead of
+# hardcoding "chat". The routing layer (routing.py:161-165) checks task_type
+# keywords to pick the model chain: "reasoning"/"math"/"code" -> hard chain
+# (llama-3.3-70b + gemini-2.5-pro), "agent"/"analysis" -> medium chain,
+# everything else -> easy chain (flash + instant). With task_type="chat"
+# hardcoded, even "design a distributed rate limiter" went to the easy chain.
+def _derive_task_type(prompt: str) -> str:
+    """বাংলা: প্রম্পট বিশ্লেষণ করে task_type নির্ধারণ — routing layer সঠিক
+    model chain বাছাই করতে পারে। Hardcoded 'chat' এর বদলে dynamic classification।"""
+    p = (prompt or "").lower()
+    # Hard: reasoning + math + code patterns
+    hard_keywords = ("reasoning", "math", "code", "coding", "algorithm", "design",
+                     "architect", "implement", "debug", "refactor", "optimize",
+                     "analyze", "synthesize", "compare", "evaluate", "step by step")
+    if any(kw in p for kw in hard_keywords):
+        return "reasoning"
+    # Medium: agent + analysis patterns
+    medium_keywords = ("agent", "analysis", "summarize", "explain", "describe",
+                       "research", "investigate", "review")
+    if any(kw in p for kw in medium_keywords):
+        return "analysis"
+    return "chat"
+
 # Global circuit breaker instance
 main_llm_circuit = RedisCircuitBreaker(
     name="llm_gateway", failure_threshold=3, recovery_timeout=30.0
@@ -31,9 +55,60 @@ router = APIRouter(
 )
 
 
+# ROOT-CAUSE FIX (#2728): versioned system persona registry — previously
+# chat.py had no Section.SYSTEM persona block (only a language directive).
+# Now: task_type-based persona injected as the first SYSTEM context block.
+_SYSTEM_PERSONA_VERSION = "1.0"
+_SYSTEM_PERSONAS = {
+    "chat": (
+        "You are SupremeAI, an intelligent AI assistant. "
+        "Provide clear, accurate, and helpful responses. "
+        "If you're unsure, say so honestly rather than fabricating. "
+        "Format code blocks with proper language tags. "
+        "Cite sources when referencing external information."
+    ),
+    "reasoning": (
+        "You are SupremeAI, an expert reasoning engine. "
+        "Think step-by-step before answering. "
+        "For code: provide complete, runnable examples with type hints. "
+        "For architecture: explain trade-offs, not just solutions. "
+        "If a request is ambiguous, state your assumptions before proceeding."
+    ),
+    "analysis": (
+        "You are SupremeAI, an analytical assistant. "
+        "Summarize concisely, highlight key insights, and flag uncertainties. "
+        "Structure responses with clear headings when appropriate."
+    ),
+}
+
+
+def _derive_task_type(prompt: str) -> str:
+    """ROOT-CAUSE FIX (#2726 + #2728): derive task_type from prompt keywords."""
+    p = (prompt or "").lower()
+    hard_kw = ("reasoning", "math", "code", "coding", "algorithm", "design",
+               "architect", "implement", "debug", "refactor", "optimize",
+               "analyze", "synthesize", "compare", "evaluate", "step by step")
+    if any(kw in p for kw in hard_kw):
+        return "reasoning"
+    medium_kw = ("agent", "analysis", "summarize", "explain", "describe",
+                 "research", "investigate", "review")
+    if any(kw in p for kw in medium_kw):
+        return "analysis"
+    return "chat"
+
+
+def _get_system_persona(task_type: str) -> str:
+    """ROOT-CAUSE FIX (#2728): return the versioned system persona for a task_type."""
+    return _SYSTEM_PERSONAS.get(task_type, _SYSTEM_PERSONAS["chat"])
+
+
 class ChatPayload(BaseModel):
     prompt: str = Field(min_length=1, max_length=20_000)
     model_name: str = "gemini-2.5-pro"
+    # ROOT-CAUSE FIX (#2725): conversation history — previously missing from
+    # ChatPayload, so the non-streaming /api/chat endpoint also had single-turn
+    # amnesia. Frontend now sends history tail (last 20 messages).
+    messages: list[dict] | None = Field(default=None, description="Conversation history for multi-turn context")
 
 
 class OrchestratedChatPayload(BaseModel):
@@ -145,7 +220,12 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
     try:
         # M2 Context Engine: memory/RAG ফ্যাক্ট এখন budgeted block হিসেবে যোগ হয়
         # (আগে অবাধ্য concatenation হতো — ERR-F03 context bloat)
+        # ROOT-CAUSE FIX (#2728): system persona block — previously the only
+        # Section.SYSTEM was the language directive. No behavioral contract existed.
+        # Now: a task_type-based persona is injected as the FIRST SYSTEM block.
+        _derived_task = _derive_task_type(payload.prompt)
         context_blocks: list[ContextBlock] = [
+            ContextBlock(section=Section.SYSTEM, text=_get_system_persona(_derived_task), priority=0, block_id="system-persona"),  # #2728
             ContextBlock(section=Section.USER, text=payload.prompt, priority=0, block_id="user")
         ]
 
@@ -262,9 +342,16 @@ async def get_completion(request: Request, payload: ChatPayload, db=Depends(get_
                     prompt=enriched_prompt,
                     # M03 P0-পূর্ণাংশ: InferenceContext বাধ্যতামূলক — টেন্যান্ট/
                     # টাস্ক অ্যাট্রিবিউশন এক-কাঠামোয় (M16 P-A spend feed এই পথেই)।
+                    # ROOT-CAUSE FIX (#2726): task_type derived from prompt complexity
+                    # instead of hardcoded "chat" — so "design a distributed rate limiter"
+                    # routes to the hard model chain (llama-3.3-70b + gemini-2.5-pro),
+                    # not the easy flash chain.
+                    # Also honor user's model_name as the model override (previously
+                    # it was only used as a cache key, never reached the gateway).
+                    model=payload.model_name if payload.model_name != "gemini-2.5-pro" else None,
                     context=InferenceContext(
                         tenant_id=str(db.tenant_id) if db.tenant_id else "anonymous",
-                        task_type="chat",
+                        task_type=_derive_task_type(payload.prompt),
                         stream=False,
                     ),
                 )
@@ -430,9 +517,12 @@ async def stream_chat(payload: ChatPayload, db=Depends(get_tenant_db)):
                         prompt=enriched_prompt,
                         # M03 P0-পূর্ণাংশ: streaming পথেও context বাধ্যতামূলক —
                         # non-streaming-এর সাথে একই attribution parity।
+                        # ROOT-CAUSE FIX (#2726): task_type derived from prompt complexity
+                        # + honor user's model_name override (same as non-streaming path).
+                        model=payload.model_name if payload.model_name != "gemini-2.5-pro" else None,
                         context=InferenceContext(
                             tenant_id=str(db.tenant_id) if db.tenant_id else "anonymous",
-                            task_type="chat",
+                            task_type=_derive_task_type(payload.prompt),  # #2726: derived not hardcoded
                             stream=True,
                         ),
                     )

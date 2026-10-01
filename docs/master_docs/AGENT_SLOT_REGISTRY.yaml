@@ -77,7 +77,7 @@ slots:
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
-  active: true
+  active: false  # ROOT-CAUSE FIX (#2723): absent from live tower as of 2026-09-30 — decommissioned/purged
   branch: agent-1-planner
   notes: 'Planner & Full Codebase Auditor. Owns comprehensive architectural audits, gap
     identification, implementation planning, and backlog issue creation. FORBIDDEN
@@ -88,7 +88,7 @@ slots:
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
-  active: true
+  active: false  # ROOT-CAUSE FIX (#2723): absent from live tower as of 2026-09-30 — decommissioned/purged
   branch: agent-2-pr-helper
   bot_identity: supremeai-pr-helper[bot]
   notes: 'PR Gate & Diagnostics Verifier. Evaluates PR delta, regression risk, and performs
@@ -105,9 +105,19 @@ slots:
     local issue-scoped audit to confirm validity, writes production code and unit tests. FORBIDDEN from
     performing full codebase audits or refactoring outside issue scope. FORBIDDEN from
     modifying any files without an atomically claimed Issue (status:in-progress).'
+- slot: agent-4
+  legacy_migration_target: platform-1
+  tool: supremeai-platform-1  # #2723: updated to match live tower agentId
+  maintainer: '@SaifulHaqueNiloy'
+  assigned_on: '2026-09-30'
+  expires_on: '2026-10-10'
+  active: true
+  notes: 'ROOT-CAUSE FIX (#2723): agent-4 was present in live tower (agentId=supremeai-platform-1)
+    but missing from this registry. Added to reconcile drift. Platform health & connectivity
+    sweeper (sibling of agent-11 platform-agent-sweep).'
 - slot: agent-5
   legacy_migration_target: ci-1
-  tool: ci-action
+  tool: agent-5  # #2723: updated to match live tower agentId
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
@@ -117,7 +127,7 @@ slots:
     auto-sync engines, and artifact regeneration. FORBIDDEN from modifying business code.'
 - slot: agent-6
   legacy_migration_target: coder-2
-  tool: coder-2
+  tool: coder-6  # #2723: updated to match live tower agentId
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
@@ -128,7 +138,7 @@ slots:
     modifying any files without an atomically claimed Issue (status:in-progress).'
 - slot: agent-7
   legacy_migration_target: coder-3
-  tool: coder-3
+  tool: solver-b  # #2723: updated to match live tower agentId
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
@@ -143,14 +153,14 @@ slots:
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
-  active: true
+  active: false  # ROOT-CAUSE FIX (#2723): absent from live tower as of 2026-09-30 — decommissioned/purged
   notes: PR helper bot decision check + code quality. Fixes wrong merges. MAIN
     duty = preserve beneficial changes + remove regressions (owner directive
     2026-09-26); CI green is desirable for all agents but NOT the helper's
     mandatory gate — decisions weigh benefit-vs-regression, red CI alone is
     not a veto when the failure is provably unrelated (evidence in comment)
 - slot: agent-9
-  tool: Continue
+  tool: agent-9  # #2723: updated to match live tower agentId
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
@@ -161,7 +171,7 @@ slots:
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
-  active: true
+  active: false  # ROOT-CAUSE FIX (#2723): absent from live tower as of 2026-09-30 — decommissioned/purged
   notes: Orchestrator + fallback. Assigns alternatives if agent inactive. Does any
     role if needed
 - slot: agent-11
@@ -185,7 +195,7 @@ slots:
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
-  active: true
+  active: false  # ROOT-CAUSE FIX (#2723): absent from live tower as of 2026-09-30 — decommissioned/purged
   notes: 'CI pipeline maintenance & failure triage (part of ci pool). Watches CI/Actions logs on failure (handoff:ci), diagnoses,
     fixes, re-verifies. Creates blocker issues on repeated failures.'
 - slot: agent-13
@@ -194,7 +204,7 @@ slots:
   maintainer: '@SaifulHaqueNiloy'
   assigned_on: '2026-09-26'
   expires_on: '2026-10-03'
-  active: true
+  active: false  # ROOT-CAUSE FIX (#2723): absent from live tower as of 2026-09-30 — decommissioned/purged
   notes: Browser testing & verification specialist (part of coder pool, handoff:coder).
 validation_rules:
 - 'slot MUST match pattern: agent-[0-9]+'
