@@ -123,6 +123,7 @@ class SafeSSEGenerator:
         task_type: str = "chat",
         session_id: str | None = None,
         tenant_id: str | None = None,
+        messages: list[dict] | None = None,  # ROOT-CAUSE FIX (#2725): conversation history
     ):
         self.prompt = prompt
         # বাংলা: Auto-RAG injection-এর জন্য মূল প্রম্পট আলাদা রাখা হয় —
@@ -132,6 +133,13 @@ class SafeSSEGenerator:
         self.task_type = task_type
         self.session_id = session_id
         self.tenant_id = tenant_id
+        # ROOT-CAUSE FIX (#2725): store conversation history so multi-turn
+        # references ("that function", "make it async") resolve correctly.
+        # Previously body.messages was accepted by ChatStreamRequest but
+        # never passed to the generator or the LLM call — causing single-turn
+        # amnesia. The history is bounded to last 20 messages to prevent
+        # unbounded context growth (token budget protection).
+        self._history: list[dict] = (messages or [])[-20:] if messages else []
         self.state = StreamState.CONNECTED
         self._buffer: list[str] = []
         self._assistant_text: list[str] = []  # Auto-RAG: response capture for memory store
@@ -273,8 +281,23 @@ class SafeSSEGenerator:
         self.state = StreamState.STREAMING
 
         try:
+            # ROOT-CAUSE FIX (#2725): build full messages array from conversation
+            # history + current prompt. Previously only `prompt=self.prompt` was
+            # sent — the LLM had no context of prior turns, causing "single-turn
+            # amnesia" (follow-up references like "that function" were unresolvable).
+            # Now: history messages are prepended, current prompt appended as the
+            # final user message. This matches the OpenAI chat-completions contract.
+            messages_for_llm: list[dict[str, Any]] = []
+            for msg in self._history:
+                role = msg.get("role", "user")
+                content = msg.get("content") or msg.get("text") or ""
+                if content:
+                    messages_for_llm.append({"role": role, "content": str(content)})
+            # Append current prompt as the final user message
+            messages_for_llm.append({"role": "user", "content": self.prompt})
+
             response_stream = await llm_gateway.acompletion(
-                prompt=self.prompt,
+                messages=messages_for_llm,
                 # M03 P0-পূর্ণাংশ: context বাধ্যতামূলক — SSE stream-ও টেন্যান্টে
                 # অ্যাট্রিবিউটেড (user_id fallback = সৎ অজানা নয়, প্রমাণিত পরিচয়)।
                 context=InferenceContext(
@@ -375,6 +398,7 @@ async def _event_stream(
     task_type: str = "chat",
     session_id: str | None = None,
     tenant_id: str | None = None,
+    messages: list[dict] | None = None,  # ROOT-CAUSE FIX (#2725): pass history through
 ) -> AsyncIterator[str]:
     """
     Backward-compatible wrapper that delegates to SafeSSEGenerator.
@@ -383,7 +407,9 @@ async def _event_stream(
     safe implementation internally.
     """
     generator = SafeSSEGenerator(
-        prompt, user_id, task_type, session_id=session_id, tenant_id=tenant_id
+        prompt, user_id, task_type,
+        session_id=session_id, tenant_id=tenant_id,
+        messages=messages,  # ROOT-CAUSE FIX (#2725): history now flows through
     )
     async for event in generator():
         yield event
@@ -447,6 +473,7 @@ async def stream_chat_post(
             body.task_type,
             session_id=getattr(body, "session_id", None),
             tenant_id=tenant_id,
+            messages=body.messages,  # ROOT-CAUSE FIX (#2725): pass conversation history
         ),
         media_type="text/event-stream",
         headers={

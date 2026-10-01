@@ -99,6 +99,16 @@ on:
         required: false
         default: false
         type: boolean
+      run_platform_deep_audit:
+        description: 'Run platform deep-audit (vault-driven discovery + auto-issue) arm'
+        required: false
+        default: false
+        type: boolean
+      platform_deep_audit_dry_run:
+        description: '[platform-deep-audit] Dry-run (probe + report only, no GitHub issue writes) — recommended for the first validation run (#2712)'
+        required: false
+        default: false
+        type: boolean
       run_rate_limit_trend:
         description: 'Run rate-limit trend snapshot arm'
         required: false
@@ -602,6 +612,56 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.SELF_HEAL_PAT || secrets.GITHUB_TOKEN }}
         run: python .github/scripts/platform_agent_check.py
+
+  # Issue #2712: platform_deep_audit.py (PR #2460) was merged but never wired
+  # to any trigger — the vault-driven discovery + classification + auto-issue
+  # engine only ran on manual local invocation. This job gives it a nightly
+  # home alongside platform-sweep. Runs at the same 0 3 UTC cron as sweep;
+  # overlap is safe because the script's existing_issue_for() does two-layer
+  # dedup (fingerprint + platform/title) before opening any issue.
+  platform-deep-audit:
+    name: 🧠 Platform Deep-Audit (vault-driven discovery + auto-issue)
+    if: >-
+        (github.event_name == 'workflow_dispatch' && inputs.run_platform_deep_audit == true) ||
+        (github.event_name == 'schedule' && github.event.schedule == '0 3 * * *')
+    concurrency:
+      group: platform-deep-audit
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      issues: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.11"
+
+      - name: Run platform deep-audit
+        env:
+          INFISICAL_HOST: https://app.infisical.com
+          INFISICAL_CLIENT_ID: ${{ secrets.INFISICAL_CLIENT_ID }}
+          INFISICAL_CLIENT_SECRET: ${{ secrets.INFISICAL_CLIENT_SECRET }}
+          INFISICAL_PROJECT_ID: ${{ secrets.INFISICAL_PROJECT_ID }}
+          GITHUB_TOKEN: ${{ secrets.SELF_HEAL_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          mkdir -p ci-reports
+          python .github/scripts/platform_deep_audit.py \
+            --json ci-reports/platform_deep_audit.json \
+            ${{ inputs.platform_deep_audit_dry_run == true && '--dry-run' || '' }}
+
+      - name: Upload audit JSON
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: platform-deep-audit-${{ github.run_id }}
+          path: ci-reports/platform_deep_audit.json
+          if-no-files-found: ignore
+          retention-days: 14
 
   rate-limit-trend:
     name: 📊 Rate Limit Trend Snapshot (daily)

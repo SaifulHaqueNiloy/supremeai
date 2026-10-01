@@ -30,21 +30,25 @@ export async function sendMessageStream(
   onDone: (action?: ChatResponse['action']) => void,
   onError: (error: string) => void,
   abortSignal?: AbortSignal,
+  history?: { role: string; content: string }[],
 ): Promise<void> {
 
   try {
     // 🔒 SECURITY FIX: Now includes authentication headers (previously missing)
     // FIX (API-contract audit): migrated to the hardened SSE pipeline
     // (POST /api/v1/stream/chat) — state machine, 15s heartbeat, chunk
-    // sanitization. Body sends { message }; backend harmonizes to `prompt`.
-    // Issue #2522: manual retry loop সরানো হলো — apiClient.stream() নিজেই
-    // throttledFetch-এর ৪-attempt exponential backoff + jitter (network + 50x,
-    // cold-start) দেয়, আর caller abort হলে সঙ্গে সঙ্গে বেরিয়ে যায়। একই জায়গা থেকে
-    // auth header, timeout ও concurrency queue-ও নিশ্চিত হয়।
+    // sanitization. Body sends { message, messages }; backend harmonizes to `prompt`.
+    // ROOT-CAUSE FIX (#2725): include history tail (last 20 messages) so
+    // multi-turn references resolve correctly. Previously only { message } was
+    // sent — follow-up like "that function" had no referent.
+    const bodyPayload: Record<string, unknown> = { message };
+    if (history && history.length > 0) {
+      bodyPayload.messages = history.slice(-20);
+    }
     const res = await apiClient.stream('/api/v1/stream/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify(bodyPayload),
       signal: abortSignal,
     });
 
