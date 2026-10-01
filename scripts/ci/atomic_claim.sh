@@ -438,6 +438,23 @@ _Automated by atomic_claim.sh — Race-safe mutex establishment per ARCH-GAP-01_
 
 gh issue comment "$ISSUE_NUMBER" --body "$CLAIM_COMMENT" 2>&1 | sed 's/^/  /' || true
 
+# ROOT-CAUSE FIX (#2894): auto-label has-pr on parent issue.
+# When this claim issue references a parent issue (e.g. "Root-cause fix for #1234"
+# in the claim issue title/body), extract the parent issue number and add
+# 'has-pr' label to it — prevents other agents from seeing the parent as
+# unclaimed and opening duplicate PRs.
+PARENT_REFS=$(gh issue view "$ISSUE_NUMBER" --json title,body -q '.title + " " + .body' 2>/dev/null | grep -oE '#[0-9]+' | grep -v "^#$ISSUE_NUMBER$" | head -5 || true)
+if [ -n "$PARENT_REFS" ]; then
+  for PARENT_REF in $PARENT_REFS; do
+    PARENT_NUM="${PARENT_REF#\#}"
+    if [ "$PARENT_NUM" != "$ISSUE_NUMBER" ]; then
+      echo "🏷️  Auto-labeling parent issue #$PARENT_NUM with 'has-pr' (mirror issue #$ISSUE_NUMBER created)..."
+      gh issue edit "$PARENT_NUM" --add-label 'has-pr' 2>/dev/null || true
+      gh issue comment "$PARENT_NUM" --body "📎 Mirror claim issue #$ISSUE_NUMBER created for this issue by \`$AGENT_NAME\`." 2>/dev/null || true
+    fi
+  done
+fi
+
 # GAP-DUPLICATE-01: The agent MUST add 'has-pr' label to the issue immediately
 # after gh pr create succeeds. This is NOT done here (we haven't created the PR yet),
 # but scripts/ci/open_pr.sh (or the agent's next step) MUST call:
