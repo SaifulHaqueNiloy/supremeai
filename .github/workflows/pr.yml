@@ -385,6 +385,8 @@ jobs:
         env:
           GATES_RESULT: ${{ needs.system-gates.result }}
           TESTS_RESULT: ${{ needs.tests.result }}
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number || inputs.pr_number }}
         run: |
           echo "System Gates Result: $GATES_RESULT"
           echo "Tests Result: $TESTS_RESULT"
@@ -392,5 +394,24 @@ jobs:
             echo "✅ PR Gate Decision: PASS — all constitutional gates & tests green."
           else
             echo "❌ PR Gate Decision: BLOCK — one or more gates/tests failed."
+            # ROOT-CAUSE FIX (#2892): auto-close PR on gate failure to prevent
+            # stranded ghost PRs that file-lock + block Cross-PR Collision Check.
+            # Only auto-close if this is a pull_request event (not workflow_dispatch).
+            if [[ -n "$PR_NUMBER" && "${{ github.event_name }}" == "pull_request" ]]; then
+              echo "🔄 Auto-closing PR #$PR_NUMBER due to gate failure..."
+              # Close the PR
+              curl -sS -X PATCH \
+                -H "Authorization: token $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" \
+                -d '{"state":"closed"}' || true
+              # Post explanatory comment
+              curl -sS -X POST \
+                -H "Authorization: token $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments" \
+                -d '{"body":"## 🔄 Auto-closed: PR Gate Failure\n\nThis PR was automatically closed because the PR Gate (Constitutional Gates or Tests) failed.\n\n**Gates:** '"$GATES_RESULT"' | **Tests:** '"$TESTS_RESULT"'\n\n### Next steps\n1. Fix the failing gate/test\n2. Re-open this PR or open a new one\n3. Ensure your Atomic Claim is valid\n\n*Auto-close by #2892 — eliminates stranded ghost PRs.*"}' || true
+              echo "✅ PR #$PR_NUMBER auto-closed with explanation comment."
+            fi
             exit 1
           fi
