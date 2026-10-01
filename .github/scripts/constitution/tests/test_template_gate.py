@@ -216,6 +216,16 @@ class IssueValidationTests(unittest.TestCase):
             self.assertEqual(status, "skip", lb)
             self.assertIn(lb, reason)
 
+    def test_marker_quoted_mid_prose_is_not_exempt(self):
+        # SELF-RED-TEAM regression (#2912): মার্কার-টেক্সট উদ্ধৃত-করা ডকুমেন্টেশন-
+        # ইস্যু false-exempt হবে না — সাধারণ ইস্যুর মতোই যাচাই হবে
+        issue = agent_issue(
+            title="fix(docs): ledger ব্যাখ্যা",
+            body="ব্যাখ্যা: ledger body শুরু হয় `<!-- SUPREMEAI_PRIORITY_QUEUE_LEDGER` দিয়ে।",
+        )
+        status, _, _ = tg.validate_issue(issue, policy())
+        self.assertEqual(status, "violating")  # সেকশন-চুক্তি নেই → স্বাভাবিক যাচাই
+
     def test_ledger_body_marker_skips_even_without_label(self):
         issue = agent_issue(
             body="<!-- SUPREMEAI_PRIORITY_QUEUE_LEDGER v1 -->\n# queue", title="x"

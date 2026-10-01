@@ -417,7 +417,7 @@ branch_creation_policy:
   # ledger/ops-telemetry/template:violating issue-র claim দিয়ে branch-license নয় —
   # একবারের claim আর আজীবনের umbrella-license হতে পারবে না।
   claim_source_blocked_labels: ["type:ledger", "type:platform-alert", "template:violating"]
-  claim_source_blocked_markers: ["<!-- SUPREMEAI_PRIORITY_QUEUE_LEDGER"]
+  claim_source_blocked_markers: ["<!-- SUPREMEAI_PRIORITY_QUEUE_LEDGER"]  # body-শুরু মার্কার (startswith) — উদ্ধৃতি false-block নয়
   # #2912 V3-chain: claim-উৎস issue-র inline template-যাচাই (label-মুছে bypass-প্রতিরোধ)
   require_template_compliant_issue: true
 
@@ -436,7 +436,7 @@ template_policy:
     violating_label: "template:violating"
     # ops-telemetry — কাজ-ইস্যু নয়, template লাগে না (ledger/platform-sweep রিপোর্ট)
     exempt_labels: ["type:ledger", "type:platform-alert", "template:exempt"]
-    exempt_body_markers: ["<!-- SUPREMEAI_PRIORITY_QUEUE_LEDGER"]
+    exempt_body_markers: ["<!-- SUPREMEAI_PRIORITY_QUEUE_LEDGER"]   # body-শুরু মার্কার (startswith)
     required_title_regex: '^(feat|fix|chore|docs|refactor|test|perf|audit|ops|task)\([^)]+\): .+'
     # agent_task.yml + group_sequence_issue.yml — উভয় টেমপ্লেটের অভিন্ন চুক্তি
     required_sections: ["Mission", "Touching Files", "Verification"]

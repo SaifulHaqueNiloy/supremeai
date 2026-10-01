@@ -337,8 +337,12 @@ def check_branch(
         blocked_labels = set(policy.get("claim_source_blocked_labels") or [])
         hit_blocked = issue_labels & blocked_labels
         issue_body = issue.get("body") or ""
+        # startswith-সিম্যান্টিক্স (#2912 self-red-team শিক্ষা): ledger body মার্কার
+        # দিয়ে শুরু হয় — মার্কার-টেক্সট উদ্ধৃত-করা ডকুমেন্টেশন-ইস্যু false-block নয়।
+        body_trim = (issue_body or "").lstrip()
         hit_marker = any(
-            m in issue_body for m in (policy.get("claim_source_blocked_markers") or [])
+            body_trim.startswith(m)
+            for m in (policy.get("claim_source_blocked_markers") or [])
         )
         if hit_blocked or hit_marker:
             why = (

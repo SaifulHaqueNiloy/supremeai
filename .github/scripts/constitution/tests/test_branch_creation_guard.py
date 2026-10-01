@@ -403,6 +403,27 @@ class ClaimSourceHygieneTests(unittest.TestCase):
         self.assertEqual(verdict, "VIOLATION")
         self.assertIn("template:violating", reason)
 
+    def test_marker_quoted_mid_prose_is_not_ledger(self):
+        # SELF-RED-TEAM regression (#2912): এই ফিক্সের নিজের issue-ই marker-টেক্সট
+        # উদ্ধৃত করেছিল (V5-বর্ণনায়) — substring-match তাকে false-ledger ভেবে
+        # branch মুছেছিল। startswith-সিম্যান্টিক্সে উদ্ধৃতি-ইস্যু আর ব্লক হয় না।
+        body = (
+            "### Mission & Problem Statement\nV5 ফাঁক: ledger-marker "
+            "`<!-- SUPREMEAI_PRIORITY_QUEUE_LEDGER` দিয়ে claim করা যায়।\n\n"
+            "### Priority Tier\nP1-high\n\n"
+            "### Touching Files (Scope Gate Boundary)\n- a.py\n\n"
+            "### 3-Tier Verification Contract\n1..2..3\n"
+        )
+        api = FakeApi(
+            issues={2912: self._full_issue(body=body, title="fix(governance): x")},
+            comments={2912: [CLAIM_COMMENT_CODER]},
+        )
+        verdict, reason, _ = guard.check_branch(
+            "coder-1-2912-x", "supremeai-coder-1-bot[bot]", policy(), api=api, repo=REPO
+        )
+        self.assertEqual(verdict, "ALLOW")
+        self.assertIn("Atomic-Claim verified", reason)
+
     def test_ledger_body_marker_claim_rejected(self):
         # লেবেল নেই, কিন্তু ledger-marker body-তে আছে — marker-ও যথেষ্ট
         api = FakeApi(

@@ -224,7 +224,10 @@ def validate_issue(issue: dict, policy: dict) -> tuple:
 
     body = issue.get("body") or ""
     for marker in ip.get("exempt_body_markers") or []:
-        if marker in body:
+        # startswith-সিম্যান্টিক্স (#2912 self-red-team): ledger-এর body মার্কার
+        # দিয়েই *শুরু* হয়। substring-match হলে যেকোনো ডকুমেন্টেশন-ইস্যু যেটি
+        # মার্কার-টেক্সট উদ্ধৃত করে (যেমন এই ফিক্সের নিজের issue!) false-exempt হতো।
+        if body.lstrip().startswith(marker):
             return "skip", [], f"exempt body marker ({marker[:44]}…)"
 
     created = issue.get("created_at") or ""
