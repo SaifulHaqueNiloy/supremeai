@@ -15,6 +15,7 @@ from sqlalchemy.orm.exc import StaleDataError
 
 from api.dependencies import get_current_user_token
 from core.config import settings
+from core.http_client import get_shared_async_client
 from core.llm.token_deductor import TokenDeductor
 from core.logging_config import logger
 from database.session import get_db_session
@@ -54,16 +55,15 @@ async def _verify_sslcommerz_transaction(val_id: str) -> dict | None:
     if not SSLCOMMERZ_STORE_ID or not SSLCOMMERZ_STORE_PASSWORD:
         logger.critical("SSLCommerz credentials not configured — cannot verify transactions.")
         return None
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(
-            SSLCOMMERZ_VALIDATION_URL,
-            params={
-                "val_id": val_id,
-                "store_id": SSLCOMMERZ_STORE_ID,
-                "store_passwd": SSLCOMMERZ_STORE_PASSWORD,
-                "format": "json",
-            },
-        )
+    client = get_shared_async_client()
+    resp = await client.get(
+        SSLCOMMERZ_VALIDATION_URL, 
+        params={
+            "val_id": val_id, 
+            "store_id": SSLCOMMERZ_STORE_ID, 
+            "store_passwd": SSLCOMMERZ_STORE_PASSWORD, 
+            "format": "json", 
+        }, timeout=10.0)
     resp.raise_for_status()
     data = resp.json()
     return data if data.get("status") in ("VALID", "VALIDATED") else None

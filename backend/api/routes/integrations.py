@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.dependencies import get_current_user_token
 from core.config import settings
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 from core.security.security_vault import encrypt_token
 from database.session import get_db_session
@@ -174,10 +175,10 @@ async def github_callback(
     }
     headers = {"Accept": "application/json"}
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        # ⏱️ FIX: explicit timeout — default timeout infinite হলে serverless function hang করে বিল বাড়ায়
-        response = await client.post(token_url, json=payload, headers=headers, timeout=30.0)
-        data = response.json()
+    client = get_shared_async_client()
+    # ⏱️ FIX: explicit timeout — default timeout infinite হলে serverless function hang করে বিল বাড়ায়
+    response = await client.post(token_url, json=payload, headers=headers, timeout=30.0)
+    data = response.json()
 
     access_token = data.get("access_token")
     if not access_token:

@@ -13,6 +13,7 @@ from fastapi import HTTPException
 
 from api.routes.admin_dashboard import router
 from api.routes.admin_dashboard._models import ApprovalActionPayload
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 
 
@@ -30,10 +31,10 @@ async def get_commandcenter_approvals_mcp():
         headers = {}
         if admin_key:
             headers["Authorization"] = f"Bearer {admin_key}"
-        async with httpx.AsyncClient(timeout=4.0) as client:
-            resp = await client.get(f"{mcp_url.rstrip('/')}/approvals", headers=headers)
-            if resp.status_code == 200:
-                return resp.json()
+        client = get_shared_async_client()
+        resp = await client.get(f"{mcp_url.rstrip('/')}/approvals",  headers=headers, timeout=4.0)
+        if resp.status_code == 200:
+            return resp.json()
     except Exception as e:
         logger.warning(f"Failed to fetch approvals from MCP control tower: {e}")
 
@@ -59,16 +60,16 @@ async def resolve_commandcenter_approval_mcp(payload: ApprovalActionPayload):
         if admin_key:
             headers["Authorization"] = f"Bearer {admin_key}"
         url = f"{mcp_url.rstrip('/')}/approve?id={payload.id}&decision={decision}"
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            resp = await client.get(url, headers=headers)
-            if resp.status_code in (200, 302):
-                return {
-                    "status": "success",
-                    "message": f"Request {payload.id} marked as {decision}",
-                }
-            raise HTTPException(
-                status_code=resp.status_code, detail="Control tower rejected approval"
-            )
+        client = get_shared_async_client()
+        resp = await client.get(url,  headers=headers, timeout=5.0)
+        if resp.status_code in (200, 302):
+            return {
+                "status": "success",
+                "message": f"Request {payload.id} marked as {decision}",
+            }
+        raise HTTPException(
+            status_code=resp.status_code, detail="Control tower rejected approval"
+        )
     except HTTPException:
         raise
     except Exception as e:

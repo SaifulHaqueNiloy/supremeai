@@ -7,6 +7,7 @@ import os
 import time
 from typing import Any
 
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 
 # Issue #445 doctrine (real work or loud failure, never fabricated success):
@@ -170,8 +171,8 @@ class VoiceService:
         data = {"model": "whisper-large-v3", "response_format": "json"}
 
         started = time.monotonic()
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=headers, files=files, data=data)
+        client = get_shared_async_client()
+        response = await client.post(url,  headers=headers,  files=files,  data=data, timeout=30.0)
         latency_ms = int((time.monotonic() - started) * 1000)
 
         if response.status_code != 200:
@@ -220,8 +221,8 @@ class VoiceService:
         data = {"model": "whisper-1", "response_format": "json"}
 
         started = time.monotonic()
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=headers, files=files, data=data)
+        client = get_shared_async_client()
+        response = await client.post(url,  headers=headers,  files=files,  data=data, timeout=30.0)
         latency_ms = int((time.monotonic() - started) * 1000)
 
         if response.status_code != 200:
@@ -295,8 +296,8 @@ class VoiceService:
         }
 
         started = time.monotonic()
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, json=payload)
+        client = get_shared_async_client()
+        response = await client.post(url,  json=payload, timeout=30.0)
         latency_ms = int((time.monotonic() - started) * 1000)
 
         if response.status_code != 200:
@@ -345,8 +346,8 @@ class VoiceService:
         headers = {"Authorization": f"Bearer {api_key}"}
 
         started = time.monotonic()
-        async with httpx.AsyncClient(timeout=30.0) as client:
-            response = await client.post(url, headers=headers, content=audio_bytes)
+        client = get_shared_async_client()
+        response = await client.post(url,  headers=headers,  content=audio_bytes, timeout=30.0)
         latency_ms = int((time.monotonic() - started) * 1000)
 
         if response.status_code != 200:
@@ -475,8 +476,8 @@ class VoiceService:
         headers = {"xi-api-key": api_key, "Content-Type": "application/json"}
         payload = {"text": text, "model_id": "eleven_multilingual_v2"}
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(url, headers=headers, json=payload)
+        client = get_shared_async_client()
+        response = await client.post(url,  headers=headers,  json=payload, timeout=60.0)
         if response.status_code != 200:
             return {
                 "status": "error",

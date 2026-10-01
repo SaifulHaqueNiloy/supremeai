@@ -20,6 +20,7 @@ from core.health.uptime_tracker import (
     get_uptime_summary,
     record_check,
 )
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 
 router = APIRouter(prefix="/admin-api", tags=["health"], dependencies=[Depends(get_current_admin)])
@@ -134,40 +135,39 @@ async def check_single_service(config: dict) -> ServiceHealth:
     start_time = datetime.now()
 
     try:
-        async with httpx.AsyncClient(timeout=config["timeout"]) as client:
-            response = await client.get(
-                config["url"],
-                headers={"User-Agent": "SupremeAI-HealthChecker/2.0"},
-            )
+        client = get_shared_async_client()
+        response = await client.get(
+            config["url"], 
+            headers={"User-Agent": "SupremeAI-HealthChecker/2.0"}, timeout=config["timeout"])
 
-            response_time = (datetime.now() - start_time).total_seconds() * 1000
+        response_time = (datetime.now() - start_time).total_seconds() * 1000
 
-            if response.status_code == 200:
-                # Try to parse health details from response
-                try:
-                    data = response.json()
-                    status = data.get("status", "healthy")
-                    if status == "degraded":
-                        status = "degraded"
-                    else:
-                        status = "healthy"
-                except Exception:
+        if response.status_code == 200:
+            # Try to parse health details from response
+            try:
+                data = response.json()
+                status = data.get("status", "healthy")
+                if status == "degraded":
+                    status = "degraded"
+                else:
                     status = "healthy"
-            elif response.status_code >= 500:
-                status = "unhealthy"
-            else:
-                status = "degraded"
+            except Exception:
+                status = "healthy"
+        elif response.status_code >= 500:
+            status = "unhealthy"
+        else:
+            status = "degraded"
 
-            return ServiceHealth(
-                name=config["name"],
-                display_name=config["display_name"],
-                status=status,
-                response_time_ms=round(response_time, 2),
-                status_code=response.status_code,
-                last_check=datetime.utcnow(),
-                url=config["url"],
-                critical=config.get("critical", False),
-            )
+        return ServiceHealth(
+            name=config["name"],
+            display_name=config["display_name"],
+            status=status,
+            response_time_ms=round(response_time, 2),
+            status_code=response.status_code,
+            last_check=datetime.utcnow(),
+            url=config["url"],
+            critical=config.get("critical", False),
+        )
 
     except httpx.TimeoutException:
         return ServiceHealth(
@@ -571,20 +571,19 @@ async def test_specific_service(service_url: str = Query(...)):
     start_time = datetime.now()
 
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            response = await client.get(
-                service_url,
-                headers={"User-Agent": "SupremeAI-Admin-Test/1.0"},
-            )
+        client = get_shared_async_client()
+        response = await client.get(
+            service_url, 
+            headers={"User-Agent": "SupremeAI-Admin-Test/1.0"}, timeout=10.0)
 
-            return {
-                "success": True,
-                "url": service_url,
-                "status_code": response.status_code,
-                "response_time_ms": round((datetime.now() - start_time).total_seconds() * 1000, 2),
-                "headers": dict(response.headers),
-                "body_preview": response.text[:500] if response.text else None,
-            }
+        return {
+            "success": True,
+            "url": service_url,
+            "status_code": response.status_code,
+            "response_time_ms": round((datetime.now() - start_time).total_seconds() * 1000, 2),
+            "headers": dict(response.headers),
+            "body_preview": response.text[:500] if response.text else None,
+        }
     except Exception as e:
         return {
             "success": False,
