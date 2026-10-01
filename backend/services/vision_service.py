@@ -8,6 +8,7 @@ import os
 import time
 from typing import Any
 
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 
 # Issue #444 doctrine (real work or loud failure, never fabricated success):
@@ -137,13 +138,12 @@ class VisionService:
         }
 
         started = time.monotonic()
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                url,
-                params={"key": api_key},
-                json=payload,
-                headers={"Content-Type": "application/json"},
-            )
+        client = get_shared_async_client()
+        response = await client.post(
+            url, 
+            params={"key": api_key}, 
+            json=payload, 
+            headers={"Content-Type": "application/json"}, timeout=60.0)
 
         latency_ms = int((time.monotonic() - started) * 1000)
         if response.status_code != 200:

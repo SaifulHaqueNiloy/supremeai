@@ -12,6 +12,7 @@ from enum import Enum
 
 import httpx
 
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 
 
@@ -143,9 +144,9 @@ class OllamaFallback:
     async def _check_ollama_running(self) -> bool:
         """Check if Ollama server is running"""
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{self.base_url}/api/tags")
-                return response.status_code == 200
+            client = get_shared_async_client()
+            response = await client.get(f"{self.base_url}/api/tags", timeout=5.0)
+            return response.status_code == 200
         except Exception:
             logger.debug(
                 "Exception swallowed in local_fallback (deliberate fallback)", exc_info=True
