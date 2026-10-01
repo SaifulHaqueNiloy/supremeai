@@ -4,20 +4,12 @@ import { useDashboardStore } from './dashboardStore';
 describe('dashboardStore', () => {
   beforeEach(() => {
     useDashboardStore.setState({
-      isDeploymentModalOpen: false,
       systemStatus: 'healthy',
       activePanel: null,
       dashboardMode: 'simple',
       chatTabTerminalOpen: true,
       chatTabBrowserOpen: true,
     });
-  });
-
-  it('sets the deployment modal open state', () => {
-    useDashboardStore.getState().setDeploymentModal(true);
-    expect(useDashboardStore.getState().isDeploymentModalOpen).toBe(true);
-    useDashboardStore.getState().setDeploymentModal(false);
-    expect(useDashboardStore.getState().isDeploymentModalOpen).toBe(false);
   });
 
   it('updates the system status', () => {
