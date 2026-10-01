@@ -13,6 +13,7 @@ import httpx
 from fastapi import APIRouter
 from pydantic import BaseModel
 
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 
 router = APIRouter(prefix="/onboarding", tags=["onboarding"])
@@ -52,9 +53,9 @@ async def _validate_api_key(provider: str, api_key: str) -> bool:
     url = SUPPORTED_PROVIDERS[provider].format(key=api_key)
     headers = {"Authorization": f"Bearer {api_key}"}
     try:
-        async with httpx.AsyncClient(timeout=8.0) as client:
-            resp = await client.get(url, headers=headers)
-            return resp.status_code in (200, 206)
+        client = get_shared_async_client()
+        resp = await client.get(url,  headers=headers, timeout=8.0)
+        return resp.status_code in (200, 206)
     except Exception as exc:
         logger.debug(f"API key validation request failed: {exc}")
         return False

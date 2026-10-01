@@ -9,6 +9,7 @@ import httpx
 from fastapi import APIRouter, Depends
 
 from api.dependencies import get_current_user_token
+from core.http_client import get_shared_async_client
 from core.service_registry import (
     SERVICE_REGISTRY,
     public_capabilities,
@@ -42,8 +43,8 @@ async def health(_: str = Depends(get_current_user_token)) -> dict:
             }
         started = time.perf_counter()
         try:
-            async with httpx.AsyncClient(timeout=5.0) as client:
-                response = await client.get(f"{base_url}{service.health_path}")
+            client = get_shared_async_client()
+            response = await client.get(f"{base_url}{service.health_path}", timeout=5.0)
             status = "healthy" if response.status_code < 400 else "unhealthy"
             return {
                 **service.public_dict(),

@@ -21,6 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 
 from api.dependencies import get_current_admin
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 
 router = APIRouter(prefix="/api/admin/ai", tags=["AI Surface Assignment"])
@@ -271,8 +272,8 @@ async def test_provider(
         import httpx
 
         headers = {"Authorization": f"Bearer {key}"} if provider_id != "gemini" else {}
-        async with httpx.AsyncClient(timeout=10) as client:
-            resp = await client.get(url, headers=headers)
+        client = get_shared_async_client()
+        resp = await client.get(url,  headers=headers, timeout=10)
 
         if resp.status_code == 200:
             return {"provider": provider_id, "status": "✅ working", "working": True, "code": 200}

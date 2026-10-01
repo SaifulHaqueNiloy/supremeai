@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
+from core.http_client import get_shared_async_client
 from core.logging_config import logger
 
 try:
@@ -422,21 +423,20 @@ class DynamicAIOrchestrator:
             },
         }
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                url,
-                params={"key": provider.api_key},
-                json=payload,
-                headers={"Content-Type": "application/json"},
-            )
+        client = get_shared_async_client()
+        response = await client.post(
+            url, 
+            params={"key": provider.api_key}, 
+            json=payload, 
+            headers={"Content-Type": "application/json"}, timeout=60.0)
 
-            if response.status_code == 200:
-                data = response.json()
-                text = data["candidates"][0]["content"]["parts"][0]["text"]
-                return GenerationResult(success=True, text=text, model_used=model)
-            else:
-                error_msg = f"Gemini API error {response.status_code}: {response.text[:200]}"
-                return GenerationResult(success=False, error=error_msg)
+        if response.status_code == 200:
+            data = response.json()
+            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            return GenerationResult(success=True, text=text, model_used=model)
+        else:
+            error_msg = f"Gemini API error {response.status_code}: {response.text[:200]}"
+            return GenerationResult(success=False, error=error_msg)
 
     async def _call_openai_compatible(
         self, provider: ProviderConfig, model: str, prompt: str, system_prompt: str | None, **kwargs
@@ -458,34 +458,33 @@ class DynamicAIOrchestrator:
             "max_tokens": kwargs.get("max_tokens", 2048),
         }
 
-        async with httpx.AsyncClient(timeout=60.0) as client:
-            response = await client.post(
-                url,
-                json=payload,
-                headers={
-                    "Authorization": f"Bearer {provider.api_key}",
-                    "Content-Type": "application/json",
-                },
+        client = get_shared_async_client()
+        response = await client.post(
+            url, 
+            json=payload, 
+            headers={
+                "Authorization": f"Bearer {provider.api_key}", 
+                "Content-Type": "application/json", 
+            }, timeout=60.0)
+
+        if response.status_code == 200:
+            data = response.json()
+            text = data["choices"][0]["message"]["content"]
+
+            # Estimate cost (rough)
+            usage = data.get("usage", {})
+            prompt_tokens = usage.get("prompt_tokens", 0)
+            completion_tokens = usage.get("completion_tokens", 0)
+            estimated_cost = (
+                prompt_tokens * 0.000001 + completion_tokens * 0.000002
+            )  # Rough estimate
+
+            return GenerationResult(
+                success=True, text=text, model_used=model, cost_usd=estimated_cost
             )
-
-            if response.status_code == 200:
-                data = response.json()
-                text = data["choices"][0]["message"]["content"]
-
-                # Estimate cost (rough)
-                usage = data.get("usage", {})
-                prompt_tokens = usage.get("prompt_tokens", 0)
-                completion_tokens = usage.get("completion_tokens", 0)
-                estimated_cost = (
-                    prompt_tokens * 0.000001 + completion_tokens * 0.000002
-                )  # Rough estimate
-
-                return GenerationResult(
-                    success=True, text=text, model_used=model, cost_usd=estimated_cost
-                )
-            else:
-                error_msg = f"{provider.provider_id} API error {response.status_code}: {response.text[:200]}"
-                return GenerationResult(success=False, error=error_msg)
+        else:
+            error_msg = f"{provider.provider_id} API error {response.status_code}: {response.text[:200]}"
+            return GenerationResult(success=False, error=error_msg)
 
     async def _call_huggingface(
         self, provider: ProviderConfig, model: str, prompt: str, **kwargs
@@ -504,44 +503,43 @@ class DynamicAIOrchestrator:
             },
         }
 
-        async with httpx.AsyncClient(timeout=120.0) as client:
-            response = await client.post(
-                url,
-                json=payload,
-                headers={
-                    "Authorization": f"Bearer {provider.api_key}",
-                    "Content-Type": "application/json",
-                },
-            )
+        client = get_shared_async_client()
+        response = await client.post(
+            url, 
+            json=payload, 
+            headers={
+                "Authorization": f"Bearer {provider.api_key}", 
+                "Content-Type": "application/json", 
+            }, timeout=120.0)
 
-            if response.status_code == 200:
-                data = response.json()
-                if isinstance(data, list):
-                    text = data[0].get("generated_text", "")
-                elif isinstance(data, dict):
-                    text = data.get("generated_text", data.get("text", ""))
-                else:
-                    text = str(data)
-
-                return GenerationResult(success=True, text=text, model_used=model)
-
-            elif response.status_code == 503:
-                # FIX (P1, review 2026-09-12): the "retry once" was actually UNBOUNDED
-                # recursion — every 503 from a cold HF Space spawned another recursion
-                # level with a new httpx client (request hung forever; max_retries was
-                # never applied). Bound it to a single retry, then fail honestly.
-                if kwargs.get("_hf_retry_done"):
-                    return GenerationResult(
-                        success=False,
-                        error=f"HF model {model} still loading after retry (503)",
-                    )
-                await asyncio.sleep(10)
-                kwargs = dict(kwargs)
-                kwargs["_hf_retry_done"] = True
-                return await self._call_huggingface(provider, model, prompt, **kwargs)
+        if response.status_code == 200:
+            data = response.json()
+            if isinstance(data, list):
+                text = data[0].get("generated_text", "")
+            elif isinstance(data, dict):
+                text = data.get("generated_text", data.get("text", ""))
             else:
-                error_msg = f"HF API error {response.status_code}: {response.text[:200]}"
-                return GenerationResult(success=False, error=error_msg)
+                text = str(data)
+
+            return GenerationResult(success=True, text=text, model_used=model)
+
+        elif response.status_code == 503:
+            # FIX (P1, review 2026-09-12): the "retry once" was actually UNBOUNDED
+            # recursion — every 503 from a cold HF Space spawned another recursion
+            # level with a new httpx client (request hung forever; max_retries was
+            # never applied). Bound it to a single retry, then fail honestly.
+            if kwargs.get("_hf_retry_done"):
+                return GenerationResult(
+                    success=False,
+                    error=f"HF model {model} still loading after retry (503)",
+                )
+            await asyncio.sleep(10)
+            kwargs = dict(kwargs)
+            kwargs["_hf_retry_done"] = True
+            return await self._call_huggingface(provider, model, prompt, **kwargs)
+        else:
+            error_msg = f"HF API error {response.status_code}: {response.text[:200]}"
+            return GenerationResult(success=False, error=error_msg)
 
     async def _call_openrouter(
         self, provider: ProviderConfig, model: str, prompt: str, system_prompt: str | None, **kwargs
