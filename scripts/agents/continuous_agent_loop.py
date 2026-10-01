@@ -553,8 +553,12 @@ def run_continuous_loop(role: str, agent_name: str, max_iterations: int = 10,
         return
 
     iteration = 0
-    while iteration < max_iterations:
+    while True:  # ROOT-CAUSE FIX (#2912): TRUE continuous — never breaks
         iteration += 1
+        # ROOT-CAUSE FIX (#2912): advisory — exit gracefully, cron re-triggers
+        if max_iterations > 0 and iteration > max_iterations:
+            print(f"ℹ️ Reached max_iterations={max_iterations}. Exiting gracefully — cron will re-trigger.")
+            break
         print(f"\n{'='*60}")
         print(f"  🔄 Iteration {iteration}: Agent={agent_name}, Role={role}")
         print(f"{'='*60}")
@@ -562,23 +566,36 @@ def run_continuous_loop(role: str, agent_name: str, max_iterations: int = 10,
         release_orphan_claims(agent_name)
 
         if not has_open_issues():
-            run_audit()
+            # ROOT-CAUSE FIX (#2908 + #2912): Smart fallback — CI fixer, scheduled
+            # tasks, audit, health check. If all clear → sleep + retry (NOT break).
+            created = run_smart_fallback()
+            if not created:
+                import time as _t
+                print("   ⏳ All clear — sleeping 60s before next iteration...")
+                _t.sleep(60)
             auto_escalate_priorities()
             if not has_open_issues():
-                print("ℹ️ No issues to process after audit. Waiting...")
-                break
+                # ROOT-CAUSE FIX (#2912): smart fallback already ran. Sleep + retry, NOT break.
+                import time as _t
+                print("ℹ️ No issues after smart fallback. Sleeping 60s before retry...")
+                _t.sleep(60)
+                continue
 
         auto_escalate_priorities()
 
         task = acquire_next_issue(role, agent_name)
         if not task:
-            print("ℹ️ No task available. Waiting...")
-            break
+            print("ℹ️ No task available. Sleeping 30s before retry...")
+            import time as _t
+            _t.sleep(30)
+            continue  # ROOT-CAUSE FIX (#2912): retry, NOT break
 
         issue_number = task.get("issue")
         if not issue_number:
-            print("ℹ️ No issue number in task. Waiting...")
-            break
+            print("ℹ️ No issue number in task. Sleeping 30s before retry...")
+            import time as _t
+            _t.sleep(30)
+            continue  # ROOT-CAUSE FIX (#2912): retry, NOT break
 
         # Issue #2682 (mandate 1): ওপরের লেয়ারের (API/UI) টাস্ক তখনই ক্লেইম করা
         # যাবে যখন নিচের লেয়ারের কোনো টাস্ক খোলা নেই — খোলা থাকলে ভিত্তি
@@ -586,8 +603,10 @@ def run_continuous_loop(role: str, agent_name: str, max_iterations: int = 10,
         allowed, gate_reason = topological_task_claim_check(int(issue_number))
         if not allowed:
             print(f"⛔ {gate_reason}")
-            print("ℹ️ Topological gate: foundation layers still open — waiting for lower layers.")
-            break
+            print("ℹ️ Topological gate: foundation layers still open — sleeping 30s...")
+            import time as _t
+            _t.sleep(30)
+            continue  # ROOT-CAUSE FIX (#2912): wait, NOT break
         if gate_reason:
             print(f"✅ {gate_reason}")
 
@@ -617,8 +636,13 @@ def run_continuous_loop(role: str, agent_name: str, max_iterations: int = 10,
             if exec_cmd:
                 rc = run_work_command(exec_cmd, role, agent_name, slot=slot)
                 print(f"🏁 Work command exited rc={rc} for issue #{issue_number}")
+            print(f"✅ Task #{issue_number} complete. Immediately checking for next task...")
+            # ROOT-CAUSE FIX (#2912): task complete → loop back immediately, no break
         else:
-            print("⚠️ Claim failed after retries, moving to next task...")
+            print("⚠️ Claim failed after retries. Sleeping 10s before next attempt...")
+            import time as _t
+            _t.sleep(10)
+            # ROOT-CAUSE FIX (#2912): retry, NOT break — loop continues
 
 
 def main() -> int:
