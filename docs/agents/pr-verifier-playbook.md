@@ -1223,3 +1223,12 @@ fix নয়, reproducibility issue।
 - **BOARD**: ৭-open-PR heads-সব-অপরিবর্তিত; #2826 `719deea4`-স্থিত (re-trigger-নেই → মিউচুয়াল-কলিশন-অটুট); #2861 `a24be23b`-লাল-গেটে; issues **31**-স্থিত; **merge-ক্যান্ডিডেট-শূন্য**।
 - DEDUPE: নতুন-সমস্যা-শূন্য → **0-issue/0-কমেন্ট**; BASELINE re-anchor ~08:00Z।
 - **এই চক্রে: 0 merge/0 force-push/0 main-push/0 নতুন-ইস্যু/0 কমেন্ট; playbook T186 addendum; watch: owner-সিদ্ধান্ত (override-merge) → #2861-সবুজে-SHA-guard-মার্জ (প্রাইম), ত্রয়ী-BNG, #2862-claim, #2855-মুক্তি; nightly-ops-রাত্রিক-ফল।**
+
+### Addendum — Task 187 (2026-10-01 ~16:30+08 = 08:30–08:40Z): রোলব্যাক-৫-শ্রেণি-পুনরাবৃত্তি (clone-শুধু) + শান্ত-চক্র-৬ + অ্যাঙ্কর-৮ম-পুনঃপ্রমাণ
+- **HANDSHAKE (08:30Z)**: worklog last=186 ✓ (my-project-অটুট — worklog 2564/playbook 1225); কিন্তু **clone-ENOENT + :3771-DOWN** = রোলব্যাক-৫-শ্রেণি-পুনরাবৃত্তি (clone-শুধু-মৃত্যু; tower-উৎস-বিলুপ্তির-সাথে-সহপ্রাপ্ত); :3000/:3779-সবুজ-টিকে।
+- **রিকভারি (~২-মিনিট, হালকা-রেসিপি)**: plain-clone (main `2b3bf6c1` ✓) → control-plane `bun install` + bash-start → :3771=200 → তিন-পোর্ট-সবুজ।
+- **POLICY SYNC**: **অ্যাঙ্কর-৮ম-পুনঃপ্রমাণ** ✓ (AGENTS=`38bc29aa`/`774e44d2`, rules.yml=`333816c1`/`f5f254c9`, last-touch 2026-09-30); main অপরিবর্তিত **৭ok/০fail**।
+- **SWEEP (08:01→08:31Z)**: **১-ঘটনা = নিজের-T186-playbook-push** (08:01:43Z, self) — **টানা-৬-শান্ত-চক্র** (শেষ-বাহ্যিক 06:13Z-এস্কেলেশন → ~২ঘ১৮মিনিট-owner-নীরবতা); #1565-closed-অটুট।
+- **BOARD**: ৭-open-PR heads-সব-অপরিবর্তিত; #2826 `719deea4`-স্থিত (re-trigger-নেই); #2861 লাল-গেটে; issues **31**-স্থিত; **merge-ক্যান্ডিডেট-শূন্য**।
+- DEDUPE: নতুন-সমস্যা-শূন্য → **0-issue/0-কমেন্ট**; BASELINE re-anchor ~08:31Z।
+- **এই চক্রে: 0 merge/0 force-push/0 main-push/0 নতুন-ইস্যু/0 কমেন্ট; playbook T187 addendum; watch: owner-সিদ্ধান্ত (override-merge) → #2861-সবুজে-SHA-guard-মার্জ (প্রাইম), ত্রয়ী-BNG, #2862-claim, #2855-মুক্তি; nightly-ops-রাত্রিক-ফল।**
