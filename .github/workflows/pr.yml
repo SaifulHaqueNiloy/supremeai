@@ -187,6 +187,10 @@ jobs:
         run: |
           set -euo pipefail
           python -m constitution.gates all --pr "$PR_NUMBER"
+          # #2912: Template Conformance Gate — fixed template (issue + PR) সব
+          # agent-এর জন্য বাধ্যতামূলক (Summary + Linked Issue + Rollback সেকশন;
+          # linked issue-ও compliant হতে হবে — চেইন-ডকট্রিন)।
+          python .github/scripts/constitution/template_gate.py --pr "$PR_NUMBER"
           # #2492: Bengali mandate check (advisory — WARNING, not BLOCK)
           python .github/scripts/constitution/bengali_check.py "${PR_BODY:-}" || true
           python scripts/ci/generate_agents_md.py --check
@@ -204,6 +208,10 @@ jobs:
           python scripts/ci/reconcile_secrets_registry.py --strict
           # Loop 4: Slot Registry Drift Guard (docs/master_docs/AGENT_SLOT_REGISTRY.yaml SSOT)
           python scripts/agents/check_slot_registry_drift.py --quiet
+          # ROOT-CAUSE FIX (#2518): Env-var drift guard — was dead code (script existed
+          # but zero workflows called it). Now wired as a blocking gate so new env vars
+          # added to code without .env.example documentation fail CI.
+          python scripts/ci/generate_env_example.py --check
 
       - name: 💥 Cross-PR File Collision Check
         env:
