@@ -102,7 +102,8 @@
 | সেন্ট্রাল লুপ / টাস্ক-অ্যাকুইরি | `python scripts/agents/continuous_agent_loop.py --role <lane> --agent-name <id>` |
 | স্লট-লক / ব্রাঞ্চ-অ্যাকুইরি | `python scripts/agents/acquire_role_slot.py` |
 | ফ্লিট ড্যাশবোর্ড | `python scripts/ci/task_dashboard.py` |
-| হার্টবিট (একক সোর্স) | `python tools/agent_heartbeat/heartbeat.py` |
+| হার্টবিট — redis/mcp (লাইভনেস) | `python scripts/agents/heartbeat_ping.py --slot agent-N --agent-id <id> [--once]` |
+| হার্টবিট — dashboard (৬-স্টেট) | `python tools/agent_heartbeat/heartbeat.py loop\|once\|working\|stop` |
 | MCP কন্ট্রোল-টাওয়ার | `python scripts/agents/mcp_tower_client.py heartbeat --slot <slot> --name <id> --url https://supremeai-mcp-tower.onrender.com` |
 | এজেন্ট-পুশ ব্রোকার | `python scripts/git/push_as_agent.py` |
 | সংবিধান-ভ্যালিডেটর | `python scripts/ci/generate_agents_md.py --check` |
