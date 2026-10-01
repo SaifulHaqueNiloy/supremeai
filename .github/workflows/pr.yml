@@ -313,6 +313,33 @@ jobs:
             -m "$TEST_MARKERS" \
             -x --no-cov -q -p no:cacheprovider
 
+      # ROOT-CAUSE FIX (#2893): cross-tier test gate — runs the FULL backend
+      # test suite on every PR touching backend/. Previously only the changed
+      # tier ran, so stale assertions in unrelated tests weren't caught until
+      # an unrelated PR touched them → "merge → red → fix" cycle.
+      - name: Full backend suite (cross-tier gate #2893)
+        if: steps.paths.outputs.backend == 'true'
+        working-directory: backend
+        env:
+          PYTHONPATH: ..
+        run: |
+          set -euo pipefail
+          # ROOT-CAUSE FIX (#2893): run the full backend test suite as a second
+          # gate. If any pre-existing test fails (stale assertion from a prior
+          # merge), BLOCK this PR — don't merge red onto main.
+          echo "Running full backend suite (cross-tier gate)..."
+          poetry run pytest backend/tests/ \
+            -x --no-cov -q -p no:cacheprovider \
+            --timeout=60 \
+            --ignore=backend/tests/e2e \
+            --ignore=backend/tests/integration \
+            || {
+              echo "::error::Full backend suite failed — pre-existing stale test detected."
+              echo "::error::Fix the failing test BEFORE merging this PR (cross-tier gate #2893)."
+              exit 1
+            }
+          echo "✅ Full backend suite passed — no stale tests."
+
       - name: Ruff lint (incremental — changed .py files)
         if: steps.paths.outputs.backend == 'true'
         working-directory: backend
