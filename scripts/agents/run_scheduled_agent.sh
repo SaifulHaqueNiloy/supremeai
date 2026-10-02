@@ -79,14 +79,21 @@ echo "  → Agent name: auto-resolved (persistent identity + dynamic model)"
 echo "  → Model: from AGENT_MODEL env (default: glm5.2)"
 echo ""
 
-# Run loop with 3 iterations (enough to claim + work on 1 issue)
-# বাংলা মন্তব্য: 3 iterations = 1 claim + work + push/PR, তারপর exit।
-# পরবর্তী 45-min cycle-এ আবার run হবে।
+# Run loop with 1 iteration (claim + work on 1 issue, then clean exit)
+# বাংলা মন্তব্য: 1 iteration = 1 task। শেষ হলে daemon-এ ফেরা (per AGENTS.md Rule 5)।
+# Daemon পরবর্তী task অবিলম্বে শুরু করবে — sleep নয়, continuous execution।
 AGENT_MODEL="${AGENT_MODEL:-glm5.2}" \
-timeout 1800 /home/z/.venv/bin/python3 scripts/agents/continuous_agent_loop.py --iterations 3 2>&1 || true
+timeout 1800 /home/z/.venv/bin/python3 scripts/agents/continuous_agent_loop.py --iterations 1 2>&1 || true
 
 echo ""
 echo "=== [$(date +%T)] Scheduled Agent Run Complete ==="
+
+# ─── AGENTS.md Rule 5: Graceful Exit (task_completed signal) ───
+# বাংলা মন্তব্য: AGENTS.md Major Rule 2 (Stateless Lifecycle)-এর শেষ ধাপ:
+#   "কাজ শেষ হাতেই লোকাল এনভায়রনমেন্ট ক্লিন করে স্ক্রিপ্টকে task_completed
+#    সিগন্যাল দিয়ে সেন্ট্রাল লুপে ফেরা।"
+# এই signal দেখে daemon পরবর্তী task অবিলম্বে শুরু করবে (sleep নয়)।
+echo "✅ TASK_COMPLETED signal sent — daemon will start next task immediately"
 
 # ─── Step 6: Trim worklog to last 12 hours (housekeeping) ───
 # বাংলা মন্তব্য: worklog.md বড় হয়ে গেলে পুরোনো entries মুছে ফেলা হয়।
