@@ -18,9 +18,8 @@ def mock_env_vars(monkeypatch):
     env_vars = {
         "SUPABASE_DATABASE_URL": "postgres://localhost/mydb",
         "RENDER_API_KEY": "test-render-key",
-        "RAILWAY_TOKEN": "test-railway-token",
-        "ORACLE_CLOUD_API_KEY": "test-oracle-key",
-        "ORACLE_REGION": "us-phoenix-1",
+        # বাংলা মন্তব্য (#3077): RAILWAY_TOKEN/ORACLE_CLOUD_API_KEY সরানো —
+        # mcp_cloud_deploy.py থেকে Railway/Oracle প্রোভাইডারই বাদ (ভুয়া endpoint)।
         "ADMIN_AUTHORIZED": "true",
         "GITHUB_TOKEN": "test-github-token",
     }
@@ -72,7 +71,7 @@ class TestCloudDeployMCP:
         from tools.mcp.mcp_cloud_deploy import CloudProvider, GetLogsInput
 
         valid_input = GetLogsInput(
-            provider=CloudProvider.RAILWAY, service_name="my-service", lines=500
+            provider=CloudProvider.RENDER, service_name="my-service", lines=500
         )
         assert valid_input.lines == 500
 
@@ -81,8 +80,13 @@ class TestCloudDeployMCP:
         from tools.mcp.mcp_cloud_deploy import CloudProvider
 
         assert CloudProvider.RENDER.value == "render"
-        assert CloudProvider.RAILWAY.value == "railway"
-        assert CloudProvider.ORACLE.value == "oracle"
+        # বাংলা মন্তব্য (#3077): Railway/Oracle এখন অবৈধ — নির্বাচন করলেই ValueError (চুক্তি-গার্ড)।
+        with pytest.raises(ValueError):
+            CloudProvider("railway")
+        with pytest.raises(ValueError):
+            CloudProvider("oracle")
+        assert not hasattr(CloudProvider, "RAILWAY")
+        assert not hasattr(CloudProvider, "ORACLE")
 
 
 # বাংলা মন্তব্য: github_cicd_mcp টেস্টস
@@ -336,40 +340,14 @@ class TestCloudDeployMCPExtended:
         assert data["error"] == "RENDER_API_KEY not configured"
 
     @pytest.mark.asyncio
-    async def test_deploy_service_missing_railway_token(self, monkeypatch):
-        """RAILWAY_TOKEN না থাকলে ডিপ্লয় ব্যর্থ হয়।"""
-        monkeypatch.setenv("RAILWAY_TOKEN", "")
-        import tools.mcp.mcp_cloud_deploy
+    async def test_deploy_service_removed_providers_rejected(self):
+        """(#3077) Railway/Oracle এখন নিষিদ্ধ — enum-ভ্যালুই গ্রহণ করা হয় না (টোকেন-মিসডিরেকশন বন্ধ)।"""
+        from tools.mcp.mcp_cloud_deploy import DeployServiceInput
 
-        importlib.reload(tools.mcp.mcp_cloud_deploy)
-        from tools.mcp.mcp_cloud_deploy import (
-            CloudProvider,
-            DeployServiceInput,
-            cloud_deploy_service,
-        )
-
-        params = DeployServiceInput(provider=CloudProvider.RAILWAY, service_name="test")
-        result = await cloud_deploy_service(params)
-        data = json.loads(result)
-        assert data["error"] == "RAILWAY_TOKEN not configured"
-
-    @pytest.mark.asyncio
-    async def test_deploy_service_missing_oracle_api_key(self, monkeypatch):
-        """ORACLE_CLOUD_API_KEY না থাকলে ডিপ্লয় ব্যর্থ হয়।"""
-        monkeypatch.setenv("ORACLE_CLOUD_API_KEY", "")
-        import tools.mcp.mcp_cloud_deploy
-
-        importlib.reload(tools.mcp.mcp_cloud_deploy)
-        from tools.mcp.mcp_cloud_deploy import (
-            CloudProvider,
-            DeployServiceInput,
-            cloud_deploy_service,
-        )
-
-        params = DeployServiceInput(provider=CloudProvider.ORACLE, service_name="test")
-        result = await cloud_deploy_service(params)
-        data = json.loads(result)
-        assert data["error"] == "ORACLE_CLOUD_API_KEY not configured"
+        with pytest.raises(ValidationError):
+            DeployServiceInput(provider="railway", service_name="test")
+        with pytest.raises(ValidationError):
+            DeployServiceInput(provider="oracle", service_name="test")
 
     @pytest.mark.asyncio
     async def test_deploy_service_api_error_401(self, monkeypatch):
@@ -510,8 +488,7 @@ class TestCloudDeployMCPExtended:
     @pytest.mark.asyncio
     async def test_list_services_success(self, monkeypatch):
         """Services তালিকা লোড করা যায়।"""
-        monkeypatch.setenv("RAILWAY_TOKEN", "")
-        monkeypatch.setenv("ORACLE_CLOUD_API_KEY", "")
+        # বাংলা মন্তব্য (#3077): Railway/Oracle লেগ সরানো — কেবল Render প্রোব হয়।
         from tools.mcp.mcp_cloud_deploy import cloud_list_services
 
         mock_response = MagicMock()
@@ -1208,60 +1185,16 @@ class TestInputValidation:
             assert data["success"] is True
 
     @pytest.mark.asyncio
-    async def test_deploy_service_railway_success(self, monkeypatch):
-        """Railway-এ সফল ডিপ্লয়।"""
-        monkeypatch.setenv("ADMIN_AUTHORIZED", "true")
-        from tools.mcp.mcp_cloud_deploy import (
-            CloudProvider,
-            DeployServiceInput,
-            cloud_deploy_service,
-        )
+    async def test_deploy_service_removed_providers_never_reach_http(self):
+        """(#3077) Railway/Oracle প্রোভাইডার সরানো — deploy/log কোনো পাথেই নির্বাচনযোগ্য নয়।"""
+        from pydantic import ValidationError as PydanticValidationError
 
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "status": "deploying",
-            "url": "https://railway.app/test",
-        }
-        mock_response.raise_for_status = MagicMock()
+        from tools.mcp.mcp_cloud_deploy import GetLogsInput
 
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.post = AsyncMock(return_value=mock_response)
-            mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
-
-            params = DeployServiceInput(provider=CloudProvider.RAILWAY, service_name="test-service")
-            result = await cloud_deploy_service(params)
-            data = json.loads(result)
-            assert data["success"] is True
-
-    @pytest.mark.asyncio
-    async def test_deploy_service_oracle_success(self, monkeypatch):
-        """Oracle-এ সফল ডিপ্লয়।"""
-        monkeypatch.setenv("ADMIN_AUTHORIZED", "true")
-        from tools.mcp.mcp_cloud_deploy import (
-            CloudProvider,
-            DeployServiceInput,
-            cloud_deploy_service,
-        )
-
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "status": "accepted",
-            "url": "https://oracle.com/test",
-        }
-        mock_response.raise_for_status = MagicMock()
-
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.post = AsyncMock(return_value=mock_response)
-            mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
-
-            params = DeployServiceInput(provider=CloudProvider.ORACLE, service_name="test-service")
-            result = await cloud_deploy_service(params)
-            data = json.loads(result)
-            assert data["success"] is True
+        with pytest.raises(PydanticValidationError):
+            GetLogsInput(provider="railway", service_name="test-service")
+        with pytest.raises(PydanticValidationError):
+            GetLogsInput(provider="oracle", service_name="test-service")
 
     @pytest.mark.asyncio
     async def test_get_logs_render_success(self, monkeypatch):
@@ -1290,58 +1223,9 @@ class TestInputValidation:
             assert data["provider"] == "render"
 
     @pytest.mark.asyncio
-    async def test_get_logs_railway_success(self, monkeypatch):
-        """Railway-এ সফল লগ রিট্রিভাল।"""
-        from tools.mcp.mcp_cloud_deploy import (
-            CloudProvider,
-            GetLogsInput,
-            cloud_get_deployment_logs,
-        )
-
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"logs": "log content"}
-        mock_response.raise_for_status = MagicMock()
-
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.get = AsyncMock(return_value=mock_response)
-            mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
-
-            params = GetLogsInput(provider=CloudProvider.RAILWAY, service_name="test-service")
-            result = await cloud_get_deployment_logs(params)
-            data = json.loads(result)
-            assert data["provider"] == "railway"
-
-    @pytest.mark.asyncio
-    async def test_get_logs_oracle_success(self, monkeypatch):
-        """Oracle-এ সফল লগ রিট্রিভাল।"""
-        from tools.mcp.mcp_cloud_deploy import (
-            CloudProvider,
-            GetLogsInput,
-            cloud_get_deployment_logs,
-        )
-
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {"logs": ["log1", "log2"]}
-        mock_response.raise_for_status = MagicMock()
-
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.get = AsyncMock(return_value=mock_response)
-            mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
-
-            params = GetLogsInput(provider=CloudProvider.ORACLE, service_name="test-service")
-            result = await cloud_get_deployment_logs(params)
-            data = json.loads(result)
-            assert data["provider"] == "oracle"
-
-    @pytest.mark.asyncio
     async def test_list_services_render_only(self, monkeypatch):
         """কেবলমাত্র Render সার্ভিস লিস্ট করা হয়।"""
-        monkeypatch.setenv("RAILWAY_TOKEN", "")
-        monkeypatch.setenv("ORACLE_CLOUD_API_KEY", "")
+        # বাংলা মন্তব্য (#3077): Railway/Oracle লেগ সরানো — কেবল Render-ই প্রোব হয়।
 
         from tools.mcp.mcp_cloud_deploy import cloud_list_services
 
@@ -1361,47 +1245,19 @@ class TestInputValidation:
             assert data["count"] == 1
 
     @pytest.mark.asyncio
-    async def test_list_services_railway_only(self, monkeypatch):
-        """কেবলমাত্র Railway সার্ভিস লিস্ট করা হয়।"""
+    async def test_list_services_unconfigured_render_only(self, monkeypatch):
+        """(#3077) RENDER_API_KEY আনসেট হলে তালিকা খালি — Railway লেগ আর নেই।"""
         monkeypatch.setenv("RENDER_API_KEY", "")
-        monkeypatch.setenv("ORACLE_CLOUD_API_KEY", "")
 
         from tools.mcp.mcp_cloud_deploy import cloud_list_services
 
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = [
-            {"name": "svc1", "status": "active", "url": "https://test.com"}
-        ]
-
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.get = AsyncMock(return_value=mock_response)
-            mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
-
-            result = await cloud_list_services()
-            data = json.loads(result)
-            assert data["count"] == 1
+        result = await cloud_list_services()
+        data = json.loads(result)
+        assert data["count"] == 0
 
     @pytest.mark.asyncio
     async def test_list_services_render_error(self, monkeypatch):
         """Render API এ রিকোয়েস্ট ফেইল করে।"""
-        from tools.mcp.mcp_cloud_deploy import cloud_list_services
-
-        with patch("httpx.AsyncClient") as mock_client:
-            mock_instance = MagicMock()
-            mock_instance.get = AsyncMock(side_effect=Exception("Connection failed"))
-            mock_client.return_value.__aenter__ = AsyncMock(return_value=mock_instance)
-
-            result = await cloud_list_services()
-            data = json.loads(result)
-            assert data["count"] == 0
-
-    @pytest.mark.asyncio
-    async def test_list_services_railway_error(self, monkeypatch):
-        """Railway API এ রিকোয়েস্ট ফেইল করে।"""
-        monkeypatch.setenv("RENDER_API_KEY", "test-key")
-
         from tools.mcp.mcp_cloud_deploy import cloud_list_services
 
         with patch("httpx.AsyncClient") as mock_client:

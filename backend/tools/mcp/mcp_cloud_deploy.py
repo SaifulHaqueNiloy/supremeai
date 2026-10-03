@@ -9,7 +9,6 @@ import json
 
 # বাংলা মন্তব্য: পরিবেশের ভেরিয়েবল চেক করার জন্য os মডিউল ইমপোর্ট করা হলো
 import os
-import re
 from enum import StrEnum
 
 import httpx
@@ -34,38 +33,18 @@ def _get_render_api_key() -> str:
     return getattr(settings, "render_api_key", "") or os.environ.get("RENDER_API_KEY", "")
 
 
-def _get_railway_token() -> str:
-    # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে RAILWAY_TOKEN চেক করা হবে
-    return getattr(settings, "railway_token", "") or os.environ.get("RAILWAY_TOKEN", "")
-
-
-def _get_oracle_api_key() -> str:
-    # বাংলা মন্তব্য: settings-এ না থাকলে os.environ থেকে ORACLE_CLOUD_API_KEY চেক করা হবে
-    return getattr(settings, "oracle_cloud_api_key", "") or os.environ.get(
-        "ORACLE_CLOUD_API_KEY", ""
-    )
-
-
-def _get_oracle_region() -> str:
-    region = getattr(settings, "oracle_region", "us-phoenix-1") or getattr(
-        settings, "oracle_region", "us-phoenix-1"
-    )
-    if not region:
-        return "us-phoenix-1"
-    if not re.match(r"^[a-z0-9\-]+$", region):
-        logger.error(
-            f"Invalid ORACLE_REGION format: '{region}'. It should only contain lowercase letters, numbers, and hyphens."
-        )
-        return "us-phoenix-1"
-    return region
+# বাংলা মন্তব্য (#3077): Railway ও Oracle প্রোভাইডার সম্পূর্ণ সরানো হয়েছে —
+#   ১. Railway: "https://back-end.railway.app/v2/services" Railway-এর API host নয় (লাইভ প্রোব → 404);
+#      RAILWAY_TOKEN Bearer হিসেবে ভুল host-এ যেত = credential-মিসডিরেকশন ঝুঁকি।
+#   ২. Oracle: "containerengine.<region>.oraclecloud.com/api/v1/deploy" কোনো বাস্তব OCI endpoint নয় —
+#      dead-by-construction।
+# সক্রিয় ডিপ্লয়-প্ল্যাটফর্ম (deploy-train.yml): Render + Cloudflare + Firebase।
 
 
 class CloudProvider(StrEnum):
     """সমর্থিত ক্লাউড প্রোভাইডার।"""
 
     RENDER = "render"
-    RAILWAY = "railway"
-    ORACLE = "oracle"
 
 
 class ResponseFormat(StrEnum):
@@ -127,8 +106,8 @@ async def cloud_deploy_service(params: DeployServiceInput) -> str:
     """
     ক্লাউড প্রোভাইডারে নতুন সার্ভিস ডিপ্লয় করে।
 
-    এই টুলটি Render, Railway, Oracle Cloud-এ ডিপ্লয় সমর্থন করে।
-    প্রতিটি প্রোভাইডারের জন্য নির্দিষ্ট API ইন্টিগ্রেশন।
+    # বাংলা মন্তব্য (#3077): এই টুল এখন শুধু Render ডিপ্লয় সমর্থন করে —
+    # Railway/Oracle ভুয়া endpoint (টোকেন-মিসডিরেকশন) বন্ধ।
 
     Args:
         params (DeployServiceInput): ইনপুট প্যারামিটার সম্বলিত:
@@ -158,19 +137,7 @@ async def cloud_deploy_service(params: DeployServiceInput) -> str:
         api_url = "https://api.render.com/v1/services"
         headers = {"Authorization": f"Bearer {render_api_key}"}
 
-    elif params.provider == CloudProvider.RAILWAY:
-        railway_token = _get_railway_token()
-        if not railway_token:
-            return json_error("RAILWAY_TOKEN not configured")
-        api_url = "https://back-end.railway.app/v2/services"
-        headers = {"Authorization": f"Bearer {railway_token}"}
-
-    elif params.provider == CloudProvider.ORACLE:
-        oracle_key = _get_oracle_api_key()
-        if not oracle_key:
-            return json_error("ORACLE_CLOUD_API_KEY not configured")
-        api_url = f"https://containerengine.{_get_oracle_region()}.oraclecloud.com/api/v1/deploy"
-        headers = {"Authorization": f"Bearer {oracle_key}"}
+    # বাংলা মন্তব্য (#3077): Railway/Oracle ব্রাঞ্চ সরানো — ভুয়া endpoint, বিস্তারিত CloudProvider-এর উপরে।
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
@@ -233,19 +200,7 @@ async def cloud_get_deployment_logs(params: GetLogsInput) -> str:
         api_url = f"https://api.render.com/v1/services/{params.service_name}/logs"
         headers = {"Authorization": f"Bearer {render_api_key}"}
 
-    elif params.provider == CloudProvider.RAILWAY:
-        railway_token = _get_railway_token()
-        if not railway_token:
-            return json_error("RAILWAY_TOKEN not configured")
-        api_url = f"https://back-end.railway.app/v2/services/{params.service_name}/logs"
-        headers = {"Authorization": f"Bearer {railway_token}"}
-
-    elif params.provider == CloudProvider.ORACLE:
-        oracle_key = _get_oracle_api_key()
-        if not oracle_key:
-            return json_error("ORACLE_CLOUD_API_KEY not configured")
-        api_url = f"https://logging.{_get_oracle_region()}.oraclecloud.com/api/v1/logs"
-        headers = {"Authorization": f"Bearer {oracle_key}"}
+    # বাংলা মন্তব্য (#3077): Railway/Oracle লগ-ব্রাঞ্চ সরানো — ভুয়া endpoint।
 
     try:
         async with httpx.AsyncClient(timeout=30.0) as client:
@@ -311,26 +266,7 @@ async def cloud_list_services() -> str:
         except Exception as e:
             logger.error(f"Failed to list services from Render: {e}")
 
-    railway_token = _get_railway_token()
-    if railway_token:
-        try:
-            async with httpx.AsyncClient(timeout=30.0) as client:
-                response = await client.get(
-                    "https://back-end.railway.app/v2/services",
-                    headers={"Authorization": f"Bearer {railway_token}"},
-                )
-                if response.status_code == 200:
-                    for svc in response.json():
-                        services.append(
-                            {
-                                "provider": "railway",
-                                "name": svc.get("name"),
-                                "status": svc.get("status"),
-                                "url": svc.get("url", ""),
-                            }
-                        )
-        except Exception as e:
-            logger.error(f"Failed to list services from Railway: {e}")
+    # বাংলা মন্তব্য (#3077): Railway লিস্টিং-লেগ সরানো — ভুয়া host, টোকেন পাঠানোই যাবে না।
 
     return json.dumps({"services": services, "count": len(services)}, ensure_ascii=False)
 
