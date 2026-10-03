@@ -149,7 +149,8 @@ async def get_multi_account_health(
 
     # 4. LLM Provider Key Pools & Cooling
     llm_pools: dict[str, Any] = {}
-    providers = ["gemini", "openai", "groq", "mistral", "deepseek", "bynara", "bai", "v0"]
+    # বাংলা মন্তব্য (#3076): "v0" বাদ — api.v0.dev মৃত রুট (404); প্রোফাইল-স্ক্যানে অর্থহীন প্রোব ছিল।
+    providers = ["gemini", "openai", "groq", "mistral", "deepseek", "bynara", "bai"]
     now = time.monotonic()
     for prov in providers:
         raw_key = (
