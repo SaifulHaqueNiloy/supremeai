@@ -125,3 +125,16 @@ class TestCanonicalEnvelopeInLoopContract:
         contract = build_task_contract("agent-x", "coder", task, "b")
         gate = contract["task_contract"]["admin_gate"]
         assert gate["required"] is True and gate["status"] == "WAITING"
+
+
+class TestRoleRulesFallbackAliases:
+    """#3095-রির্স্ট্রাকচার-পরবর্তী আবিষ্কার: প্রতিটি রোল মেশিন-রুল পায় (নীরব শূন্য নয়)।"""
+
+    def test_every_live_role_gets_rules(self):
+        # বাংলা মন্তব্য: ci-fixer আগে ci_devops কী-মিসে ০-রুল পাচ্ছিল —
+        # এখন কী-অ্যালায়াস-চেইন প্রতিটি পরিচিত রোলে অ-শূন্য রুল নিশ্চিত করে।
+        from scripts.agents.continuous_agent_loop import _load_agent_rules
+        for role in ("coder", "ci-fixer", "auditor", "planner", "pr-helper",
+                     "watcher", "human-eyes", "breaker", "platform"):
+            applicable, prohibited = _load_agent_rules(role)
+            assert applicable or prohibited, f"role {role} got zero machine rules"

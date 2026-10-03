@@ -100,8 +100,25 @@ def _parse_agent_rules_md(text: str, role: str) -> tuple[list[str], list[str]]:
     return [], []
 
 
+# বাংলা মন্তব্য (#3088 সেশন-আবিষ্কার): AGENT_RULES.md #3095-রির্স্ট্রাকচারের পরে
+# লেগেসি `### রোল:` হেডার আর নেই → সব রোল YAML-fallback-এ যায়; কিন্তু
+# rules.yml-এর কী-নাম ভিন্ন (ci_devops ইত্যাদি) — ci-fixer (সিস্টেমের
+# হাইয়েস্ট-প্রায়োরিটি রোল!) নীরবে শূন্য-রুল পাচ্ছিল। কী-অ্যালায়াস-চেইন
+# দিয়ে রুট-ফিক্স: role → underscore-রূপ → নথিভুক্ত অ্যালায়াস।
+_YAML_ROLE_KEYS = {
+    "ci-fixer": "ci_devops",
+    "ci": "ci_devops",
+    "platform": "platform",
+    "watcher": "platform",  # ROLE_ALIASES: platform লেনের মেশিন-রুল watcher-এ
+    "human-eyes": "browser",
+    "breaker": "rules_breaker",
+    "ecosystem_scout": "ecosystem_scout",
+    "pr-helper": "pr_helper",
+}
+
+
 def _load_agent_rules_yaml(role: str) -> tuple[list[str], list[str]]:
-    """Fallback: পুরনো rules.yml উৎস (PR-1 মার্জের আগে বা নতুন রোল সেখানে না থাকলে)।"""
+    """Fallback: rules.yml উৎস — কী-অ্যালায়াস-চেইনসহ (#3095-রির্স্ট্রাকচার-পরবর্তী একমাত্র মেশিন-উৎস)।"""
     applicable: list[str] = []
     prohibited: list[str] = []
     try:
@@ -111,7 +128,8 @@ def _load_agent_rules_yaml(role: str) -> tuple[list[str], list[str]]:
     try:
         data = yaml.safe_load(RULES_PATH.read_text(encoding="utf-8")) or {}
         agent_rules = data.get("agent_rules") or {}
-        mapping = agent_rules.get(role) or {}
+        key = _YAML_ROLE_KEYS.get(role) or role.replace("-", "_")
+        mapping = agent_rules.get(role) or agent_rules.get(key) or {}
         applicable = list(mapping.get("applicable_rules") or [])
         prohibited = list(mapping.get("prohibited_actions") or [])
     except Exception:
