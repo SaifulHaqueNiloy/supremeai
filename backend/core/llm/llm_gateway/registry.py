@@ -27,13 +27,12 @@ _MODEL_KEY_MAP: dict[str, str] = {
     "together": "TOGETHER_API_KEY",
     "ollama": "OLLAMA_API_KEY",
     "hf_space": "HF_API_KEY",
-    # Zero-cost OpenAI-compatible routers (final-test audit 2026-09-13):
-    # BYNARA_API_KEY / BAI_API_KEY were configured in the deployment env but
-    # never consumed by any code path — the keys were orphaned while the
-    # routing chain wasted 40-60s per call on dead providers.
+    # বাংলা মন্তব্য: Zero-cost OpenAI-compatible routers (final-test audit 2026-09-13):
+    # BYNARA_API_KEY / BAI_API_KEY configured — admin-verified live routers (#3080-এ ঝুঁকি-পর্যালোচনা চলছে)।
     "bynara": "bynara_api_key",
     "bai": "bai_api_key",
-    "v0": "v0_api_key",
+    # বাংলা মন্তব্য (#3076): "v0" সরানো হয়েছে — api.v0.dev/v1 মৃত রুট (লাইভ প্রোব 2026-10-03 → HTTP 404);
+    # v0.dev-এর কোনো পাবলিক OpenAI-compatible API নেই, fallback-walk শুধু সময় নষ্ট করত।
     "mistral": "mistral_api_key",
 }
 
@@ -43,7 +42,7 @@ _MODEL_KEY_MAP: dict[str, str] = {
 _PROVIDER_API_BASES: dict[str, str] = {
     "bynara": "https://router.bynara.id/v1",
     "bai": "https://api.b.ai/v1",
-    "v0": "https://api.v0.dev/v1",
+    # বাংলা মন্তব্য (#3076): "v0" base_url সরানো — মৃত endpoint (404), নিচে কোনো রেফারেন্স নেই।
 }
 
 # Models that are no longer served by their provider (verified 2026-09-13).

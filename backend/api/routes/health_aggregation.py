@@ -83,6 +83,12 @@ class DependencyHealth(BaseModel):
 # SERVICE REGISTRY
 # ══════════════════════════════════════════════════════════════════════════════
 
+# বাংলা মন্তব্য (#3079): edge-worker URL এখন env-চালিত — প্লেসহোল্ডার host
+# (supremeai-edge.your-subdomain.workers.dev) সরানো হয়েছে (লাইভ প্রোব → 404)।
+# workers.dev সাবডোমেইন অ্যাকাউন্ট-স্পেসিফিক, রিপোর বাইরে — EDGE_WORKER_URL আনসেট হলে
+# প্রোব স্কিপ (Rule 7: গ্রেসফুল ডিগ্রেডেশন, ফেক হেলথ-স্ট্যাটাস নয়)।
+_EDGE_WORKER_URL = os.environ.get("EDGE_WORKER_URL", "").rstrip("/")
+
 SERVICE_REGISTRY = [
     {
         "name": "main_backend",
@@ -113,7 +119,7 @@ SERVICE_REGISTRY = [
     {
         "name": "cloudflare_worker",
         "display_name": "Edge Worker",
-        "url": "https://supremeai-edge.your-subdomain.workers.dev/health",
+        "url": (_EDGE_WORKER_URL + "/health") if _EDGE_WORKER_URL else "",
         "critical": True,
         "timeout": 5.0,
     },
@@ -386,7 +392,9 @@ async def probe_schema_drift(force: bool = False, session_factory=None) -> Schem
 
 async def check_all_services() -> list[ServiceHealth]:
     """Check all registered services concurrently."""
-    tasks = [check_single_service(svc) for svc in SERVICE_REGISTRY]
+    # বাংলা মন্তব্য (#3079): কনফিগার-অনুপস্থিত (খালি URL) সার্ভিস স্কিপ — কৃত্রিম লাল অ্যালার্ম নয়।
+    probed = [svc for svc in SERVICE_REGISTRY if svc["url"]]
+    tasks = [check_single_service(svc) for svc in probed]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     # Convert exceptions to unhealthy status
@@ -395,13 +403,13 @@ async def check_all_services() -> list[ServiceHealth]:
         if isinstance(result, Exception):
             services.append(
                 ServiceHealth(
-                    name=SERVICE_REGISTRY[i]["name"],
-                    display_name=SERVICE_REGISTRY[i]["display_name"],
+                    name=probed[i]["name"],
+                    display_name=probed[i]["display_name"],
                     status="unknown",
                     error=str(result),
                     last_check=datetime.utcnow(),
-                    url=SERVICE_REGISTRY[i]["url"],
-                    critical=SERVICE_REGISTRY[i].get("critical", False),
+                    url=probed[i]["url"],
+                    critical=probed[i].get("critical", False),
                 )
             )
         else:
