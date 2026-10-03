@@ -64,14 +64,17 @@ class SynapticDreamWorker:
             try:
                 from database.supabase_client import db
 
-                result = (
+                # #3163: enforce tenant scope in deletion — prevent cross-tenant data loss
+                delete_query = (
                     db.client.table("ai_memory")
                     .delete()
                     .lt("importance_score", self.PRUNE_IMPORTANCE_THRESHOLD)
                     .lt("created_at", cutoff_date.isoformat())
-                    .select("id")
-                    .execute()
                 )
+                # #3163: if tenant_id provided, scope deletion to that tenant only
+                if tenant_id:
+                    delete_query = delete_query.eq("tenant_id", tenant_id)
+                result = delete_query.select("id").execute()
                 pruned = len(result.data or [])
                 logger.info(
                     f"[SynapticDream] Pruned {pruned} transient records "
