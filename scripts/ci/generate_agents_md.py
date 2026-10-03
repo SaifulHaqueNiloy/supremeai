@@ -18,8 +18,20 @@ AGENTS_PATH = REPO_ROOT / "AGENTS.md"
 RULES_PATH = REPO_ROOT / "AGENT_RULES.md"
 
 # বাংলা মন্তব্য: স্টেবল মার্কার — এগুলো মুছলে ভ্যালিডেটর CI-তে ব্লক করবে
-AGENTS_REQUIRED_MARKERS = ["Major Rule 1", "Major Rule 2", "AGENT_RULES.md"]
-RULES_REQUIRED_MARKERS = ["ভাগ ১", "ভাগ ২", "ভাগ ৩", "ভাগ ৪", "ভাগ ৫", "রোল: coder"]
+AGENTS_REQUIRED_MARKERS = [  # #3113: markers follow admin docs-restructure (#3095) contract
+    "First Rule: Authority",
+    "Second Rule: Stateless Task Lifecycle",
+    "AGENT_RULES.md",
+]
+RULES_REQUIRED_MARKERS = [
+    "# 1. Universal Agent Contract",
+    "# 2. Non-Negotiable Engineering Policies",
+    "# 3. Role Policy Contracts",
+    "## Coder",
+    "# 4. Issue Creation Policy",
+    "# 7. Standard Task Contract",
+    "# 15. Fail-Closed Guard List",
+]
 
 
 def main() -> int:
