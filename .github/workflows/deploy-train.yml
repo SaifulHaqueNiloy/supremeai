@@ -282,8 +282,10 @@ jobs:
         uses: actions/setup-node@v5
         with:
           node-version: '24'
-      - name: Install pnpm
-        run: npm install -g pnpm@10.15.0
+      - name: Setup pnpm
+        uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e77994a6a51a7e4 # v4
+        with:
+          version: 10.15.0
       - name: Install Mission Control deps
         working-directory: apps/mission-control
         run: pnpm install --frozen-lockfile
