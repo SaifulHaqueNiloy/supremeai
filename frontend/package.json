@@ -2,7 +2,11 @@
   "name": "supremeai-studio-client",
   "description": "SupremeAI Studio Client - Multi-cloud AI orchestration platform web interface",
   "author": "SupremeAI Team",
-  "repository": "https://github.com/paykaribazaronline/supremeai",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SaifulHaqueNiloy/supremeai.git",
+    "directory": "frontend"
+  },
   "private": true,
   "version": "2.0.0",
   "type": "module",
