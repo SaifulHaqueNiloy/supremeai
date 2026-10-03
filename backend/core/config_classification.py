@@ -75,6 +75,16 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         description="Optional scraper service.",
     ),
     ConfigSpec(
+        "EDGE_WORKER_URL",
+        frozenset({ConfigClass.OPTIONAL, ConfigClass.PUBLIC}),
+        frozenset({ConfigSource.ENV}),
+        frozenset({"backend", "infrastructure"}),
+        description=(
+            "Optional Cloudflare edge-worker base URL (workers.dev host is account-specific, "
+            "not in repo). Unset = health probes skip the edge service (#3079)."
+        ),
+    ),
+    ConfigSpec(
         "ADMIN_URL",
         frozenset({ConfigClass.OPTIONAL, ConfigClass.CONDITIONAL}),
         frozenset({ConfigSource.ENV}),
@@ -1604,13 +1614,7 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({"backend"}),
         description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
     ),
-    ConfigSpec(
-        "ORACLE_CLOUD_API_KEY",
-        frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
-        frozenset({ConfigSource.VAULT, ConfigSource.ENV}),
-        frozenset({"backend"}),
-        description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
-    ),
+    # বাংলা মন্তব্য (#3077): ORACLE_CLOUD_API_KEY সরানো — mcp_cloud_deploy.py-এর Oracle লেগ বন্ধ (ভুয়া OCI endpoint)।
     ConfigSpec(
         "PAGERDUTY_ROUTING_KEY",
         frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
@@ -1667,13 +1671,7 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
         frozenset({"backend"}),
         description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
     ),
-    ConfigSpec(
-        "RAILWAY_TOKEN",
-        frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
-        frozenset({ConfigSource.VAULT, ConfigSource.ENV}),
-        frozenset({"backend"}),
-        description="Auto-classified by CI drift remediation (P5) — heuristic default, needs manual review.",
-    ),
+    # বাংলা মন্তব্য (#3077): RAILWAY_TOKEN সরানো — "back-end.railway.app" API host নয়; ভুল host-এ টোকেন যেত।
     ConfigSpec(
         "RATE_LIMIT_FALLBACK_MAX_KEYS",
         frozenset({ConfigClass.SECRET, ConfigClass.CONDITIONAL}),
@@ -2442,13 +2440,8 @@ CONFIG_SPECS: tuple[ConfigSpec, ...] = (
     # ROOT-CAUSE FIX (#2722): TOWER_AUTH_TOKEN removed — was declared in
     # .env.example but never provisioned in Infisical + never read by any
     # client. Canonical tower auth is MCP_API_KEY (agent) + MCP_ADMIN_KEY (admin).
-    ConfigSpec(
-        "V0_API_KEY",
-        frozenset({ConfigClass.OPTIONAL, ConfigClass.SECRET}),
-        frozenset({ConfigSource.ENV, ConfigSource.VAULT}),
-        frozenset({"backend", "ai"}),
-        description="API key for V0 / v0.dev generation service.",
-    ),
+    # বাংলা মন্তব্য (#3076): V0_API_KEY সরানো হয়েছে — api.v0.dev মৃত রুট (লাইভ প্রোব 404);
+    # v0.dev-এর কোনো পাবলিক OpenAI-compatible API নেই, তাই কী-স্পেকটিও অবশিষ্ট।
     ConfigSpec(
         "VITE_FIREBASE_AUTH_URL",
         frozenset({ConfigClass.OPTIONAL, ConfigClass.PUBLIC}),
