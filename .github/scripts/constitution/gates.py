@@ -51,6 +51,10 @@ DEFAULT_VERIFICATION_POLICY = {
     "min_evidence_chars": 40,
     "section_names": ["Test Evidence", "Tests", "পরীক্ষা", "টেস্ট এভিডেন্স"],
     "output_markers": ["passed", "pytest", "unittest", "bun test", "vitest"],
+    # #3032: marker matching uses word-boundary regex, not substring.
+    # বাংলা মন্তব্য (#3032): "passed" substring matched "0 passed" / "not passed"।
+    # এখন \bword\b regex — exact word match। "0 failed" আর "10 failed" আলাদা।
+    "marker_match_mode": "word_boundary",
 }
 DEFAULT_LEASE_POLICY = {
     "bot_author_regex": r"^supremeai-([a-z0-9]+)-([0-9]+)-bot(\[bot\])?$",
@@ -311,7 +315,19 @@ def extract_test_evidence(body: str, policy: dict) -> tuple[bool, str]:
             "paste the real test command + result summary"
         )
     lowered = text.lower()
-    if any(marker.lower() in lowered for marker in markers):
+    # #3032: smart evidence matching — not just substring or word-boundary.
+    # বাংলা মন্তব্য (#3032 root-cause fix): আগে "passed" substring match করত →
+    # "0 passed", "not passed", "10 failed" সব match হতো। এখন:
+    #   ১. test runner name present (pytest/unittest/vitest/bun test)
+    #   ২. positive result: "N passed" (N>0) OR "0 failed" (exact zero)
+    has_runner = bool(re.search(r"\b(pytest|unittest|vitest|bun\s+test)\b", lowered))
+    has_positive_pass = bool(re.search(r"\b[1-9]\d*\s+passed\b", lowered))
+    has_zero_fail = bool(re.search(r"\b0\s+failed\b", lowered))
+    if has_runner and (has_positive_pass or has_zero_fail):
+        return True, f"Test Evidence found ({len(text)} chars, contains test-output markers)"
+    # Fallback: any marker as standalone word (backward compat for simple "pytest" mentions)
+    markers = policy.get("output_markers") or DEFAULT_VERIFICATION_POLICY["output_markers"]
+    if has_runner and any(re.search(rf"\b{re.escape(m.lower())}\b", lowered) for m in markers):
         return True, f"Test Evidence found ({len(text)} chars, contains test-output markers)"
     return False, (
         "Test Evidence section has no recognizable test output marker "

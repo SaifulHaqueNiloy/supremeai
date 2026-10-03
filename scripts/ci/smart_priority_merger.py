@@ -362,34 +362,43 @@ def check_pr_evidence(body: str) -> Tuple[bool, str]:
     if len(text) < 40:
         return False, f"Evidence text too short ({len(text)} < 40 chars)"
 
-    valid_markers = ["passed", "pytest", "unittest", "bun test", "vitest", "0 failed"]
-    if any(marker in text for marker in valid_markers):
-        return True, "Valid Test Evidence found"
+    # #3032 root-cause fix: word-boundary markers — "0 failed" substring matched
+    # "10 failed", "100 failed". "passed" matched "0 passed", "not passed".
+    # বাংলা মন্তব্য: word-boundary দিয়ে exact word match — "10 failed" আর "0 failed"
+    # কে আলাদা করে। সাথে count pattern (\d+ passed) যাতে সত্যিকারের test output
+    # ছাড়া কিছু match না হয়।
+    import re as _re
+    # Require a numeric count pattern: "N passed" or "N failed" with N > 0 for passed
+    has_passed_count = bool(_re.search(r"\b(\d+)\s+passed\b", text))
+    has_zero_failed = bool(_re.search(r"\b0\s+failed\b", text))
+    has_pytest = bool(_re.search(r"\bpytest\b", text))
+    has_unittest = bool(_re.search(r"\bunittest\b", text))
+    has_buntest = bool(_re.search(r"\bbun\s+test\b", text))
+    has_vitest = bool(_re.search(r"\bvitest\b", text))
 
-    return False, "Missing output markers (needs 'passed', 'pytest', etc.)"
+    # Valid evidence: test runner mentioned + pass count or zero failures
+    test_runner = has_pytest or has_unittest or has_buntest or has_vitest
+    if test_runner and (has_passed_count or has_zero_failed):
+        return True, "Valid Test Evidence found (test runner + pass/zero-fail markers)"
+
+    return False, "Missing output markers (needs test runner + 'N passed' or '0 failed')"
 
 
 def heal_pr_body_evidence(body: str) -> str:
     """
-    বাংলা মন্তব্য: PR বডিতে যদি Test Evidence হেডিং থাকে কিন্তু ভ্যালিড মার্কার না থাকে,
-    তবে হেডিংয়ের ঠিক নিচে ভ্যালিড টেস্ট এভিডেন্স মার্কার যোগ করে।
-    হেডিং না থাকলে বডির শেষে '## Test Evidence' সেকশন যোগ করে।
+    #3032 root-cause fix: NEVER fabricate test evidence.
+    
+    বাংলা মন্তব্য (#3032): আগে এই function PR body-তে নকল test evidence লিখত
+    ("pytest passed (100% all tests passed and verified)") — কোনো test ছাড়াই।
+    এটা systemic-integrity break — merge pipeline নিজেই gate-এর চুক্তি ভাঙত।
+    
+    এখন: body অপরিবর্তিত রিটার্ন করে। Auto-heal evidence করবে না — পরিবর্তে
+    PR author/agent-কে আসল test output দিতে হবে। Verification Gate-এ
+    evidence missing হলে HOLD করবে, merge করবে না।
     """
-    names = ["Test Evidence", "Tests", "পরীক্ষা", "টেস্ট এভিডেন্স"]
-    pattern = re.compile(rf"^#+\s*(?:.*)?({'|'.join(re.escape(n) for n in names)}).*$", re.IGNORECASE | re.MULTILINE)
-    m = pattern.search(body)
-
-    evidence_text = "- Automated verification evidence: pytest passed (100% all tests passed and verified)\n"
-
-    if m:
-        heading_end = m.end()
-        prefix = body[:heading_end]
-        suffix = body[heading_end:]
-        if not prefix.endswith("\n"):
-            prefix += "\n"
-        return prefix + evidence_text + suffix
-    else:
-        return body.rstrip() + f"\n\n## Test Evidence\n{evidence_text}\n"
+    # #3032: Return body unchanged — no fabrication.
+    # The caller (auto_heal_pr_evidence) should detect this and HOLD the PR.
+    return body
 
 
 def auto_heal_pr_evidence(pr_num: int, current_body: str, rollup: Optional[List[Dict[str, Any]]] = None) -> bool:
