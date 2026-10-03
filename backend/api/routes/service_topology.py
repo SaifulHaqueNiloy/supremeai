@@ -76,6 +76,10 @@ class ServiceHealthResult:
 # COMPLETE SERVICE REGISTRY (12+ Services)
 # ══════════════════════════════════════════════════════════════════════════════
 
+# বাংলা মন্তব্য (#3079): edge-worker URL env-চালিত — প্লেসহোল্ডার host সরানো (লাইভ প্রোব → 404);
+# EDGE_WORKER_URL আনসেট হলে টপোলজি-প্রোব স্কিপ (গ্রেসফুল ডিগ্রেডেশন)।
+_EDGE_WORKER_URL = os.environ.get("EDGE_WORKER_URL", "").rstrip("/")
+
 COMPLETE_SERVICE_REGISTRY: list[ServiceConfig] = [
     # ─── CORE INFRASTRUCTURE ──────────────────────────────────────────────
     ServiceConfig(
@@ -145,7 +149,7 @@ COMPLETE_SERVICE_REGISTRY: list[ServiceConfig] = [
         name="cloudflare_worker",
         display_name="Cloudflare Edge Worker",
         category="edge",
-        url="https://supremeai-edge.your-subdomain.workers.dev",
+        url=_EDGE_WORKER_URL,
         health_endpoint="/health",
         critical=True,
         timeout=5.0,
@@ -344,13 +348,15 @@ async def probe_service(service: ServiceConfig) -> ServiceHealthResult:
 
 async def probe_all_services() -> list[ServiceHealthResult]:
     """Probe all services concurrently."""
-    tasks = [probe_service(svc) for svc in COMPLETE_SERVICE_REGISTRY]
+    # বাংলা মন্তব্য (#3079): খালি URL (কনফিগার-অনুপস্থিত) সার্ভিস প্রোব-তালিকা থেকে বাদ।
+    probed = [svc for svc in COMPLETE_SERVICE_REGISTRY if svc.url]
+    tasks = [probe_service(svc) for svc in probed]
     results = await asyncio.gather(*tasks, return_exceptions=True)
 
     services = []
     for i, result in enumerate(results):
         if isinstance(result, BaseException):
-            svc = COMPLETE_SERVICE_REGISTRY[i]
+            svc = probed[i]
             services.append(
                 ServiceHealthResult(
                     name=svc.name,
