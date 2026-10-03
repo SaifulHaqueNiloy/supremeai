@@ -294,8 +294,13 @@ def extract_test_evidence(body: str, policy: dict) -> tuple[bool, str]:
 
     section = None
     for name in names:
+        # #3032: fix heading regex — \s* allowed #3032 (issue ref) to match as heading.
+        # বাংলা মন্তব্য: আগে `^#+\s*(?:.*)?` pattern `#3032`-কে heading ভাবত →
+        # body text-এ "test evidence" substring match করে wrong section দিত।
+        # এখন `^#+\s+` — heading-এ `#`-এর পরে কমপক্ষে একটি space লাগবে (markdown spec)।
+        # `(?:.*)?` সরানো হয়েছে — greedy match আর দরকার নেই।
         pattern = re.compile(
-            rf"^#+\s*(?:.*)?{re.escape(name)}.*$",
+            rf"^#+\s+{re.escape(name)}.*$",
             re.IGNORECASE | re.MULTILINE,
         )
         m = pattern.search(body)

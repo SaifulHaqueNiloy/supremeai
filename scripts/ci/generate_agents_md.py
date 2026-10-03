@@ -18,8 +18,10 @@ AGENTS_PATH = REPO_ROOT / "AGENTS.md"
 RULES_PATH = REPO_ROOT / "AGENT_RULES.md"
 
 # বাংলা মন্তব্য: স্টেবল মার্কার — এগুলো মুছলে ভ্যালিডেটর CI-তে ব্লক করবে
-AGENTS_REQUIRED_MARKERS = ["Major Rule 1", "Major Rule 2", "AGENT_RULES.md"]
-RULES_REQUIRED_MARKERS = ["ভাগ ১", "ভাগ ২", "ভাগ ৩", "ভাগ ৪", "ভাগ ৫", "রোল: coder"]
+# #3032 followup: AGENTS.md was restructured (00b94c19) — old markers ("Major Rule 1",
+# "ভাগ ১") replaced with new structure. Updated markers to match new format.
+AGENTS_REQUIRED_MARKERS = ["First Rule", "Second Rule", "AGENT_RULES.md"]
+RULES_REQUIRED_MARKERS = ["U1", "U2", "U3", "U4", "U5", "Coder"]
 
 
 def main() -> int:
